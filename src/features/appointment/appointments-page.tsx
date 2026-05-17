@@ -3,9 +3,10 @@ import { useNavigate } from '@tanstack/react-router'
 import { usePatientStore } from '@/features/patient/patient-store'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
 import { useCan, useDoctorFilter } from '@/features/user/user-store'
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, X, ExternalLink, CheckCircle, Calendar, Phone, Clock, Syringe, User } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, ExternalLink, CheckCircle, Calendar, Phone, Clock, Syringe, User } from 'lucide-react'
 import type { Application } from '@/features/patient/patient-store'
 import { cn } from '@/shared/lib/utils'
+import { Modal, Button, Toast } from '@/shared/ui'
 import {
   format,
   startOfWeek,
@@ -281,20 +282,24 @@ export function AppointmentsPage() {
         )}
       </div>
 
-      {/* Appointment detail modal */}
-      {selectedApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setSelectedApp(null)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-(--border-custom)">
-              <h3 className="text-sm font-bold text-(--text)">Detalhes do Agendamento</h3>
-              <button onClick={() => setSelectedApp(null)} className="text-(--text-muted) hover:text-(--text) transition-colors">
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="px-5 py-4 space-y-4">
-              {/* Patient info */}
+      <Modal
+        open={!!selectedApp}
+        onClose={() => setSelectedApp(null)}
+        title="Detalhes do Agendamento"
+        size="md"
+        footer={selectedApp ? <>
+          <button
+            onClick={() => sendReminder(getPatientPhone(), getPatientFullName(selectedApp.patientId).split(' ')[0], selectedApp.data, selectedApp.horaInicio)}
+            className="text-[0.65rem] font-medium text-[#25D366] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none mr-auto"
+          >
+            <Phone size={11} />
+            Enviar lembrete via WhatsApp
+          </button>
+          <Button variant="outline" onClick={() => setSelectedApp(null)}>Fechar</Button>
+        </> : null}
+      >
+        {selectedApp && <>
+          {/* Patient info */}
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-sm font-bold text-white shrink-0">
                   {getPatientFullName(selectedApp.patientId).split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
@@ -366,73 +371,45 @@ export function AppointmentsPage() {
                 </div>
               </div>
 
-              {/* Google Calendar sync status */}
-              {googleConnected && (
-                <div className="flex items-center gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2">
-                  <Calendar size={13} className="text-brand shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-[0.6rem] text-brand font-medium">Sincronizado com Google Agenda</p>
-                    <p className="text-[0.5rem] text-brand/60">Este evento está visível na agenda do profissional responsável.</p>
-                  </div>
-                  <a href="#" className="text-[0.55rem] text-brand font-semibold hover:underline no-underline flex items-center gap-0.5 shrink-0">
-                    <ExternalLink size={9} />
-                    Abrir
-                  </a>
-                </div>
-              )}
+          {/* Google Calendar sync status */}
+          {googleConnected && (
+            <div className="flex items-center gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2">
+              <Calendar size={13} className="text-brand shrink-0" />
+              <div className="flex-1">
+                <p className="text-[0.6rem] text-brand font-medium">Sincronizado com Google Agenda</p>
+                <p className="text-[0.5rem] text-brand/60">Este evento está visível na agenda do profissional responsável.</p>
+              </div>
+              <a href="#" className="text-[0.55rem] text-brand font-semibold hover:underline no-underline flex items-center gap-0.5 shrink-0">
+                <ExternalLink size={9} />
+                Abrir
+              </a>
             </div>
+          )}
+        </>}
+      </Modal>
 
-            {/* Footer actions */}
-            <div className="border-t border-(--border-custom) px-5 py-3 flex items-center justify-between">
-              <button
-                onClick={() => sendReminder(getPatientPhone(), getPatientFullName(selectedApp.patientId).split(' ')[0], selectedApp.data, selectedApp.horaInicio)}
-                className="text-[0.65rem] font-medium text-[#25D366] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none"
-              >
-                <Phone size={11} />
-                Enviar lembrete via WhatsApp
-              </button>
-              <button onClick={() => setSelectedApp(null)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all">
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Toast
+        open={showToast}
+        onClose={() => setShowToast(false)}
+        variant="success"
+        icon={<CheckCircle size={16} />}
+        title="Agendamento criado com sucesso!"
+        description={googleConnected
+          ? 'O agendamento foi registrado e sincronizado automaticamente com o Google Agenda.'
+          : 'O agendamento foi registrado. O paciente será notificado conforme as configurações definidas.'}
+      />
 
-      {/* Success toast */}
-      {showToast && (
-        <div className="fixed top-6 right-6 z-50" style={{ animation: 'slide-up-fade 0.3s ease-out' }}>
-          <div className="flex items-start gap-3 bg-white border border-emerald-200 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] p-4 w-95">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 shrink-0 mt-0.5">
-              <CheckCircle size={16} className="text-emerald-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-(--text)">Agendamento criado com sucesso!</p>
-              <p className="text-xs text-(--text-muted) mt-1">
-                {googleConnected
-                  ? 'O agendamento foi registrado e sincronizado automaticamente com o Google Agenda.'
-                  : 'O agendamento foi registrado. O paciente será notificado conforme as configurações definidas.'}
-              </p>
-            </div>
-            <button onClick={() => setShowToast(false)} className="h-6 w-6 flex items-center justify-center rounded-md text-(--text-muted) hover:bg-gray-100 transition-all shrink-0">
-              <X size={14} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Add appointment modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowAddModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-(--border-custom)">
-              <h3 className="text-sm font-bold text-(--text)">Novo Agendamento</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-(--text-muted) hover:text-(--text) transition-colors">
-                <X size={16} />
-              </button>
-            </div>
-            <div className="px-5 py-4 space-y-3.5">
-              {googleConnected && (
+      <Modal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Novo Agendamento"
+        size="md"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowAddModal(false)}>Cancelar</Button>
+          <Button variant="primary" onClick={() => { setShowAddModal(false); setShowToast(true); setTimeout(() => setShowToast(false), 6000) }}>Agendar</Button>
+        </>}
+      >
+        {googleConnected && (
                 <div className="flex items-center gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2">
                   <Calendar size={13} className="text-brand shrink-0" />
                   <p className="text-[0.6rem] text-brand leading-relaxed">
@@ -535,22 +512,11 @@ export function AppointmentsPage() {
                   )}
                 </div>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Observações</label>
-                <textarea rows={2} placeholder="Observações adicionais (opcional)" className="w-full rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 py-2 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all resize-none" />
-              </div>
-            </div>
-            <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
-              <button onClick={() => setShowAddModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all">
-                Cancelar
-              </button>
-              <button onClick={() => { setShowAddModal(false); setShowToast(true); setTimeout(() => setShowToast(false), 6000) }} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all">
-                Agendar
-              </button>
-            </div>
-          </div>
+        <div>
+          <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Observações</label>
+          <textarea rows={2} placeholder="Observações adicionais (opcional)" className="w-full rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 py-2 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all resize-none" />
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Camera, Save } from 'lucide-react'
+import { Modal, Button } from '@/shared/ui'
 
 export function ProfilePage() {
   const navigate = useNavigate()
@@ -150,24 +151,23 @@ export function ProfilePage() {
         </div>
       </div>
 
-      {/* Save confirmation modal */}
-      {showSaveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowSaveModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                <Save size={16} className="text-brand" />
-              </div>
-              <h3 className="text-sm font-bold text-(--text)">Salvar alterações</h3>
-            </div>
-            <p className="text-xs text-(--text-muted) mb-5">As alterações no seu perfil serão salvas e aplicadas imediatamente.</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowSaveModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-              <button onClick={() => { setShowSaveModal(false); setEditing(false) }} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px transition-all cursor-pointer">Confirmar</button>
-            </div>
+      <Modal
+        open={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        size="sm"
+        headerSlot={<div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 shrink-0">
+            <Save size={16} className="text-brand" />
           </div>
-        </div>
-      )}
+          <h3 className="text-sm font-bold text-(--text)">Salvar alterações</h3>
+        </div>}
+        footer={<>
+          <Button variant="outline" onClick={() => setShowSaveModal(false)}>Cancelar</Button>
+          <Button variant="primary" onClick={() => { setShowSaveModal(false); setEditing(false) }}>Confirmar</Button>
+        </>}
+      >
+        <p className="text-xs text-(--text-muted)">As alterações no seu perfil serão salvas e aplicadas imediatamente.</p>
+      </Modal>
     </div>
   )
 }

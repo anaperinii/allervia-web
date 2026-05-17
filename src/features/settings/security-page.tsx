@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Lock, Smartphone, Eye, FileDown, UserX, LogOut, ChevronRight, X } from 'lucide-react'
+import { ArrowLeft, Lock, Smartphone, Eye, FileDown, UserX, LogOut, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { Modal, Button } from '@/shared/ui'
 
 const sessions = [
   { id: '1', device: 'Chrome · Windows 11', location: 'Anápolis, GO', time: 'Agora (sessão atual)', current: true },
@@ -165,73 +166,65 @@ export function SecurityPage() {
         </div>
       </div>
 
-      {/* Password modal */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowPasswordModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-(--border-custom)">
-              <h3 className="text-sm font-bold text-(--text)">Alterar senha</h3>
-              <button onClick={() => setShowPasswordModal(false)} className="text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"><X size={16} /></button>
-            </div>
-            <div className="px-5 py-4 space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Senha atual</label>
-                <input type="password" placeholder="Insira aqui" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nova senha</label>
-                <input type="password" placeholder="Insira aqui" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Confirmar nova senha</label>
-                <input type="password" placeholder="Insira aqui" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputClass} />
-              </div>
-            </div>
-            <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
-              <button onClick={() => setShowPasswordModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-              <button onClick={() => setShowPasswordModal(false)} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px transition-all cursor-pointer">Alterar senha</button>
-            </div>
-          </div>
+      <Modal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        title="Alterar senha"
+        size="sm"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowPasswordModal(false)}>Cancelar</Button>
+          <Button variant="primary" onClick={() => setShowPasswordModal(false)}>Alterar senha</Button>
+        </>}
+      >
+        <div>
+          <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Senha atual</label>
+          <input type="password" placeholder="Insira aqui" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} className={inputClass} />
         </div>
-      )}
+        <div>
+          <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nova senha</label>
+          <input type="password" placeholder="Insira aqui" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClass} />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Confirmar nova senha</label>
+          <input type="password" placeholder="Insira aqui" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputClass} />
+        </div>
+      </Modal>
 
-      {/* Export modal */}
-      {showExportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowExportModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                <FileDown size={16} className="text-brand" />
-              </div>
-              <h3 className="text-sm font-bold text-(--text)">Exportar dados</h3>
-            </div>
-            <p className="text-xs text-(--text-muted) mb-5">Uma cópia dos seus dados pessoais será preparada e enviada para seu e-mail em até 48 horas, conforme previsto pela LGPD.</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowExportModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-              <button onClick={() => setShowExportModal(false)} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px transition-all cursor-pointer">Solicitar exportação</button>
-            </div>
+      <Modal
+        open={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        size="sm"
+        headerSlot={<div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 shrink-0">
+            <FileDown size={16} className="text-brand" />
           </div>
-        </div>
-      )}
+          <h3 className="text-sm font-bold text-(--text)">Exportar dados</h3>
+        </div>}
+        footer={<>
+          <Button variant="outline" onClick={() => setShowExportModal(false)}>Cancelar</Button>
+          <Button variant="primary" onClick={() => setShowExportModal(false)}>Solicitar exportação</Button>
+        </>}
+      >
+        <p className="text-xs text-(--text-muted)">Uma cópia dos seus dados pessoais será preparada e enviada para seu e-mail em até 48 horas, conforme previsto pela LGPD.</p>
+      </Modal>
 
-      {/* Revoke session modal */}
-      {showRevokeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowRevokeModal(null)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 shrink-0">
-                <LogOut size={16} className="text-red-500" />
-              </div>
-              <h3 className="text-sm font-bold text-(--text)">Encerrar sessão</h3>
-            </div>
-            <p className="text-xs text-(--text-muted) mb-5">Este dispositivo será desconectado imediatamente e precisará fazer login novamente para acessar o sistema.</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowRevokeModal(null)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-              <button onClick={() => setShowRevokeModal(null)} className="h-8 px-4 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-all cursor-pointer">Encerrar</button>
-            </div>
+      <Modal
+        open={!!showRevokeModal}
+        onClose={() => setShowRevokeModal(null)}
+        size="sm"
+        headerSlot={<div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 shrink-0">
+            <LogOut size={16} className="text-red-500" />
           </div>
-        </div>
-      )}
+          <h3 className="text-sm font-bold text-(--text)">Encerrar sessão</h3>
+        </div>}
+        footer={<>
+          <Button variant="outline" onClick={() => setShowRevokeModal(null)}>Cancelar</Button>
+          <Button variant="danger" onClick={() => setShowRevokeModal(null)}>Encerrar</Button>
+        </>}
+      >
+        <p className="text-xs text-(--text-muted)">Este dispositivo será desconectado imediatamente e precisará fazer login novamente para acessar o sistema.</p>
+      </Modal>
     </div>
   )
 }

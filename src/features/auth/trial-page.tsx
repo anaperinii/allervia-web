@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, Shield, Check, Clock, Mail, X } from 'lucide-react'
+import { ArrowRight, Shield, Check, Clock, Mail } from 'lucide-react'
+import { Modal } from '@/shared/ui'
 import imunecareLogo from '@/assets/imunecare-logo.png'
 import imunecareWhiteLogo from '@/assets/imunecare-white-logo.png'
 import { validateEmail, formatPhone } from '@/shared/lib/validators'
@@ -226,34 +227,33 @@ export function TrialPage() {
         </div>
       </div>
 
-      {/* Confirmation modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowModal(false)}>
-          <div className="relative bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.15)] w-full max-w-md mx-4 p-7 text-center" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 h-7 w-7 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-100 transition-all">
-              <X size={16} />
-            </button>
-            <div className="flex justify-center mb-4">
-              <div className="h-14 w-14 rounded-full bg-emerald-100 flex items-center justify-center">
-                <Mail size={24} className="text-emerald-600" />
-              </div>
+      <Modal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        size="md"
+        headerSlot={<div />}
+      >
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="h-14 w-14 rounded-full bg-emerald-100 flex items-center justify-center">
+              <Mail size={24} className="text-emerald-600" />
             </div>
-            <h3 className="text-lg font-bold text-(--text) mb-2">Solicitação enviada com sucesso!</h3>
-            <p className="text-xs text-(--text-muted) leading-relaxed mb-4">
-              Recebemos sua solicitação de acesso e nossa equipe já está analisando seus dados.
-              Você receberá uma confirmação com as instruções de ativação diretamente no e-mail informado.
-            </p>
-            <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-4 py-3 mb-4">
-              <p className="text-[0.65rem] text-(--text-muted) font-medium mb-1">Fique atento à sua caixa de entrada</p>
-              <p className="text-sm font-semibold text-brand">contato@imunecare.com.br</p>
-              <p className="text-[0.6rem] text-(--text-muted) mt-1">Prazo de retorno: até 1 dia útil</p>
-            </div>
-            <Link to="/" className="inline-flex items-center justify-center w-full h-9 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-bold hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(24,193,203,0.35)] transition-all no-underline">
-              Voltar para a página inicial
-            </Link>
           </div>
+          <h3 className="text-lg font-bold text-(--text)">Solicitação enviada com sucesso!</h3>
+          <p className="text-xs text-(--text-muted) leading-relaxed">
+            Recebemos sua solicitação de acesso e nossa equipe já está analisando seus dados.
+            Você receberá uma confirmação com as instruções de ativação diretamente no e-mail informado.
+          </p>
+          <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-4 py-3">
+            <p className="text-[0.65rem] text-(--text-muted) font-medium mb-1">Fique atento à sua caixa de entrada</p>
+            <p className="text-sm font-semibold text-brand">contato@imunecare.com.br</p>
+            <p className="text-[0.6rem] text-(--text-muted) mt-1">Prazo de retorno: até 1 dia útil</p>
+          </div>
+          <Link to="/" className="inline-flex items-center justify-center w-full h-9 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-bold hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(24,193,203,0.35)] transition-all no-underline">
+            Voltar para a página inicial
+          </Link>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

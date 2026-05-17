@@ -6,6 +6,7 @@ import { useCan } from '@/features/user/user-store'
 import { useForm } from '@/shared/hooks/useForm'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/immunotherapies-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
+import { Modal, Button } from '@/shared/ui'
 import { PROFILES } from '@/features/user/user-store'
 import { usePatientStore, type Application } from '@/features/patient/patient-store'
 import {
@@ -361,23 +362,18 @@ export function AddImmunotherapyPage() {
         </div>
       </div>
 
-      {/* Cancel confirmation modal */}
-      {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowCancelModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-sm font-bold text-(--text) mb-2">Cancelar cadastro?</h3>
-            <p className="text-xs text-(--text-muted) mb-5">Os dados preenchidos serão perdidos. Deseja realmente cancelar a prescrição da imunoterapia?</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowCancelModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all">
-                Continuar editando
-              </button>
-              <button onClick={() => navigate({ to: '/immunotherapies' })} className="h-8 px-4 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-all">
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        title="Cancelar cadastro?"
+        size="sm"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowCancelModal(false)}>Continuar editando</Button>
+          <Button variant="danger" onClick={() => navigate({ to: '/immunotherapies' })}>Cancelar</Button>
+        </>}
+      >
+        <p className="text-xs text-(--text-muted)">Os dados preenchidos serão perdidos. Deseja realmente cancelar a prescrição da imunoterapia?</p>
+      </Modal>
     </div>
   )
 }

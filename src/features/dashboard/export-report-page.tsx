@@ -5,6 +5,7 @@ import { cn } from '@/shared/lib/utils'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer } from 'recharts'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
 import { useCan, useDoctorFilter } from '@/features/user/user-store'
+import { Modal, Button } from '@/shared/ui'
 
 const formats = [
   { id: 'pdf', label: 'PDF', icon: FileText },
@@ -534,67 +535,52 @@ export function ExportReportPage() {
         </div>
       </div>
 
-      {/* Export confirmation modal */}
-      {showExportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowExportModal(false)}>
-          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-center mb-3">
-              <div className="h-11 w-11 rounded-full bg-brand/10 flex items-center justify-center">
-                <ShieldCheck size={20} className="text-brand" />
-              </div>
-            </div>
-            <h3 className="text-sm font-bold text-(--text) mb-1.5 text-center">Confirmar exportação</h3>
-            <p className="text-[0.7rem] text-(--text-muted) mb-4 text-center leading-relaxed">
-              Ao confirmar, um registro desta exportação será salvo no log de auditoria do sistema, incluindo data, hora, responsável e justificativa informada.
-            </p>
-
-            <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5 mb-4 space-y-1.5">
-              <div className="flex justify-between">
-                <span className="text-[0.6rem] text-(--text-muted)">Formato</span>
-                <span className="text-[0.6rem] font-semibold text-(--text)">{format.toUpperCase()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[0.6rem] text-(--text-muted)">Dados anonimizados</span>
-                <span className={cn("text-[0.6rem] font-semibold", anonimizar ? "text-brand" : "text-amber-600")}>{anonimizar ? 'Sim' : 'Não'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[0.6rem] text-(--text-muted)">Justificativa</span>
-                <span className="text-[0.6rem] font-semibold text-(--text) text-right max-w-[60%] truncate">{justificativa}</span>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button onClick={() => setShowExportModal(false)} className="flex-1 h-8 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all">
-                Cancelar
-              </button>
-              <button
-                onClick={() => { setShowExportModal(false); navigate({ to: '/dashboard' }) }}
-                className="flex-1 h-8 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all"
-              >
-                Confirmar e exportar
-              </button>
-            </div>
+      <Modal
+        open={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        title="Confirmar exportação"
+        size="sm"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowExportModal(false)}>Cancelar</Button>
+          <Button variant="primary" onClick={() => { setShowExportModal(false); navigate({ to: '/dashboard' }) }}>Confirmar e exportar</Button>
+        </>}
+      >
+        <div className="flex justify-center">
+          <div className="h-11 w-11 rounded-full bg-brand/10 flex items-center justify-center">
+            <ShieldCheck size={20} className="text-brand" />
           </div>
         </div>
-      )}
-
-      {/* Cancel modal */}
-      {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowCancelModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-sm font-bold text-(--text) mb-2">Cancelar exportação?</h3>
-            <p className="text-xs text-(--text-muted) mb-5">As configurações do relatório serão perdidas.</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowCancelModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all">
-                Continuar editando
-              </button>
-              <button onClick={() => navigate({ to: '/dashboard' })} className="h-8 px-4 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-all">
-                Cancelar
-              </button>
-            </div>
+        <p className="text-[0.7rem] text-(--text-muted) text-center leading-relaxed">
+          Ao confirmar, um registro desta exportação será salvo no log de auditoria do sistema, incluindo data, hora, responsável e justificativa informada.
+        </p>
+        <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5 space-y-1.5">
+          <div className="flex justify-between">
+            <span className="text-[0.6rem] text-(--text-muted)">Formato</span>
+            <span className="text-[0.6rem] font-semibold text-(--text)">{format.toUpperCase()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[0.6rem] text-(--text-muted)">Dados anonimizados</span>
+            <span className={cn("text-[0.6rem] font-semibold", anonimizar ? "text-brand" : "text-amber-600")}>{anonimizar ? 'Sim' : 'Não'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[0.6rem] text-(--text-muted)">Justificativa</span>
+            <span className="text-[0.6rem] font-semibold text-(--text) text-right max-w-[60%] truncate">{justificativa}</span>
           </div>
         </div>
-      )}
+      </Modal>
+
+      <Modal
+        open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        title="Cancelar exportação?"
+        size="sm"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowCancelModal(false)}>Continuar editando</Button>
+          <Button variant="danger" onClick={() => navigate({ to: '/dashboard' })}>Cancelar</Button>
+        </>}
+      >
+        <p className="text-xs text-(--text-muted)">As configurações do relatório serão perdidas.</p>
+      </Modal>
     </div>
   )
 }

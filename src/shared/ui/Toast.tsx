@@ -17,7 +17,7 @@ interface ToastProps {
   variant?: ToastVariant
   icon: ReactNode
   title: string
-  description?: string
+  description?: ReactNode
 }
 
 /** Toast fixo no canto superior direito com animação de slide. */
