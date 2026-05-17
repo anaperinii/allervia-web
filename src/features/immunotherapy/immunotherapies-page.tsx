@@ -15,9 +15,9 @@ import {
   ChevronsRight,
   ChevronDown,
   CheckCircle,
-  X,
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { Toast, Button, Select, TextInput } from '@/shared/ui'
 
 const INTERVAL_COLORS: Record<number, { bg: string; text: string; dot: string }> = {
   7: { bg: '#FDECF0', text: '#E8768E', dot: '#E8768E' },
@@ -106,44 +106,38 @@ export function ImmunotherapiesPage() {
           <div className="flex flex-wrap items-center gap-1.5">
             {/* Search */}
             <div className="relative flex-1 min-w-45">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--text-muted)" />
-              <input
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) z-10" />
+              <TextInput
                 placeholder="Pesquisar paciente"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-8 pl-8 pr-3 rounded-lg border border-(--border-custom) bg-gray-50/60 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all"
+                className="h-8 pl-8"
               />
             </div>
 
             {/* Tipo filter */}
-            <div className="relative">
-              <select
-                value={tipoFilter}
-                onChange={(e) => setTipoFilter(e.target.value)}
-                className="h-8 pl-2.5 pr-7 rounded-lg border border-(--border-custom) bg-white text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all"
-              >
-                <option>Todos os tipos</option>
-                {tipos.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
-              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-            </div>
+            <Select
+              value={tipoFilter}
+              onChange={(e) => setTipoFilter(e.target.value)}
+              className="h-8 bg-white w-auto"
+            >
+              <option value="Todos os tipos">Todos os tipos</option>
+              {tipos.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </Select>
 
             {/* Ciclo filter */}
-            <div className="relative">
-              <select
-                value={cicloFilter}
-                onChange={(e) => setCicloFilter(e.target.value)}
-                className="h-8 pl-2.5 pr-7 rounded-lg border border-(--border-custom) bg-white text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all"
-              >
-                <option>Todos os intervalos</option>
-                {ciclos.map((c) => (
-                  <option key={c}>{c} dias</option>
-                ))}
-              </select>
-              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-            </div>
+            <Select
+              value={cicloFilter}
+              onChange={(e) => setCicloFilter(e.target.value)}
+              className="h-8 bg-white w-auto"
+            >
+              <option value="Todos os intervalos">Todos os intervalos</option>
+              {ciclos.map((c) => (
+                <option key={c} value={c}>{c} dias</option>
+              ))}
+            </Select>
 
             {/* Inativas toggle */}
             <button
@@ -159,20 +153,23 @@ export function ImmunotherapiesPage() {
               <Archive size={14} />
             </button>
 
-            {/* Adicionar */}
             {canAddImmunotherapy && (
-              <button onClick={() => navigate({ to: '/add-immunotherapy' })} className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all">
-                <Plus size={14} />
+              <Button
+                tone="brand"
+                variant="solid"
+                prominent
+                leftIcon={<Plus size={14} />}
+                to="/add-immunotherapy"
+                className="px-3"
+              >
                 Adicionar Imunoterapia
-              </button>
+              </Button>
             )}
 
-            {/* Evoluir */}
             {canEvolve && (
-              <button onClick={() => navigate({ to: '/patient-evolution' })} className="h-8 px-3 flex items-center gap-1.5 rounded-lg border-[1.5px] border-teal-400 text-teal-600 text-xs font-semibold hover:bg-teal-50 hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.25)] transition-all">
-                <FileText size={14} />
+              <Button tone="brand" variant="outline" leftIcon={<FileText size={14} />} to="/patient-evolution" className="px-3">
                 Evoluir Paciente
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -296,32 +293,25 @@ export function ImmunotherapiesPage() {
         </div>
       </div>
 
-      {/* Success toast */}
-      {showToast && (
-        <div className="fixed top-6 right-6 z-50" style={{ animation: 'slide-up-fade 0.3s ease-out' }}>
-          <div className="flex items-start gap-3 bg-white border border-emerald-200 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] p-4 w-95">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 shrink-0 mt-0.5">
-              <CheckCircle size={16} className="text-emerald-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-(--text)">Registro salvo com sucesso!</p>
-              <p className="text-xs text-(--text-muted) mt-1">Os dados de {patientName || 'paciente'} foram registrados e a próxima dose já está agendada.</p>
-              {patientId && (
-                <Link
-                  to="/patient/$patientId"
-                  params={{ patientId }}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 mt-2 transition-colors"
-                >
-                  Acessar prontuário do paciente &rarr;
-                </Link>
-              )}
-            </div>
-            <button onClick={() => setShowToast(false)} className="h-6 w-6 flex items-center justify-center rounded-md text-(--text-muted) hover:bg-gray-100 transition-all shrink-0">
-              <X size={14} />
-            </button>
-          </div>
-        </div>
-      )}
+      <Toast
+        open={showToast}
+        onClose={() => setShowToast(false)}
+        variant="success"
+        icon={<CheckCircle size={16} />}
+        title="Registro salvo com sucesso!"
+        description={<>
+          Os dados de {patientName || 'paciente'} foram registrados e a próxima dose já está agendada.
+          {patientId && (
+            <Link
+              to="/patient/$patientId"
+              params={{ patientId }}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 mt-2 transition-colors"
+            >
+              Acessar prontuário do paciente &rarr;
+            </Link>
+          )}
+        </>}
+      />
     </div>
   )
 }

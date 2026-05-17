@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import {} from '@tanstack/react-router'
 import { ArrowLeft, Camera, Save } from 'lucide-react'
+import { Modal, Button, IconButton, TextInput } from "@/shared/ui"
 
 export function ProfilePage() {
-  const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
   const [showSaveModal, setShowSaveModal] = useState(false)
 
@@ -20,7 +20,6 @@ export function ProfilePage() {
 
   const set = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }))
 
-  const inputClass = "w-full h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all"
   const disabledClass = "w-full h-9 rounded-lg border border-(--border-custom) bg-gray-100/80 px-3 text-xs text-(--text-muted) cursor-not-allowed"
 
   return (
@@ -29,24 +28,21 @@ export function ProfilePage() {
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate({ to: '/settings' })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-              <ArrowLeft size={16} />
-            </button>
+            <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
             <h1 className="text-2xl font-bold text-(--text)">Meu Perfil</h1>
           </div>
           {!editing ? (
-            <button onClick={() => setEditing(true)} className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold shadow-[0_2px_12px_rgba(24,193,203,0.3)] hover:-translate-y-px transition-all cursor-pointer">
+            <Button tone="brand" variant="solid" prominent onClick={() => setEditing(true)} className="px-3">
               Editar perfil
-            </button>
+            </Button>
           ) : (
             <div className="flex items-center gap-2">
-              <button onClick={() => setEditing(false)} className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
+              <Button variant="outline" onClick={() => setEditing(false)} className="px-3">
                 Cancelar
-              </button>
-              <button onClick={() => { setShowSaveModal(true) }} className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold shadow-[0_2px_12px_rgba(24,193,203,0.3)] hover:-translate-y-px transition-all cursor-pointer">
-                <Save size={13} />
+              </Button>
+              <Button tone="brand" variant="solid" prominent leftIcon={<Save size={13} />} onClick={() => setShowSaveModal(true)} className="px-3">
                 Salvar alterações
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -81,7 +77,7 @@ export function ProfilePage() {
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nome completo</label>
                   {editing ? (
-                    <input value={form.nome} onChange={(e) => set('nome', e.target.value)} className={inputClass} />
+                    <TextInput value={form.nome} onChange={(e) => set('nome', e.target.value)}  />
                   ) : (
                     <div className={disabledClass + " flex items-center"}>{form.nome}</div>
                   )}
@@ -93,7 +89,7 @@ export function ProfilePage() {
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de nascimento</label>
                   {editing ? (
-                    <input type="date" value={form.dataNascimento} onChange={(e) => set('dataNascimento', e.target.value)} className={inputClass} />
+                    <TextInput type="date" value={form.dataNascimento} onChange={(e) => set('dataNascimento', e.target.value)}  />
                   ) : (
                     <div className={disabledClass + " flex items-center"}>15/03/1985</div>
                   )}
@@ -101,7 +97,7 @@ export function ProfilePage() {
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Telefone</label>
                   {editing ? (
-                    <input value={form.telefone} onChange={(e) => set('telefone', e.target.value)} className={inputClass} />
+                    <TextInput value={form.telefone} onChange={(e) => set('telefone', e.target.value)}  />
                   ) : (
                     <div className={disabledClass + " flex items-center"}>{form.telefone}</div>
                   )}
@@ -118,7 +114,7 @@ export function ProfilePage() {
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">E-mail</label>
                   {editing ? (
-                    <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} className={inputClass} />
+                    <TextInput type="email" value={form.email} onChange={(e) => set('email', e.target.value)}  />
                   ) : (
                     <div className={disabledClass + " flex items-center"}>{form.email}</div>
                   )}
@@ -130,7 +126,7 @@ export function ProfilePage() {
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Especialidade</label>
                   {editing ? (
-                    <input value={form.especialidade} onChange={(e) => set('especialidade', e.target.value)} className={inputClass} />
+                    <TextInput value={form.especialidade} onChange={(e) => set('especialidade', e.target.value)}  />
                   ) : (
                     <div className={disabledClass + " flex items-center"}>{form.especialidade}</div>
                   )}
@@ -138,7 +134,7 @@ export function ProfilePage() {
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Instituição</label>
                   {editing ? (
-                    <input value={form.instituicao} onChange={(e) => set('instituicao', e.target.value)} className={inputClass} />
+                    <TextInput value={form.instituicao} onChange={(e) => set('instituicao', e.target.value)}  />
                   ) : (
                     <div className={disabledClass + " flex items-center"}>{form.instituicao}</div>
                   )}
@@ -150,24 +146,19 @@ export function ProfilePage() {
         </div>
       </div>
 
-      {/* Save confirmation modal */}
-      {showSaveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowSaveModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                <Save size={16} className="text-brand" />
-              </div>
-              <h3 className="text-sm font-bold text-(--text)">Salvar alterações</h3>
-            </div>
-            <p className="text-xs text-(--text-muted) mb-5">As alterações no seu perfil serão salvas e aplicadas imediatamente.</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowSaveModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-              <button onClick={() => { setShowSaveModal(false); setEditing(false) }} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px transition-all cursor-pointer">Confirmar</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        size="sm"
+        title="Salvar alterações"
+        icon={<Save size={16} />}
+        footer={<>
+          <Button variant="outline" onClick={() => setShowSaveModal(false)}>Cancelar</Button>
+          <Button variant="primary" onClick={() => { setShowSaveModal(false); setEditing(false) }}>Confirmar</Button>
+        </>}
+      >
+        <p className="text-xs text-(--text-muted)">As alterações no seu perfil serão salvas e aplicadas imediatamente.</p>
+      </Modal>
     </div>
   )
 }

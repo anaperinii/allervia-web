@@ -4,12 +4,13 @@ import { usePatientStore } from '@/features/patient/patient-store'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
 import { useCan, useUserStore } from '@/features/user/user-store'
 import { useAuditStore } from '@/features/audit/audit-store'
-import { Search, ChevronDown, ArrowLeft, ClipboardList, Syringe, CalendarDays, Info } from 'lucide-react'
+import { Search, ArrowLeft, ClipboardList, Syringe, CalendarDays, Info } from 'lucide-react'
 import { addDays, format, differenceInDays, parse } from 'date-fns'
 import { cn } from '@/shared/lib/utils'
 import { validateVolume, validateConcentration } from '@/shared/lib/validators'
 import { calculateNextDose, parseDose } from '@/features/immunotherapy/scit-protocol'
 import { useForm } from '@/shared/hooks/useForm'
+import { Modal, Button, IconButton, TextInput, TextArea, Select } from "@/shared/ui"
 
 const stepLabels = ['Paciente', 'Pré-Aplicação', 'Pós-Aplicação', 'Revisão dos Dados']
 
@@ -241,14 +242,7 @@ export function PatientEvolutionPage() {
     } catch { return null }
   }, [selectedPatient])
 
-  const inputCls = (field?: keyof EvolutionForm) => cn(
-    "w-full h-9 rounded-lg border bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all",
-    field && errors[field] && touched[field] ? "border-red-400 bg-red-50/30" : "border-(--border-custom)"
-  )
-  const textareaCls = (field?: keyof EvolutionForm) => cn(
-    "w-full rounded-lg border bg-gray-50/60 px-3 py-2 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all resize-none",
-    field && errors[field] && touched[field] ? "border-red-400 bg-red-50/30" : "border-(--border-custom)"
-  )
+  const isInvalid = (field: keyof EvolutionForm) => !!(errors[field] && touched[field])
   const ErrorMsg = ({ field }: { field: keyof EvolutionForm }) => {
     if (!errors[field] || !touched[field]) return null
     return <span className="text-[0.6rem] text-red-500 mt-0.5 block">{errors[field]}</span>
@@ -346,9 +340,9 @@ export function PatientEvolutionPage() {
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <button onClick={() => setShowCancelModal(true)} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
+          <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
             <ArrowLeft size={16} />
-          </button>
+          </IconButton>
           <h1 className="text-2xl font-bold text-(--text)">Evolução do Paciente</h1>
         </div>
 
@@ -374,7 +368,7 @@ export function PatientEvolutionPage() {
               <h2 className="text-sm font-bold text-(--text)">Selecionar Paciente</h2>
               <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted)" />
-                <input
+                <TextInput
                   placeholder="Buscar paciente por nome"
                   value={search}
                   disabled={!!preselectedId && !!selectedPatient}
@@ -382,7 +376,7 @@ export function PatientEvolutionPage() {
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   onKeyDown={handleKeyDown}
-                  className={cn(inputCls(), "pl-8", preselectedId && selectedPatient && "opacity-60 cursor-not-allowed")}
+                  className={cn("pl-8", preselectedId && selectedPatient && "opacity-60 cursor-not-allowed")}
                 />
                 {showSuggestions && filtered.length > 0 && (
                   <div ref={suggestionsRef} className="absolute z-10 w-full mt-1 bg-white border border-(--border-custom) rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -483,56 +477,52 @@ export function PatientEvolutionPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Como o paciente passou durante o intervalo? <span className="text-red-400">*</span></label>
-                  <textarea rows={3} placeholder="Descreva aqui" value={form.intervaloRelato} onChange={(e) => set('intervaloRelato', e.target.value)} onBlur={() => touch('intervaloRelato')} className={textareaCls('intervaloRelato')} />
+                  <TextArea rows={3} placeholder="Descreva aqui" value={form.intervaloRelato} onChange={(e) => set('intervaloRelato', e.target.value)} onBlur={() => touch('intervaloRelato')} invalid={isInvalid('intervaloRelato')} />
                   <ErrorMsg field="intervaloRelato" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Efeito colateral</label>
-                  <div className="relative">
-                    <select value={form.efeitoColateral} onChange={(e) => set('efeitoColateral', e.target.value)} className={cn(inputCls(), "appearance-none pr-8 cursor-pointer")}>
-                      <option value="Não">Não</option>
-                      <option value="Sim">Sim</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={form.efeitoColateral} onChange={(e) => set('efeitoColateral', e.target.value)}>
+                    <option value="Não">Não</option>
+                    <option value="Sim">Sim</option>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Necessidade de medicação</label>
-                  <div className="relative">
-                    <select value={form.necessidadeMedicacao} onChange={(e) => set('necessidadeMedicacao', e.target.value)} className={cn(inputCls(), "appearance-none pr-8 cursor-pointer")}>
-                      <option value="Não">Não</option>
-                      <option value="Sim">Sim</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={form.necessidadeMedicacao} onChange={(e) => set('necessidadeMedicacao', e.target.value)}>
+                    <option value="Não">Não</option>
+                    <option value="Sim">Sim</option>
+                  </Select>
                 </div>
                 <div>
                   <label className={cn("text-xs font-semibold mb-1.5 block", form.efeitoColateral === 'Sim' ? "text-(--text-muted)" : "text-(--text-muted)/40")}>Efeitos colaterais relatados {form.efeitoColateral === 'Sim' && <span className="text-red-400">*</span>}</label>
-                  <input
+                  <TextInput
                     placeholder="Insira aqui"
                     disabled={form.efeitoColateral !== 'Sim'}
                     value={form.efeitosRelatados}
                     onChange={(e) => set('efeitosRelatados', e.target.value)}
                     onBlur={() => touch('efeitosRelatados')}
-                    className={cn(form.efeitoColateral === 'Sim' ? inputCls('efeitosRelatados') : inputCls(), form.efeitoColateral !== 'Sim' && "opacity-40 cursor-not-allowed")}
+                    invalid={form.efeitoColateral === 'Sim' && isInvalid('efeitosRelatados')}
+                    className={cn(form.efeitoColateral !== 'Sim' && "opacity-40 cursor-not-allowed")}
                   />
                   {form.efeitoColateral === 'Sim' && <ErrorMsg field="efeitosRelatados" />}
                 </div>
                 <div>
                   <label className={cn("text-xs font-semibold mb-1.5 block", form.necessidadeMedicacao === 'Sim' ? "text-(--text-muted)" : "text-(--text-muted)/40")}>Medicações administradas {form.necessidadeMedicacao === 'Sim' && <span className="text-red-400">*</span>}</label>
-                  <input
+                  <TextInput
                     placeholder="Insira aqui"
                     disabled={form.necessidadeMedicacao !== 'Sim'}
                     value={form.medicacoes}
                     onChange={(e) => set('medicacoes', e.target.value)}
                     onBlur={() => touch('medicacoes')}
-                    className={cn(form.necessidadeMedicacao === 'Sim' ? inputCls('medicacoes') : inputCls(), form.necessidadeMedicacao !== 'Sim' && "opacity-40 cursor-not-allowed")}
+                    invalid={form.necessidadeMedicacao === 'Sim' && isInvalid('medicacoes')}
+                    className={cn(form.necessidadeMedicacao !== 'Sim' && "opacity-40 cursor-not-allowed")}
                   />
                   {form.necessidadeMedicacao === 'Sim' && <ErrorMsg field="medicacoes" />}
                 </div>
                 <div className="col-span-2">
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Notas do responsável</label>
-                  <textarea rows={2} placeholder="Insira aqui" value={form.notasPre} onChange={(e) => set('notasPre', e.target.value)} className={textareaCls()} />
+                  <TextArea rows={2} placeholder="Insira aqui" value={form.notasPre} onChange={(e) => set('notasPre', e.target.value)} />
                 </div>
               </div>
             </div>
@@ -544,71 +534,69 @@ export function PatientEvolutionPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data da aplicação</label>
-                  <input type="date" value={form.dataAplicacao} onChange={(e) => set('dataAplicacao', e.target.value)} onBlur={() => touch('dataAplicacao')} className={inputCls('dataAplicacao')} />
+                  <TextInput type="date" value={form.dataAplicacao} onChange={(e) => set('dataAplicacao', e.target.value)} onBlur={() => touch('dataAplicacao')} invalid={isInvalid('dataAplicacao')} />
                   <ErrorMsg field="dataAplicacao" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Hora início</label>
-                    <input type="time" value={form.horaInicio} onChange={(e) => set('horaInicio', e.target.value)} onBlur={() => touch('horaInicio')} className={inputCls('horaInicio')} />
+                    <TextInput type="time" value={form.horaInicio} onChange={(e) => set('horaInicio', e.target.value)} onBlur={() => touch('horaInicio')} invalid={isInvalid('horaInicio')} />
                     <ErrorMsg field="horaInicio" />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Hora fim</label>
-                    <input type="time" value={form.horaFim} onChange={(e) => set('horaFim', e.target.value)} onBlur={() => touch('horaFim')} className={inputCls('horaFim')} />
+                    <TextInput type="time" value={form.horaFim} onChange={(e) => set('horaFim', e.target.value)} onBlur={() => touch('horaFim')} invalid={isInvalid('horaFim')} />
                     <ErrorMsg field="horaFim" />
                   </div>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Volume aplicado</label>
                   <div className="relative">
-                    <input placeholder="Ex: 0.5" value={form.volumeAplicado} onChange={(e) => set('volumeAplicado', formatVolume(e.target.value))} onBlur={() => touch('volumeAplicado')} className={cn(inputCls('volumeAplicado'), "pr-10")} />
+                    <TextInput placeholder="Ex: 0.5" value={form.volumeAplicado} onChange={(e) => set('volumeAplicado', formatVolume(e.target.value))} onBlur={() => touch('volumeAplicado')} invalid={isInvalid('volumeAplicado')} className="pr-10" />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">ml</span>
                   </div>
                   <ErrorMsg field="volumeAplicado" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Concentração do extrato</label>
-                  <input placeholder="1:10" value={form.concentracao} onChange={(e) => set('concentracao', formatConcentration(e.target.value))} onBlur={() => touch('concentracao')} className={inputCls('concentracao')} />
+                  <TextInput placeholder="1:10" value={form.concentracao} onChange={(e) => set('concentracao', formatConcentration(e.target.value))} onBlur={() => touch('concentracao')} invalid={isInvalid('concentracao')} />
                   <ErrorMsg field="concentracao" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Intervalo próxima aplicação</label>
-                  <div className="relative">
-                    {(() => {
-                      const isCustom = form.intervaloProxima && !['7', '14', '21', '28'].includes(form.intervaloProxima)
-                      const selectValue = isCustom ? 'outro' : form.intervaloProxima
-                      return (
-                        <select
-                          value={selectValue}
-                          onChange={(e) => {
-                            const v = e.target.value
-                            set('intervaloProxima', v === 'outro' ? ' ' : v)
-                          }}
-                          onBlur={() => touch('intervaloProxima')}
-                          className={cn(inputCls('intervaloProxima'), "appearance-none pr-8 cursor-pointer")}
-                        >
-                          <option value="" disabled>Selecione</option>
-                          <option value="7">7 dias</option>
-                          <option value="14">14 dias</option>
-                          <option value="21">21 dias</option>
-                          <option value="28">28 dias</option>
-                          <option value="outro">Outro</option>
-                        </select>
-                      )
-                    })()}
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  {(() => {
+                    const isCustom = form.intervaloProxima && !['7', '14', '21', '28'].includes(form.intervaloProxima)
+                    const selectValue = isCustom ? 'outro' : form.intervaloProxima
+                    return (
+                      <Select
+                        value={selectValue}
+                        onChange={(e) => {
+                          const v = e.target.value
+                          set('intervaloProxima', v === 'outro' ? ' ' : v)
+                        }}
+                        onBlur={() => touch('intervaloProxima')}
+                        invalid={isInvalid('intervaloProxima')}
+                      >
+                        <option value="" disabled>Selecione</option>
+                        <option value="7">7 dias</option>
+                        <option value="14">14 dias</option>
+                        <option value="21">21 dias</option>
+                        <option value="28">28 dias</option>
+                        <option value="outro">Outro</option>
+                      </Select>
+                    )
+                  })()}
                   {(form.intervaloProxima === ' ' || (form.intervaloProxima && !['7','14','21','28'].includes(form.intervaloProxima))) && (
                     <div className="mt-2 space-y-2">
                       <div className="flex items-center gap-2">
-                        <input
+                        <TextInput
                           type="number"
                           min="1"
                           placeholder="Ex: 35"
                           value={form.intervaloProxima.trim()}
                           onChange={(e) => set('intervaloProxima', e.target.value.replace(/[^0-9]/g, ''))}
-                          className={cn(inputCls('intervaloProxima'), "flex-1")}
+                          invalid={isInvalid('intervaloProxima')}
+                          className="flex-1"
                         />
                         <span className="text-[0.65rem] text-(--text-muted) shrink-0">dias</span>
                       </div>
@@ -621,13 +609,14 @@ export function PatientEvolutionPage() {
                       })()}
                       <div>
                         <label className="text-[0.65rem] font-semibold text-(--text-muted) mb-1 block">Justificativa do intervalo personalizado <span className="text-red-400">*</span></label>
-                        <textarea
+                        <TextArea
                           rows={2}
                           placeholder="Descreva o motivo clínico para um intervalo fora do protocolo padrão"
                           value={form.intervaloJustificativa}
                           onChange={(e) => set('intervaloJustificativa', e.target.value)}
                           onBlur={() => touch('intervaloJustificativa')}
-                          className={cn("w-full rounded-lg border bg-gray-50/60 px-3 py-2 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all resize-none", errors.intervaloJustificativa && touched.intervaloJustificativa ? "border-red-400 bg-red-50/30" : "border-(--border-custom)")}
+                          invalid={isInvalid('intervaloJustificativa')}
+                          className="focus:ring-amber-400"
                         />
                         <ErrorMsg field="intervaloJustificativa" />
                       </div>
@@ -637,51 +626,42 @@ export function PatientEvolutionPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Responsável</label>
-                  <div className="relative">
-                    <select
-                      value={form.responsavel}
-                      onChange={(e) => set('responsavel', e.target.value)}
-                      onBlur={() => touch('responsavel')}
-                      className={cn(inputCls('responsavel'), "appearance-none pr-8 cursor-pointer")}
-                    >
-                      <option value="" disabled>Selecione o responsável pela aplicação</option>
-                      {RESPONSAVEIS_APLICACAO.map((r) => (
-                        <option key={r.name} value={r.name}>{r.name} — {r.role}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select
+                    value={form.responsavel}
+                    onChange={(e) => set('responsavel', e.target.value)}
+                    onBlur={() => touch('responsavel')}
+                    invalid={isInvalid('responsavel')}
+                  >
+                    <option value="" disabled>Selecione o responsável pela aplicação</option>
+                    {RESPONSAVEIS_APLICACAO.map((r) => (
+                      <option key={r.name} value={r.name}>{r.name} — {r.role}</option>
+                    ))}
+                  </Select>
                   <ErrorMsg field="responsavel" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Efeito colateral</label>
-                  <div className="relative">
-                    <select value={form.efeitoColateralPos} onChange={(e) => set('efeitoColateralPos', e.target.value)} className={cn(inputCls(), "appearance-none pr-8 cursor-pointer")}>
-                      <option value="Não">Não</option>
-                      <option value="Sim">Sim</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={form.efeitoColateralPos} onChange={(e) => set('efeitoColateralPos', e.target.value)}>
+                    <option value="Não">Não</option>
+                    <option value="Sim">Sim</option>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Necessidade de medicação</label>
-                  <div className="relative">
-                    <select value={form.necessidadeMedicacaoPos} onChange={(e) => set('necessidadeMedicacaoPos', e.target.value)} className={cn(inputCls(), "appearance-none pr-8 cursor-pointer")}>
-                      <option value="Não">Não</option>
-                      <option value="Sim">Sim</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={form.necessidadeMedicacaoPos} onChange={(e) => set('necessidadeMedicacaoPos', e.target.value)}>
+                    <option value="Não">Não</option>
+                    <option value="Sim">Sim</option>
+                  </Select>
                 </div>
                 {/* Conditional fields with fade-in */}
                 <div className={cn("transition-all duration-300 overflow-hidden", form.efeitoColateralPos === 'Sim' ? "max-h-24 opacity-100" : "max-h-0 opacity-0")}>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Efeitos colaterais relatados</label>
-                  <input placeholder="Insira aqui" value={form.efeitosRelatadosPos} onChange={(e) => set('efeitosRelatadosPos', e.target.value)} onBlur={() => touch('efeitosRelatadosPos')} className={inputCls('efeitosRelatadosPos')} />
+                  <TextInput placeholder="Insira aqui" value={form.efeitosRelatadosPos} onChange={(e) => set('efeitosRelatadosPos', e.target.value)} onBlur={() => touch('efeitosRelatadosPos')} invalid={isInvalid('efeitosRelatadosPos')} />
                   <ErrorMsg field="efeitosRelatadosPos" />
                 </div>
                 <div className={cn("transition-all duration-300 overflow-hidden", form.necessidadeMedicacaoPos === 'Sim' ? "max-h-24 opacity-100" : "max-h-0 opacity-0")}>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Medicações administradas</label>
-                  <input placeholder="Insira aqui" value={form.medicacoesPos} onChange={(e) => set('medicacoesPos', e.target.value)} onBlur={() => touch('medicacoesPos')} className={inputCls('medicacoesPos')} />
+                  <TextInput placeholder="Insira aqui" value={form.medicacoesPos} onChange={(e) => set('medicacoesPos', e.target.value)} onBlur={() => touch('medicacoesPos')} invalid={isInvalid('medicacoesPos')} />
                   <ErrorMsg field="medicacoesPos" />
                 </div>
                 {/* RF-013 — Ajuste após reação adversa com necessidade de medicação */}
@@ -735,7 +715,7 @@ export function PatientEvolutionPage() {
                 </div>
                 <div className="col-span-2">
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Notas do responsável</label>
-                  <textarea rows={2} placeholder="Insira aqui" value={form.notasPos} onChange={(e) => set('notasPos', e.target.value)} className={textareaCls()} />
+                  <TextArea rows={2} placeholder="Insira aqui" value={form.notasPos} onChange={(e) => set('notasPos', e.target.value)} />
                 </div>
               </div>
             </div>
@@ -822,43 +802,39 @@ export function PatientEvolutionPage() {
         {/* Footer */}
         <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
           {step > 0 && (
-            <button onClick={() => setStep((s) => (s - 1) as 0 | 1 | 2 | 3)} className="h-8 px-4 rounded-lg border-[1.5px] border-teal-400 text-teal-600 text-xs font-semibold hover:bg-teal-50 transition-all">
+            <Button tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 0 | 1 | 2 | 3)}>
               Voltar
-            </button>
+            </Button>
           )}
           {step < 3 ? (
-            <button
+            <Button
+              tone="brand"
+              variant="solid"
               onClick={handleContinue}
               disabled={step === 0 && (!selectedPatient || selectedPatient.status === 'inativo')}
-              className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
             >
               Continuar
-            </button>
+            </Button>
           ) : (
-            <button onClick={handleSaveEvolution} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all">
+            <Button tone="brand" variant="solid" onClick={handleSaveEvolution}>
               Salvar Evolução
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
-      {/* Cancel confirmation modal */}
-      {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowCancelModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-sm font-bold text-(--text) mb-2">Cancelar evolução?</h3>
-            <p className="text-xs text-(--text-muted) mb-5">Os dados preenchidos serão perdidos. Deseja realmente cancelar a evolução do paciente?</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowCancelModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all">
-                Continuar editando
-              </button>
-              <button onClick={() => navigate({ to: '/immunotherapies' })} className="h-8 px-4 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-all">
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        title="Cancelar evolução?"
+        size="sm"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowCancelModal(false)}>Continuar editando</Button>
+          <Button variant="danger" onClick={() => navigate({ to: '/immunotherapies' })}>Cancelar</Button>
+        </>}
+      >
+        <p className="text-xs text-(--text-muted)">Os dados preenchidos serão perdidos. Deseja realmente cancelar a evolução do paciente?</p>
+      </Modal>
     </div>
   )
 }

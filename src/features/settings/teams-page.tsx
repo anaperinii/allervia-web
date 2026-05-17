@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import {} from '@tanstack/react-router'
 import { ArrowLeft, Plus, X, Mail, Shield, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal, Clock, Trash2, Pencil, UserX, UserCheck, Send, Lock } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useCan } from '@/features/user/user-store'
+import { Modal, Button, IconButton, TextInput, MediaRow } from "@/shared/ui"
 
 interface TeamMember {
   id: string
@@ -45,7 +46,6 @@ const mockInvites: Invite[] = [
 ]
 
 export function TeamsPage() {
-  const navigate = useNavigate()
   const canManageTeam = useCan('manage_team')
   const [tab, setTab] = useState<'members' | 'invites'>('members')
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -76,7 +76,6 @@ export function TeamsPage() {
 
   const pendingCount = invites.filter((i) => i.status === 'pendente').length
 
-  const inputClass = "w-full h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all"
 
   if (!canManageTeam) {
     return (
@@ -87,9 +86,9 @@ export function TeamsPage() {
           </div>
           <h2 className="text-base font-bold text-(--text) mb-1.5">Acesso restrito</h2>
           <p className="text-xs text-(--text-muted) max-w-sm leading-relaxed mb-5">A gestão de equipe está disponível apenas para o perfil <span className="font-semibold text-(--text)">Administrador</span>. Troque de perfil pelo menu de usuário para acessar esta área.</p>
-          <button onClick={() => navigate({ to: '/settings' })} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer">
+          <Button variant="outline" to="/settings">
             Voltar para configurações
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -101,15 +100,12 @@ export function TeamsPage() {
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate({ to: '/settings' })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-              <ArrowLeft size={16} />
-            </button>
+            <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
             <h1 className="text-2xl font-bold text-(--text)">Equipes e Convites</h1>
           </div>
-          <button onClick={() => setShowInviteModal(true)} className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold shadow-[0_2px_12px_rgba(24,193,203,0.3)] hover:-translate-y-px transition-all cursor-pointer">
-            <Plus size={14} />
+          <Button tone="brand" variant="solid" prominent leftIcon={<Plus size={14} />} onClick={() => setShowInviteModal(true)} className="px-3">
             Convidar membro
-          </button>
+          </Button>
         </div>
 
         {/* Tabs */}
@@ -172,15 +168,15 @@ export function TeamsPage() {
                     return (
                       <tr key={member.id} className="border-b border-(--border-custom) last:border-0 hover:bg-gray-50/50 transition-colors cursor-pointer">
                         <td className="px-5 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-white text-[0.6rem] font-bold shrink-0">
-                              {member.avatar}
-                            </div>
-                            <div>
-                              <div className="text-xs font-semibold text-(--text)">{member.name}</div>
-                              <div className="text-[0.65rem] text-(--text-muted)">{member.email}</div>
-                            </div>
-                          </div>
+                          <MediaRow
+                            leading={
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-white text-[0.6rem] font-bold shrink-0">
+                                {member.avatar}
+                              </div>
+                            }
+                            title={member.name}
+                            description={member.email}
+                          />
                         </td>
                         <td className="px-5 py-3">
                           <span className={cn("text-[0.65rem] font-semibold px-2 py-0.5 rounded-full", role.bg, role.color)}>
@@ -348,169 +344,82 @@ export function TeamsPage() {
         )}
       </div>
 
-      {/* Invite modal */}
-      {showInviteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowInviteModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-(--border-custom)">
-              <h3 className="text-sm font-bold text-(--text)">Convidar novo membro</h3>
-              <button onClick={() => setShowInviteModal(false)} className="text-(--text-muted) hover:text-(--text) transition-colors">
-                <X size={16} />
-              </button>
-            </div>
-            <div className="px-5 py-4 space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">E-mail do convidado</label>
-                <input
-                  type="email"
-                  placeholder="nome@clinica.com"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Perfil de acesso</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(roleLabels).map(([key, val]) => (
-                    <button
-                      key={key}
-                      onClick={() => setInviteRole(key)}
-                      className={cn(
-                        "h-9 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5",
-                        inviteRole === key
-                          ? "border-brand bg-brand-50 text-brand-dark"
-                          : "border-(--border-custom) text-(--text-muted) hover:border-brand/50"
-                      )}
-                    >
-                      <Shield size={12} />
-                      {val.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-brand-50 border border-brand/20 rounded-lg p-3">
-                <div className="text-[0.65rem] font-semibold text-brand-dark mb-1">Sobre este perfil</div>
-                <div className="text-[0.6rem] text-brand-dark/80 leading-relaxed">
-                  {inviteRole === 'admin' && 'Acesso total ao sistema: gerenciar equipes, configurações, relatórios e todos os dados clínicos.'}
-                  {inviteRole === 'medico' && 'Prescrever imunoterapias, acompanhar pacientes, ajustar protocolos e gerar relatórios clínicos.'}
-                  {inviteRole === 'enfermeiro' && 'Registrar aplicações, evoluir pacientes, monitorar reações adversas e gerenciar agendamentos.'}
-                  {inviteRole === 'tecnico' && 'Registrar aplicações sob supervisão, consultar prontuários e auxiliar no controle de estoque.'}
-                </div>
-              </div>
-            </div>
-            <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
-              <button onClick={() => setShowInviteModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-                Cancelar
-              </button>
+      <Modal
+        open={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        title="Convidar novo membro"
+        size="md"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowInviteModal(false)}>Cancelar</Button>
+          <Button variant="primary" disabled={!inviteEmail} onClick={() => setShowInviteModal(false)}>Enviar convite</Button>
+        </>}
+      >
+        <div>
+          <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">E-mail do convidado</label>
+          <TextInput
+            type="email"
+            placeholder="nome@clinica.com"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Perfil de acesso</label>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(roleLabels).map(([key, val]) => (
               <button
-                onClick={() => setShowInviteModal(false)}
-                disabled={!inviteEmail}
-                className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(24,193,203,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                key={key}
+                onClick={() => setInviteRole(key)}
+                className={cn(
+                  "h-9 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5",
+                  inviteRole === key
+                    ? "border-brand bg-brand-50 text-brand-dark"
+                    : "border-(--border-custom) text-(--text-muted) hover:border-brand/50"
+                )}
               >
-                Enviar convite
+                <Shield size={12} />
+                {val.label}
               </button>
-            </div>
+            ))}
           </div>
         </div>
-      )}
-
-      {/* Confirmation modal */}
-      {confirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setConfirmModal(null)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            {confirmModal.type === 'remove-member' && (
-              <>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 shrink-0">
-                    <Trash2 size={16} className="text-red-500" />
-                  </div>
-                  <h3 className="text-sm font-bold text-(--text)">Remover membro</h3>
-                </div>
-                <p className="text-xs text-(--text-muted) mb-5">
-                  Tem certeza que deseja remover <span className="font-semibold text-(--text)">{confirmModal.name}</span> da equipe? Esta ação não pode ser desfeita.
-                </p>
-                <div className="flex justify-end gap-2">
-                  <button onClick={() => setConfirmModal(null)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-                  <button onClick={() => { setMembers((m) => m.filter((x) => x.id !== confirmModal.id)); setConfirmModal(null) }} className="h-8 px-4 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-all cursor-pointer">Remover</button>
-                </div>
-              </>
-            )}
-
-            {confirmModal.type === 'deactivate' && (
-              <>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 shrink-0">
-                    <UserX size={16} className="text-amber-600" />
-                  </div>
-                  <h3 className="text-sm font-bold text-(--text)">Desativar membro</h3>
-                </div>
-                <p className="text-xs text-(--text-muted) mb-5">
-                  <span className="font-semibold text-(--text)">{confirmModal.name}</span> perderá o acesso ao sistema até ser reativado. Os dados não serão removidos.
-                </p>
-                <div className="flex justify-end gap-2">
-                  <button onClick={() => setConfirmModal(null)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-                  <button onClick={() => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'inativo' as const } : x)); setConfirmModal(null) }} className="h-8 px-4 rounded-lg bg-amber-500 text-white text-xs font-semibold hover:bg-amber-600 transition-all cursor-pointer">Desativar</button>
-                </div>
-              </>
-            )}
-
-            {confirmModal.type === 'activate' && (
-              <>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-50 shrink-0">
-                    <UserCheck size={16} className="text-green-600" />
-                  </div>
-                  <h3 className="text-sm font-bold text-(--text)">Reativar membro</h3>
-                </div>
-                <p className="text-xs text-(--text-muted) mb-5">
-                  <span className="font-semibold text-(--text)">{confirmModal.name}</span> terá o acesso ao sistema restaurado com as mesmas permissões anteriores.
-                </p>
-                <div className="flex justify-end gap-2">
-                  <button onClick={() => setConfirmModal(null)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-                  <button onClick={() => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'ativo' as const } : x)); setConfirmModal(null) }} className="h-8 px-4 rounded-lg bg-green-500 text-white text-xs font-semibold hover:bg-green-600 transition-all cursor-pointer">Reativar</button>
-                </div>
-              </>
-            )}
-
-            {confirmModal.type === 'resend-invite' && (
-              <>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                    <Send size={16} className="text-brand" />
-                  </div>
-                  <h3 className="text-sm font-bold text-(--text)">Reenviar convite</h3>
-                </div>
-                <p className="text-xs text-(--text-muted) mb-5">
-                  Um novo e-mail de convite será enviado para <span className="font-semibold text-(--text)">{confirmModal.name}</span>. O convite anterior será invalidado.
-                </p>
-                <div className="flex justify-end gap-2">
-                  <button onClick={() => setConfirmModal(null)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-                  <button onClick={() => setConfirmModal(null)} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px transition-all cursor-pointer">Reenviar</button>
-                </div>
-              </>
-            )}
-
-            {confirmModal.type === 'delete-invite' && (
-              <>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 shrink-0">
-                    <Trash2 size={16} className="text-red-500" />
-                  </div>
-                  <h3 className="text-sm font-bold text-(--text)">Excluir convite</h3>
-                </div>
-                <p className="text-xs text-(--text-muted) mb-5">
-                  O convite para <span className="font-semibold text-(--text)">{confirmModal.name}</span> será excluído permanentemente e não poderá mais ser utilizado.
-                </p>
-                <div className="flex justify-end gap-2">
-                  <button onClick={() => setConfirmModal(null)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-                  <button onClick={() => { setInvites((inv) => inv.filter((x) => x.id !== confirmModal.id)); setConfirmModal(null) }} className="h-8 px-4 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-all cursor-pointer">Excluir</button>
-                </div>
-              </>
-            )}
+        <div className="bg-brand-50 border border-brand/20 rounded-lg p-3">
+          <div className="text-[0.65rem] font-semibold text-brand-dark mb-1">Sobre este perfil</div>
+          <div className="text-[0.6rem] text-brand-dark/80 leading-relaxed">
+            {inviteRole === 'admin' && 'Acesso total ao sistema: gerenciar equipes, configurações, relatórios e todos os dados clínicos.'}
+            {inviteRole === 'medico' && 'Prescrever imunoterapias, acompanhar pacientes, ajustar protocolos e gerar relatórios clínicos.'}
+            {inviteRole === 'enfermeiro' && 'Registrar aplicações, evoluir pacientes, monitorar reações adversas e gerenciar agendamentos.'}
+            {inviteRole === 'tecnico' && 'Registrar aplicações sob supervisão, consultar prontuários e auxiliar no controle de estoque.'}
           </div>
         </div>
-      )}
+      </Modal>
+
+      {confirmModal && (() => {
+        const cfg = {
+          'remove-member': { icon: Trash2, tone: 'danger' as const, title: 'Remover membro', body: <>Tem certeza que deseja remover <span className="font-semibold text-(--text)">{confirmModal.name}</span> da equipe? Esta ação não pode ser desfeita.</>, btn: 'Remover', variant: 'danger' as const, onConfirm: () => { setMembers((m) => m.filter((x) => x.id !== confirmModal.id)); setConfirmModal(null) } },
+          'deactivate': { icon: UserX, tone: 'warning' as const, title: 'Desativar membro', body: <><span className="font-semibold text-(--text)">{confirmModal.name}</span> perderá o acesso ao sistema até ser reativado. Os dados não serão removidos.</>, btn: 'Desativar', variant: 'warning' as const, onConfirm: () => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'inativo' as const } : x)); setConfirmModal(null) } },
+          'activate': { icon: UserCheck, tone: 'success' as const, title: 'Reativar membro', body: <><span className="font-semibold text-(--text)">{confirmModal.name}</span> terá o acesso ao sistema restaurado com as mesmas permissões anteriores.</>, btn: 'Reativar', variant: 'success' as const, onConfirm: () => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'ativo' as const } : x)); setConfirmModal(null) } },
+          'resend-invite': { icon: Send, tone: 'brand' as const, title: 'Reenviar convite', body: <>Um novo e-mail de convite será enviado para <span className="font-semibold text-(--text)">{confirmModal.name}</span>. O convite anterior será invalidado.</>, btn: 'Reenviar', variant: 'primary' as const, onConfirm: () => setConfirmModal(null) },
+          'delete-invite': { icon: Trash2, tone: 'danger' as const, title: 'Excluir convite', body: <>O convite para <span className="font-semibold text-(--text)">{confirmModal.name}</span> será excluído permanentemente e não poderá mais ser utilizado.</>, btn: 'Excluir', variant: 'danger' as const, onConfirm: () => { setInvites((inv) => inv.filter((x) => x.id !== confirmModal.id)); setConfirmModal(null) } },
+        }[confirmModal.type]
+        const Icon = cfg.icon
+        return (
+          <Modal
+            open={true}
+            onClose={() => setConfirmModal(null)}
+            size="sm"
+            title={cfg.title}
+            icon={<Icon size={16} />}
+            tone={cfg.tone}
+            footer={<>
+              <Button variant="outline" onClick={() => setConfirmModal(null)}>Cancelar</Button>
+              <Button variant={cfg.variant} onClick={cfg.onConfirm}>{cfg.btn}</Button>
+            </>}
+          >
+            <p className="text-xs text-(--text-muted)">{cfg.body}</p>
+          </Modal>
+        )
+      })()}
     </div>
   )
 }

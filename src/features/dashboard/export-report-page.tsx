@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, FileText, FileSpreadsheet, FileDown, ChevronDown, Check, Settings, ShieldCheck, EyeOff } from 'lucide-react'
+import { ArrowLeft, FileText, FileSpreadsheet, FileDown, Check, Settings, ShieldCheck, EyeOff } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer } from 'recharts'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
 import { useCan, useDoctorFilter } from '@/features/user/user-store'
+import { Modal, Button, IconButton, TextInput, Select } from "@/shared/ui"
 
 const formats = [
   { id: 'pdf', label: 'PDF', icon: FileText },
@@ -124,16 +125,15 @@ export function ExportReportPage() {
     )
   }
 
-  const inputClass = "w-full h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all"
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <button onClick={() => setShowCancelModal(true)} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-red-50 hover:text-red-500 transition-all">
+          <IconButton aria-label="Voltar" variant="danger" onClick={() => setShowCancelModal(true)}>
             <ArrowLeft size={18} />
-          </button>
+          </IconButton>
           <h1 className="text-2xl font-bold text-(--text)">Exportar Relatório</h1>
         </div>
 
@@ -164,7 +164,7 @@ export function ExportReportPage() {
             {/* File name */}
             <div>
               <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nome do arquivo</label>
-              <input value={fileName} onChange={(e) => setFileName(e.target.value)} className={inputClass} />
+              <TextInput value={fileName} onChange={(e) => setFileName(e.target.value)} />
             </div>
 
             {/* Format */}
@@ -195,38 +195,31 @@ export function ExportReportPage() {
             {/* Interval */}
             <div>
               <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Período</label>
-              <div className="relative mb-2">
-                <select value={interval} onChange={(e) => setInterval(e.target.value)} className={cn(inputClass, "appearance-none pr-8 cursor-pointer")}>
+              <div className="mb-2">
+                <Select value={interval} onChange={(e) => setInterval(e.target.value)}>
                   {intervals.map((i) => <option key={i}>{i}</option>)}
-                </select>
-                <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
+                </Select>
               </div>
               {interval === 'Personalizado' ? (
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-[0.6rem] text-(--text-muted) mb-1 block">Data início</label>
-                    <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} className={inputClass} />
+                    <TextInput type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
                   </div>
                   <div>
                     <label className="text-[0.6rem] text-(--text-muted) mb-1 block">Data fim</label>
-                    <input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} className={inputClass} />
+                    <TextInput type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
                   </div>
                 </div>
               ) : interval !== 'Personalizado' && (
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="relative">
-                    <select value={mesFilter} onChange={(e) => setMesFilter(e.target.value)} className={cn(inputClass, "appearance-none pr-7 cursor-pointer")}>
-                      <option value="Todos">Mês</option>
-                      {['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].map((m) => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                    <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
-                  <div className="relative">
-                    <select value={anoFilter} onChange={(e) => setAnoFilter(e.target.value)} className={cn(inputClass, "appearance-none pr-7 cursor-pointer")}>
-                      {['2024','2025','2026'].map((a) => <option key={a} value={a}>{a}</option>)}
-                    </select>
-                    <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={mesFilter} onChange={(e) => setMesFilter(e.target.value)}>
+                    <option value="Todos">Mês</option>
+                    {['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].map((m) => <option key={m} value={m}>{m}</option>)}
+                  </Select>
+                  <Select value={anoFilter} onChange={(e) => setAnoFilter(e.target.value)}>
+                    {['2024','2025','2026'].map((a) => <option key={a} value={a}>{a}</option>)}
+                  </Select>
                 </div>
               )}
             </div>
@@ -534,67 +527,52 @@ export function ExportReportPage() {
         </div>
       </div>
 
-      {/* Export confirmation modal */}
-      {showExportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowExportModal(false)}>
-          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-center mb-3">
-              <div className="h-11 w-11 rounded-full bg-brand/10 flex items-center justify-center">
-                <ShieldCheck size={20} className="text-brand" />
-              </div>
-            </div>
-            <h3 className="text-sm font-bold text-(--text) mb-1.5 text-center">Confirmar exportação</h3>
-            <p className="text-[0.7rem] text-(--text-muted) mb-4 text-center leading-relaxed">
-              Ao confirmar, um registro desta exportação será salvo no log de auditoria do sistema, incluindo data, hora, responsável e justificativa informada.
-            </p>
-
-            <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5 mb-4 space-y-1.5">
-              <div className="flex justify-between">
-                <span className="text-[0.6rem] text-(--text-muted)">Formato</span>
-                <span className="text-[0.6rem] font-semibold text-(--text)">{format.toUpperCase()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[0.6rem] text-(--text-muted)">Dados anonimizados</span>
-                <span className={cn("text-[0.6rem] font-semibold", anonimizar ? "text-brand" : "text-amber-600")}>{anonimizar ? 'Sim' : 'Não'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[0.6rem] text-(--text-muted)">Justificativa</span>
-                <span className="text-[0.6rem] font-semibold text-(--text) text-right max-w-[60%] truncate">{justificativa}</span>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button onClick={() => setShowExportModal(false)} className="flex-1 h-8 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all">
-                Cancelar
-              </button>
-              <button
-                onClick={() => { setShowExportModal(false); navigate({ to: '/dashboard' }) }}
-                className="flex-1 h-8 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all"
-              >
-                Confirmar e exportar
-              </button>
-            </div>
+      <Modal
+        open={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        title="Confirmar exportação"
+        size="sm"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowExportModal(false)}>Cancelar</Button>
+          <Button variant="primary" onClick={() => { setShowExportModal(false); navigate({ to: '/dashboard' }) }}>Confirmar e exportar</Button>
+        </>}
+      >
+        <div className="flex justify-center">
+          <div className="h-11 w-11 rounded-full bg-brand/10 flex items-center justify-center">
+            <ShieldCheck size={20} className="text-brand" />
           </div>
         </div>
-      )}
-
-      {/* Cancel modal */}
-      {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowCancelModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-sm font-bold text-(--text) mb-2">Cancelar exportação?</h3>
-            <p className="text-xs text-(--text-muted) mb-5">As configurações do relatório serão perdidas.</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowCancelModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all">
-                Continuar editando
-              </button>
-              <button onClick={() => navigate({ to: '/dashboard' })} className="h-8 px-4 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-all">
-                Cancelar
-              </button>
-            </div>
+        <p className="text-[0.7rem] text-(--text-muted) text-center leading-relaxed">
+          Ao confirmar, um registro desta exportação será salvo no log de auditoria do sistema, incluindo data, hora, responsável e justificativa informada.
+        </p>
+        <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5 space-y-1.5">
+          <div className="flex justify-between">
+            <span className="text-[0.6rem] text-(--text-muted)">Formato</span>
+            <span className="text-[0.6rem] font-semibold text-(--text)">{format.toUpperCase()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[0.6rem] text-(--text-muted)">Dados anonimizados</span>
+            <span className={cn("text-[0.6rem] font-semibold", anonimizar ? "text-brand" : "text-amber-600")}>{anonimizar ? 'Sim' : 'Não'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[0.6rem] text-(--text-muted)">Justificativa</span>
+            <span className="text-[0.6rem] font-semibold text-(--text) text-right max-w-[60%] truncate">{justificativa}</span>
           </div>
         </div>
-      )}
+      </Modal>
+
+      <Modal
+        open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        title="Cancelar exportação?"
+        size="sm"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowCancelModal(false)}>Continuar editando</Button>
+          <Button variant="danger" onClick={() => navigate({ to: '/dashboard' })}>Cancelar</Button>
+        </>}
+      >
+        <p className="text-xs text-(--text-muted)">As configurações do relatório serão perdidas.</p>
+      </Modal>
     </div>
   )
 }

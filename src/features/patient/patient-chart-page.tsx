@@ -8,7 +8,7 @@ import { META_DOSE, calculateNextDose } from '@/features/immunotherapy/scit-prot
 import { addDays, format, differenceInDays, parse } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/utils'
-import { Toast, Modal, Button, FieldLabel, TextInput, TextArea, Select } from '@/shared/ui'
+import { Toast, Modal, Button, FieldLabel, TextInput, TextArea, Select, SegmentedControl } from '@/shared/ui'
 import { useForm } from '@/shared/hooks/useForm'
 import {
   Clock,
@@ -446,21 +446,27 @@ export function PatientChartPage() {
                 )
               ) : (
                 canEvolve && (
-                  <button
-                    onClick={() => navigate({ to: '/patient-evolution', search: { patientId: selectedPatient.id } })}
-                    className="flex-1 h-8 rounded-lg text-xs font-semibold transition-all bg-linear-to-br from-brand to-teal-400 text-white cursor-pointer hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)]"
+                  <Button
+                    tone="brand"
+                    variant="solid"
+                    fullWidth
+                    to="/patient-evolution"
+                    search={{ patientId: selectedPatient.id }}
                   >
                     Evoluir Paciente
-                  </button>
+                  </Button>
                 )
               )}
               {canEmitReport && (
-                <button
-                  onClick={() => navigate({ to: '/patient-report', search: { patientId: selectedPatient.id } })}
-                  className="flex-1 h-8 rounded-lg border-[1.5px] border-(--border-custom) text-xs font-semibold text-(--text-muted) cursor-pointer hover:border-brand hover:text-brand hover:bg-teal-50 hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.12)] transition-all"
+                <Button
+                  tone="brand"
+                  variant="outline"
+                  fullWidth
+                  to="/patient-report"
+                  search={{ patientId: selectedPatient.id }}
                 >
                   Emitir Relatório
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -591,16 +597,19 @@ export function PatientChartPage() {
                     </div>
                     )}
                     {canInactivate && selectedPatient.status === 'ativo' && (
-                      <button
+                      <Button
+                        tone="warning"
+                        variant="outline"
+                        size="sm"
+                        fullWidth
+                        leftIcon={<PowerOff size={11} />}
                         onClick={() => {
                           inactivateForm.reset()
                           setShowInactivateModal(true)
                         }}
-                        className="w-full h-7 rounded-lg text-[0.65rem] font-semibold transition-all flex items-center justify-center gap-1.5 border-[1.5px] border-yellow-300 text-yellow-700 hover:bg-yellow-50 hover:border-yellow-400 cursor-pointer"
                       >
-                        <PowerOff size={11} />
                         Inativar imunoterapia
-                      </button>
+                      </Button>
                     )}
                     {inactivationCount > 0 && (
                       <button
@@ -825,16 +834,16 @@ export function PatientChartPage() {
                     </button>
                   )}
                 </div>
-                <div className="flex h-6.5 rounded-lg border border-(--border-custom) overflow-hidden shrink-0">
-                  <button onClick={() => setViewMode('timeline')} className={cn("px-2 flex items-center gap-1 text-[0.55rem] font-semibold transition-all", viewMode === 'timeline' ? "bg-brand text-white" : "text-(--text-muted) hover:bg-gray-50")}>
-                    <List size={10} />
-                    Lista
-                  </button>
-                  <button onClick={() => setViewMode('calendar')} className={cn("px-2 flex items-center gap-1 text-[0.55rem] font-semibold transition-all", viewMode === 'calendar' ? "bg-brand text-white" : "text-(--text-muted) hover:bg-gray-50")}>
-                    <CalendarDays size={10} />
-                    Calendário
-                  </button>
-                </div>
+                <SegmentedControl
+                  value={viewMode}
+                  onChange={setViewMode}
+                  size="xs"
+                  options={[
+                    { value: 'timeline', label: 'Lista', icon: <List size={10} /> },
+                    { value: 'calendar', label: 'Calendário', icon: <CalendarDays size={10} /> },
+                  ]}
+                  aria-label="Modo de visualização das aplicações"
+                />
                 </div>
               )}
             </div>

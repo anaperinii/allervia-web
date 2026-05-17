@@ -3,9 +3,10 @@ import { useNavigate } from '@tanstack/react-router'
 import { usePatientStore } from '@/features/patient/patient-store'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
 import { useCan, useDoctorFilter } from '@/features/user/user-store'
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, X, ExternalLink, CheckCircle, Calendar, Phone, Clock, Syringe, User } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, ExternalLink, CheckCircle, Calendar, Phone, Clock, Syringe, User } from 'lucide-react'
 import type { Application } from '@/features/patient/patient-store'
 import { cn } from '@/shared/lib/utils'
+import { Modal, Button, Toast, SegmentedControl, TextInput, Select } from '@/shared/ui'
 import {
   format,
   startOfWeek,
@@ -116,7 +117,6 @@ export function AppointmentsPage() {
 
   const selectedDayApps = useMemo(() => getAppsForDate(selectedDate), [selectedDate, scheduled])
 
-  const inputClass = 'w-full h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all'
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
@@ -125,10 +125,17 @@ export function AppointmentsPage() {
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-(--text)">Agendamentos</h1>
           {canNewAppointment && (
-            <button onClick={() => setShowAddModal(true)} className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all">
-              <Plus size={14} />
+            <Button
+              tone="brand"
+              variant="solid"
+              prominent
+              size="md"
+              leftIcon={<Plus size={13} />}
+              onClick={() => setShowAddModal(true)}
+              className="px-3"
+            >
               Novo Agendamento
-            </button>
+            </Button>
           )}
         </div>
 
@@ -146,13 +153,16 @@ export function AppointmentsPage() {
             </button>
             <span className="text-sm font-semibold text-(--text) ml-1">{monthLabel}</span>
           </div>
-          <div className="flex items-center gap-1">
-            {(['week', 'month'] as const).map((mode) => (
-              <button key={mode} onClick={() => setViewMode(mode)} className={cn('h-7 px-3 rounded-md text-xs font-semibold transition-all', viewMode === mode ? 'bg-linear-to-br from-brand to-teal-400 text-white' : 'border border-(--border-custom) text-(--text-muted) hover:border-brand hover:text-brand')}>
-                {mode === 'week' ? 'Semana' : 'Mês'}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            value={viewMode}
+            onChange={setViewMode}
+            size="sm"
+            options={[
+              { value: 'week', label: 'Semana' },
+              { value: 'month', label: 'Mês' },
+            ]}
+            aria-label="Modo de visualização"
+          />
         </div>
 
         {/* Calendar grid */}
@@ -281,20 +291,24 @@ export function AppointmentsPage() {
         )}
       </div>
 
-      {/* Appointment detail modal */}
-      {selectedApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setSelectedApp(null)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-(--border-custom)">
-              <h3 className="text-sm font-bold text-(--text)">Detalhes do Agendamento</h3>
-              <button onClick={() => setSelectedApp(null)} className="text-(--text-muted) hover:text-(--text) transition-colors">
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="px-5 py-4 space-y-4">
-              {/* Patient info */}
+      <Modal
+        open={!!selectedApp}
+        onClose={() => setSelectedApp(null)}
+        title="Detalhes do Agendamento"
+        size="md"
+        footer={selectedApp ? <>
+          <button
+            onClick={() => sendReminder(getPatientPhone(), getPatientFullName(selectedApp.patientId).split(' ')[0], selectedApp.data, selectedApp.horaInicio)}
+            className="text-[0.65rem] font-medium text-[#25D366] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none mr-auto"
+          >
+            <Phone size={11} />
+            Enviar lembrete via WhatsApp
+          </button>
+          <Button variant="outline" onClick={() => setSelectedApp(null)}>Fechar</Button>
+        </> : null}
+      >
+        {selectedApp && <>
+          {/* Patient info */}
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-sm font-bold text-white shrink-0">
                   {getPatientFullName(selectedApp.patientId).split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
@@ -366,73 +380,45 @@ export function AppointmentsPage() {
                 </div>
               </div>
 
-              {/* Google Calendar sync status */}
-              {googleConnected && (
-                <div className="flex items-center gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2">
-                  <Calendar size={13} className="text-brand shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-[0.6rem] text-brand font-medium">Sincronizado com Google Agenda</p>
-                    <p className="text-[0.5rem] text-brand/60">Este evento está visível na agenda do profissional responsável.</p>
-                  </div>
-                  <a href="#" className="text-[0.55rem] text-brand font-semibold hover:underline no-underline flex items-center gap-0.5 shrink-0">
-                    <ExternalLink size={9} />
-                    Abrir
-                  </a>
-                </div>
-              )}
+          {/* Google Calendar sync status */}
+          {googleConnected && (
+            <div className="flex items-center gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2">
+              <Calendar size={13} className="text-brand shrink-0" />
+              <div className="flex-1">
+                <p className="text-[0.6rem] text-brand font-medium">Sincronizado com Google Agenda</p>
+                <p className="text-[0.5rem] text-brand/60">Este evento está visível na agenda do profissional responsável.</p>
+              </div>
+              <a href="#" className="text-[0.55rem] text-brand font-semibold hover:underline no-underline flex items-center gap-0.5 shrink-0">
+                <ExternalLink size={9} />
+                Abrir
+              </a>
             </div>
+          )}
+        </>}
+      </Modal>
 
-            {/* Footer actions */}
-            <div className="border-t border-(--border-custom) px-5 py-3 flex items-center justify-between">
-              <button
-                onClick={() => sendReminder(getPatientPhone(), getPatientFullName(selectedApp.patientId).split(' ')[0], selectedApp.data, selectedApp.horaInicio)}
-                className="text-[0.65rem] font-medium text-[#25D366] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none"
-              >
-                <Phone size={11} />
-                Enviar lembrete via WhatsApp
-              </button>
-              <button onClick={() => setSelectedApp(null)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all">
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Toast
+        open={showToast}
+        onClose={() => setShowToast(false)}
+        variant="success"
+        icon={<CheckCircle size={16} />}
+        title="Agendamento criado com sucesso!"
+        description={googleConnected
+          ? 'O agendamento foi registrado e sincronizado automaticamente com o Google Agenda.'
+          : 'O agendamento foi registrado. O paciente será notificado conforme as configurações definidas.'}
+      />
 
-      {/* Success toast */}
-      {showToast && (
-        <div className="fixed top-6 right-6 z-50" style={{ animation: 'slide-up-fade 0.3s ease-out' }}>
-          <div className="flex items-start gap-3 bg-white border border-emerald-200 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] p-4 w-95">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 shrink-0 mt-0.5">
-              <CheckCircle size={16} className="text-emerald-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-(--text)">Agendamento criado com sucesso!</p>
-              <p className="text-xs text-(--text-muted) mt-1">
-                {googleConnected
-                  ? 'O agendamento foi registrado e sincronizado automaticamente com o Google Agenda.'
-                  : 'O agendamento foi registrado. O paciente será notificado conforme as configurações definidas.'}
-              </p>
-            </div>
-            <button onClick={() => setShowToast(false)} className="h-6 w-6 flex items-center justify-center rounded-md text-(--text-muted) hover:bg-gray-100 transition-all shrink-0">
-              <X size={14} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Add appointment modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowAddModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-(--border-custom)">
-              <h3 className="text-sm font-bold text-(--text)">Novo Agendamento</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-(--text-muted) hover:text-(--text) transition-colors">
-                <X size={16} />
-              </button>
-            </div>
-            <div className="px-5 py-4 space-y-3.5">
-              {googleConnected && (
+      <Modal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Novo Agendamento"
+        size="md"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowAddModal(false)}>Cancelar</Button>
+          <Button variant="primary" onClick={() => { setShowAddModal(false); setShowToast(true); setTimeout(() => setShowToast(false), 6000) }}>Agendar</Button>
+        </>}
+      >
+        {googleConnected && (
                 <div className="flex items-center gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2">
                   <Calendar size={13} className="text-brand shrink-0" />
                   <p className="text-[0.6rem] text-brand leading-relaxed">
@@ -442,75 +428,65 @@ export function AppointmentsPage() {
               )}
               <div>
                 <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Paciente</label>
-                <div className="relative">
-                  <select className={cn(inputClass, 'appearance-none pr-8 cursor-pointer')}>
-                    <option value="" disabled selected>Selecione o paciente</option>
-                    {immunotherapies.filter((i) => i.status === 'ativo').map((i) => (
-                      <option key={i.id} value={i.id}>{i.nome}</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                </div>
+                <Select defaultValue="">
+                  <option value="" disabled>Selecione o paciente</option>
+                  {immunotherapies.filter((i) => i.status === 'ativo').map((i) => (
+                    <option key={i.id} value={i.id}>{i.nome}</option>
+                  ))}
+                </Select>
               </div>
               <div>
                 <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data</label>
-                <input type="date" className={inputClass} />
+                <TextInput type="date" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Hora início</label>
-                  <input type="time" className={inputClass} />
+                  <TextInput type="time" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Hora fim</label>
-                  <input type="time" className={inputClass} />
+                  <TextInput type="time" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Dose / Concentração</label>
-                  <div className="relative">
-                    <select className={cn(inputClass, 'appearance-none pr-8 cursor-pointer')}>
-                      <option value="" disabled selected>Selecione</option>
-                      {['1:10.000 - 0,1ml','1:10.000 - 0,2ml','1:10.000 - 0,4ml','1:10.000 - 0,8ml','1:1.000 - 0,1ml','1:1.000 - 0,2ml','1:1.000 - 0,4ml','1:1.000 - 0,8ml','1:100 - 0,1ml','1:100 - 0,2ml','1:100 - 0,4ml','1:100 - 0,8ml','1:10 - 0,1ml','1:10 - 0,2ml','1:10 - 0,4ml','1:10 - 0,5ml'].map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select defaultValue="">
+                    <option value="" disabled>Selecione</option>
+                    {['1:10.000 - 0,1ml','1:10.000 - 0,2ml','1:10.000 - 0,4ml','1:10.000 - 0,8ml','1:1.000 - 0,1ml','1:1.000 - 0,2ml','1:1.000 - 0,4ml','1:1.000 - 0,8ml','1:100 - 0,1ml','1:100 - 0,2ml','1:100 - 0,4ml','1:100 - 0,8ml','1:10 - 0,1ml','1:10 - 0,2ml','1:10 - 0,4ml','1:10 - 0,5ml'].map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </Select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Intervalo</label>
-                  <div className="relative">
-                    {(() => {
-                      const isCustom = newApptInterval && !['7', '14', '21', '28'].includes(newApptInterval)
-                      const selectValue = isCustom ? 'outro' : newApptInterval
-                      return (
-                        <select
-                          value={selectValue}
-                          onChange={(e) => setNewApptInterval(e.target.value === 'outro' ? ' ' : e.target.value)}
-                          className={cn(inputClass, 'appearance-none pr-8 cursor-pointer')}
-                        >
-                          <option value="7">7 dias</option>
-                          <option value="14">14 dias</option>
-                          <option value="21">21 dias</option>
-                          <option value="28">28 dias</option>
-                          <option value="outro">Outro</option>
-                        </select>
-                      )
-                    })()}
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  {(() => {
+                    const isCustom = newApptInterval && !['7', '14', '21', '28'].includes(newApptInterval)
+                    const selectValue = isCustom ? 'outro' : newApptInterval
+                    return (
+                      <Select
+                        value={selectValue}
+                        onChange={(e) => setNewApptInterval(e.target.value === 'outro' ? ' ' : e.target.value)}
+                      >
+                        <option value="7">7 dias</option>
+                        <option value="14">14 dias</option>
+                        <option value="21">21 dias</option>
+                        <option value="28">28 dias</option>
+                        <option value="outro">Outro</option>
+                      </Select>
+                    )
+                  })()}
                   {(newApptInterval === ' ' || (newApptInterval && !['7','14','21','28'].includes(newApptInterval))) && (
                     <div className="mt-2 space-y-2">
                       <div className="flex items-center gap-2">
-                        <input
+                        <TextInput
                           type="number"
                           min="1"
                           placeholder="Ex: 35"
                           value={newApptInterval.trim()}
                           onChange={(e) => setNewApptInterval(e.target.value.replace(/[^0-9]/g, ''))}
-                          className={cn(inputClass, 'flex-1')}
+                          className="flex-1"
                         />
                         <span className="text-[0.65rem] text-(--text-muted) shrink-0">dias</span>
                       </div>
@@ -535,22 +511,11 @@ export function AppointmentsPage() {
                   )}
                 </div>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Observações</label>
-                <textarea rows={2} placeholder="Observações adicionais (opcional)" className="w-full rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 py-2 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all resize-none" />
-              </div>
-            </div>
-            <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
-              <button onClick={() => setShowAddModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all">
-                Cancelar
-              </button>
-              <button onClick={() => { setShowAddModal(false); setShowToast(true); setTimeout(() => setShowToast(false), 6000) }} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all">
-                Agendar
-              </button>
-            </div>
-          </div>
+        <div>
+          <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Observações</label>
+          <textarea rows={2} placeholder="Observações adicionais (opcional)" className="w-full rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 py-2 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all resize-none" />
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

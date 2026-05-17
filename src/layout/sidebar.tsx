@@ -7,6 +7,7 @@ import { useNotificationsStore, type Notification } from '@/features/notificatio
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import imunecareLogo from '@/assets/imunecare-logo.png'
+import { Modal, Button } from '@/shared/ui'
 import {
   ChevronLeft,
   ChevronRight,
@@ -356,45 +357,23 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       </div>
 
       {/* Modal de confirmação de logout */}
-      {showLogoutModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in-0 duration-200">
-          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.15)] p-6 w-full max-w-sm mx-4 animate-in zoom-in-95 duration-200">
-
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mx-auto mb-4">
-              <LogOut size={20} className="text-red-500" />
-            </div>
-
-            <div className="text-center mb-6">
-              <h2 className="text-base font-bold text-(--text) mb-1.5">
-                Sair da conta?
-              </h2>
-              <p className="text-xs text-(--text-muted)">
-                Você será redirecionado para a tela de login. Deseja continuar?
-              </p>
-            </div>
-
-            <div className="flex gap-2.5">
-              <button
-                onClick={() => setShowLogoutModal(false)}
-                className="flex-1 h-9 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowLogoutModal(false)
-                  navigate({ to: '/login' })
-                }}
-                className="flex-1 h-9 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold"
-              >
-                Sair
-              </button>
-            </div>
-
-          </div>
+      <Modal
+        open={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        title="Sair da conta?"
+        size="sm"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowLogoutModal(false)}>Cancelar</Button>
+          <Button variant="danger" onClick={() => { setShowLogoutModal(false); navigate({ to: '/login' }) }}>Sair</Button>
+        </>}
+      >
+        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mx-auto">
+          <LogOut size={20} className="text-red-500" />
         </div>
-      )}
+        <p className="text-xs text-(--text-muted) text-center">
+          Você será redirecionado para a tela de login. Deseja continuar?
+        </p>
+      </Modal>
     </aside>
   )
 }

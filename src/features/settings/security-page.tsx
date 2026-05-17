@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Lock, Smartphone, Eye, FileDown, UserX, LogOut, ChevronRight, X } from 'lucide-react'
+import {} from '@tanstack/react-router'
+import { ArrowLeft, Lock, Smartphone, Eye, FileDown, UserX, LogOut, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { Modal, Button, IconButton, Switch, TextInput, MediaRow } from "@/shared/ui"
 
 const sessions = [
   { id: '1', device: 'Chrome · Windows 11', location: 'Anápolis, GO', time: 'Agora (sessão atual)', current: true },
@@ -10,7 +11,6 @@ const sessions = [
 ]
 
 export function SecurityPage() {
-  const navigate = useNavigate()
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
   const [showRevokeModal, setShowRevokeModal] = useState<string | null>(null)
@@ -19,16 +19,13 @@ export function SecurityPage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
-  const inputClass = "w-full h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all"
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <button onClick={() => navigate({ to: '/settings' })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-            <ArrowLeft size={16} />
-          </button>
+          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
           <h1 className="text-2xl font-bold text-(--text)">Segurança e Privacidade</h1>
         </div>
 
@@ -41,39 +38,24 @@ export function SecurityPage() {
                 <h2 className="text-xs font-bold text-(--text)">Autenticação</h2>
               </div>
               <div className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Lock size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Alterar senha</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Última alteração há 30 dias</div>
-                    </div>
-                  </div>
-                  <button onClick={() => setShowPasswordModal(true)} className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1.5">
-                    Alterar
-                    <ChevronRight size={12} />
-                  </button>
-                </div>
+                <MediaRow
+                  icon={<Lock size={14} />}
+                  title="Alterar senha"
+                  description="Última alteração há 30 dias"
+                  trailing={
+                    <button onClick={() => setShowPasswordModal(true)} className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1.5">
+                      Alterar
+                      <ChevronRight size={12} />
+                    </button>
+                  }
+                />
                 <div className="border-t border-(--border-custom)" />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Smartphone size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Autenticação em dois fatores (2FA)</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Proteja sua conta com verificação adicional</div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setTwoFaEnabled(!twoFaEnabled)}
-                    className={cn("h-6 w-11 rounded-full transition-all cursor-pointer relative", twoFaEnabled ? "bg-brand" : "bg-gray-300")}
-                  >
-                    <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", twoFaEnabled ? "left-5.5" : "left-0.5")} />
-                  </button>
-                </div>
+                <MediaRow
+                  icon={<Smartphone size={14} />}
+                  title="Autenticação em dois fatores (2FA)"
+                  description="Proteja sua conta com verificação adicional"
+                  trailing={<Switch checked={twoFaEnabled} onChange={setTwoFaEnabled} aria-label="Autenticação em dois fatores" />}
+                />
               </div>
             </div>
 
@@ -115,123 +97,94 @@ export function SecurityPage() {
                 <h2 className="text-xs font-bold text-(--text)">Privacidade e LGPD</h2>
               </div>
               <div className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Eye size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Visibilidade do perfil</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Controle quem pode ver seus dados na equipe</div>
-                    </div>
-                  </div>
-                  <span className="text-[0.65rem] font-medium text-brand bg-brand-50 px-2 py-0.5 rounded-full">Equipe</span>
-                </div>
+                <MediaRow
+                  icon={<Eye size={14} />}
+                  title="Visibilidade do perfil"
+                  description="Controle quem pode ver seus dados na equipe"
+                  trailing={<span className="text-[0.65rem] font-medium text-brand bg-brand-50 px-2 py-0.5 rounded-full">Equipe</span>}
+                />
                 <div className="border-t border-(--border-custom)" />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <FileDown size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Exportar meus dados</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Solicite uma cópia de todos os seus dados pessoais</div>
-                    </div>
-                  </div>
-                  <button onClick={() => setShowExportModal(true)} className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1.5">
-                    Solicitar
-                    <ChevronRight size={12} />
-                  </button>
-                </div>
+                <MediaRow
+                  icon={<FileDown size={14} />}
+                  title="Exportar meus dados"
+                  description="Solicite uma cópia de todos os seus dados pessoais"
+                  trailing={
+                    <button onClick={() => setShowExportModal(true)} className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1.5">
+                      Solicitar
+                      <ChevronRight size={12} />
+                    </button>
+                  }
+                />
                 <div className="border-t border-(--border-custom)" />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <UserX size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Anonimização de pacientes</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Gerencie solicitações de anonimização de dados de pacientes (Art. 18 LGPD)</div>
-                    </div>
-                  </div>
-                  <button className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1.5">
-                    Gerenciar
-                    <ChevronRight size={12} />
-                  </button>
-                </div>
+                <MediaRow
+                  icon={<UserX size={14} />}
+                  title="Anonimização de pacientes"
+                  description="Gerencie solicitações de anonimização de dados de pacientes (Art. 18 LGPD)"
+                  trailing={
+                    <button className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1.5">
+                      Gerenciar
+                      <ChevronRight size={12} />
+                    </button>
+                  }
+                />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Password modal */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowPasswordModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-(--border-custom)">
-              <h3 className="text-sm font-bold text-(--text)">Alterar senha</h3>
-              <button onClick={() => setShowPasswordModal(false)} className="text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"><X size={16} /></button>
-            </div>
-            <div className="px-5 py-4 space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Senha atual</label>
-                <input type="password" placeholder="Insira aqui" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nova senha</label>
-                <input type="password" placeholder="Insira aqui" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Confirmar nova senha</label>
-                <input type="password" placeholder="Insira aqui" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputClass} />
-              </div>
-            </div>
-            <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
-              <button onClick={() => setShowPasswordModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-              <button onClick={() => setShowPasswordModal(false)} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px transition-all cursor-pointer">Alterar senha</button>
-            </div>
-          </div>
+      <Modal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        title="Alterar senha"
+        size="sm"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowPasswordModal(false)}>Cancelar</Button>
+          <Button variant="primary" onClick={() => setShowPasswordModal(false)}>Alterar senha</Button>
+        </>}
+      >
+        <div>
+          <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Senha atual</label>
+          <TextInput type="password" placeholder="Insira aqui" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} />
         </div>
-      )}
+        <div>
+          <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nova senha</label>
+          <TextInput type="password" placeholder="Insira aqui" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Confirmar nova senha</label>
+          <TextInput type="password" placeholder="Insira aqui" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+        </div>
+      </Modal>
 
-      {/* Export modal */}
-      {showExportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowExportModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                <FileDown size={16} className="text-brand" />
-              </div>
-              <h3 className="text-sm font-bold text-(--text)">Exportar dados</h3>
-            </div>
-            <p className="text-xs text-(--text-muted) mb-5">Uma cópia dos seus dados pessoais será preparada e enviada para seu e-mail em até 48 horas, conforme previsto pela LGPD.</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowExportModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-              <button onClick={() => setShowExportModal(false)} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px transition-all cursor-pointer">Solicitar exportação</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        size="sm"
+        title="Exportar dados"
+        icon={<FileDown size={16} />}
+        footer={<>
+          <Button variant="outline" onClick={() => setShowExportModal(false)}>Cancelar</Button>
+          <Button variant="primary" onClick={() => setShowExportModal(false)}>Solicitar exportação</Button>
+        </>}
+      >
+        <p className="text-xs text-(--text-muted)">Uma cópia dos seus dados pessoais será preparada e enviada para seu e-mail em até 48 horas, conforme previsto pela LGPD.</p>
+      </Modal>
 
-      {/* Revoke session modal */}
-      {showRevokeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowRevokeModal(null)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 shrink-0">
-                <LogOut size={16} className="text-red-500" />
-              </div>
-              <h3 className="text-sm font-bold text-(--text)">Encerrar sessão</h3>
-            </div>
-            <p className="text-xs text-(--text-muted) mb-5">Este dispositivo será desconectado imediatamente e precisará fazer login novamente para acessar o sistema.</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowRevokeModal(null)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">Cancelar</button>
-              <button onClick={() => setShowRevokeModal(null)} className="h-8 px-4 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-all cursor-pointer">Encerrar</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={!!showRevokeModal}
+        onClose={() => setShowRevokeModal(null)}
+        size="sm"
+        title="Encerrar sessão"
+        icon={<LogOut size={16} />}
+        tone="danger"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowRevokeModal(null)}>Cancelar</Button>
+          <Button variant="danger" onClick={() => setShowRevokeModal(null)}>Encerrar</Button>
+        </>}
+      >
+        <p className="text-xs text-(--text-muted)">Este dispositivo será desconectado imediatamente e precisará fazer login novamente para acessar o sistema.</p>
+      </Modal>
     </div>
   )
 }

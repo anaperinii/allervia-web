@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Database, Bell, Server, ChevronDown, Calendar, ExternalLink, CheckCircle, Palette, Plus, X, Lock, Syringe, Pencil, Trash2, Check } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import {} from '@tanstack/react-router'
+import { ArrowLeft, Database, Bell, Server, Calendar, ExternalLink, CheckCircle, Palette, Plus, X, Lock, Syringe, Pencil, Trash2, Check } from 'lucide-react'
 import { useCan } from '@/features/user/user-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
+import { IconButton, Switch, Button, Select, TextInput, MediaRow } from "@/shared/ui"
 
 const defaultEventColors = [
   { id: 'subcutanea', label: 'Subcutânea', color: '#14B8A6' },
@@ -12,7 +12,6 @@ const defaultEventColors = [
 ]
 
 export function AdvancedSettingsPage() {
-  const navigate = useNavigate()
   const canAdvanced = useCan('advanced_settings')
   const [autoBackup, setAutoBackup] = useState(true)
   const [emailNotifications, setEmailNotifications] = useState(true)
@@ -37,8 +36,6 @@ export function AdvancedSettingsPage() {
   const startEditType = (id: string, label: string) => { setEditingTypeId(id); setEditingTypeLabel(label) }
   const saveEditType = () => { if (editingTypeId) { updateType(editingTypeId, editingTypeLabel); setEditingTypeId(null); setEditingTypeLabel('') } }
 
-  const inputClass = "w-full h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all"
-
   if (!canAdvanced) {
     return (
       <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
@@ -48,9 +45,9 @@ export function AdvancedSettingsPage() {
           </div>
           <h2 className="text-base font-bold text-(--text) mb-1.5">Acesso restrito</h2>
           <p className="text-xs text-(--text-muted) max-w-sm leading-relaxed mb-5">As configurações avançadas são restritas a perfis <span className="font-semibold text-(--text)">Administrador</span> e <span className="font-semibold text-(--text)">Médico</span>.</p>
-          <button onClick={() => navigate({ to: '/settings' })} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer">
+          <Button variant="outline" to="/settings">
             Voltar para configurações
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -60,9 +57,7 @@ export function AdvancedSettingsPage() {
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <button onClick={() => navigate({ to: '/settings' })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-            <ArrowLeft size={16} />
-          </button>
+          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
           <h1 className="text-2xl font-bold text-(--text)">Configurações Avançadas</h1>
         </div>
 
@@ -90,9 +85,7 @@ export function AdvancedSettingsPage() {
                           <div className="text-[0.65rem] text-(--text-muted)">{item.desc}</div>
                         </div>
                       </div>
-                      <button onClick={() => item.set(!item.value)} className={cn("h-6 w-11 rounded-full transition-all cursor-pointer relative", item.value ? "bg-brand" : "bg-gray-300")}>
-                        <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", item.value ? "left-5.5" : "left-0.5")} />
-                      </button>
+                      <Switch checked={item.value} onChange={item.set} aria-label={item.label} />
                     </div>
                   </div>
                 ))}
@@ -107,37 +100,28 @@ export function AdvancedSettingsPage() {
               <div className="p-4 grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Fuso horário</label>
-                  <div className="relative">
-                    <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className={cn(inputClass, "pr-8")}>
-                      <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
-                      <option value="America/Manaus">Manaus (GMT-4)</option>
-                      <option value="America/Noronha">Fernando de Noronha (GMT-2)</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={timezone} onChange={(e) => setTimezone(e.target.value)}>
+                    <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
+                    <option value="America/Manaus">Manaus (GMT-4)</option>
+                    <option value="America/Noronha">Fernando de Noronha (GMT-2)</option>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Tempo de sessão (minutos)</label>
-                  <div className="relative">
-                    <select value={sessionTimeout} onChange={(e) => setSessionTimeout(e.target.value)} className={cn(inputClass, "pr-8")}>
-                      <option value="15">15 minutos</option>
-                      <option value="30">30 minutos</option>
-                      <option value="60">1 hora</option>
-                      <option value="120">2 horas</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={sessionTimeout} onChange={(e) => setSessionTimeout(e.target.value)}>
+                    <option value="15">15 minutos</option>
+                    <option value="30">30 minutos</option>
+                    <option value="60">1 hora</option>
+                    <option value="120">2 horas</option>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Idioma</label>
-                  <div className="relative">
-                    <select value={language} onChange={(e) => setLanguage(e.target.value)} className={cn(inputClass, "pr-8")}>
-                      <option value="pt-BR">Português (Brasil)</option>
-                      <option value="en">English</option>
-                      <option value="es">Español</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
+                    <option value="pt-BR">Português (Brasil)</option>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -150,17 +134,12 @@ export function AdvancedSettingsPage() {
               <div className="p-4 space-y-4">
                 {/* Google Agenda connection */}
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                        <Calendar size={14} className="text-brand" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-(--text)">Google Agenda</div>
-                        <div className="text-[0.65rem] text-(--text-muted)">Sincronize agendamentos automaticamente</div>
-                      </div>
-                    </div>
-                    {googleConnected ? (
+                  <MediaRow
+                    className="mb-3"
+                    icon={<Calendar size={14} />}
+                    title="Google Agenda"
+                    description="Sincronize agendamentos automaticamente"
+                    trailing={googleConnected ? (
                       <div className="flex items-center gap-2">
                         <span className="flex items-center gap-1 text-[0.6rem] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                           <CheckCircle size={10} />
@@ -175,7 +154,7 @@ export function AdvancedSettingsPage() {
                         Conectar conta Google
                       </button>
                     )}
-                  </div>
+                  />
 
                   {googleConnected && (
                     <div className="bg-gray-50 rounded-lg p-3 space-y-3 ml-11">
@@ -184,9 +163,7 @@ export function AdvancedSettingsPage() {
                           <div className="text-[0.7rem] font-medium text-(--text)">Sincronização automática</div>
                           <div className="text-[0.55rem] text-(--text-muted)">Novos agendamentos são enviados ao Google Agenda</div>
                         </div>
-                        <button onClick={() => setAutoSync(!autoSync)} className={cn("h-6 w-11 rounded-full transition-all cursor-pointer relative", autoSync ? "bg-brand" : "bg-gray-300")}>
-                          <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", autoSync ? "left-5.5" : "left-0.5")} />
-                        </button>
+                        <Switch checked={autoSync} onChange={setAutoSync} />
                       </div>
                       <div className="flex items-center gap-1.5 text-[0.6rem] text-(--text-muted)">
                         <ExternalLink size={10} />
@@ -199,33 +176,24 @@ export function AdvancedSettingsPage() {
                 <div className="border-t border-(--border-custom)" />
 
                 {/* Lembretes */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Bell size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Lembrete via WhatsApp</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Enviar lembrete automático ao paciente antes da consulta</div>
-                    </div>
-                  </div>
-                  <button onClick={() => setReminderWhatsapp(!reminderWhatsapp)} className={cn("h-6 w-11 rounded-full transition-all cursor-pointer relative", reminderWhatsapp ? "bg-brand" : "bg-gray-300")}>
-                    <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", reminderWhatsapp ? "left-5.5" : "left-0.5")} />
-                  </button>
-                </div>
+                <MediaRow
+                  icon={<Bell size={14} />}
+                  title="Lembrete via WhatsApp"
+                  description="Enviar lembrete automático ao paciente antes da consulta"
+                  trailing={<Switch checked={reminderWhatsapp} onChange={setReminderWhatsapp} />}
+                />
 
                 {reminderWhatsapp && (
                   <div className="ml-11">
                     <label className="text-[0.65rem] font-medium text-(--text-muted) mb-1 block">Antecedência do lembrete</label>
-                    <div className="relative w-40">
-                      <select value={reminderHours} onChange={(e) => setReminderHours(e.target.value)} className={cn(inputClass, "pr-8")}>
+                    <div className="w-40">
+                      <Select value={reminderHours} onChange={(e) => setReminderHours(e.target.value)}>
                         <option value="2">2 horas antes</option>
                         <option value="6">6 horas antes</option>
                         <option value="12">12 horas antes</option>
                         <option value="24">24 horas antes</option>
                         <option value="48">48 horas antes</option>
-                      </select>
-                      <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
+                      </Select>
                     </div>
                   </div>
                 )}
@@ -234,15 +202,12 @@ export function AdvancedSettingsPage() {
 
                 {/* Cores por tipo de evento */}
                 <div>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Palette size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Cores dos eventos</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Personalize as cores para cada tipo de agendamento</div>
-                    </div>
-                  </div>
+                  <MediaRow
+                    className="mb-3"
+                    icon={<Palette size={14} />}
+                    title="Cores dos eventos"
+                    description="Personalize as cores para cada tipo de agendamento"
+                  />
                   <div className="space-y-2 ml-11">
                     {eventColors.map((ec) => (
                       <div key={ec.id} className="flex items-center justify-between group">
@@ -301,17 +266,16 @@ export function AdvancedSettingsPage() {
               <div className="p-4 space-y-3">
                 <p className="text-[0.65rem] text-(--text-muted) leading-relaxed">Gerencie os tipos disponíveis ao cadastrar uma imunoterapia. Alterações refletem em toda a clínica.</p>
                 <div className="flex gap-2">
-                  <input
+                  <TextInput
                     value={newTypeLabel}
                     onChange={(e) => setNewTypeLabel(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddType() } }}
                     placeholder="Ex: Pólen, Pelos de Gato..."
-                    className="flex-1 h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all"
+                    className="flex-1"
                   />
-                  <button onClick={handleAddType} className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all cursor-pointer">
-                    <Plus size={13} />
+                  <Button tone="brand" variant="solid" leftIcon={<Plus size={13} />} onClick={handleAddType} className="h-9 px-3">
                     Adicionar
-                  </button>
+                  </Button>
                 </div>
                 <div className="space-y-1.5">
                   {customTypes.map((t) => (
@@ -358,33 +322,19 @@ export function AdvancedSettingsPage() {
                 <h2 className="text-xs font-bold text-(--text)">Dados e Backup</h2>
               </div>
               <div className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Database size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Backup automático</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Backup diário dos dados clínicos às 03:00</div>
-                    </div>
-                  </div>
-                  <button onClick={() => setAutoBackup(!autoBackup)} className={cn("h-6 w-11 rounded-full transition-all cursor-pointer relative", autoBackup ? "bg-brand" : "bg-gray-300")}>
-                    <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", autoBackup ? "left-5.5" : "left-0.5")} />
-                  </button>
-                </div>
+                <MediaRow
+                  icon={<Database size={14} />}
+                  title="Backup automático"
+                  description="Backup diário dos dados clínicos às 03:00"
+                  trailing={<Switch checked={autoBackup} onChange={setAutoBackup} />}
+                />
                 <div className="border-t border-(--border-custom)" />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Server size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Último backup</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">10/04/2026 às 03:00 — 42.3 MB</div>
-                    </div>
-                  </div>
-                  <span className="text-[0.65rem] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Sucesso</span>
-                </div>
+                <MediaRow
+                  icon={<Server size={14} />}
+                  title="Último backup"
+                  description="10/04/2026 às 03:00 — 42.3 MB"
+                  trailing={<span className="text-[0.65rem] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Sucesso</span>}
+                />
               </div>
             </div>
           </div>

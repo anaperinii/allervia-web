@@ -8,7 +8,6 @@ interface FieldLabelProps {
   hint?: string
   children: ReactNode
   error?: string | null
-  /** Texto de apoio abaixo do input (ex: contador de caracteres). */
   helperText?: string
 }
 
@@ -36,14 +35,14 @@ interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
   invalid?: boolean
 }
 export function TextInput({ invalid, className, ...rest }: TextInputProps) {
-  return <input {...rest} className={cn(FIELD_BASE, 'h-9', invalid ? FIELD_INVALID : FIELD_VALID, className)} />
+  return <input {...rest} aria-invalid={invalid || undefined} className={cn(FIELD_BASE, 'h-9', invalid ? FIELD_INVALID : FIELD_VALID, className)} />
 }
 
 interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   invalid?: boolean
 }
 export function TextArea({ invalid, className, rows = 3, ...rest }: TextAreaProps) {
-  return <textarea {...rest} rows={rows} className={cn(FIELD_BASE, 'py-2 resize-none', invalid ? FIELD_INVALID : FIELD_VALID, className)} />
+  return <textarea {...rest} rows={rows} aria-invalid={invalid || undefined} className={cn(FIELD_BASE, 'py-2 resize-none', invalid ? FIELD_INVALID : FIELD_VALID, className)} />
 }
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
@@ -53,7 +52,7 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 export function Select({ invalid, className, children, ...rest }: SelectProps) {
   return (
     <div className="relative">
-      <select {...rest} className={cn(FIELD_BASE, 'h-9 appearance-none cursor-pointer pr-8', invalid ? FIELD_INVALID : FIELD_VALID, className)}>
+      <select {...rest} aria-invalid={invalid || undefined} className={cn(FIELD_BASE, 'h-9 appearance-none cursor-pointer pr-8', invalid ? FIELD_INVALID : FIELD_VALID, className)}>
         {children}
       </select>
       <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />

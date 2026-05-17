@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router'
 import { AuthCard } from '@/features/auth/auth-card'
 import { ArrowLeft, Mail, ShieldCheck, Clock, CheckCircle, KeyRound } from 'lucide-react'
 import { useEnterReveal } from '@/shared/hooks/use-enter-reveal'
+import { TextInput } from '@/shared/ui'
 
 type Step = 'request' | 'code' | 'reset' | 'done'
 
@@ -17,7 +18,6 @@ export function ForgotPasswordPage() {
 
   const containerRef = useEnterReveal()
 
-  const inputClass = "w-full h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all"
 
   const validateEmail = () => {
     const e: Record<string, string> = {}
@@ -97,12 +97,12 @@ export function ForgotPasswordPage() {
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-medium text-(--text)/80">E-mail cadastrado</label>
-                  <input
+                  <TextInput
                     type="email"
                     placeholder="seu@email.com.br"
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors({}) }}
-                    className={`${inputClass} ${errors.email ? 'border-red-400 bg-red-50/30' : ''}`}
+                    invalid={!!errors.email}
                   />
                   {errors.email && <span className="text-[0.65rem] text-red-500">{errors.email}</span>}
                 </div>
@@ -209,24 +209,24 @@ export function ForgotPasswordPage() {
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-medium text-(--text)/80">Nova senha</label>
-                  <input
+                  <TextInput
                     type="password"
                     placeholder="Mínimo 8 caracteres"
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); if (errors.password) setErrors((er) => { const n = { ...er }; delete n.password; return n }) }}
-                    className={`${inputClass} ${errors.password ? 'border-red-400 bg-red-50/30' : ''}`}
+                    invalid={!!errors.password}
                   />
                   {errors.password && <span className="text-[0.65rem] text-red-500">{errors.password}</span>}
                 </div>
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-medium text-(--text)/80">Confirmar nova senha</label>
-                  <input
+                  <TextInput
                     type="password"
                     placeholder="Repita a nova senha"
                     value={confirmPassword}
                     onChange={(e) => { setConfirmPassword(e.target.value); if (errors.confirmPassword) setErrors((er) => { const n = { ...er }; delete n.confirmPassword; return n }) }}
-                    className={`${inputClass} ${errors.confirmPassword ? 'border-red-400 bg-red-50/30' : ''}`}
+                    invalid={!!errors.confirmPassword}
                   />
                   {errors.confirmPassword && <span className="text-[0.65rem] text-red-500">{errors.confirmPassword}</span>}
                 </div>

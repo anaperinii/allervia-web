@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, Shield, Check, Clock, Mail, X } from 'lucide-react'
+import { ArrowRight, Shield, Check, Clock, Mail } from 'lucide-react'
+import { Modal, TextInput, Select } from '@/shared/ui'
 import imunecareLogo from '@/assets/imunecare-logo.png'
 import imunecareWhiteLogo from '@/assets/imunecare-white-logo.png'
 import { validateEmail, formatPhone } from '@/shared/lib/validators'
@@ -52,14 +53,7 @@ export function TrialPage() {
     return Object.keys(e).length === 0
   }
 
-  const inputCls = (f: keyof TrialForm) =>
-    `w-full h-8 rounded-lg border bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/50 focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all ${
-      errors[f] && touched[f] ? 'border-red-400 bg-red-50/30' : 'border-(--border-custom)'
-    }`
-  const selectCls = (f: keyof TrialForm) =>
-    `w-full h-8 rounded-lg border bg-gray-50/60 px-3 text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all pr-8 ${
-      errors[f] && touched[f] ? 'border-red-400 bg-red-50/30' : 'border-(--border-custom)'
-    }`
+  const isInvalid = (f: keyof TrialForm) => !!(errors[f] && touched[f])
   const Err = ({ f }: { f: keyof TrialForm }) =>
     errors[f] && touched[f] ? <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors[f]}</span> : null
 
@@ -115,31 +109,32 @@ export function TrialPage() {
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
             <div>
               <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Nome <span className="text-red-400">*</span></label>
-              <input value={form.nome} onChange={(e) => set('nome', e.target.value)} onBlur={() => touch('nome')} placeholder="Insira aqui" className={inputCls('nome')} maxLength={60} />
+              <TextInput value={form.nome} onChange={(e) => set('nome', e.target.value)} onBlur={() => touch('nome')} placeholder="Insira aqui" invalid={isInvalid('nome')} className="h-8" maxLength={60} />
               <Err f="nome" />
             </div>
             <div>
               <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Sobrenome <span className="text-red-400">*</span></label>
-              <input value={form.sobrenome} onChange={(e) => set('sobrenome', e.target.value)} onBlur={() => touch('sobrenome')} placeholder="Insira aqui" className={inputCls('sobrenome')} maxLength={80} />
+              <TextInput value={form.sobrenome} onChange={(e) => set('sobrenome', e.target.value)} onBlur={() => touch('sobrenome')} placeholder="Insira aqui" invalid={isInvalid('sobrenome')} className="h-8" maxLength={80} />
               <Err f="sobrenome" />
             </div>
           </div>
 
           <div className="mb-2.5">
             <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">E-mail profissional <span className="text-red-400">*</span></label>
-            <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} onBlur={() => touch('email')} placeholder="voce@clinica.com.br" className={inputCls('email')} maxLength={254} autoComplete="email" />
+            <TextInput type="email" value={form.email} onChange={(e) => set('email', e.target.value)} onBlur={() => touch('email')} placeholder="voce@clinica.com.br" invalid={isInvalid('email')} className="h-8" maxLength={254} autoComplete="email" />
             <Err f="email" />
           </div>
 
           <div className="mb-2.5">
             <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Telefone / WhatsApp <span className="text-red-400">*</span></label>
-            <input
+            <TextInput
               type="tel"
               value={form.telefone}
               onChange={(e) => set('telefone', formatPhone(e.target.value))}
               onBlur={() => touch('telefone')}
               placeholder="(00) 00000-0000"
-              className={inputCls('telefone')}
+              invalid={isInvalid('telefone')}
+              className="h-8"
               maxLength={16}
             />
             <Err f="telefone" />
@@ -148,24 +143,24 @@ export function TrialPage() {
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
             <div>
               <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Qual é a sua atuação? <span className="text-red-400">*</span></label>
-              <select value={form.atuacao} onChange={(e) => set('atuacao', e.target.value)} onBlur={() => touch('atuacao')} className={selectCls('atuacao')}>
+              <Select value={form.atuacao} onChange={(e) => set('atuacao', e.target.value)} onBlur={() => touch('atuacao')} invalid={isInvalid('atuacao')} className="h-8">
                 <option value="" disabled>Selecionar</option>
                 <option>Médico(a)</option>
                 <option>Gestor(a) de clínica</option>
                 <option>Farmacêutico(a)</option>
                 <option>Enfermeiro(a)</option>
                 <option>Outro</option>
-              </select>
+              </Select>
               <Err f="atuacao" />
             </div>
             <div>
               <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Solução digital para quem? <span className="text-red-400">*</span></label>
-              <select value={form.solucao} onChange={(e) => set('solucao', e.target.value)} onBlur={() => touch('solucao')} className={selectCls('solucao')}>
+              <Select value={form.solucao} onChange={(e) => set('solucao', e.target.value)} onBlur={() => touch('solucao')} invalid={isInvalid('solucao')} className="h-8">
                 <option value="" disabled>Selecionar</option>
                 <option>Para mim (uso próprio)</option>
                 <option>Para minha clínica</option>
                 <option>Para uma rede de clínicas</option>
-              </select>
+              </Select>
               <Err f="solucao" />
             </div>
           </div>
@@ -173,12 +168,12 @@ export function TrialPage() {
           <div className="grid grid-cols-2 gap-2.5 mb-4">
             <div>
               <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Especialidade da clínica <span className="text-red-400">*</span></label>
-              <input value={form.especialidade} onChange={(e) => set('especialidade', e.target.value)} onBlur={() => touch('especialidade')} placeholder="Ex.: Alergia e Imunologia" className={inputCls('especialidade')} maxLength={80} />
+              <TextInput value={form.especialidade} onChange={(e) => set('especialidade', e.target.value)} onBlur={() => touch('especialidade')} placeholder="Ex.: Alergia e Imunologia" invalid={isInvalid('especialidade')} className="h-8" maxLength={80} />
               <Err f="especialidade" />
             </div>
             <div>
               <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Nº de profissionais <span className="text-red-400">*</span></label>
-              <input
+              <TextInput
                 type="number"
                 min="1"
                 max="9999"
@@ -186,7 +181,8 @@ export function TrialPage() {
                 onChange={(e) => set('profissionais', e.target.value)}
                 onBlur={() => touch('profissionais')}
                 placeholder="Ex.: 5"
-                className={inputCls('profissionais')}
+                invalid={isInvalid('profissionais')}
+                className="h-8"
               />
               <Err f="profissionais" />
             </div>
@@ -226,34 +222,33 @@ export function TrialPage() {
         </div>
       </div>
 
-      {/* Confirmation modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowModal(false)}>
-          <div className="relative bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.15)] w-full max-w-md mx-4 p-7 text-center" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 h-7 w-7 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-100 transition-all">
-              <X size={16} />
-            </button>
-            <div className="flex justify-center mb-4">
-              <div className="h-14 w-14 rounded-full bg-emerald-100 flex items-center justify-center">
-                <Mail size={24} className="text-emerald-600" />
-              </div>
+      <Modal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        size="md"
+        headerSlot={<div />}
+      >
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="h-14 w-14 rounded-full bg-emerald-100 flex items-center justify-center">
+              <Mail size={24} className="text-emerald-600" />
             </div>
-            <h3 className="text-lg font-bold text-(--text) mb-2">Solicitação enviada com sucesso!</h3>
-            <p className="text-xs text-(--text-muted) leading-relaxed mb-4">
-              Recebemos sua solicitação de acesso e nossa equipe já está analisando seus dados.
-              Você receberá uma confirmação com as instruções de ativação diretamente no e-mail informado.
-            </p>
-            <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-4 py-3 mb-4">
-              <p className="text-[0.65rem] text-(--text-muted) font-medium mb-1">Fique atento à sua caixa de entrada</p>
-              <p className="text-sm font-semibold text-brand">contato@imunecare.com.br</p>
-              <p className="text-[0.6rem] text-(--text-muted) mt-1">Prazo de retorno: até 1 dia útil</p>
-            </div>
-            <Link to="/" className="inline-flex items-center justify-center w-full h-9 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-bold hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(24,193,203,0.35)] transition-all no-underline">
-              Voltar para a página inicial
-            </Link>
           </div>
+          <h3 className="text-lg font-bold text-(--text)">Solicitação enviada com sucesso!</h3>
+          <p className="text-xs text-(--text-muted) leading-relaxed">
+            Recebemos sua solicitação de acesso e nossa equipe já está analisando seus dados.
+            Você receberá uma confirmação com as instruções de ativação diretamente no e-mail informado.
+          </p>
+          <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-4 py-3">
+            <p className="text-[0.65rem] text-(--text-muted) font-medium mb-1">Fique atento à sua caixa de entrada</p>
+            <p className="text-sm font-semibold text-brand">contato@imunecare.com.br</p>
+            <p className="text-[0.6rem] text-(--text-muted) mt-1">Prazo de retorno: até 1 dia útil</p>
+          </div>
+          <Link to="/" className="inline-flex items-center justify-center w-full h-9 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-bold hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(24,193,203,0.35)] transition-all no-underline">
+            Voltar para a página inicial
+          </Link>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

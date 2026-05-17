@@ -1,4 +1,3 @@
-import { useNavigate } from '@tanstack/react-router'
 import {
   Shield,
   Settings,
@@ -7,10 +6,10 @@ import {
   Users,
   CreditCard,
   HelpCircle,
-  ChevronRight,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useUserStore, ROLE_PERMISSIONS, type Permission } from '@/features/user/user-store'
+import { Button, CardButton } from '@/shared/ui'
 
 interface SettingsOption {
   icon: LucideIcon
@@ -31,7 +30,6 @@ const settingsOptions: SettingsOption[] = [
 ]
 
 export function SettingsPage() {
-  const navigate = useNavigate()
   const role = useUserStore((s) => s.current.role)
   const permissions = ROLE_PERMISSIONS[role]
   const visibleOptions = settingsOptions.filter((o) => !o.requires || permissions.includes(o.requires))
@@ -55,9 +53,9 @@ export function SettingsPage() {
                 <div className="text-[0.65rem] text-(--text-muted)">Administrador</div>
               </div>
 
-              <button onClick={() => navigate({ to: '/profile' })} className="w-full h-7 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-[0.7rem] font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(24,193,203,0.3)] transition-all cursor-pointer">
+              <Button tone="brand" variant="solid" size="sm" fullWidth to="/profile">
                 Seu Perfil
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -67,20 +65,13 @@ export function SettingsPage() {
               {visibleOptions.map((option) => {
                 const Icon = option.icon
                 return (
-                  <button
+                  <CardButton
                     key={option.label}
-                    onClick={() => option.route && navigate({ to: option.route })}
-                    className="flex w-full items-center gap-3.5 rounded-lg border border-(--border-custom) bg-white p-3 text-left transition-all hover:border-teal-300 hover:shadow-[0_2px_8px_rgba(20,184,166,0.08)] group cursor-pointer"
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50 group-hover:bg-teal-50 transition-colors shrink-0">
-                      <Icon size={17} className="text-(--text-muted) group-hover:text-teal-600 transition-colors" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-(--text)">{option.label}</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">{option.description}</div>
-                    </div>
-                    <ChevronRight size={14} className="text-(--text-muted)/30 group-hover:text-teal-500 transition-colors shrink-0" />
-                  </button>
+                    to={option.route!}
+                    icon={<Icon size={17} />}
+                    title={option.label}
+                    description={option.description}
+                  />
                 )
               })}
             </div>

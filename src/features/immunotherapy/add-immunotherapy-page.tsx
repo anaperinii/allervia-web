@@ -1,91 +1,36 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ChevronDown, ArrowLeft, User, Syringe, Info } from 'lucide-react'
+import { ArrowLeft, User, Syringe, Info } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useCan } from '@/features/user/user-store'
 import { useForm } from '@/shared/hooks/useForm'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/immunotherapies-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
+import { Modal, Button, IconButton, TextInput, Select } from "@/shared/ui"
 import { PROFILES } from '@/features/user/user-store'
 import { usePatientStore, type Application } from '@/features/patient/patient-store'
-import { validateExtrato } from '@/shared/lib/validators'
+import {
+  validateName,
+  validateCPF,
+  validatePhone,
+  validateWeight,
+  validateBirthdate,
+  validateFutureDate,
+  validateExtrato,
+  validateConcentration,
+  validateVolume,
+  formatCPF,
+  formatPhone,
+  formatWeight,
+  formatConcentration,
+  formatVolume,
+  todayStr,
+  tomorrowStr,
+} from '@/shared/lib/validators'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 const stepLabels = ['Dados do Paciente', 'Dados da Imunoterapia', 'Revisão dos Dados']
-
-function formatCPF(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11)
-  if (digits.length <= 3) return digits
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
-}
-
-function formatPhone(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11)
-  if (digits.length <= 2) return digits.length ? `(${digits}` : ''
-  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
-}
-
-function formatWeight(value: string): string {
-  const cleaned = value.replace(/[^0-9,.]/g, '').replace(',', '.')
-  const parts = cleaned.split('.')
-  if (parts.length > 2) return parts[0] + '.' + parts.slice(1).join('')
-  return cleaned
-}
-
-function formatConcentration(value: string): string {
-  const cleaned = value.replace(/[^0-9.:]/g, '')
-  if (!cleaned.startsWith('1:') && cleaned.length > 0) {
-    const digits = cleaned.replace(/\D/g, '')
-    if (digits.length > 0) return `1:${digits}`
-    return ''
-  }
-  return cleaned
-}
-
-function formatVolume(value: string): string {
-  const cleaned = value.replace(/[^0-9,.]/g, '').replace(',', '.')
-  const parts = cleaned.split('.')
-  if (parts.length > 2) return parts[0] + '.' + parts.slice(1).join('')
-  return cleaned
-}
-
-function validateCPF(cpf: string): boolean {
-  const digits = cpf.replace(/\D/g, '')
-  if (digits.length !== 11) return false
-  if (/^(\d)\1+$/.test(digits)) return false
-  let sum = 0
-  for (let i = 0; i < 9; i++) sum += parseInt(digits[i]) * (10 - i)
-  let check = 11 - (sum % 11)
-  if (check >= 10) check = 0
-  if (parseInt(digits[9]) !== check) return false
-  sum = 0
-  for (let i = 0; i < 10; i++) sum += parseInt(digits[i]) * (11 - i)
-  check = 11 - (sum % 11)
-  if (check >= 10) check = 0
-  return parseInt(digits[10]) === check
-}
-
-function validatePhone(phone: string): boolean {
-  return phone.replace(/\D/g, '').length === 11
-}
-
-function validateWeight(weight: string): boolean {
-  const num = parseFloat(weight)
-  return !isNaN(num) && num > 0 && num <= 500
-}
-
-function validateConcentration(conc: string): boolean {
-  return /^1:\d+(\.\d+)?$/.test(conc)
-}
-
-function validateVolume(vol: string): boolean {
-  const num = parseFloat(vol)
-  return !isNaN(num) && num > 0 && num <= 10
-}
 
 export function AddImmunotherapyPage() {
   const navigate = useNavigate()
@@ -141,7 +86,7 @@ export function AddImmunotherapyPage() {
   const formState = useForm<ImmForm>({
     initial: {
       nome: '', cpf: '', telefone: '', dataNascimento: '', peso: '', medicoResponsavel: '',
-      tipo: '', viaCutanea: '', dataInicio: '', extrato: '', metaConcentracao: '', metaVolume: '',
+      tipo: '', viaCutanea: '', dataInicio: tomorrowStr(), extrato: '', metaConcentracao: '', metaVolume: '',
     },
   })
   const form = formState.values
@@ -152,15 +97,11 @@ export function AddImmunotherapyPage() {
 
   const validateStep1 = useCallback((): boolean => {
     const e: Partial<Record<keyof ImmForm, string>> = {}
-    if (!form.nome.trim()) e.nome = 'Nome é obrigatório'
-    else if (form.nome.trim().length < 3) e.nome = 'Nome deve ter ao menos 3 caracteres'
-    if (!form.cpf.trim()) e.cpf = 'CPF é obrigatório'
-    else if (!validateCPF(form.cpf)) e.cpf = 'CPF inválido'
-    if (!form.telefone.trim()) e.telefone = 'Telefone é obrigatório'
-    else if (!validatePhone(form.telefone)) e.telefone = 'Telefone inválido'
-    if (!form.dataNascimento) e.dataNascimento = 'Data de nascimento é obrigatória'
-    if (!form.peso.trim()) e.peso = 'Peso é obrigatório'
-    else if (!validateWeight(form.peso)) e.peso = 'Peso inválido'
+    { const err = validateName(form.nome); if (err) e.nome = err }
+    { const err = validateCPF(form.cpf); if (err) e.cpf = err }
+    { const err = validatePhone(form.telefone); if (err) e.telefone = err }
+    { const err = validateBirthdate(form.dataNascimento); if (err) e.dataNascimento = err }
+    { const err = validateWeight(form.peso); if (err) e.peso = err }
     if (!form.medicoResponsavel.trim()) e.medicoResponsavel = 'Médico responsável é obrigatório'
     formState.setErrors(e)
     return Object.keys(e).length === 0
@@ -170,20 +111,15 @@ export function AddImmunotherapyPage() {
     const e: Partial<Record<keyof ImmForm, string>> = {}
     if (!form.tipo.trim()) e.tipo = 'Tipo é obrigatório'
     if (!form.viaCutanea) e.viaCutanea = 'Via cutânea é obrigatória'
-    if (!form.dataInicio) e.dataInicio = 'Data de início é obrigatória'
+    { const err = validateFutureDate(form.dataInicio, 'Data de início'); if (err) e.dataInicio = err }
     { const err = validateExtrato(form.extrato); if (err) e.extrato = err }
-    if (!form.metaConcentracao.trim()) e.metaConcentracao = 'Meta de concentração é obrigatória'
-    else if (!validateConcentration(form.metaConcentracao)) e.metaConcentracao = 'Formato inválido (ex: 1:10)'
-    if (!form.metaVolume.trim()) e.metaVolume = 'Meta de volume é obrigatória'
-    else if (!validateVolume(form.metaVolume)) e.metaVolume = 'Volume inválido'
+    { const err = validateConcentration(form.metaConcentracao); if (err) e.metaConcentracao = err }
+    { const err = validateVolume(form.metaVolume); if (err) e.metaVolume = err }
     formState.setErrors(e)
     return Object.keys(e).length === 0
   }, [form])
 
-  const inputClass = (field?: keyof ImmForm) => cn(
-    "w-full h-9 rounded-lg border bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all",
-    field && errors[field] && touched[field] ? "border-red-400 bg-red-50/30" : "border-(--border-custom)"
-  )
+  const isInvalid = (field: keyof ImmForm) => !!(errors[field] && touched[field])
 
   const ErrorMsg = ({ field }: { field: keyof ImmForm }) => {
     if (!errors[field] || !touched[field]) return null
@@ -201,9 +137,9 @@ export function AddImmunotherapyPage() {
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <button onClick={() => setShowCancelModal(true)} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
+          <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
             <ArrowLeft size={16} />
-          </button>
+          </IconButton>
           <h1 className="text-2xl font-bold text-(--text)">Adicionar Imunoterapia</h1>
         </div>
 
@@ -233,43 +169,40 @@ export function AddImmunotherapyPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nome do Paciente</label>
-                  <input placeholder="Nome completo" value={form.nome} onChange={(e) => set('nome', e.target.value)} onBlur={() => touch('nome')} className={inputClass('nome')} />
+                  <TextInput placeholder="Nome completo" value={form.nome} onChange={(e) => set('nome', e.target.value)} onBlur={() => touch('nome')} invalid={isInvalid('nome')} />
                   <ErrorMsg field="nome" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">CPF</label>
-                  <input placeholder="000.000.000-00" value={form.cpf} onChange={(e) => set('cpf', formatCPF(e.target.value))} onBlur={() => touch('cpf')} className={inputClass('cpf')} />
+                  <TextInput placeholder="000.000.000-00" value={form.cpf} onChange={(e) => set('cpf', formatCPF(e.target.value))} onBlur={() => touch('cpf')} invalid={isInvalid('cpf')} />
                   <ErrorMsg field="cpf" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Telefone</label>
-                  <input placeholder="(00) 00000-0000" value={form.telefone} onChange={(e) => set('telefone', formatPhone(e.target.value))} onBlur={() => touch('telefone')} className={inputClass('telefone')} />
+                  <TextInput placeholder="(00) 00000-0000" value={form.telefone} onChange={(e) => set('telefone', formatPhone(e.target.value))} onBlur={() => touch('telefone')} invalid={isInvalid('telefone')} />
                   <ErrorMsg field="telefone" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Nascimento</label>
-                  <input type="date" value={form.dataNascimento} onChange={(e) => set('dataNascimento', e.target.value)} onBlur={() => touch('dataNascimento')} className={inputClass('dataNascimento')} />
+                  <TextInput type="date" max={todayStr()} value={form.dataNascimento} onChange={(e) => set('dataNascimento', e.target.value)} onBlur={() => touch('dataNascimento')} invalid={isInvalid('dataNascimento')} />
                   <ErrorMsg field="dataNascimento" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Peso</label>
                   <div className="relative">
-                    <input placeholder="Ex: 72.5" value={form.peso} onChange={(e) => set('peso', formatWeight(e.target.value))} onBlur={() => touch('peso')} className={cn(inputClass('peso'), "pr-10")} />
+                    <TextInput placeholder="Ex: 72.5" value={form.peso} onChange={(e) => set('peso', formatWeight(e.target.value))} onBlur={() => touch('peso')} invalid={isInvalid('peso')} className="pr-10" />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">kg</span>
                   </div>
                   <ErrorMsg field="peso" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Médico Responsável</label>
-                  <div className="relative">
-                    <select value={form.medicoResponsavel} onChange={(e) => set('medicoResponsavel', e.target.value)} onBlur={() => touch('medicoResponsavel')} className={cn(inputClass('medicoResponsavel'), "appearance-none pr-8 cursor-pointer")}>
-                      <option value="" disabled>Selecione o médico</option>
-                      {PROFILES.filter((p) => p.role === 'medico').map((p) => (
-                        <option key={p.id} value={p.name}>{p.name} · {p.registration}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={form.medicoResponsavel} onChange={(e) => set('medicoResponsavel', e.target.value)} onBlur={() => touch('medicoResponsavel')} invalid={isInvalid('medicoResponsavel')}>
+                    <option value="" disabled>Selecione o médico</option>
+                    {PROFILES.filter((p) => p.role === 'medico').map((p) => (
+                      <option key={p.id} value={p.name}>{p.name} · {p.registration}</option>
+                    ))}
+                  </Select>
                   <ErrorMsg field="medicoResponsavel" />
                 </div>
               </div>
@@ -282,46 +215,40 @@ export function AddImmunotherapyPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Tipo</label>
-                  <div className="relative">
-                    <select value={form.tipo} onChange={(e) => set('tipo', e.target.value)} onBlur={() => touch('tipo')} className={cn(inputClass('tipo'), "appearance-none pr-8 cursor-pointer")}>
-                      <option value="" disabled>Selecione o tipo</option>
-                      {customTypes.map((t) => <option key={t.id} value={t.label}>{t.label}</option>)}
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={form.tipo} onChange={(e) => set('tipo', e.target.value)} onBlur={() => touch('tipo')} invalid={isInvalid('tipo')}>
+                    <option value="" disabled>Selecione o tipo</option>
+                    {customTypes.map((t) => <option key={t.id} value={t.label}>{t.label}</option>)}
+                  </Select>
                   <ErrorMsg field="tipo" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Via Cutânea</label>
-                  <div className="relative">
-                    <select value={form.viaCutanea} onChange={(e) => set('viaCutanea', e.target.value)} onBlur={() => touch('viaCutanea')} className={cn(inputClass('viaCutanea'), "appearance-none pr-8 cursor-pointer")}>
-                      <option value="" disabled>Selecione</option>
-                      <option value="Subcutânea">Subcutânea</option>
-                      <option value="Sublingual">Sublingual</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={form.viaCutanea} onChange={(e) => set('viaCutanea', e.target.value)} onBlur={() => touch('viaCutanea')} invalid={isInvalid('viaCutanea')}>
+                    <option value="" disabled>Selecione</option>
+                    <option value="Subcutânea">Subcutânea</option>
+                    <option value="Sublingual">Sublingual</option>
+                  </Select>
                   <ErrorMsg field="viaCutanea" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Início</label>
-                  <input type="date" value={form.dataInicio} onChange={(e) => set('dataInicio', e.target.value)} onBlur={() => touch('dataInicio')} className={inputClass('dataInicio')} />
+                  <TextInput type="date" min={todayStr()} value={form.dataInicio} onChange={(e) => set('dataInicio', e.target.value)} onBlur={() => touch('dataInicio')} invalid={isInvalid('dataInicio')} />
                   <ErrorMsg field="dataInicio" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Extrato</label>
-                  <input placeholder="Ex: Der p 60 + Der f 10% + Blt 30%" value={form.extrato} onChange={(e) => set('extrato', e.target.value)} onBlur={() => touch('extrato')} className={inputClass('extrato')} />
+                  <TextInput placeholder="Ex: Der p 60 + Der f 10% + Blt 30%" value={form.extrato} onChange={(e) => set('extrato', e.target.value)} onBlur={() => touch('extrato')} invalid={isInvalid('extrato')} />
                   <ErrorMsg field="extrato" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Meta de Concentração</label>
-                  <input placeholder="1:10" value={form.metaConcentracao} onChange={(e) => set('metaConcentracao', formatConcentration(e.target.value))} onBlur={() => touch('metaConcentracao')} className={inputClass('metaConcentracao')} />
+                  <TextInput placeholder="1:10" value={form.metaConcentracao} onChange={(e) => set('metaConcentracao', formatConcentration(e.target.value))} onBlur={() => touch('metaConcentracao')} invalid={isInvalid('metaConcentracao')} />
                   <ErrorMsg field="metaConcentracao" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Meta de Volume</label>
                   <div className="relative">
-                    <input placeholder="Ex: 0.5" value={form.metaVolume} onChange={(e) => set('metaVolume', formatVolume(e.target.value))} onBlur={() => touch('metaVolume')} className={cn(inputClass('metaVolume'), "pr-10")} />
+                    <TextInput placeholder="Ex: 0.5" value={form.metaVolume} onChange={(e) => set('metaVolume', formatVolume(e.target.value))} onBlur={() => touch('metaVolume')} invalid={isInvalid('metaVolume')} className="pr-10" />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">ml</span>
                   </div>
                   <ErrorMsg field="metaVolume" />
@@ -407,39 +334,34 @@ export function AddImmunotherapyPage() {
         {/* Footer */}
         <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
           {step > 1 && (
-            <button onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)} className="h-8 px-4 rounded-lg border-[1.5px] border-teal-400 text-teal-600 text-xs font-semibold hover:bg-teal-50 transition-all">
+            <Button tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
               Voltar
-            </button>
+            </Button>
           )}
           {step < 3 ? (
-            <button onClick={handleContinue} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all">
+            <Button tone="brand" variant="solid" onClick={handleContinue}>
               Continuar
-            </button>
+            </Button>
           ) : (
-            <button onClick={handleFinish} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all">
+            <Button tone="brand" variant="solid" onClick={handleFinish}>
               Salvar Imunoterapia
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
-      {/* Cancel confirmation modal */}
-      {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowCancelModal(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-sm font-bold text-(--text) mb-2">Cancelar cadastro?</h3>
-            <p className="text-xs text-(--text-muted) mb-5">Os dados preenchidos serão perdidos. Deseja realmente cancelar a prescrição da imunoterapia?</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowCancelModal(false)} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all">
-                Continuar editando
-              </button>
-              <button onClick={() => navigate({ to: '/immunotherapies' })} className="h-8 px-4 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-all">
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        title="Cancelar cadastro?"
+        size="sm"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowCancelModal(false)}>Continuar editando</Button>
+          <Button variant="danger" onClick={() => navigate({ to: '/immunotherapies' })}>Cancelar</Button>
+        </>}
+      >
+        <p className="text-xs text-(--text-muted)">Os dados preenchidos serão perdidos. Deseja realmente cancelar a prescrição da imunoterapia?</p>
+      </Modal>
     </div>
   )
 }

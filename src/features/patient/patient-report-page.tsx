@@ -9,6 +9,7 @@ import { jsPDF } from 'jspdf'
 import { cn } from '@/shared/lib/utils'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { Modal, Button, IconButton, SegmentedControl, TextArea } from "@/shared/ui"
 
 const formats = [
   { id: 'pdf', label: 'PDF', icon: FileText },
@@ -414,9 +415,9 @@ export function PatientReportPage() {
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate({ to: '/patient/$patientId', params: { patientId: patient.id } })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
+            <IconButton aria-label="Voltar para o prontuário" to="/patient/$patientId" params={{ patientId: patient.id }}>
               <ArrowLeft size={16} />
-            </button>
+            </IconButton>
             <div>
               <h1 className="text-lg font-bold text-(--text)">Emitir Relatório</h1>
               <p className="text-[0.65rem] text-(--text-muted)">{patient.nome}</p>
@@ -445,16 +446,17 @@ export function PatientReportPage() {
         <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Left — Config */}
           <div className="w-72 shrink-0 border-r border-(--border-custom) p-5 overflow-y-auto space-y-5">
-            {/* Mode tabs */}
             {canLgpdPortability && (
-              <div className="flex h-8 rounded-lg border border-(--border-custom) overflow-hidden">
-                <button onClick={() => setReportMode('clinico')} className={cn("flex-1 px-3 text-xs font-semibold transition-all", reportMode === 'clinico' ? "bg-linear-to-br from-brand to-teal-400 text-white" : "text-(--text-muted) hover:bg-gray-50")}>
-                  Clínico
-                </button>
-                <button onClick={() => setReportMode('lgpd')} className={cn("flex-1 px-3 text-xs font-semibold transition-all", reportMode === 'lgpd' ? "bg-linear-to-br from-brand to-teal-400 text-white" : "text-(--text-muted) hover:bg-gray-50")}>
-                  Portabilidade
-                </button>
-              </div>
+              <SegmentedControl
+                value={reportMode}
+                onChange={setReportMode}
+                fullWidth
+                options={[
+                  { value: 'clinico', label: 'Clínico' },
+                  { value: 'lgpd', label: 'Portabilidade' },
+                ]}
+                aria-label="Modo do relatório"
+              />
             )}
 
             {reportMode === 'lgpd' && (
@@ -491,12 +493,11 @@ export function PatientReportPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Motivo da solicitação <span className="text-red-400">*</span></label>
-                  <textarea
+                  <TextArea
                     rows={2}
                     placeholder="Ex: Solicitação formal do paciente"
                     value={justificativa}
                     onChange={(e) => setJustificativa(e.target.value)}
-                    className="w-full rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 py-2 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all resize-none"
                   />
                 </div>
                 <button
@@ -675,12 +676,11 @@ export function PatientReportPage() {
             {/* Justification */}
             <div>
               <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Justificativa <span className="text-red-400">*</span></label>
-              <textarea
+              <TextArea
                 rows={2}
                 placeholder="Ex: Acompanhamento clínico do paciente"
                 value={justificativa}
                 onChange={(e) => setJustificativa(e.target.value)}
-                className="w-full rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 py-2 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all resize-none"
               />
             </div>
 
@@ -895,53 +895,43 @@ export function PatientReportPage() {
         </div>
       </div>
 
-      {/* Export confirmation modal */}
-      {showExportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowExportModal(false)}>
-          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-center mb-3">
-              <div className="h-11 w-11 rounded-full bg-brand/10 flex items-center justify-center">
-                <ShieldCheck size={20} className="text-brand" />
-              </div>
-            </div>
-            <h3 className="text-sm font-bold text-(--text) mb-1.5 text-center">Confirmar exportação</h3>
-            <p className="text-[0.7rem] text-(--text-muted) mb-4 text-center leading-relaxed">
-              Esta ação será registrada no log de auditoria do sistema conforme exigências da LGPD.
-            </p>
-
-            <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5 mb-4 space-y-1.5">
-              <div className="flex justify-between">
-                <span className="text-[0.6rem] text-(--text-muted)">Paciente</span>
-                <span className="text-[0.6rem] font-semibold text-(--text)">{anonimizar ? mask(patient.nome) : patient.nome}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[0.6rem] text-(--text-muted)">Formato</span>
-                <span className="text-[0.6rem] font-semibold text-(--text)">{fileFormat.toUpperCase()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[0.6rem] text-(--text-muted)">Dados anonimizados</span>
-                <span className={cn("text-[0.6rem] font-semibold", anonimizar ? "text-brand" : "text-amber-600")}>{anonimizar ? 'Sim' : 'Não'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[0.6rem] text-(--text-muted)">Justificativa</span>
-                <span className="text-[0.6rem] font-semibold text-(--text) text-right max-w-[60%] truncate">{justificativa}</span>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button onClick={() => setShowExportModal(false)} className="flex-1 h-8 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-                Cancelar
-              </button>
-              <button
-                onClick={() => { setShowExportModal(false); handleExport() }}
-                className="flex-1 h-8 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all cursor-pointer"
-              >
-                Confirmar e exportar
-              </button>
-            </div>
+      <Modal
+        open={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        title="Confirmar exportação"
+        size="sm"
+        footer={<>
+          <Button variant="outline" onClick={() => setShowExportModal(false)}>Cancelar</Button>
+          <Button variant="primary" onClick={() => { setShowExportModal(false); handleExport() }}>Confirmar e exportar</Button>
+        </>}
+      >
+        <div className="flex justify-center">
+          <div className="h-11 w-11 rounded-full bg-brand/10 flex items-center justify-center">
+            <ShieldCheck size={20} className="text-brand" />
           </div>
         </div>
-      )}
+        <p className="text-[0.7rem] text-(--text-muted) text-center leading-relaxed">
+          Esta ação será registrada no log de auditoria do sistema conforme exigências da LGPD.
+        </p>
+        <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5 space-y-1.5">
+          <div className="flex justify-between">
+            <span className="text-[0.6rem] text-(--text-muted)">Paciente</span>
+            <span className="text-[0.6rem] font-semibold text-(--text)">{anonimizar ? mask(patient.nome) : patient.nome}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[0.6rem] text-(--text-muted)">Formato</span>
+            <span className="text-[0.6rem] font-semibold text-(--text)">{fileFormat.toUpperCase()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[0.6rem] text-(--text-muted)">Dados anonimizados</span>
+            <span className={cn("text-[0.6rem] font-semibold", anonimizar ? "text-brand" : "text-amber-600")}>{anonimizar ? 'Sim' : 'Não'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[0.6rem] text-(--text-muted)">Justificativa</span>
+            <span className="text-[0.6rem] font-semibold text-(--text) text-right max-w-[60%] truncate">{justificativa}</span>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

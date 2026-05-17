@@ -60,7 +60,7 @@ src/
 │   ├── auth/          Login / register / recuperação de senha
 │   ├── dashboard/     Dashboard + export-report
 │   ├── immunotherapy/ Lista, cadastro e tipos customizáveis
-│   ├── marketing/     Landing page + seções
+│   ├── landing-page/  Landing page + seções 
 │   ├── notification/  Central de notificações
 │   ├── patient/       Prontuário, evolução e relatório do paciente
 │   ├── settings/      Configurações (avançadas, perfil, times, etc.)
@@ -248,7 +248,8 @@ src/
 │   │   ├── immunotherapies-page.tsx
 │   │   ├── immunotherapies-store.ts
 │   │   └── scit-protocol.ts
-│   ├── marketing/
+│   ├── landing-page/
+│   │   ├── _ui/
 │   │   ├── landing-page.tsx
 │   │   └── sections/
 │   ├── notification/

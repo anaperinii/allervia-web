@@ -2,8 +2,9 @@ import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
 import { useCan, useDoctorFilter } from '@/features/user/user-store'
-import { Users, Syringe, Activity, TrendingUp, TrendingDown, Download, ChevronDown, Archive, Pin, PinOff } from 'lucide-react'
+import { Users, Syringe, Activity, TrendingUp, TrendingDown, Download, Archive, Pin, PinOff } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { Button, SegmentedControl, Select } from '@/shared/ui'
 import {
   PieChart, Pie, Cell,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -119,41 +120,26 @@ export function DashboardPage() {
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-(--text)">Dashboard</h1>
           <div className="flex items-center gap-2">
-            {/* Modality toggle */}
-            <div className="flex h-8 rounded-lg border border-(--border-custom) overflow-hidden">
-              {[{ key: 'sub', label: 'Subcutânea' }, { key: 'sbl', label: 'Sublingual' }].map((m) => (
-                <button
-                  key={m.key}
-                  onClick={() => setModality(m.key as 'sub' | 'sbl')}
-                  className={cn("px-3 text-xs font-semibold transition-all", modality === m.key ? "bg-linear-to-br from-brand to-teal-400 text-white" : "text-(--text-muted) hover:bg-gray-50")}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
-            {/* Tipo filter */}
-            <div className="relative">
-              <select value={tipoFilter} onChange={(e) => setTipoFilter(e.target.value)} className="h-8 pl-2.5 pr-7 rounded-lg border border-(--border-custom) bg-white text-xs appearance-none cursor-pointer focus:outline-none transition-all">
-                <option value="Todos">Todos os tipos</option>
-                {tipos.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-            </div>
-            {/* Mês filter */}
-            <div className="relative">
-              <select value={mesFilter} onChange={(e) => setMesFilter(e.target.value)} className="h-8 pl-2.5 pr-7 rounded-lg border border-(--border-custom) bg-white text-xs appearance-none cursor-pointer focus:outline-none transition-all">
-                <option value="Todos">Todos os meses</option>
-                {['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-            </div>
-            {/* Ano filter */}
-            <div className="relative">
-              <select value={anoFilter} onChange={(e) => setAnoFilter(e.target.value)} className="h-8 pl-2.5 pr-7 rounded-lg border border-(--border-custom) bg-white text-xs appearance-none cursor-pointer focus:outline-none transition-all">
-                {['2024','2025','2026'].map((a) => <option key={a} value={a}>{a}</option>)}
-              </select>
-              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-            </div>
+            <SegmentedControl
+              value={modality}
+              onChange={setModality}
+              options={[
+                { value: 'sub', label: 'Subcutânea' },
+                { value: 'sbl', label: 'Sublingual' },
+              ]}
+              aria-label="Modalidade"
+            />
+            <Select value={tipoFilter} onChange={(e) => setTipoFilter(e.target.value)} className="h-8 bg-white">
+              <option value="Todos">Todos os tipos</option>
+              {tipos.map((t) => <option key={t} value={t}>{t}</option>)}
+            </Select>
+            <Select value={mesFilter} onChange={(e) => setMesFilter(e.target.value)} className="h-8 bg-white">
+              <option value="Todos">Todos os meses</option>
+              {['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m) => <option key={m} value={m}>{m}</option>)}
+            </Select>
+            <Select value={anoFilter} onChange={(e) => setAnoFilter(e.target.value)} className="h-8 bg-white">
+              {['2024','2025','2026'].map((a) => <option key={a} value={a}>{a}</option>)}
+            </Select>
             <button
               onClick={() => setShowArchived(!showArchived)}
               className={cn("h-8 px-3 flex items-center gap-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer", showArchived ? "bg-teal-50 border-teal-200 text-teal-700" : "border-(--border-custom) text-(--text-muted) hover:bg-gray-50")}
@@ -166,13 +152,16 @@ export function DashboardPage() {
                 </span>
               )}
             </button>
-            <button
-              onClick={() => navigate({ to: '/export-report' })}
-              className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px transition-all"
+            <Button
+              tone="brand"
+              variant="solid"
+              prominent
+              leftIcon={<Download size={13} />}
+              to="/export-report"
+              className="px-3"
             >
-              <Download size={13} />
               Exportar Relatório
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -214,17 +203,14 @@ export function DashboardPage() {
           <div className="flex flex-wrap gap-4">
             {/* Pie: Concentrations */}
             {isVisible('conc') && (
-            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-[380px]">
+            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-95">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-(--text)">Ciclos de Tratamento por Concentração</h3>
                 <div className="flex items-center gap-1">
-                  <div className="relative">
-                    <select value={concCardFilter} onChange={(e) => setConcCardFilter(e.target.value)} className="h-6 pl-2 pr-5 rounded-md border border-(--border-custom) bg-white text-[0.6rem] appearance-none cursor-pointer focus:outline-none">
-                      <option value="Todos">Todos</option>
-                      {tipos.map((t) => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    <ChevronDown size={9} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={concCardFilter} onChange={(e) => setConcCardFilter(e.target.value)} className="h-6 pl-2 pr-5 bg-white text-[0.6rem]">
+                    <option value="Todos">Todos</option>
+                    {tipos.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </Select>
                   <ArchiveBtn id="conc" />
                 </div>
               </div>
@@ -253,17 +239,14 @@ export function DashboardPage() {
 
             {/* Bar: Phases */}
             {isVisible('phase') && (
-            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-[380px]">
+            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-95">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-(--text)">Distribuição de Fases</h3>
                 <div className="flex items-center gap-1">
-                  <div className="relative">
-                    <select value={phaseCardFilter} onChange={(e) => setPhaseCardFilter(e.target.value)} className="h-6 pl-2 pr-5 rounded-md border border-(--border-custom) bg-white text-[0.6rem] appearance-none cursor-pointer focus:outline-none">
-                      <option value="Todos">Todos os meses</option>
-                      {['Jan','Fev','Mar','Abr'].map((m) => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                    <ChevronDown size={9} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={phaseCardFilter} onChange={(e) => setPhaseCardFilter(e.target.value)} className="h-6 pl-2 pr-5 bg-white text-[0.6rem]">
+                    <option value="Todos">Todos os meses</option>
+                    {['Jan','Fev','Mar','Abr'].map((m) => <option key={m} value={m}>{m}</option>)}
+                  </Select>
                   <ArchiveBtn id="phase" />
                 </div>
               </div>
@@ -292,17 +275,14 @@ export function DashboardPage() {
 
             {/* Line: Status */}
             {isVisible('status') && (
-            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-[380px]">
+            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-95">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-(--text)">Status de Imunoterapias</h3>
                 <div className="flex items-center gap-1">
-                  <div className="relative">
-                    <select value={statusCardFilter} onChange={(e) => setStatusCardFilter(e.target.value)} className="h-6 pl-2 pr-5 rounded-md border border-(--border-custom) bg-white text-[0.6rem] appearance-none cursor-pointer focus:outline-none">
-                      <option value="Todos">Todos os meses</option>
-                      {['Jan','Fev','Mar','Abr'].map((m) => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                    <ChevronDown size={9} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={statusCardFilter} onChange={(e) => setStatusCardFilter(e.target.value)} className="h-6 pl-2 pr-5 bg-white text-[0.6rem]">
+                    <option value="Todos">Todos os meses</option>
+                    {['Jan','Fev','Mar','Abr'].map((m) => <option key={m} value={m}>{m}</option>)}
+                  </Select>
                   <ArchiveBtn id="status" />
                 </div>
               </div>
@@ -332,18 +312,15 @@ export function DashboardPage() {
 
             {/* Bar: Top types */}
             {isVisible('type') && (
-            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-[380px]">
+            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-95">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-(--text)">Imunoterapias Ativas por Tipo</h3>
                 <div className="flex items-center gap-1">
-                  <div className="relative">
-                    <select value={typeCardFilter} onChange={(e) => setTypeCardFilter(e.target.value)} className="h-6 pl-2 pr-5 rounded-md border border-(--border-custom) bg-white text-[0.6rem] appearance-none cursor-pointer focus:outline-none">
-                      <option value="Todos">Todas as fases</option>
-                      <option value="Indução">Indução</option>
-                      <option value="Manutenção">Manutenção</option>
-                    </select>
-                    <ChevronDown size={9} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={typeCardFilter} onChange={(e) => setTypeCardFilter(e.target.value)} className="h-6 pl-2 pr-5 bg-white text-[0.6rem]">
+                    <option value="Todos">Todas as fases</option>
+                    <option value="Indução">Indução</option>
+                    <option value="Manutenção">Manutenção</option>
+                  </Select>
                   <ArchiveBtn id="type" />
                 </div>
               </div>
@@ -375,13 +352,10 @@ export function DashboardPage() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-bold text-(--text)">Volume vs Concentração</h3>
               <div className="flex items-center gap-1">
-                <div className="relative">
-                  <select value={volCardFilter} onChange={(e) => setVolCardFilter(e.target.value)} className="h-6 pl-2 pr-5 rounded-md border border-(--border-custom) bg-white text-[0.6rem] appearance-none cursor-pointer focus:outline-none">
-                    <option value="Todos">Todos os tipos</option>
-                    {tipos.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                  <ChevronDown size={9} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                </div>
+                <Select value={volCardFilter} onChange={(e) => setVolCardFilter(e.target.value)} className="h-6 pl-2 pr-5 bg-white text-[0.6rem]">
+                  <option value="Todos">Todos os tipos</option>
+                  {tipos.map((t) => <option key={t} value={t}>{t}</option>)}
+                </Select>
                 <ArchiveBtn id="vol" />
               </div>
             </div>

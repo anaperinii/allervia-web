@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { validatePassword as sharedValidatePassword, validatePasswordConfirm } from '@/shared/lib/validators'
-import { useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { AuthCard } from '@/features/auth/auth-card'
-import { Eye, EyeOff, ChevronDown, Smile, CheckCircle, Mail, ShieldCheck, ArrowRight } from 'lucide-react'
+import { Eye, EyeOff, Smile, CheckCircle, Mail, ShieldCheck, ArrowRight } from 'lucide-react'
 import { useEnterReveal } from '@/shared/hooks/use-enter-reveal'
+import { TextInput, Select } from '@/shared/ui'
 
 const specialties = [
   'Alergologia e Imunologia',
@@ -17,7 +18,6 @@ const specialties = [
 type Step = 'welcome' | 'form' | 'verify' | 'done'
 
 export function RegisterPage() {
-  const navigate = useNavigate()
   const [step, setStep] = useState<Step>('welcome')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -36,7 +36,6 @@ export function RegisterPage() {
     return `${local.slice(0, 3)}${'*'.repeat(Math.max(local.length - 3, 3))}@${domain}`
   })()
 
-  const inputClass = "w-full h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all"
 
   const validateForm = () => {
     const e: Record<string, string> = {}
@@ -158,12 +157,12 @@ export function RegisterPage() {
               <div className="flex flex-col gap-3.5">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-(--text)/80">Nome completo</label>
-                  <input
+                  <TextInput
                     type="text"
                     placeholder="Seu nome completo"
                     value={name}
                     onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((er) => { const n = { ...er }; delete n.name; return n }) }}
-                    className={`${inputClass} ${errors.name ? 'border-red-400 bg-red-50/30' : ''}`}
+                    invalid={!!errors.name}
                   />
                   {errors.name && <span className="text-[0.6rem] text-red-500">{errors.name}</span>}
                 </div>
@@ -173,11 +172,11 @@ export function RegisterPage() {
                     <label className="text-xs font-medium text-(--text)/80">E-mail</label>
                     <span className="text-[0.6rem] text-brand">Definido pelo administrador</span>
                   </div>
-                  <input
+                  <TextInput
                     type="email"
                     value={maskedEmail}
                     readOnly
-                    className={`${inputClass} text-(--text-muted) cursor-default bg-gray-100/60`}
+                    className="text-(--text-muted) cursor-default bg-gray-100/60"
                   />
                 </div>
 
@@ -185,12 +184,13 @@ export function RegisterPage() {
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-medium text-(--text)/80">Senha</label>
                     <div className="relative">
-                      <input
+                      <TextInput
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Mín. 8 caracteres"
                         value={password}
                         onChange={(e) => { setPassword(e.target.value); if (errors.password) setErrors((er) => { const n = { ...er }; delete n.password; return n }) }}
-                        className={`${inputClass} pr-9 ${errors.password ? 'border-red-400 bg-red-50/30' : ''}`}
+                        invalid={!!errors.password}
+                        className="pr-9"
                       />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted)/60 hover:text-(--text-muted) transition-colors" tabIndex={-1}>
                         {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -202,12 +202,13 @@ export function RegisterPage() {
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-medium text-(--text)/80">Confirmar senha</label>
                     <div className="relative">
-                      <input
+                      <TextInput
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="Repita a senha"
                         value={confirmPassword}
                         onChange={(e) => { setConfirmPassword(e.target.value); if (errors.confirmPassword) setErrors((er) => { const n = { ...er }; delete n.confirmPassword; return n }) }}
-                        className={`${inputClass} pr-9 ${errors.confirmPassword ? 'border-red-400 bg-red-50/30' : ''}`}
+                        invalid={!!errors.confirmPassword}
+                        className="pr-9"
                       />
                       <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted)/60 hover:text-(--text-muted) transition-colors" tabIndex={-1}>
                         {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -238,19 +239,16 @@ export function RegisterPage() {
 
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-(--text)/80">Especialidade</label>
-                  <div className="relative">
-                    <select
-                      value={specialty}
-                      onChange={(e) => { setSpecialty(e.target.value); if (errors.specialty) setErrors((er) => { const n = { ...er }; delete n.specialty; return n }) }}
-                      className={`${inputClass} appearance-none pr-9 cursor-pointer ${errors.specialty ? 'border-red-400 bg-red-50/30' : ''}`}
-                    >
-                      <option value="" disabled>Selecionar</option>
-                      {specialties.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select
+                    value={specialty}
+                    onChange={(e) => { setSpecialty(e.target.value); if (errors.specialty) setErrors((er) => { const n = { ...er }; delete n.specialty; return n }) }}
+                    invalid={!!errors.specialty}
+                  >
+                    <option value="" disabled>Selecionar</option>
+                    {specialties.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </Select>
                   {errors.specialty && <span className="text-[0.6rem] text-red-500">{errors.specialty}</span>}
                 </div>
               </div>
@@ -358,13 +356,13 @@ export function RegisterPage() {
                 </div>
               </div>
 
-              <button
-                onClick={() => navigate({ to: '/login' })}
-                className="w-full h-10 rounded-xl text-xs font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none flex items-center justify-center gap-2"
+              <Link
+                to="/login"
+                className="w-full h-10 rounded-xl text-xs font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none flex items-center justify-center gap-2 no-underline"
               >
                 Acessar o ImuneCare
                 <ArrowRight size={14} />
-              </button>
+              </Link>
             </>
           )}
 

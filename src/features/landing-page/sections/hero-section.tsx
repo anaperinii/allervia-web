@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { LandingCTA } from '@/features/landing-page/_ui'
 import patientImg from '@/assets/patient-hero-section.png'
 
 export function HeroSection() {
@@ -25,12 +25,9 @@ export function HeroSection() {
         </p>
 
         <div className="flex gap-3 flex-wrap">
-          <Link
-            to="/trial"
-            className="px-6 py-2.5 rounded-full border-none bg-linear-to-br from-brand to-teal-400 text-white font-semibold text-[0.9rem] cursor-pointer transition-all duration-250 shadow-[0_4px_20px_rgba(24,193,203,0.35)] hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(24,193,203,0.4)] no-underline"
-          >
+          <LandingCTA to="/trial" variant="filled">
             Solicitar demonstração
-          </Link>
+          </LandingCTA>
         </div>
       </div>
 

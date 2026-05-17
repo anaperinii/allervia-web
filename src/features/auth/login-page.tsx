@@ -4,6 +4,7 @@ import { AuthCard } from '@/features/auth/auth-card'
 import { Eye, EyeOff } from 'lucide-react'
 import { useEnterReveal } from '@/shared/hooks/use-enter-reveal'
 import { validateEmail } from '@/shared/lib/validators'
+import { TextInput } from '@/shared/ui'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -37,9 +38,7 @@ export function LoginPage() {
     navigate({ to: '/immunotherapies' })
   }
 
-  const inputBase = 'w-full rounded-lg border bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all'
-  const fieldClass = (field: string, extra = '') =>
-    `${inputBase} ${errors[field] && touched[field] ? 'border-red-400 bg-red-50/30' : 'border-(--border-custom)'} ${extra}`
+  const isInvalid = (field: string) => !!(errors[field] && touched[field])
   const ErrMsg = ({ field }: { field: string }) =>
     errors[field] && touched[field] ? <span className="text-[0.6rem] text-red-500 mt-0.5 block">{errors[field]}</span> : null
 
@@ -58,7 +57,7 @@ export function LoginPage() {
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-(--text)/80">Email</label>
-              <input
+              <TextInput
                 type="email"
                 placeholder="seu@email.com.br"
                 value={email}
@@ -68,7 +67,7 @@ export function LoginPage() {
                   const err = validateEmail(email)
                   if (err) setErrors((p) => ({ ...p, email: err }))
                 }}
-                className={fieldClass('email', 'h-9')}
+                invalid={isInvalid('email')}
                 autoComplete="email"
                 maxLength={254}
               />
@@ -78,14 +77,15 @@ export function LoginPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-(--text)/80">Senha</label>
               <div className="relative">
-                <input
+                <TextInput
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Insira aqui"
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); clearError('password') }}
                   onBlur={() => touch('password')}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleLogin() }}
-                  className={fieldClass('password', 'h-11 pr-10 text-sm')}
+                  invalid={isInvalid('password')}
+                  className="h-11 pr-10 text-sm"
                   autoComplete="current-password"
                   maxLength={128}
                 />

@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Book, MessageCircle, Mail, ChevronDown, ExternalLink } from 'lucide-react'
+import {} from '@tanstack/react-router'
+import { ArrowLeft, Book, MessageCircle, Mail, ChevronDown } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { IconButton, CardButton } from "@/shared/ui"
 
 const faqs = [
   { q: 'Como cadastrar um novo paciente?', a: 'Acesse Imunoterapias > Adicionar Imunoterapia. O cadastro do paciente é feito na primeira etapa do fluxo, seguido da prescrição do protocolo.' },
@@ -12,16 +13,13 @@ const faqs = [
 ]
 
 export function HelpPage() {
-  const navigate = useNavigate()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <button onClick={() => navigate({ to: '/settings' })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-            <ArrowLeft size={16} />
-          </button>
+          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
           <h1 className="text-2xl font-bold text-(--text)">Ajuda</h1>
         </div>
 
@@ -36,16 +34,14 @@ export function HelpPage() {
               ].map((item) => {
                 const Icon = item.icon
                 return (
-                  <button key={item.label} className="border border-(--border-custom) rounded-xl p-4 text-left hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer group">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg mb-2.5" style={{ backgroundColor: item.color + '15' }}>
-                      <Icon size={16} style={{ color: item.color }} />
-                    </div>
-                    <div className="text-xs font-semibold text-(--text) flex items-center gap-1">
-                      {item.label}
-                      <ExternalLink size={10} className="text-(--text-muted) opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <div className="text-[0.6rem] text-(--text-muted) mt-0.5">{item.desc}</div>
-                  </button>
+                  <CardButton
+                    key={item.label}
+                    orientation="vertical"
+                    icon={<Icon size={16} />}
+                    iconColor={item.color}
+                    title={item.label}
+                    description={item.desc}
+                  />
                 )
               })}
             </div>

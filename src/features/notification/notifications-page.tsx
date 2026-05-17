@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useNotificationsStore, type Notification, type NotificationCategory } from '@/features/notification/notifications-store'
-import { BellOff, Mail, MailOpen, ChevronDown, ChevronRight, CheckCheck, ChevronUp } from 'lucide-react'
+import { BellOff, Mail, MailOpen, ChevronRight, CheckCheck, ChevronUp, ChevronDown } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { Select, TextInput } from '@/shared/ui'
 import { formatDistanceToNow, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -68,8 +69,6 @@ export function NotificationsPage() {
   const handleBatchRead = () => { markSelectedAsRead([...selectedIds]); setSelectedIds(new Set()) }
   const handleBatchUnread = () => { markSelectedAsUnread([...selectedIds]); setSelectedIds(new Set()) }
 
-  const selectClass = "h-7 pl-2 pr-6 rounded-lg border border-(--border-custom) bg-white text-[0.65rem] appearance-none cursor-pointer focus:outline-none"
-
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
@@ -127,17 +126,14 @@ export function NotificationsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <select value={readFilter} onChange={(e) => setReadFilter(e.target.value as typeof readFilter)} className={selectClass}>
-                <option value="all">Todas</option>
-                <option value="unread">Não lidas</option>
-                <option value="read">Lidas</option>
-              </select>
-              <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-            </div>
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-7 px-2 rounded-lg border border-(--border-custom) bg-white text-[0.65rem] focus:outline-none" />
+            <Select value={readFilter} onChange={(e) => setReadFilter(e.target.value as typeof readFilter)} className="h-7 bg-white text-[0.65rem]">
+              <option value="all">Todas</option>
+              <option value="unread">Não lidas</option>
+              <option value="read">Lidas</option>
+            </Select>
+            <TextInput type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-7 bg-white text-[0.65rem]" />
             <span className="text-[0.6rem] text-(--text-muted)">—</span>
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-7 px-2 rounded-lg border border-(--border-custom) bg-white text-[0.65rem] focus:outline-none" />
+            <TextInput type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-7 bg-white text-[0.65rem]" />
           </div>
         </div>
 
