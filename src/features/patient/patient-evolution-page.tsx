@@ -10,7 +10,7 @@ import { cn } from '@/shared/lib/utils'
 import { validateVolume, validateConcentration } from '@/shared/lib/validators'
 import { calculateNextDose, parseDose } from '@/features/immunotherapy/scit-protocol'
 import { useForm } from '@/shared/hooks/useForm'
-import { Modal, Button } from '@/shared/ui'
+import { Modal, Button, IconButton } from "@/shared/ui"
 
 const stepLabels = ['Paciente', 'Pré-Aplicação', 'Pós-Aplicação', 'Revisão dos Dados']
 
@@ -347,9 +347,9 @@ export function PatientEvolutionPage() {
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <button onClick={() => setShowCancelModal(true)} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
+          <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
             <ArrowLeft size={16} />
-          </button>
+          </IconButton>
           <h1 className="text-2xl font-bold text-(--text)">Evolução do Paciente</h1>
         </div>
 
@@ -823,22 +823,23 @@ export function PatientEvolutionPage() {
         {/* Footer */}
         <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
           {step > 0 && (
-            <button onClick={() => setStep((s) => (s - 1) as 0 | 1 | 2 | 3)} className="h-8 px-4 rounded-lg border-[1.5px] border-teal-400 text-teal-600 text-xs font-semibold hover:bg-teal-50 transition-all">
+            <Button tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 0 | 1 | 2 | 3)}>
               Voltar
-            </button>
+            </Button>
           )}
           {step < 3 ? (
-            <button
+            <Button
+              tone="brand"
+              variant="solid"
               onClick={handleContinue}
               disabled={step === 0 && (!selectedPatient || selectedPatient.status === 'inativo')}
-              className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
             >
               Continuar
-            </button>
+            </Button>
           ) : (
-            <button onClick={handleSaveEvolution} className="h-8 px-4 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all">
+            <Button tone="brand" variant="solid" onClick={handleSaveEvolution}>
               Salvar Evolução
-            </button>
+            </Button>
           )}
         </div>
       </div>

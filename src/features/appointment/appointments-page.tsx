@@ -6,7 +6,7 @@ import { useCan, useDoctorFilter } from '@/features/user/user-store'
 import { Plus, ChevronLeft, ChevronRight, ChevronDown, ExternalLink, CheckCircle, Calendar, Phone, Clock, Syringe, User } from 'lucide-react'
 import type { Application } from '@/features/patient/patient-store'
 import { cn } from '@/shared/lib/utils'
-import { Modal, Button, Toast } from '@/shared/ui'
+import { Modal, Button, Toast, SegmentedControl } from '@/shared/ui'
 import {
   format,
   startOfWeek,
@@ -126,10 +126,17 @@ export function AppointmentsPage() {
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-(--text)">Agendamentos</h1>
           {canNewAppointment && (
-            <button onClick={() => setShowAddModal(true)} className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all">
-              <Plus size={14} />
+            <Button
+              tone="brand"
+              variant="solid"
+              prominent
+              size="md"
+              leftIcon={<Plus size={13} />}
+              onClick={() => setShowAddModal(true)}
+              className="px-3"
+            >
               Novo Agendamento
-            </button>
+            </Button>
           )}
         </div>
 
@@ -147,13 +154,16 @@ export function AppointmentsPage() {
             </button>
             <span className="text-sm font-semibold text-(--text) ml-1">{monthLabel}</span>
           </div>
-          <div className="flex items-center gap-1">
-            {(['week', 'month'] as const).map((mode) => (
-              <button key={mode} onClick={() => setViewMode(mode)} className={cn('h-7 px-3 rounded-md text-xs font-semibold transition-all', viewMode === mode ? 'bg-linear-to-br from-brand to-teal-400 text-white' : 'border border-(--border-custom) text-(--text-muted) hover:border-brand hover:text-brand')}>
-                {mode === 'week' ? 'Semana' : 'Mês'}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            value={viewMode}
+            onChange={setViewMode}
+            size="sm"
+            options={[
+              { value: 'week', label: 'Semana' },
+              { value: 'month', label: 'Mês' },
+            ]}
+            aria-label="Modo de visualização"
+          />
         </div>
 
         {/* Calendar grid */}

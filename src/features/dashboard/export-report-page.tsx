@@ -5,7 +5,7 @@ import { cn } from '@/shared/lib/utils'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer } from 'recharts'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
 import { useCan, useDoctorFilter } from '@/features/user/user-store'
-import { Modal, Button } from '@/shared/ui'
+import { Modal, Button, IconButton } from "@/shared/ui"
 
 const formats = [
   { id: 'pdf', label: 'PDF', icon: FileText },
@@ -132,9 +132,9 @@ export function ExportReportPage() {
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <button onClick={() => setShowCancelModal(true)} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-red-50 hover:text-red-500 transition-all">
+          <IconButton aria-label="Voltar" variant="danger" onClick={() => setShowCancelModal(true)}>
             <ArrowLeft size={18} />
-          </button>
+          </IconButton>
           <h1 className="text-2xl font-bold text-(--text)">Exportar Relatório</h1>
         </div>
 

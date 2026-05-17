@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import {} from '@tanstack/react-router'
 import { ArrowLeft, Type, Layout, Contrast, MousePointer, Eye } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { IconButton, Switch } from "@/shared/ui"
 
 export function PersonalizationPage() {
-  const navigate = useNavigate()
   const [theme, setTheme] = useState('light')
   const [density, setDensity] = useState('comfortable')
   const [highContrast, setHighContrast] = useState(false)
@@ -16,9 +16,7 @@ export function PersonalizationPage() {
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <button onClick={() => navigate({ to: '/settings' })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-            <ArrowLeft size={16} />
-          </button>
+          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
           <h1 className="text-2xl font-bold text-(--text)">Personalização e Acessibilidade</h1>
         </div>
 
@@ -112,9 +110,7 @@ export function PersonalizationPage() {
                           <div className="text-[0.65rem] text-(--text-muted)">{item.desc}</div>
                         </div>
                       </div>
-                      <button onClick={() => item.set(!item.value)} className={cn("h-6 w-11 rounded-full transition-all cursor-pointer relative", item.value ? "bg-brand" : "bg-gray-300")}>
-                        <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", item.value ? "left-5.5" : "left-0.5")} />
-                      </button>
+                      <Switch checked={item.value} onChange={item.set} aria-label={item.label} />
                     </div>
                   </div>
                 ))}
@@ -143,9 +139,7 @@ export function PersonalizationPage() {
                           <div className="text-[0.65rem] text-(--text-muted)">{item.desc}</div>
                         </div>
                       </div>
-                      <button onClick={() => item.set(!item.value)} className={cn("h-6 w-11 rounded-full transition-all cursor-pointer relative", item.value ? "bg-brand" : "bg-gray-300")}>
-                        <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", item.value ? "left-5.5" : "left-0.5")} />
-                      </button>
+                      <Switch checked={item.value} onChange={item.set} aria-label={item.label} />
                     </div>
                   </div>
                 ))}

@@ -17,7 +17,7 @@ import {
   CheckCircle,
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { Toast } from '@/shared/ui'
+import { Toast, Button } from '@/shared/ui'
 
 const INTERVAL_COLORS: Record<number, { bg: string; text: string; dot: string }> = {
   7: { bg: '#FDECF0', text: '#E8768E', dot: '#E8768E' },
@@ -159,20 +159,23 @@ export function ImmunotherapiesPage() {
               <Archive size={14} />
             </button>
 
-            {/* Adicionar */}
             {canAddImmunotherapy && (
-              <button onClick={() => navigate({ to: '/add-immunotherapy' })} className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all">
-                <Plus size={14} />
+              <Button
+                tone="brand"
+                variant="solid"
+                prominent
+                leftIcon={<Plus size={14} />}
+                to="/add-immunotherapy"
+                className="px-3"
+              >
                 Adicionar Imunoterapia
-              </button>
+              </Button>
             )}
 
-            {/* Evoluir */}
             {canEvolve && (
-              <button onClick={() => navigate({ to: '/patient-evolution' })} className="h-8 px-3 flex items-center gap-1.5 rounded-lg border-[1.5px] border-teal-400 text-teal-600 text-xs font-semibold hover:bg-teal-50 hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.25)] transition-all">
-                <FileText size={14} />
+              <Button tone="brand" variant="outline" leftIcon={<FileText size={14} />} to="/patient-evolution" className="px-3">
                 Evoluir Paciente
-              </button>
+              </Button>
             )}
           </div>
         </div>

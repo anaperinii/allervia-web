@@ -1,6 +1,7 @@
-import { useNavigate } from '@tanstack/react-router'
+import {} from '@tanstack/react-router'
 import { ArrowLeft, Check, Zap, Building, Crown, CreditCard, Calendar, Receipt } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { IconButton } from "@/shared/ui"
 
 const plans = [
   {
@@ -38,15 +39,12 @@ const plans = [
 const maxFeatures = Math.max(...plans.map((p) => p.features.length))
 
 export function PlansPage() {
-  const navigate = useNavigate()
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <button onClick={() => navigate({ to: '/settings' })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-            <ArrowLeft size={16} />
-          </button>
+          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
           <h1 className="text-2xl font-bold text-(--text)">Planos e Serviços</h1>
         </div>
 

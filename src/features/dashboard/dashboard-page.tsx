@@ -4,6 +4,7 @@ import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapie
 import { useCan, useDoctorFilter } from '@/features/user/user-store'
 import { Users, Syringe, Activity, TrendingUp, TrendingDown, Download, ChevronDown, Archive, Pin, PinOff } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { Button, SegmentedControl } from '@/shared/ui'
 import {
   PieChart, Pie, Cell,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -119,18 +120,15 @@ export function DashboardPage() {
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-(--text)">Dashboard</h1>
           <div className="flex items-center gap-2">
-            {/* Modality toggle */}
-            <div className="flex h-8 rounded-lg border border-(--border-custom) overflow-hidden">
-              {[{ key: 'sub', label: 'Subcutânea' }, { key: 'sbl', label: 'Sublingual' }].map((m) => (
-                <button
-                  key={m.key}
-                  onClick={() => setModality(m.key as 'sub' | 'sbl')}
-                  className={cn("px-3 text-xs font-semibold transition-all", modality === m.key ? "bg-linear-to-br from-brand to-teal-400 text-white" : "text-(--text-muted) hover:bg-gray-50")}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
+            <SegmentedControl
+              value={modality}
+              onChange={setModality}
+              options={[
+                { value: 'sub', label: 'Subcutânea' },
+                { value: 'sbl', label: 'Sublingual' },
+              ]}
+              aria-label="Modalidade"
+            />
             {/* Tipo filter */}
             <div className="relative">
               <select value={tipoFilter} onChange={(e) => setTipoFilter(e.target.value)} className="h-8 pl-2.5 pr-7 rounded-lg border border-(--border-custom) bg-white text-xs appearance-none cursor-pointer focus:outline-none transition-all">
@@ -166,13 +164,16 @@ export function DashboardPage() {
                 </span>
               )}
             </button>
-            <button
-              onClick={() => navigate({ to: '/export-report' })}
-              className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px transition-all"
+            <Button
+              tone="brand"
+              variant="solid"
+              prominent
+              leftIcon={<Download size={13} />}
+              to="/export-report"
+              className="px-3"
             >
-              <Download size={13} />
               Exportar Relatório
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -214,7 +215,7 @@ export function DashboardPage() {
           <div className="flex flex-wrap gap-4">
             {/* Pie: Concentrations */}
             {isVisible('conc') && (
-            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-[380px]">
+            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-95">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-(--text)">Ciclos de Tratamento por Concentração</h3>
                 <div className="flex items-center gap-1">
@@ -253,7 +254,7 @@ export function DashboardPage() {
 
             {/* Bar: Phases */}
             {isVisible('phase') && (
-            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-[380px]">
+            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-95">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-(--text)">Distribuição de Fases</h3>
                 <div className="flex items-center gap-1">
@@ -292,7 +293,7 @@ export function DashboardPage() {
 
             {/* Line: Status */}
             {isVisible('status') && (
-            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-[380px]">
+            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-95">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-(--text)">Status de Imunoterapias</h3>
                 <div className="flex items-center gap-1">
@@ -332,7 +333,7 @@ export function DashboardPage() {
 
             {/* Bar: Top types */}
             {isVisible('type') && (
-            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-[380px]">
+            <div className="border border-(--border-custom) rounded-xl p-4 group flex-1 basis-[calc(50%-0.5rem)] min-w-95">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-(--text)">Imunoterapias Ativas por Tipo</h3>
                 <div className="flex items-center gap-1">

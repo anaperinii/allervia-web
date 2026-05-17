@@ -9,7 +9,7 @@ import { jsPDF } from 'jspdf'
 import { cn } from '@/shared/lib/utils'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Modal, Button } from '@/shared/ui'
+import { Modal, Button, IconButton, SegmentedControl } from "@/shared/ui"
 
 const formats = [
   { id: 'pdf', label: 'PDF', icon: FileText },
@@ -415,9 +415,9 @@ export function PatientReportPage() {
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate({ to: '/patient/$patientId', params: { patientId: patient.id } })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
+            <IconButton aria-label="Voltar para o prontuário" to="/patient/$patientId" params={{ patientId: patient.id }}>
               <ArrowLeft size={16} />
-            </button>
+            </IconButton>
             <div>
               <h1 className="text-lg font-bold text-(--text)">Emitir Relatório</h1>
               <p className="text-[0.65rem] text-(--text-muted)">{patient.nome}</p>
@@ -446,16 +446,17 @@ export function PatientReportPage() {
         <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Left — Config */}
           <div className="w-72 shrink-0 border-r border-(--border-custom) p-5 overflow-y-auto space-y-5">
-            {/* Mode tabs */}
             {canLgpdPortability && (
-              <div className="flex h-8 rounded-lg border border-(--border-custom) overflow-hidden">
-                <button onClick={() => setReportMode('clinico')} className={cn("flex-1 px-3 text-xs font-semibold transition-all", reportMode === 'clinico' ? "bg-linear-to-br from-brand to-teal-400 text-white" : "text-(--text-muted) hover:bg-gray-50")}>
-                  Clínico
-                </button>
-                <button onClick={() => setReportMode('lgpd')} className={cn("flex-1 px-3 text-xs font-semibold transition-all", reportMode === 'lgpd' ? "bg-linear-to-br from-brand to-teal-400 text-white" : "text-(--text-muted) hover:bg-gray-50")}>
-                  Portabilidade
-                </button>
-              </div>
+              <SegmentedControl
+                value={reportMode}
+                onChange={setReportMode}
+                fullWidth
+                options={[
+                  { value: 'clinico', label: 'Clínico' },
+                  { value: 'lgpd', label: 'Portabilidade' },
+                ]}
+                aria-label="Modo do relatório"
+              />
             )}
 
             {reportMode === 'lgpd' && (

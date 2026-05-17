@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useUserStore, ROLE_PERMISSIONS, type Permission } from '@/features/user/user-store'
+import { Button } from '@/shared/ui'
 
 interface SettingsOption {
   icon: LucideIcon
@@ -55,9 +56,9 @@ export function SettingsPage() {
                 <div className="text-[0.65rem] text-(--text-muted)">Administrador</div>
               </div>
 
-              <button onClick={() => navigate({ to: '/profile' })} className="w-full h-7 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-[0.7rem] font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(24,193,203,0.3)] transition-all cursor-pointer">
+              <Button tone="brand" variant="solid" size="sm" fullWidth to="/profile">
                 Seu Perfil
-              </button>
+              </Button>
             </div>
           </div>
 

@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import {} from '@tanstack/react-router'
 import { ArrowLeft, Plus, X, Mail, Shield, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal, Clock, Trash2, Pencil, UserX, UserCheck, Send, Lock } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useCan } from '@/features/user/user-store'
-import { Modal, Button } from '@/shared/ui'
+import { Modal, Button, IconButton } from "@/shared/ui"
 
 interface TeamMember {
   id: string
@@ -46,7 +46,6 @@ const mockInvites: Invite[] = [
 ]
 
 export function TeamsPage() {
-  const navigate = useNavigate()
   const canManageTeam = useCan('manage_team')
   const [tab, setTab] = useState<'members' | 'invites'>('members')
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -88,9 +87,9 @@ export function TeamsPage() {
           </div>
           <h2 className="text-base font-bold text-(--text) mb-1.5">Acesso restrito</h2>
           <p className="text-xs text-(--text-muted) max-w-sm leading-relaxed mb-5">A gestão de equipe está disponível apenas para o perfil <span className="font-semibold text-(--text)">Administrador</span>. Troque de perfil pelo menu de usuário para acessar esta área.</p>
-          <button onClick={() => navigate({ to: '/settings' })} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer">
+          <Button variant="outline" to="/settings">
             Voltar para configurações
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -102,9 +101,7 @@ export function TeamsPage() {
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate({ to: '/settings' })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-              <ArrowLeft size={16} />
-            </button>
+            <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
             <h1 className="text-2xl font-bold text-(--text)">Equipes e Convites</h1>
           </div>
           <button onClick={() => setShowInviteModal(true)} className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold shadow-[0_2px_12px_rgba(24,193,203,0.3)] hover:-translate-y-px transition-all cursor-pointer">

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { validatePassword as sharedValidatePassword, validatePasswordConfirm } from '@/shared/lib/validators'
-import { useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { AuthCard } from '@/features/auth/auth-card'
 import { Eye, EyeOff, ChevronDown, Smile, CheckCircle, Mail, ShieldCheck, ArrowRight } from 'lucide-react'
 import { useEnterReveal } from '@/shared/hooks/use-enter-reveal'
@@ -17,7 +17,6 @@ const specialties = [
 type Step = 'welcome' | 'form' | 'verify' | 'done'
 
 export function RegisterPage() {
-  const navigate = useNavigate()
   const [step, setStep] = useState<Step>('welcome')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -358,13 +357,13 @@ export function RegisterPage() {
                 </div>
               </div>
 
-              <button
-                onClick={() => navigate({ to: '/login' })}
-                className="w-full h-10 rounded-xl text-xs font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none flex items-center justify-center gap-2"
+              <Link
+                to="/login"
+                className="w-full h-10 rounded-xl text-xs font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none flex items-center justify-center gap-2 no-underline"
               >
                 Acessar o ImuneCare
                 <ArrowRight size={14} />
-              </button>
+              </Link>
             </>
           )}
 

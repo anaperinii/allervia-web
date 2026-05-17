@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import {} from '@tanstack/react-router'
 import { ArrowLeft, Camera, Save } from 'lucide-react'
-import { Modal, Button } from '@/shared/ui'
+import { Modal, Button, IconButton } from "@/shared/ui"
 
 export function ProfilePage() {
-  const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
   const [showSaveModal, setShowSaveModal] = useState(false)
 
@@ -30,9 +29,7 @@ export function ProfilePage() {
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate({ to: '/settings' })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-              <ArrowLeft size={16} />
-            </button>
+            <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
             <h1 className="text-2xl font-bold text-(--text)">Meu Perfil</h1>
           </div>
           {!editing ? (

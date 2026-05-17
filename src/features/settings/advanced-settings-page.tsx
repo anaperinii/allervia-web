@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import {} from '@tanstack/react-router'
 import { ArrowLeft, Database, Bell, Server, ChevronDown, Calendar, ExternalLink, CheckCircle, Palette, Plus, X, Lock, Syringe, Pencil, Trash2, Check } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useCan } from '@/features/user/user-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
+import { IconButton, Switch, Button } from "@/shared/ui"
 
 const defaultEventColors = [
   { id: 'subcutanea', label: 'Subcutânea', color: '#14B8A6' },
@@ -12,7 +13,6 @@ const defaultEventColors = [
 ]
 
 export function AdvancedSettingsPage() {
-  const navigate = useNavigate()
   const canAdvanced = useCan('advanced_settings')
   const [autoBackup, setAutoBackup] = useState(true)
   const [emailNotifications, setEmailNotifications] = useState(true)
@@ -48,9 +48,9 @@ export function AdvancedSettingsPage() {
           </div>
           <h2 className="text-base font-bold text-(--text) mb-1.5">Acesso restrito</h2>
           <p className="text-xs text-(--text-muted) max-w-sm leading-relaxed mb-5">As configurações avançadas são restritas a perfis <span className="font-semibold text-(--text)">Administrador</span> e <span className="font-semibold text-(--text)">Médico</span>.</p>
-          <button onClick={() => navigate({ to: '/settings' })} className="h-8 px-4 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer">
+          <Button variant="outline" to="/settings">
             Voltar para configurações
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -60,9 +60,7 @@ export function AdvancedSettingsPage() {
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <button onClick={() => navigate({ to: '/settings' })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-            <ArrowLeft size={16} />
-          </button>
+          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
           <h1 className="text-2xl font-bold text-(--text)">Configurações Avançadas</h1>
         </div>
 
@@ -90,9 +88,7 @@ export function AdvancedSettingsPage() {
                           <div className="text-[0.65rem] text-(--text-muted)">{item.desc}</div>
                         </div>
                       </div>
-                      <button onClick={() => item.set(!item.value)} className={cn("h-6 w-11 rounded-full transition-all cursor-pointer relative", item.value ? "bg-brand" : "bg-gray-300")}>
-                        <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", item.value ? "left-5.5" : "left-0.5")} />
-                      </button>
+                      <Switch checked={item.value} onChange={item.set} aria-label={item.label} />
                     </div>
                   </div>
                 ))}
@@ -184,9 +180,7 @@ export function AdvancedSettingsPage() {
                           <div className="text-[0.7rem] font-medium text-(--text)">Sincronização automática</div>
                           <div className="text-[0.55rem] text-(--text-muted)">Novos agendamentos são enviados ao Google Agenda</div>
                         </div>
-                        <button onClick={() => setAutoSync(!autoSync)} className={cn("h-6 w-11 rounded-full transition-all cursor-pointer relative", autoSync ? "bg-brand" : "bg-gray-300")}>
-                          <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", autoSync ? "left-5.5" : "left-0.5")} />
-                        </button>
+                        <Switch checked={autoSync} onChange={setAutoSync} />
                       </div>
                       <div className="flex items-center gap-1.5 text-[0.6rem] text-(--text-muted)">
                         <ExternalLink size={10} />
@@ -209,9 +203,7 @@ export function AdvancedSettingsPage() {
                       <div className="text-[0.65rem] text-(--text-muted)">Enviar lembrete automático ao paciente antes da consulta</div>
                     </div>
                   </div>
-                  <button onClick={() => setReminderWhatsapp(!reminderWhatsapp)} className={cn("h-6 w-11 rounded-full transition-all cursor-pointer relative", reminderWhatsapp ? "bg-brand" : "bg-gray-300")}>
-                    <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", reminderWhatsapp ? "left-5.5" : "left-0.5")} />
-                  </button>
+                  <Switch checked={reminderWhatsapp} onChange={setReminderWhatsapp} />
                 </div>
 
                 {reminderWhatsapp && (
@@ -306,7 +298,7 @@ export function AdvancedSettingsPage() {
                     onChange={(e) => setNewTypeLabel(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddType() } }}
                     placeholder="Ex: Pólen, Pelos de Gato..."
-                    className="flex-1 h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all"
+                    className="flex-1 h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-transparent transition-all"
                   />
                   <button onClick={handleAddType} className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all cursor-pointer">
                     <Plus size={13} />
@@ -368,9 +360,7 @@ export function AdvancedSettingsPage() {
                       <div className="text-[0.65rem] text-(--text-muted)">Backup diário dos dados clínicos às 03:00</div>
                     </div>
                   </div>
-                  <button onClick={() => setAutoBackup(!autoBackup)} className={cn("h-6 w-11 rounded-full transition-all cursor-pointer relative", autoBackup ? "bg-brand" : "bg-gray-300")}>
-                    <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", autoBackup ? "left-5.5" : "left-0.5")} />
-                  </button>
+                  <Switch checked={autoBackup} onChange={setAutoBackup} />
                 </div>
                 <div className="border-t border-(--border-custom)" />
                 <div className="flex items-center justify-between">

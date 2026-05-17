@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import {} from '@tanstack/react-router'
 import { ArrowLeft, Lock, Smartphone, Eye, FileDown, UserX, LogOut, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { Modal, Button } from '@/shared/ui'
+import { Modal, Button, IconButton, Switch } from "@/shared/ui"
 
 const sessions = [
   { id: '1', device: 'Chrome · Windows 11', location: 'Anápolis, GO', time: 'Agora (sessão atual)', current: true },
@@ -11,7 +11,6 @@ const sessions = [
 ]
 
 export function SecurityPage() {
-  const navigate = useNavigate()
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
   const [showRevokeModal, setShowRevokeModal] = useState<string | null>(null)
@@ -27,9 +26,7 @@ export function SecurityPage() {
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <button onClick={() => navigate({ to: '/settings' })} className="h-8 w-8 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-50 transition-all cursor-pointer">
-            <ArrowLeft size={16} />
-          </button>
+          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
           <h1 className="text-2xl font-bold text-(--text)">Segurança e Privacidade</h1>
         </div>
 
@@ -68,12 +65,7 @@ export function SecurityPage() {
                       <div className="text-[0.65rem] text-(--text-muted)">Proteja sua conta com verificação adicional</div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setTwoFaEnabled(!twoFaEnabled)}
-                    className={cn("h-6 w-11 rounded-full transition-all cursor-pointer relative", twoFaEnabled ? "bg-brand" : "bg-gray-300")}
-                  >
-                    <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", twoFaEnabled ? "left-5.5" : "left-0.5")} />
-                  </button>
+                  <Switch checked={twoFaEnabled} onChange={setTwoFaEnabled} aria-label="Autenticação em dois fatores" />
                 </div>
               </div>
             </div>

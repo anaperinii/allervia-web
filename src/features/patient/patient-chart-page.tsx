@@ -446,21 +446,27 @@ export function PatientChartPage() {
                 )
               ) : (
                 canEvolve && (
-                  <button
-                    onClick={() => navigate({ to: '/patient-evolution', search: { patientId: selectedPatient.id } })}
-                    className="flex-1 h-8 rounded-lg text-xs font-semibold transition-all bg-linear-to-br from-brand to-teal-400 text-white cursor-pointer hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)]"
+                  <Button
+                    tone="brand"
+                    variant="solid"
+                    fullWidth
+                    to="/patient-evolution"
+                    search={{ patientId: selectedPatient.id }}
                   >
                     Evoluir Paciente
-                  </button>
+                  </Button>
                 )
               )}
               {canEmitReport && (
-                <button
-                  onClick={() => navigate({ to: '/patient-report', search: { patientId: selectedPatient.id } })}
-                  className="flex-1 h-8 rounded-lg border-[1.5px] border-(--border-custom) text-xs font-semibold text-(--text-muted) cursor-pointer hover:border-brand hover:text-brand hover:bg-teal-50 hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.12)] transition-all"
+                <Button
+                  tone="brand"
+                  variant="outline"
+                  fullWidth
+                  to="/patient-report"
+                  search={{ patientId: selectedPatient.id }}
                 >
                   Emitir Relatório
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -591,16 +597,19 @@ export function PatientChartPage() {
                     </div>
                     )}
                     {canInactivate && selectedPatient.status === 'ativo' && (
-                      <button
+                      <Button
+                        tone="warning"
+                        variant="outline"
+                        size="sm"
+                        fullWidth
+                        leftIcon={<PowerOff size={11} />}
                         onClick={() => {
                           inactivateForm.reset()
                           setShowInactivateModal(true)
                         }}
-                        className="w-full h-7 rounded-lg text-[0.65rem] font-semibold transition-all flex items-center justify-center gap-1.5 border-[1.5px] border-yellow-300 text-yellow-700 hover:bg-yellow-50 hover:border-yellow-400 cursor-pointer"
                       >
-                        <PowerOff size={11} />
                         Inativar imunoterapia
-                      </button>
+                      </Button>
                     )}
                     {inactivationCount > 0 && (
                       <button
