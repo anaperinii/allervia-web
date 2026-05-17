@@ -9,7 +9,7 @@ import { jsPDF } from 'jspdf'
 import { cn } from '@/shared/lib/utils'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Modal, Button, IconButton, SegmentedControl } from "@/shared/ui"
+import { Modal, Button, IconButton, SegmentedControl, TextArea } from "@/shared/ui"
 
 const formats = [
   { id: 'pdf', label: 'PDF', icon: FileText },
@@ -493,12 +493,11 @@ export function PatientReportPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Motivo da solicitação <span className="text-red-400">*</span></label>
-                  <textarea
+                  <TextArea
                     rows={2}
                     placeholder="Ex: Solicitação formal do paciente"
                     value={justificativa}
                     onChange={(e) => setJustificativa(e.target.value)}
-                    className="w-full rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 py-2 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all resize-none"
                   />
                 </div>
                 <button
@@ -677,12 +676,11 @@ export function PatientReportPage() {
             {/* Justification */}
             <div>
               <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Justificativa <span className="text-red-400">*</span></label>
-              <textarea
+              <TextArea
                 rows={2}
                 placeholder="Ex: Acompanhamento clínico do paciente"
                 value={justificativa}
                 onChange={(e) => setJustificativa(e.target.value)}
-                className="w-full rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 py-2 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all resize-none"
               />
             </div>
 

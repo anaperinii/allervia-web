@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Shield, Check, Clock, Mail } from 'lucide-react'
-import { Modal } from '@/shared/ui'
+import { Modal, TextInput, Select } from '@/shared/ui'
 import imunecareLogo from '@/assets/imunecare-logo.png'
 import imunecareWhiteLogo from '@/assets/imunecare-white-logo.png'
 import { validateEmail, formatPhone } from '@/shared/lib/validators'
@@ -53,14 +53,7 @@ export function TrialPage() {
     return Object.keys(e).length === 0
   }
 
-  const inputCls = (f: keyof TrialForm) =>
-    `w-full h-8 rounded-lg border bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/50 focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all ${
-      errors[f] && touched[f] ? 'border-red-400 bg-red-50/30' : 'border-(--border-custom)'
-    }`
-  const selectCls = (f: keyof TrialForm) =>
-    `w-full h-8 rounded-lg border bg-gray-50/60 px-3 text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all pr-8 ${
-      errors[f] && touched[f] ? 'border-red-400 bg-red-50/30' : 'border-(--border-custom)'
-    }`
+  const isInvalid = (f: keyof TrialForm) => !!(errors[f] && touched[f])
   const Err = ({ f }: { f: keyof TrialForm }) =>
     errors[f] && touched[f] ? <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors[f]}</span> : null
 
@@ -116,31 +109,32 @@ export function TrialPage() {
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
             <div>
               <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Nome <span className="text-red-400">*</span></label>
-              <input value={form.nome} onChange={(e) => set('nome', e.target.value)} onBlur={() => touch('nome')} placeholder="Insira aqui" className={inputCls('nome')} maxLength={60} />
+              <TextInput value={form.nome} onChange={(e) => set('nome', e.target.value)} onBlur={() => touch('nome')} placeholder="Insira aqui" invalid={isInvalid('nome')} className="h-8" maxLength={60} />
               <Err f="nome" />
             </div>
             <div>
               <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Sobrenome <span className="text-red-400">*</span></label>
-              <input value={form.sobrenome} onChange={(e) => set('sobrenome', e.target.value)} onBlur={() => touch('sobrenome')} placeholder="Insira aqui" className={inputCls('sobrenome')} maxLength={80} />
+              <TextInput value={form.sobrenome} onChange={(e) => set('sobrenome', e.target.value)} onBlur={() => touch('sobrenome')} placeholder="Insira aqui" invalid={isInvalid('sobrenome')} className="h-8" maxLength={80} />
               <Err f="sobrenome" />
             </div>
           </div>
 
           <div className="mb-2.5">
             <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">E-mail profissional <span className="text-red-400">*</span></label>
-            <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} onBlur={() => touch('email')} placeholder="voce@clinica.com.br" className={inputCls('email')} maxLength={254} autoComplete="email" />
+            <TextInput type="email" value={form.email} onChange={(e) => set('email', e.target.value)} onBlur={() => touch('email')} placeholder="voce@clinica.com.br" invalid={isInvalid('email')} className="h-8" maxLength={254} autoComplete="email" />
             <Err f="email" />
           </div>
 
           <div className="mb-2.5">
             <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Telefone / WhatsApp <span className="text-red-400">*</span></label>
-            <input
+            <TextInput
               type="tel"
               value={form.telefone}
               onChange={(e) => set('telefone', formatPhone(e.target.value))}
               onBlur={() => touch('telefone')}
               placeholder="(00) 00000-0000"
-              className={inputCls('telefone')}
+              invalid={isInvalid('telefone')}
+              className="h-8"
               maxLength={16}
             />
             <Err f="telefone" />
@@ -149,24 +143,24 @@ export function TrialPage() {
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
             <div>
               <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Qual é a sua atuação? <span className="text-red-400">*</span></label>
-              <select value={form.atuacao} onChange={(e) => set('atuacao', e.target.value)} onBlur={() => touch('atuacao')} className={selectCls('atuacao')}>
+              <Select value={form.atuacao} onChange={(e) => set('atuacao', e.target.value)} onBlur={() => touch('atuacao')} invalid={isInvalid('atuacao')} className="h-8">
                 <option value="" disabled>Selecionar</option>
                 <option>Médico(a)</option>
                 <option>Gestor(a) de clínica</option>
                 <option>Farmacêutico(a)</option>
                 <option>Enfermeiro(a)</option>
                 <option>Outro</option>
-              </select>
+              </Select>
               <Err f="atuacao" />
             </div>
             <div>
               <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Solução digital para quem? <span className="text-red-400">*</span></label>
-              <select value={form.solucao} onChange={(e) => set('solucao', e.target.value)} onBlur={() => touch('solucao')} className={selectCls('solucao')}>
+              <Select value={form.solucao} onChange={(e) => set('solucao', e.target.value)} onBlur={() => touch('solucao')} invalid={isInvalid('solucao')} className="h-8">
                 <option value="" disabled>Selecionar</option>
                 <option>Para mim (uso próprio)</option>
                 <option>Para minha clínica</option>
                 <option>Para uma rede de clínicas</option>
-              </select>
+              </Select>
               <Err f="solucao" />
             </div>
           </div>
@@ -174,12 +168,12 @@ export function TrialPage() {
           <div className="grid grid-cols-2 gap-2.5 mb-4">
             <div>
               <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Especialidade da clínica <span className="text-red-400">*</span></label>
-              <input value={form.especialidade} onChange={(e) => set('especialidade', e.target.value)} onBlur={() => touch('especialidade')} placeholder="Ex.: Alergia e Imunologia" className={inputCls('especialidade')} maxLength={80} />
+              <TextInput value={form.especialidade} onChange={(e) => set('especialidade', e.target.value)} onBlur={() => touch('especialidade')} placeholder="Ex.: Alergia e Imunologia" invalid={isInvalid('especialidade')} className="h-8" maxLength={80} />
               <Err f="especialidade" />
             </div>
             <div>
               <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Nº de profissionais <span className="text-red-400">*</span></label>
-              <input
+              <TextInput
                 type="number"
                 min="1"
                 max="9999"
@@ -187,7 +181,8 @@ export function TrialPage() {
                 onChange={(e) => set('profissionais', e.target.value)}
                 onBlur={() => touch('profissionais')}
                 placeholder="Ex.: 5"
-                className={inputCls('profissionais')}
+                invalid={isInvalid('profissionais')}
+                className="h-8"
               />
               <Err f="profissionais" />
             </div>

@@ -30,11 +30,11 @@ export function FeaturesGrid() {
   return (
     <section id="features" className="py-24 px-[5%] relative overflow-hidden">
       {/* Top seam (continuation from Hero bottom blobs) */}
-      <div className="pointer-events-none absolute -top-40 -left-40 w-[450px] h-[450px] rounded-full bg-linear-to-br from-cyan-200/20 to-teal-300/20 blur-3xl" />
-      <div className="pointer-events-none absolute -top-32 -right-20 w-[380px] h-[380px] rounded-full bg-linear-to-br from-teal-200/25 to-cyan-100/15 blur-3xl" />
+      <div className="pointer-events-none absolute -top-40 -left-40 w-112.5 h-112.5 rounded-full bg-linear-to-br from-cyan-200/20 to-teal-300/20 blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 -right-20 w-95 h-95 rounded-full bg-linear-to-br from-teal-200/25 to-cyan-100/15 blur-3xl" />
       {/* Bottom seam (continues into SplitSection) */}
-      <div className="pointer-events-none absolute -bottom-32 -left-24 w-[420px] h-[420px] rounded-full bg-linear-to-br from-teal-200/20 to-cyan-200/15 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-28 -right-20 w-[360px] h-[360px] rounded-full bg-cyan-200/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -left-24 w-105 h-105 rounded-full bg-linear-to-br from-teal-200/20 to-cyan-200/15 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-28 -right-20 w-90 h-90 rounded-full bg-cyan-200/20 blur-3xl" />
       <div className="reveal relative">
         <span className="inline-block text-[0.75rem] font-bold tracking-[2px] uppercase text-teal-600 bg-teal-50 border border-teal-200 px-4 py-1.5 rounded-full mb-4">
           Funcionalidades

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import {} from '@tanstack/react-router'
-import { ArrowLeft, Book, MessageCircle, Mail, ChevronDown, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Book, MessageCircle, Mail, ChevronDown } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { IconButton } from "@/shared/ui"
+import { IconButton, CardButton } from "@/shared/ui"
 
 const faqs = [
   { q: 'Como cadastrar um novo paciente?', a: 'Acesse Imunoterapias > Adicionar Imunoterapia. O cadastro do paciente é feito na primeira etapa do fluxo, seguido da prescrição do protocolo.' },
@@ -34,16 +34,14 @@ export function HelpPage() {
               ].map((item) => {
                 const Icon = item.icon
                 return (
-                  <button key={item.label} className="border border-(--border-custom) rounded-xl p-4 text-left hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer group">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg mb-2.5" style={{ backgroundColor: item.color + '15' }}>
-                      <Icon size={16} style={{ color: item.color }} />
-                    </div>
-                    <div className="text-xs font-semibold text-(--text) flex items-center gap-1">
-                      {item.label}
-                      <ExternalLink size={10} className="text-(--text-muted) opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <div className="text-[0.6rem] text-(--text-muted) mt-0.5">{item.desc}</div>
-                  </button>
+                  <CardButton
+                    key={item.label}
+                    orientation="vertical"
+                    icon={<Icon size={16} />}
+                    iconColor={item.color}
+                    title={item.label}
+                    description={item.desc}
+                  />
                 )
               })}
             </div>

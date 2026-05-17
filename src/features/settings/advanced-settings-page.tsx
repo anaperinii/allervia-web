@@ -3,7 +3,7 @@ import {} from '@tanstack/react-router'
 import { ArrowLeft, Database, Bell, Server, Calendar, ExternalLink, CheckCircle, Palette, Plus, X, Lock, Syringe, Pencil, Trash2, Check } from 'lucide-react'
 import { useCan } from '@/features/user/user-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
-import { IconButton, Switch, Button, Select, TextInput } from "@/shared/ui"
+import { IconButton, Switch, Button, Select, TextInput, MediaRow } from "@/shared/ui"
 
 const defaultEventColors = [
   { id: 'subcutanea', label: 'Subcutânea', color: '#14B8A6' },
@@ -134,17 +134,12 @@ export function AdvancedSettingsPage() {
               <div className="p-4 space-y-4">
                 {/* Google Agenda connection */}
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                        <Calendar size={14} className="text-brand" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-(--text)">Google Agenda</div>
-                        <div className="text-[0.65rem] text-(--text-muted)">Sincronize agendamentos automaticamente</div>
-                      </div>
-                    </div>
-                    {googleConnected ? (
+                  <MediaRow
+                    className="mb-3"
+                    icon={<Calendar size={14} />}
+                    title="Google Agenda"
+                    description="Sincronize agendamentos automaticamente"
+                    trailing={googleConnected ? (
                       <div className="flex items-center gap-2">
                         <span className="flex items-center gap-1 text-[0.6rem] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                           <CheckCircle size={10} />
@@ -159,7 +154,7 @@ export function AdvancedSettingsPage() {
                         Conectar conta Google
                       </button>
                     )}
-                  </div>
+                  />
 
                   {googleConnected && (
                     <div className="bg-gray-50 rounded-lg p-3 space-y-3 ml-11">
@@ -181,18 +176,12 @@ export function AdvancedSettingsPage() {
                 <div className="border-t border-(--border-custom)" />
 
                 {/* Lembretes */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Bell size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Lembrete via WhatsApp</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Enviar lembrete automático ao paciente antes da consulta</div>
-                    </div>
-                  </div>
-                  <Switch checked={reminderWhatsapp} onChange={setReminderWhatsapp} />
-                </div>
+                <MediaRow
+                  icon={<Bell size={14} />}
+                  title="Lembrete via WhatsApp"
+                  description="Enviar lembrete automático ao paciente antes da consulta"
+                  trailing={<Switch checked={reminderWhatsapp} onChange={setReminderWhatsapp} />}
+                />
 
                 {reminderWhatsapp && (
                   <div className="ml-11">
@@ -213,15 +202,12 @@ export function AdvancedSettingsPage() {
 
                 {/* Cores por tipo de evento */}
                 <div>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Palette size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Cores dos eventos</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Personalize as cores para cada tipo de agendamento</div>
-                    </div>
-                  </div>
+                  <MediaRow
+                    className="mb-3"
+                    icon={<Palette size={14} />}
+                    title="Cores dos eventos"
+                    description="Personalize as cores para cada tipo de agendamento"
+                  />
                   <div className="space-y-2 ml-11">
                     {eventColors.map((ec) => (
                       <div key={ec.id} className="flex items-center justify-between group">
@@ -336,31 +322,19 @@ export function AdvancedSettingsPage() {
                 <h2 className="text-xs font-bold text-(--text)">Dados e Backup</h2>
               </div>
               <div className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Database size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Backup automático</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Backup diário dos dados clínicos às 03:00</div>
-                    </div>
-                  </div>
-                  <Switch checked={autoBackup} onChange={setAutoBackup} />
-                </div>
+                <MediaRow
+                  icon={<Database size={14} />}
+                  title="Backup automático"
+                  description="Backup diário dos dados clínicos às 03:00"
+                  trailing={<Switch checked={autoBackup} onChange={setAutoBackup} />}
+                />
                 <div className="border-t border-(--border-custom)" />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Server size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Último backup</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">10/04/2026 às 03:00 — 42.3 MB</div>
-                    </div>
-                  </div>
-                  <span className="text-[0.65rem] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Sucesso</span>
-                </div>
+                <MediaRow
+                  icon={<Server size={14} />}
+                  title="Último backup"
+                  description="10/04/2026 às 03:00 — 42.3 MB"
+                  trailing={<span className="text-[0.65rem] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Sucesso</span>}
+                />
               </div>
             </div>
           </div>

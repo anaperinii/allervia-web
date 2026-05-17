@@ -1,6 +1,6 @@
-import { Link } from '@tanstack/react-router'
 import { Check, Zap, Building, Crown } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { LandingCTA } from '@/features/landing-page/_ui'
 
 const plans = [
   {
@@ -113,17 +113,9 @@ export function PricingSection() {
 
                 {/* CTA */}
                 <div className="mt-7">
-                  <Link
-                    to="/trial"
-                    className={cn(
-                      "block w-full py-3 rounded-xl text-center text-sm font-semibold transition-all no-underline cursor-pointer",
-                      plan.highlighted
-                        ? "bg-linear-to-br from-brand to-teal-400 text-white shadow-[0_4px_20px_rgba(24,193,203,0.3)] hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(24,193,203,0.4)]"
-                        : "border-[1.5px] border-brand text-brand hover:bg-brand-50"
-                    )}
-                  >
+                  <LandingCTA to="/trial" shape="block" variant={plan.highlighted ? 'filled' : 'outline'}>
                     {plan.cta}
-                  </Link>
+                  </LandingCTA>
                 </div>
               </div>
             </div>

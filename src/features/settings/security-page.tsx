@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {} from '@tanstack/react-router'
 import { ArrowLeft, Lock, Smartphone, Eye, FileDown, UserX, LogOut, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { Modal, Button, IconButton, Switch, TextInput } from "@/shared/ui"
+import { Modal, Button, IconButton, Switch, TextInput, MediaRow } from "@/shared/ui"
 
 const sessions = [
   { id: '1', device: 'Chrome · Windows 11', location: 'Anápolis, GO', time: 'Agora (sessão atual)', current: true },
@@ -38,34 +38,24 @@ export function SecurityPage() {
                 <h2 className="text-xs font-bold text-(--text)">Autenticação</h2>
               </div>
               <div className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Lock size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Alterar senha</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Última alteração há 30 dias</div>
-                    </div>
-                  </div>
-                  <button onClick={() => setShowPasswordModal(true)} className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1.5">
-                    Alterar
-                    <ChevronRight size={12} />
-                  </button>
-                </div>
+                <MediaRow
+                  icon={<Lock size={14} />}
+                  title="Alterar senha"
+                  description="Última alteração há 30 dias"
+                  trailing={
+                    <button onClick={() => setShowPasswordModal(true)} className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1.5">
+                      Alterar
+                      <ChevronRight size={12} />
+                    </button>
+                  }
+                />
                 <div className="border-t border-(--border-custom)" />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Smartphone size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Autenticação em dois fatores (2FA)</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Proteja sua conta com verificação adicional</div>
-                    </div>
-                  </div>
-                  <Switch checked={twoFaEnabled} onChange={setTwoFaEnabled} aria-label="Autenticação em dois fatores" />
-                </div>
+                <MediaRow
+                  icon={<Smartphone size={14} />}
+                  title="Autenticação em dois fatores (2FA)"
+                  description="Proteja sua conta com verificação adicional"
+                  trailing={<Switch checked={twoFaEnabled} onChange={setTwoFaEnabled} aria-label="Autenticação em dois fatores" />}
+                />
               </div>
             </div>
 
@@ -107,50 +97,36 @@ export function SecurityPage() {
                 <h2 className="text-xs font-bold text-(--text)">Privacidade e LGPD</h2>
               </div>
               <div className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <Eye size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Visibilidade do perfil</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Controle quem pode ver seus dados na equipe</div>
-                    </div>
-                  </div>
-                  <span className="text-[0.65rem] font-medium text-brand bg-brand-50 px-2 py-0.5 rounded-full">Equipe</span>
-                </div>
+                <MediaRow
+                  icon={<Eye size={14} />}
+                  title="Visibilidade do perfil"
+                  description="Controle quem pode ver seus dados na equipe"
+                  trailing={<span className="text-[0.65rem] font-medium text-brand bg-brand-50 px-2 py-0.5 rounded-full">Equipe</span>}
+                />
                 <div className="border-t border-(--border-custom)" />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <FileDown size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Exportar meus dados</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Solicite uma cópia de todos os seus dados pessoais</div>
-                    </div>
-                  </div>
-                  <button onClick={() => setShowExportModal(true)} className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1.5">
-                    Solicitar
-                    <ChevronRight size={12} />
-                  </button>
-                </div>
+                <MediaRow
+                  icon={<FileDown size={14} />}
+                  title="Exportar meus dados"
+                  description="Solicite uma cópia de todos os seus dados pessoais"
+                  trailing={
+                    <button onClick={() => setShowExportModal(true)} className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1.5">
+                      Solicitar
+                      <ChevronRight size={12} />
+                    </button>
+                  }
+                />
                 <div className="border-t border-(--border-custom)" />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                      <UserX size={14} className="text-brand" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-(--text)">Anonimização de pacientes</div>
-                      <div className="text-[0.65rem] text-(--text-muted)">Gerencie solicitações de anonimização de dados de pacientes (Art. 18 LGPD)</div>
-                    </div>
-                  </div>
-                  <button className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1.5">
-                    Gerenciar
-                    <ChevronRight size={12} />
-                  </button>
-                </div>
+                <MediaRow
+                  icon={<UserX size={14} />}
+                  title="Anonimização de pacientes"
+                  description="Gerencie solicitações de anonimização de dados de pacientes (Art. 18 LGPD)"
+                  trailing={
+                    <button className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1.5">
+                      Gerenciar
+                      <ChevronRight size={12} />
+                    </button>
+                  }
+                />
               </div>
             </div>
           </div>

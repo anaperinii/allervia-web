@@ -3,7 +3,7 @@ import {} from '@tanstack/react-router'
 import { ArrowLeft, Plus, X, Mail, Shield, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal, Clock, Trash2, Pencil, UserX, UserCheck, Send, Lock } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useCan } from '@/features/user/user-store'
-import { Modal, Button, IconButton, TextInput } from "@/shared/ui"
+import { Modal, Button, IconButton, TextInput, MediaRow } from "@/shared/ui"
 
 interface TeamMember {
   id: string
@@ -168,15 +168,15 @@ export function TeamsPage() {
                     return (
                       <tr key={member.id} className="border-b border-(--border-custom) last:border-0 hover:bg-gray-50/50 transition-colors cursor-pointer">
                         <td className="px-5 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-white text-[0.6rem] font-bold shrink-0">
-                              {member.avatar}
-                            </div>
-                            <div>
-                              <div className="text-xs font-semibold text-(--text)">{member.name}</div>
-                              <div className="text-[0.65rem] text-(--text-muted)">{member.email}</div>
-                            </div>
-                          </div>
+                          <MediaRow
+                            leading={
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-white text-[0.6rem] font-bold shrink-0">
+                                {member.avatar}
+                              </div>
+                            }
+                            title={member.name}
+                            description={member.email}
+                          />
                         </td>
                         <td className="px-5 py-3">
                           <span className={cn("text-[0.65rem] font-semibold px-2 py-0.5 rounded-full", role.bg, role.color)}>
