@@ -1,7 +1,7 @@
 import {} from '@tanstack/react-router'
 import { ArrowLeft, Check, Zap, Building, Crown, CreditCard, Calendar, Receipt } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { IconButton } from "@/shared/ui"
+import { IconButton, Button } from "@/shared/ui"
 
 const plans = [
   {
@@ -160,9 +160,9 @@ export function PlansPage() {
                               Plano atual
                             </button>
                           ) : (
-                            <button className="w-full h-9 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold transition-all cursor-pointer hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(24,193,203,0.3)]">
+                            <Button tone="brand" variant="solid" fullWidth className="h-9">
                               {plan.price === 'Sob consulta' ? 'Falar com vendas' : 'Fazer upgrade'}
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </div>

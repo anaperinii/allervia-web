@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import {} from '@tanstack/react-router'
-import { ArrowLeft, Database, Bell, Server, ChevronDown, Calendar, ExternalLink, CheckCircle, Palette, Plus, X, Lock, Syringe, Pencil, Trash2, Check } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { ArrowLeft, Database, Bell, Server, Calendar, ExternalLink, CheckCircle, Palette, Plus, X, Lock, Syringe, Pencil, Trash2, Check } from 'lucide-react'
 import { useCan } from '@/features/user/user-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
-import { IconButton, Switch, Button } from "@/shared/ui"
+import { IconButton, Switch, Button, Select, TextInput } from "@/shared/ui"
 
 const defaultEventColors = [
   { id: 'subcutanea', label: 'Subcutânea', color: '#14B8A6' },
@@ -36,8 +35,6 @@ export function AdvancedSettingsPage() {
   const handleAddType = () => { if (newTypeLabel.trim()) { addType(newTypeLabel); setNewTypeLabel('') } }
   const startEditType = (id: string, label: string) => { setEditingTypeId(id); setEditingTypeLabel(label) }
   const saveEditType = () => { if (editingTypeId) { updateType(editingTypeId, editingTypeLabel); setEditingTypeId(null); setEditingTypeLabel('') } }
-
-  const inputClass = "w-full h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all"
 
   if (!canAdvanced) {
     return (
@@ -103,37 +100,28 @@ export function AdvancedSettingsPage() {
               <div className="p-4 grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Fuso horário</label>
-                  <div className="relative">
-                    <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className={cn(inputClass, "pr-8")}>
-                      <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
-                      <option value="America/Manaus">Manaus (GMT-4)</option>
-                      <option value="America/Noronha">Fernando de Noronha (GMT-2)</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={timezone} onChange={(e) => setTimezone(e.target.value)}>
+                    <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
+                    <option value="America/Manaus">Manaus (GMT-4)</option>
+                    <option value="America/Noronha">Fernando de Noronha (GMT-2)</option>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Tempo de sessão (minutos)</label>
-                  <div className="relative">
-                    <select value={sessionTimeout} onChange={(e) => setSessionTimeout(e.target.value)} className={cn(inputClass, "pr-8")}>
-                      <option value="15">15 minutos</option>
-                      <option value="30">30 minutos</option>
-                      <option value="60">1 hora</option>
-                      <option value="120">2 horas</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={sessionTimeout} onChange={(e) => setSessionTimeout(e.target.value)}>
+                    <option value="15">15 minutos</option>
+                    <option value="30">30 minutos</option>
+                    <option value="60">1 hora</option>
+                    <option value="120">2 horas</option>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Idioma</label>
-                  <div className="relative">
-                    <select value={language} onChange={(e) => setLanguage(e.target.value)} className={cn(inputClass, "pr-8")}>
-                      <option value="pt-BR">Português (Brasil)</option>
-                      <option value="en">English</option>
-                      <option value="es">Español</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
+                    <option value="pt-BR">Português (Brasil)</option>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -209,15 +197,14 @@ export function AdvancedSettingsPage() {
                 {reminderWhatsapp && (
                   <div className="ml-11">
                     <label className="text-[0.65rem] font-medium text-(--text-muted) mb-1 block">Antecedência do lembrete</label>
-                    <div className="relative w-40">
-                      <select value={reminderHours} onChange={(e) => setReminderHours(e.target.value)} className={cn(inputClass, "pr-8")}>
+                    <div className="w-40">
+                      <Select value={reminderHours} onChange={(e) => setReminderHours(e.target.value)}>
                         <option value="2">2 horas antes</option>
                         <option value="6">6 horas antes</option>
                         <option value="12">12 horas antes</option>
                         <option value="24">24 horas antes</option>
                         <option value="48">48 horas antes</option>
-                      </select>
-                      <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
+                      </Select>
                     </div>
                   </div>
                 )}
@@ -293,17 +280,16 @@ export function AdvancedSettingsPage() {
               <div className="p-4 space-y-3">
                 <p className="text-[0.65rem] text-(--text-muted) leading-relaxed">Gerencie os tipos disponíveis ao cadastrar uma imunoterapia. Alterações refletem em toda a clínica.</p>
                 <div className="flex gap-2">
-                  <input
+                  <TextInput
                     value={newTypeLabel}
                     onChange={(e) => setNewTypeLabel(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddType() } }}
                     placeholder="Ex: Pólen, Pelos de Gato..."
-                    className="flex-1 h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-transparent transition-all"
+                    className="flex-1"
                   />
-                  <button onClick={handleAddType} className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(20,184,166,0.3)] transition-all cursor-pointer">
-                    <Plus size={13} />
+                  <Button tone="brand" variant="solid" leftIcon={<Plus size={13} />} onClick={handleAddType} className="h-9 px-3">
                     Adicionar
-                  </button>
+                  </Button>
                 </div>
                 <div className="space-y-1.5">
                   {customTypes.map((t) => (

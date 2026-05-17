@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {} from '@tanstack/react-router'
 import { ArrowLeft, Lock, Smartphone, Eye, FileDown, UserX, LogOut, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { Modal, Button, IconButton, Switch } from "@/shared/ui"
+import { Modal, Button, IconButton, Switch, TextInput } from "@/shared/ui"
 
 const sessions = [
   { id: '1', device: 'Chrome · Windows 11', location: 'Anápolis, GO', time: 'Agora (sessão atual)', current: true },
@@ -19,7 +19,6 @@ export function SecurityPage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
-  const inputClass = "w-full h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all"
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
@@ -170,15 +169,15 @@ export function SecurityPage() {
       >
         <div>
           <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Senha atual</label>
-          <input type="password" placeholder="Insira aqui" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} className={inputClass} />
+          <TextInput type="password" placeholder="Insira aqui" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} />
         </div>
         <div>
           <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nova senha</label>
-          <input type="password" placeholder="Insira aqui" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClass} />
+          <TextInput type="password" placeholder="Insira aqui" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
         </div>
         <div>
           <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Confirmar nova senha</label>
-          <input type="password" placeholder="Insira aqui" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputClass} />
+          <TextInput type="password" placeholder="Insira aqui" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
         </div>
       </Modal>
 
@@ -186,12 +185,8 @@ export function SecurityPage() {
         open={showExportModal}
         onClose={() => setShowExportModal(false)}
         size="sm"
-        headerSlot={<div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-            <FileDown size={16} className="text-brand" />
-          </div>
-          <h3 className="text-sm font-bold text-(--text)">Exportar dados</h3>
-        </div>}
+        title="Exportar dados"
+        icon={<FileDown size={16} />}
         footer={<>
           <Button variant="outline" onClick={() => setShowExportModal(false)}>Cancelar</Button>
           <Button variant="primary" onClick={() => setShowExportModal(false)}>Solicitar exportação</Button>
@@ -204,12 +199,9 @@ export function SecurityPage() {
         open={!!showRevokeModal}
         onClose={() => setShowRevokeModal(null)}
         size="sm"
-        headerSlot={<div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 shrink-0">
-            <LogOut size={16} className="text-red-500" />
-          </div>
-          <h3 className="text-sm font-bold text-(--text)">Encerrar sessão</h3>
-        </div>}
+        title="Encerrar sessão"
+        icon={<LogOut size={16} />}
+        tone="danger"
         footer={<>
           <Button variant="outline" onClick={() => setShowRevokeModal(null)}>Cancelar</Button>
           <Button variant="danger" onClick={() => setShowRevokeModal(null)}>Encerrar</Button>

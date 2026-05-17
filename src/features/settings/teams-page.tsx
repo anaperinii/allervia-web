@@ -3,7 +3,7 @@ import {} from '@tanstack/react-router'
 import { ArrowLeft, Plus, X, Mail, Shield, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal, Clock, Trash2, Pencil, UserX, UserCheck, Send, Lock } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useCan } from '@/features/user/user-store'
-import { Modal, Button, IconButton } from "@/shared/ui"
+import { Modal, Button, IconButton, TextInput } from "@/shared/ui"
 
 interface TeamMember {
   id: string
@@ -76,7 +76,6 @@ export function TeamsPage() {
 
   const pendingCount = invites.filter((i) => i.status === 'pendente').length
 
-  const inputClass = "w-full h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-[#18C1CB]/40 focus:border-transparent transition-all"
 
   if (!canManageTeam) {
     return (
@@ -104,10 +103,9 @@ export function TeamsPage() {
             <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
             <h1 className="text-2xl font-bold text-(--text)">Equipes e Convites</h1>
           </div>
-          <button onClick={() => setShowInviteModal(true)} className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-semibold shadow-[0_2px_12px_rgba(24,193,203,0.3)] hover:-translate-y-px transition-all cursor-pointer">
-            <Plus size={14} />
+          <Button tone="brand" variant="solid" prominent leftIcon={<Plus size={14} />} onClick={() => setShowInviteModal(true)} className="px-3">
             Convidar membro
-          </button>
+          </Button>
         </div>
 
         {/* Tabs */}
@@ -358,12 +356,11 @@ export function TeamsPage() {
       >
         <div>
           <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">E-mail do convidado</label>
-          <input
+          <TextInput
             type="email"
             placeholder="nome@clinica.com"
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
-            className={inputClass}
           />
         </div>
         <div>
@@ -399,11 +396,11 @@ export function TeamsPage() {
 
       {confirmModal && (() => {
         const cfg = {
-          'remove-member': { icon: Trash2, iconBg: 'bg-red-50', iconColor: 'text-red-500', title: 'Remover membro', body: <>Tem certeza que deseja remover <span className="font-semibold text-(--text)">{confirmModal.name}</span> da equipe? Esta ação não pode ser desfeita.</>, btn: 'Remover', variant: 'danger' as const, onConfirm: () => { setMembers((m) => m.filter((x) => x.id !== confirmModal.id)); setConfirmModal(null) } },
-          'deactivate': { icon: UserX, iconBg: 'bg-amber-50', iconColor: 'text-amber-600', title: 'Desativar membro', body: <><span className="font-semibold text-(--text)">{confirmModal.name}</span> perderá o acesso ao sistema até ser reativado. Os dados não serão removidos.</>, btn: 'Desativar', variant: 'warning' as const, onConfirm: () => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'inativo' as const } : x)); setConfirmModal(null) } },
-          'activate': { icon: UserCheck, iconBg: 'bg-green-50', iconColor: 'text-green-600', title: 'Reativar membro', body: <><span className="font-semibold text-(--text)">{confirmModal.name}</span> terá o acesso ao sistema restaurado com as mesmas permissões anteriores.</>, btn: 'Reativar', variant: 'success' as const, onConfirm: () => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'ativo' as const } : x)); setConfirmModal(null) } },
-          'resend-invite': { icon: Send, iconBg: 'bg-brand-50', iconColor: 'text-brand', title: 'Reenviar convite', body: <>Um novo e-mail de convite será enviado para <span className="font-semibold text-(--text)">{confirmModal.name}</span>. O convite anterior será invalidado.</>, btn: 'Reenviar', variant: 'primary' as const, onConfirm: () => setConfirmModal(null) },
-          'delete-invite': { icon: Trash2, iconBg: 'bg-red-50', iconColor: 'text-red-500', title: 'Excluir convite', body: <>O convite para <span className="font-semibold text-(--text)">{confirmModal.name}</span> será excluído permanentemente e não poderá mais ser utilizado.</>, btn: 'Excluir', variant: 'danger' as const, onConfirm: () => { setInvites((inv) => inv.filter((x) => x.id !== confirmModal.id)); setConfirmModal(null) } },
+          'remove-member': { icon: Trash2, tone: 'danger' as const, title: 'Remover membro', body: <>Tem certeza que deseja remover <span className="font-semibold text-(--text)">{confirmModal.name}</span> da equipe? Esta ação não pode ser desfeita.</>, btn: 'Remover', variant: 'danger' as const, onConfirm: () => { setMembers((m) => m.filter((x) => x.id !== confirmModal.id)); setConfirmModal(null) } },
+          'deactivate': { icon: UserX, tone: 'warning' as const, title: 'Desativar membro', body: <><span className="font-semibold text-(--text)">{confirmModal.name}</span> perderá o acesso ao sistema até ser reativado. Os dados não serão removidos.</>, btn: 'Desativar', variant: 'warning' as const, onConfirm: () => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'inativo' as const } : x)); setConfirmModal(null) } },
+          'activate': { icon: UserCheck, tone: 'success' as const, title: 'Reativar membro', body: <><span className="font-semibold text-(--text)">{confirmModal.name}</span> terá o acesso ao sistema restaurado com as mesmas permissões anteriores.</>, btn: 'Reativar', variant: 'success' as const, onConfirm: () => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'ativo' as const } : x)); setConfirmModal(null) } },
+          'resend-invite': { icon: Send, tone: 'brand' as const, title: 'Reenviar convite', body: <>Um novo e-mail de convite será enviado para <span className="font-semibold text-(--text)">{confirmModal.name}</span>. O convite anterior será invalidado.</>, btn: 'Reenviar', variant: 'primary' as const, onConfirm: () => setConfirmModal(null) },
+          'delete-invite': { icon: Trash2, tone: 'danger' as const, title: 'Excluir convite', body: <>O convite para <span className="font-semibold text-(--text)">{confirmModal.name}</span> será excluído permanentemente e não poderá mais ser utilizado.</>, btn: 'Excluir', variant: 'danger' as const, onConfirm: () => { setInvites((inv) => inv.filter((x) => x.id !== confirmModal.id)); setConfirmModal(null) } },
         }[confirmModal.type]
         const Icon = cfg.icon
         return (
@@ -411,12 +408,9 @@ export function TeamsPage() {
             open={true}
             onClose={() => setConfirmModal(null)}
             size="sm"
-            headerSlot={<div className="flex items-center gap-3">
-              <div className={cn("flex h-9 w-9 items-center justify-center rounded-lg shrink-0", cfg.iconBg)}>
-                <Icon size={16} className={cfg.iconColor} />
-              </div>
-              <h3 className="text-sm font-bold text-(--text)">{cfg.title}</h3>
-            </div>}
+            title={cfg.title}
+            icon={<Icon size={16} />}
+            tone={cfg.tone}
             footer={<>
               <Button variant="outline" onClick={() => setConfirmModal(null)}>Cancelar</Button>
               <Button variant={cfg.variant} onClick={cfg.onConfirm}>{cfg.btn}</Button>

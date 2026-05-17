@@ -8,7 +8,7 @@ import { META_DOSE, calculateNextDose } from '@/features/immunotherapy/scit-prot
 import { addDays, format, differenceInDays, parse } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/utils'
-import { Toast, Modal, Button, FieldLabel, TextInput, TextArea, Select } from '@/shared/ui'
+import { Toast, Modal, Button, FieldLabel, TextInput, TextArea, Select, SegmentedControl } from '@/shared/ui'
 import { useForm } from '@/shared/hooks/useForm'
 import {
   Clock,
@@ -834,16 +834,16 @@ export function PatientChartPage() {
                     </button>
                   )}
                 </div>
-                <div className="flex h-6.5 rounded-lg border border-(--border-custom) overflow-hidden shrink-0">
-                  <button onClick={() => setViewMode('timeline')} className={cn("px-2 flex items-center gap-1 text-[0.55rem] font-semibold transition-all", viewMode === 'timeline' ? "bg-brand text-white" : "text-(--text-muted) hover:bg-gray-50")}>
-                    <List size={10} />
-                    Lista
-                  </button>
-                  <button onClick={() => setViewMode('calendar')} className={cn("px-2 flex items-center gap-1 text-[0.55rem] font-semibold transition-all", viewMode === 'calendar' ? "bg-brand text-white" : "text-(--text-muted) hover:bg-gray-50")}>
-                    <CalendarDays size={10} />
-                    Calendário
-                  </button>
-                </div>
+                <SegmentedControl
+                  value={viewMode}
+                  onChange={setViewMode}
+                  size="xs"
+                  options={[
+                    { value: 'timeline', label: 'Lista', icon: <List size={10} /> },
+                    { value: 'calendar', label: 'Calendário', icon: <CalendarDays size={10} /> },
+                  ]}
+                  aria-label="Modo de visualização das aplicações"
+                />
                 </div>
               )}
             </div>

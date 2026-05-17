@@ -3,10 +3,10 @@ import { useNavigate } from '@tanstack/react-router'
 import { usePatientStore } from '@/features/patient/patient-store'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
 import { useCan, useDoctorFilter } from '@/features/user/user-store'
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, ExternalLink, CheckCircle, Calendar, Phone, Clock, Syringe, User } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, ExternalLink, CheckCircle, Calendar, Phone, Clock, Syringe, User } from 'lucide-react'
 import type { Application } from '@/features/patient/patient-store'
 import { cn } from '@/shared/lib/utils'
-import { Modal, Button, Toast, SegmentedControl } from '@/shared/ui'
+import { Modal, Button, Toast, SegmentedControl, TextInput, Select } from '@/shared/ui'
 import {
   format,
   startOfWeek,
@@ -117,7 +117,6 @@ export function AppointmentsPage() {
 
   const selectedDayApps = useMemo(() => getAppsForDate(selectedDate), [selectedDate, scheduled])
 
-  const inputClass = 'w-full h-9 rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all'
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
@@ -429,75 +428,65 @@ export function AppointmentsPage() {
               )}
               <div>
                 <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Paciente</label>
-                <div className="relative">
-                  <select className={cn(inputClass, 'appearance-none pr-8 cursor-pointer')}>
-                    <option value="" disabled selected>Selecione o paciente</option>
-                    {immunotherapies.filter((i) => i.status === 'ativo').map((i) => (
-                      <option key={i.id} value={i.id}>{i.nome}</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                </div>
+                <Select defaultValue="">
+                  <option value="" disabled>Selecione o paciente</option>
+                  {immunotherapies.filter((i) => i.status === 'ativo').map((i) => (
+                    <option key={i.id} value={i.id}>{i.nome}</option>
+                  ))}
+                </Select>
               </div>
               <div>
                 <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data</label>
-                <input type="date" className={inputClass} />
+                <TextInput type="date" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Hora início</label>
-                  <input type="time" className={inputClass} />
+                  <TextInput type="time" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Hora fim</label>
-                  <input type="time" className={inputClass} />
+                  <TextInput type="time" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Dose / Concentração</label>
-                  <div className="relative">
-                    <select className={cn(inputClass, 'appearance-none pr-8 cursor-pointer')}>
-                      <option value="" disabled selected>Selecione</option>
-                      {['1:10.000 - 0,1ml','1:10.000 - 0,2ml','1:10.000 - 0,4ml','1:10.000 - 0,8ml','1:1.000 - 0,1ml','1:1.000 - 0,2ml','1:1.000 - 0,4ml','1:1.000 - 0,8ml','1:100 - 0,1ml','1:100 - 0,2ml','1:100 - 0,4ml','1:100 - 0,8ml','1:10 - 0,1ml','1:10 - 0,2ml','1:10 - 0,4ml','1:10 - 0,5ml'].map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select defaultValue="">
+                    <option value="" disabled>Selecione</option>
+                    {['1:10.000 - 0,1ml','1:10.000 - 0,2ml','1:10.000 - 0,4ml','1:10.000 - 0,8ml','1:1.000 - 0,1ml','1:1.000 - 0,2ml','1:1.000 - 0,4ml','1:1.000 - 0,8ml','1:100 - 0,1ml','1:100 - 0,2ml','1:100 - 0,4ml','1:100 - 0,8ml','1:10 - 0,1ml','1:10 - 0,2ml','1:10 - 0,4ml','1:10 - 0,5ml'].map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </Select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Intervalo</label>
-                  <div className="relative">
-                    {(() => {
-                      const isCustom = newApptInterval && !['7', '14', '21', '28'].includes(newApptInterval)
-                      const selectValue = isCustom ? 'outro' : newApptInterval
-                      return (
-                        <select
-                          value={selectValue}
-                          onChange={(e) => setNewApptInterval(e.target.value === 'outro' ? ' ' : e.target.value)}
-                          className={cn(inputClass, 'appearance-none pr-8 cursor-pointer')}
-                        >
-                          <option value="7">7 dias</option>
-                          <option value="14">14 dias</option>
-                          <option value="21">21 dias</option>
-                          <option value="28">28 dias</option>
-                          <option value="outro">Outro</option>
-                        </select>
-                      )
-                    })()}
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  {(() => {
+                    const isCustom = newApptInterval && !['7', '14', '21', '28'].includes(newApptInterval)
+                    const selectValue = isCustom ? 'outro' : newApptInterval
+                    return (
+                      <Select
+                        value={selectValue}
+                        onChange={(e) => setNewApptInterval(e.target.value === 'outro' ? ' ' : e.target.value)}
+                      >
+                        <option value="7">7 dias</option>
+                        <option value="14">14 dias</option>
+                        <option value="21">21 dias</option>
+                        <option value="28">28 dias</option>
+                        <option value="outro">Outro</option>
+                      </Select>
+                    )
+                  })()}
                   {(newApptInterval === ' ' || (newApptInterval && !['7','14','21','28'].includes(newApptInterval))) && (
                     <div className="mt-2 space-y-2">
                       <div className="flex items-center gap-2">
-                        <input
+                        <TextInput
                           type="number"
                           min="1"
                           placeholder="Ex: 35"
                           value={newApptInterval.trim()}
                           onChange={(e) => setNewApptInterval(e.target.value.replace(/[^0-9]/g, ''))}
-                          className={cn(inputClass, 'flex-1')}
+                          className="flex-1"
                         />
                         <span className="text-[0.65rem] text-(--text-muted) shrink-0">dias</span>
                       </div>

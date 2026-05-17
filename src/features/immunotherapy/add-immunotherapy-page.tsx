@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ChevronDown, ArrowLeft, User, Syringe, Info } from 'lucide-react'
+import { ArrowLeft, User, Syringe, Info } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useCan } from '@/features/user/user-store'
 import { useForm } from '@/shared/hooks/useForm'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/immunotherapies-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
-import { Modal, Button, IconButton } from "@/shared/ui"
+import { Modal, Button, IconButton, TextInput, Select } from "@/shared/ui"
 import { PROFILES } from '@/features/user/user-store'
 import { usePatientStore, type Application } from '@/features/patient/patient-store'
 import {
@@ -119,10 +119,7 @@ export function AddImmunotherapyPage() {
     return Object.keys(e).length === 0
   }, [form])
 
-  const inputClass = (field?: keyof ImmForm) => cn(
-    "w-full h-9 rounded-lg border bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all",
-    field && errors[field] && touched[field] ? "border-red-400 bg-red-50/30" : "border-(--border-custom)"
-  )
+  const isInvalid = (field: keyof ImmForm) => !!(errors[field] && touched[field])
 
   const ErrorMsg = ({ field }: { field: keyof ImmForm }) => {
     if (!errors[field] || !touched[field]) return null
@@ -172,43 +169,40 @@ export function AddImmunotherapyPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nome do Paciente</label>
-                  <input placeholder="Nome completo" value={form.nome} onChange={(e) => set('nome', e.target.value)} onBlur={() => touch('nome')} className={inputClass('nome')} />
+                  <TextInput placeholder="Nome completo" value={form.nome} onChange={(e) => set('nome', e.target.value)} onBlur={() => touch('nome')} invalid={isInvalid('nome')} />
                   <ErrorMsg field="nome" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">CPF</label>
-                  <input placeholder="000.000.000-00" value={form.cpf} onChange={(e) => set('cpf', formatCPF(e.target.value))} onBlur={() => touch('cpf')} className={inputClass('cpf')} />
+                  <TextInput placeholder="000.000.000-00" value={form.cpf} onChange={(e) => set('cpf', formatCPF(e.target.value))} onBlur={() => touch('cpf')} invalid={isInvalid('cpf')} />
                   <ErrorMsg field="cpf" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Telefone</label>
-                  <input placeholder="(00) 00000-0000" value={form.telefone} onChange={(e) => set('telefone', formatPhone(e.target.value))} onBlur={() => touch('telefone')} className={inputClass('telefone')} />
+                  <TextInput placeholder="(00) 00000-0000" value={form.telefone} onChange={(e) => set('telefone', formatPhone(e.target.value))} onBlur={() => touch('telefone')} invalid={isInvalid('telefone')} />
                   <ErrorMsg field="telefone" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Nascimento</label>
-                  <input type="date" max={todayStr()} value={form.dataNascimento} onChange={(e) => set('dataNascimento', e.target.value)} onBlur={() => touch('dataNascimento')} className={inputClass('dataNascimento')} />
+                  <TextInput type="date" max={todayStr()} value={form.dataNascimento} onChange={(e) => set('dataNascimento', e.target.value)} onBlur={() => touch('dataNascimento')} invalid={isInvalid('dataNascimento')} />
                   <ErrorMsg field="dataNascimento" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Peso</label>
                   <div className="relative">
-                    <input placeholder="Ex: 72.5" value={form.peso} onChange={(e) => set('peso', formatWeight(e.target.value))} onBlur={() => touch('peso')} className={cn(inputClass('peso'), "pr-10")} />
+                    <TextInput placeholder="Ex: 72.5" value={form.peso} onChange={(e) => set('peso', formatWeight(e.target.value))} onBlur={() => touch('peso')} invalid={isInvalid('peso')} className="pr-10" />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">kg</span>
                   </div>
                   <ErrorMsg field="peso" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Médico Responsável</label>
-                  <div className="relative">
-                    <select value={form.medicoResponsavel} onChange={(e) => set('medicoResponsavel', e.target.value)} onBlur={() => touch('medicoResponsavel')} className={cn(inputClass('medicoResponsavel'), "appearance-none pr-8 cursor-pointer")}>
-                      <option value="" disabled>Selecione o médico</option>
-                      {PROFILES.filter((p) => p.role === 'medico').map((p) => (
-                        <option key={p.id} value={p.name}>{p.name} · {p.registration}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={form.medicoResponsavel} onChange={(e) => set('medicoResponsavel', e.target.value)} onBlur={() => touch('medicoResponsavel')} invalid={isInvalid('medicoResponsavel')}>
+                    <option value="" disabled>Selecione o médico</option>
+                    {PROFILES.filter((p) => p.role === 'medico').map((p) => (
+                      <option key={p.id} value={p.name}>{p.name} · {p.registration}</option>
+                    ))}
+                  </Select>
                   <ErrorMsg field="medicoResponsavel" />
                 </div>
               </div>
@@ -221,46 +215,40 @@ export function AddImmunotherapyPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Tipo</label>
-                  <div className="relative">
-                    <select value={form.tipo} onChange={(e) => set('tipo', e.target.value)} onBlur={() => touch('tipo')} className={cn(inputClass('tipo'), "appearance-none pr-8 cursor-pointer")}>
-                      <option value="" disabled>Selecione o tipo</option>
-                      {customTypes.map((t) => <option key={t.id} value={t.label}>{t.label}</option>)}
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={form.tipo} onChange={(e) => set('tipo', e.target.value)} onBlur={() => touch('tipo')} invalid={isInvalid('tipo')}>
+                    <option value="" disabled>Selecione o tipo</option>
+                    {customTypes.map((t) => <option key={t.id} value={t.label}>{t.label}</option>)}
+                  </Select>
                   <ErrorMsg field="tipo" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Via Cutânea</label>
-                  <div className="relative">
-                    <select value={form.viaCutanea} onChange={(e) => set('viaCutanea', e.target.value)} onBlur={() => touch('viaCutanea')} className={cn(inputClass('viaCutanea'), "appearance-none pr-8 cursor-pointer")}>
-                      <option value="" disabled>Selecione</option>
-                      <option value="Subcutânea">Subcutânea</option>
-                      <option value="Sublingual">Sublingual</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
+                  <Select value={form.viaCutanea} onChange={(e) => set('viaCutanea', e.target.value)} onBlur={() => touch('viaCutanea')} invalid={isInvalid('viaCutanea')}>
+                    <option value="" disabled>Selecione</option>
+                    <option value="Subcutânea">Subcutânea</option>
+                    <option value="Sublingual">Sublingual</option>
+                  </Select>
                   <ErrorMsg field="viaCutanea" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Início</label>
-                  <input type="date" min={todayStr()} value={form.dataInicio} onChange={(e) => set('dataInicio', e.target.value)} onBlur={() => touch('dataInicio')} className={inputClass('dataInicio')} />
+                  <TextInput type="date" min={todayStr()} value={form.dataInicio} onChange={(e) => set('dataInicio', e.target.value)} onBlur={() => touch('dataInicio')} invalid={isInvalid('dataInicio')} />
                   <ErrorMsg field="dataInicio" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Extrato</label>
-                  <input placeholder="Ex: Der p 60 + Der f 10% + Blt 30%" value={form.extrato} onChange={(e) => set('extrato', e.target.value)} onBlur={() => touch('extrato')} className={inputClass('extrato')} />
+                  <TextInput placeholder="Ex: Der p 60 + Der f 10% + Blt 30%" value={form.extrato} onChange={(e) => set('extrato', e.target.value)} onBlur={() => touch('extrato')} invalid={isInvalid('extrato')} />
                   <ErrorMsg field="extrato" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Meta de Concentração</label>
-                  <input placeholder="1:10" value={form.metaConcentracao} onChange={(e) => set('metaConcentracao', formatConcentration(e.target.value))} onBlur={() => touch('metaConcentracao')} className={inputClass('metaConcentracao')} />
+                  <TextInput placeholder="1:10" value={form.metaConcentracao} onChange={(e) => set('metaConcentracao', formatConcentration(e.target.value))} onBlur={() => touch('metaConcentracao')} invalid={isInvalid('metaConcentracao')} />
                   <ErrorMsg field="metaConcentracao" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Meta de Volume</label>
                   <div className="relative">
-                    <input placeholder="Ex: 0.5" value={form.metaVolume} onChange={(e) => set('metaVolume', formatVolume(e.target.value))} onBlur={() => touch('metaVolume')} className={cn(inputClass('metaVolume'), "pr-10")} />
+                    <TextInput placeholder="Ex: 0.5" value={form.metaVolume} onChange={(e) => set('metaVolume', formatVolume(e.target.value))} onBlur={() => touch('metaVolume')} invalid={isInvalid('metaVolume')} className="pr-10" />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">ml</span>
                   </div>
                   <ErrorMsg field="metaVolume" />

@@ -1,7 +1,7 @@
 import { cn } from '@/shared/lib/utils'
 import type { ReactNode } from 'react'
 
-export type SegmentedControlSize = 'sm' | 'md'
+export type SegmentedControlSize = 'xs' | 'sm' | 'md'
 
 export interface SegmentedControlOption<T extends string> {
   value: T
@@ -19,11 +19,13 @@ interface SegmentedControlProps<T extends string> {
 }
 
 const SIZE_CLASS: Record<SegmentedControlSize, string> = {
+  xs: 'h-6 text-[0.55rem]',
   sm: 'h-7 text-[0.65rem]',
   md: 'h-8 text-xs',
 }
 
 const ITEM_PADDING: Record<SegmentedControlSize, string> = {
+  xs: 'px-2',
   sm: 'px-2.5',
   md: 'px-3',
 }

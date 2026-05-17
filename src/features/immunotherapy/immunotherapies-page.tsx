@@ -17,7 +17,7 @@ import {
   CheckCircle,
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { Toast, Button } from '@/shared/ui'
+import { Toast, Button, Select, TextInput } from '@/shared/ui'
 
 const INTERVAL_COLORS: Record<number, { bg: string; text: string; dot: string }> = {
   7: { bg: '#FDECF0', text: '#E8768E', dot: '#E8768E' },
@@ -106,44 +106,38 @@ export function ImmunotherapiesPage() {
           <div className="flex flex-wrap items-center gap-1.5">
             {/* Search */}
             <div className="relative flex-1 min-w-45">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--text-muted)" />
-              <input
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) z-10" />
+              <TextInput
                 placeholder="Pesquisar paciente"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-8 pl-8 pr-3 rounded-lg border border-(--border-custom) bg-gray-50/60 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all"
+                className="h-8 pl-8"
               />
             </div>
 
             {/* Tipo filter */}
-            <div className="relative">
-              <select
-                value={tipoFilter}
-                onChange={(e) => setTipoFilter(e.target.value)}
-                className="h-8 pl-2.5 pr-7 rounded-lg border border-(--border-custom) bg-white text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all"
-              >
-                <option>Todos os tipos</option>
-                {tipos.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
-              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-            </div>
+            <Select
+              value={tipoFilter}
+              onChange={(e) => setTipoFilter(e.target.value)}
+              className="h-8 bg-white w-auto"
+            >
+              <option value="Todos os tipos">Todos os tipos</option>
+              {tipos.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </Select>
 
             {/* Ciclo filter */}
-            <div className="relative">
-              <select
-                value={cicloFilter}
-                onChange={(e) => setCicloFilter(e.target.value)}
-                className="h-8 pl-2.5 pr-7 rounded-lg border border-(--border-custom) bg-white text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all"
-              >
-                <option>Todos os intervalos</option>
-                {ciclos.map((c) => (
-                  <option key={c}>{c} dias</option>
-                ))}
-              </select>
-              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-            </div>
+            <Select
+              value={cicloFilter}
+              onChange={(e) => setCicloFilter(e.target.value)}
+              className="h-8 bg-white w-auto"
+            >
+              <option value="Todos os intervalos">Todos os intervalos</option>
+              {ciclos.map((c) => (
+                <option key={c} value={c}>{c} dias</option>
+              ))}
+            </Select>
 
             {/* Inativas toggle */}
             <button
