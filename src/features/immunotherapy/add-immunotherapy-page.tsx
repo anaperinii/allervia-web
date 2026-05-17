@@ -8,84 +8,28 @@ import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunoth
 import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
 import { PROFILES } from '@/features/user/user-store'
 import { usePatientStore, type Application } from '@/features/patient/patient-store'
-import { validateExtrato } from '@/shared/lib/validators'
+import {
+  validateName,
+  validateCPF,
+  validatePhone,
+  validateWeight,
+  validateBirthdate,
+  validateFutureDate,
+  validateExtrato,
+  validateConcentration,
+  validateVolume,
+  formatCPF,
+  formatPhone,
+  formatWeight,
+  formatConcentration,
+  formatVolume,
+  todayStr,
+  tomorrowStr,
+} from '@/shared/lib/validators'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 const stepLabels = ['Dados do Paciente', 'Dados da Imunoterapia', 'Revisão dos Dados']
-
-function formatCPF(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11)
-  if (digits.length <= 3) return digits
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
-}
-
-function formatPhone(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11)
-  if (digits.length <= 2) return digits.length ? `(${digits}` : ''
-  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
-}
-
-function formatWeight(value: string): string {
-  const cleaned = value.replace(/[^0-9,.]/g, '').replace(',', '.')
-  const parts = cleaned.split('.')
-  if (parts.length > 2) return parts[0] + '.' + parts.slice(1).join('')
-  return cleaned
-}
-
-function formatConcentration(value: string): string {
-  const cleaned = value.replace(/[^0-9.:]/g, '')
-  if (!cleaned.startsWith('1:') && cleaned.length > 0) {
-    const digits = cleaned.replace(/\D/g, '')
-    if (digits.length > 0) return `1:${digits}`
-    return ''
-  }
-  return cleaned
-}
-
-function formatVolume(value: string): string {
-  const cleaned = value.replace(/[^0-9,.]/g, '').replace(',', '.')
-  const parts = cleaned.split('.')
-  if (parts.length > 2) return parts[0] + '.' + parts.slice(1).join('')
-  return cleaned
-}
-
-function validateCPF(cpf: string): boolean {
-  const digits = cpf.replace(/\D/g, '')
-  if (digits.length !== 11) return false
-  if (/^(\d)\1+$/.test(digits)) return false
-  let sum = 0
-  for (let i = 0; i < 9; i++) sum += parseInt(digits[i]) * (10 - i)
-  let check = 11 - (sum % 11)
-  if (check >= 10) check = 0
-  if (parseInt(digits[9]) !== check) return false
-  sum = 0
-  for (let i = 0; i < 10; i++) sum += parseInt(digits[i]) * (11 - i)
-  check = 11 - (sum % 11)
-  if (check >= 10) check = 0
-  return parseInt(digits[10]) === check
-}
-
-function validatePhone(phone: string): boolean {
-  return phone.replace(/\D/g, '').length === 11
-}
-
-function validateWeight(weight: string): boolean {
-  const num = parseFloat(weight)
-  return !isNaN(num) && num > 0 && num <= 500
-}
-
-function validateConcentration(conc: string): boolean {
-  return /^1:\d+(\.\d+)?$/.test(conc)
-}
-
-function validateVolume(vol: string): boolean {
-  const num = parseFloat(vol)
-  return !isNaN(num) && num > 0 && num <= 10
-}
 
 export function AddImmunotherapyPage() {
   const navigate = useNavigate()
@@ -141,7 +85,7 @@ export function AddImmunotherapyPage() {
   const formState = useForm<ImmForm>({
     initial: {
       nome: '', cpf: '', telefone: '', dataNascimento: '', peso: '', medicoResponsavel: '',
-      tipo: '', viaCutanea: '', dataInicio: '', extrato: '', metaConcentracao: '', metaVolume: '',
+      tipo: '', viaCutanea: '', dataInicio: tomorrowStr(), extrato: '', metaConcentracao: '', metaVolume: '',
     },
   })
   const form = formState.values
@@ -152,15 +96,11 @@ export function AddImmunotherapyPage() {
 
   const validateStep1 = useCallback((): boolean => {
     const e: Partial<Record<keyof ImmForm, string>> = {}
-    if (!form.nome.trim()) e.nome = 'Nome é obrigatório'
-    else if (form.nome.trim().length < 3) e.nome = 'Nome deve ter ao menos 3 caracteres'
-    if (!form.cpf.trim()) e.cpf = 'CPF é obrigatório'
-    else if (!validateCPF(form.cpf)) e.cpf = 'CPF inválido'
-    if (!form.telefone.trim()) e.telefone = 'Telefone é obrigatório'
-    else if (!validatePhone(form.telefone)) e.telefone = 'Telefone inválido'
-    if (!form.dataNascimento) e.dataNascimento = 'Data de nascimento é obrigatória'
-    if (!form.peso.trim()) e.peso = 'Peso é obrigatório'
-    else if (!validateWeight(form.peso)) e.peso = 'Peso inválido'
+    { const err = validateName(form.nome); if (err) e.nome = err }
+    { const err = validateCPF(form.cpf); if (err) e.cpf = err }
+    { const err = validatePhone(form.telefone); if (err) e.telefone = err }
+    { const err = validateBirthdate(form.dataNascimento); if (err) e.dataNascimento = err }
+    { const err = validateWeight(form.peso); if (err) e.peso = err }
     if (!form.medicoResponsavel.trim()) e.medicoResponsavel = 'Médico responsável é obrigatório'
     formState.setErrors(e)
     return Object.keys(e).length === 0
@@ -170,12 +110,10 @@ export function AddImmunotherapyPage() {
     const e: Partial<Record<keyof ImmForm, string>> = {}
     if (!form.tipo.trim()) e.tipo = 'Tipo é obrigatório'
     if (!form.viaCutanea) e.viaCutanea = 'Via cutânea é obrigatória'
-    if (!form.dataInicio) e.dataInicio = 'Data de início é obrigatória'
+    { const err = validateFutureDate(form.dataInicio, 'Data de início'); if (err) e.dataInicio = err }
     { const err = validateExtrato(form.extrato); if (err) e.extrato = err }
-    if (!form.metaConcentracao.trim()) e.metaConcentracao = 'Meta de concentração é obrigatória'
-    else if (!validateConcentration(form.metaConcentracao)) e.metaConcentracao = 'Formato inválido (ex: 1:10)'
-    if (!form.metaVolume.trim()) e.metaVolume = 'Meta de volume é obrigatória'
-    else if (!validateVolume(form.metaVolume)) e.metaVolume = 'Volume inválido'
+    { const err = validateConcentration(form.metaConcentracao); if (err) e.metaConcentracao = err }
+    { const err = validateVolume(form.metaVolume); if (err) e.metaVolume = err }
     formState.setErrors(e)
     return Object.keys(e).length === 0
   }, [form])
@@ -248,7 +186,7 @@ export function AddImmunotherapyPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Nascimento</label>
-                  <input type="date" value={form.dataNascimento} onChange={(e) => set('dataNascimento', e.target.value)} onBlur={() => touch('dataNascimento')} className={inputClass('dataNascimento')} />
+                  <input type="date" max={todayStr()} value={form.dataNascimento} onChange={(e) => set('dataNascimento', e.target.value)} onBlur={() => touch('dataNascimento')} className={inputClass('dataNascimento')} />
                   <ErrorMsg field="dataNascimento" />
                 </div>
                 <div>
@@ -305,7 +243,7 @@ export function AddImmunotherapyPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Início</label>
-                  <input type="date" value={form.dataInicio} onChange={(e) => set('dataInicio', e.target.value)} onBlur={() => touch('dataInicio')} className={inputClass('dataInicio')} />
+                  <input type="date" min={todayStr()} value={form.dataInicio} onChange={(e) => set('dataInicio', e.target.value)} onBlur={() => touch('dataInicio')} className={inputClass('dataInicio')} />
                   <ErrorMsg field="dataInicio" />
                 </div>
                 <div>
