@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { UserRole } from '@/features/user/user-store'
+import type { UserRole } from '@/shared/identity/user-store'
 
 /**
  * RNE-021 — Auditoria na visualização do prontuário.

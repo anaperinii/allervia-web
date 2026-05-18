@@ -1,13 +1,13 @@
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { cn } from '@/shared/lib/utils'
 import { useState, useRef, useEffect } from 'react'
-import { usePatientStore } from '@/features/patient/patient-store'
-import { useUserStore, PROFILES, ROLE_LABELS } from '@/features/user/user-store'
-import { useNotificationsStore, type Notification } from '@/features/notification/notifications-store'
+import { usePatientStore } from '@/features/patient/stores/patient-store'
+import { useUserStore, PROFILES, ROLE_LABELS } from '@/shared/identity/user-store'
+import { useNotificationsStore, type Notification } from '@/features/notification/stores/notifications-store'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import imunecareLogo from '@/assets/imunecare-logo.png'
-import { Modal, Button } from '@/shared/ui'
+import { Modal, Button } from '@/shared/components'
 import {
   ChevronLeft,
   ChevronRight,

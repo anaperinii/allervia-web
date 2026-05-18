@@ -3,8 +3,7 @@ import { validateEmail as sharedValidateEmail, validatePassword, validatePasswor
 import { Link } from '@tanstack/react-router'
 import { AuthCard } from '@/features/auth/auth-card'
 import { ArrowLeft, Mail, ShieldCheck, Clock, CheckCircle, KeyRound } from 'lucide-react'
-import { useEnterReveal } from '@/shared/hooks/use-enter-reveal'
-import { TextInput } from '@/shared/ui'
+import { TextInput, Reveal } from '@/shared/components'
 
 type Step = 'request' | 'code' | 'reset' | 'done'
 
@@ -15,9 +14,6 @@ export function ForgotPasswordPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
-
-  const containerRef = useEnterReveal()
-
 
   const validateEmail = () => {
     const e: Record<string, string> = {}
@@ -76,10 +72,10 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div ref={containerRef} className="flex flex-col min-h-screen bg-white pt-17">
+    <div className="flex flex-col min-h-screen bg-white pt-17">
       <div className="flex flex-1 items-center justify-center px-6 sm:px-8 gap-16 max-w-6xl mx-auto w-full py-10">
         {/* Form */}
-        <div className="reveal flex flex-col w-full max-w-sm gap-6" style={{ transitionDelay: '0.1s' }}>
+        <Reveal delay={100} className="flex flex-col w-full max-w-sm gap-6">
 
           {/* Step: Request */}
           {step === 'request' && (
@@ -289,9 +285,11 @@ export function ForgotPasswordPage() {
               </div>
             </>
           )}
-        </div>
+        </Reveal>
 
-        <AuthCard initialSlide={0} className="reveal" style={{ transitionDelay: '0.2s' }} />
+        <Reveal delay={200}>
+          <AuthCard initialSlide={0} />
+        </Reveal>
       </div>
     </div>
   )

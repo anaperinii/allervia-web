@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useNotificationsStore, type Notification, type NotificationCategory } from '@/features/notification/notifications-store'
+import { useNotificationsStore, type Notification, type NotificationCategory } from '@/features/notification/stores/notifications-store'
 import { BellOff, Mail, MailOpen, ChevronRight, CheckCheck, ChevronUp, ChevronDown } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { Select, TextInput } from '@/shared/ui'
+import { Select, TextInput } from '@/shared/components'
 import { formatDistanceToNow, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 

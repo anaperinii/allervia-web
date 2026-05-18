@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {} from '@tanstack/react-router'
 import { ArrowLeft, Book, MessageCircle, Mail, ChevronDown } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { IconButton, CardButton } from "@/shared/ui"
+import { IconButton, CardButton } from "@/shared/components"
 
 const faqs = [
   { q: 'Como cadastrar um novo paciente?', a: 'Acesse Imunoterapias > Adicionar Imunoterapia. O cadastro do paciente é feito na primeira etapa do fluxo, seguido da prescrição do protocolo.' },

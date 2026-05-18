@@ -3,9 +3,10 @@ import { useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, FileText, FileSpreadsheet, FileDown, Check, Settings, ShieldCheck, EyeOff } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer } from 'recharts'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useHasPermission, useDoctorFilter } from '@/features/user/user-store'
-import { Modal, Button, IconButton, TextInput, Select } from "@/shared/ui"
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useHasPermission, useDoctorFilter } from '@/shared/identity/user-store'
+import { Modal, Button, IconButton, TextInput, Select } from "@/shared/components"
+import { CONC_COLORS, PHASE_COLORS, STATUS_COLORS, TYPE_COLORS, VOL_LEGEND, VOLUME_KEYS, ALL_TYPES } from '@/features/dashboard/constants/chart-colors'
 
 const formats = [
   { id: 'pdf', label: 'PDF', icon: FileText },
@@ -22,18 +23,6 @@ const chartOptions = [
   { id: 'types', label: 'Imunoterapias Ativas por Tipo' },
   { id: 'volume', label: 'Volume vs Concentração' },
 ]
-
-const CONC_COLORS: Record<string, string> = { '1:10.000': '#B6F2EC', '1:1.000': '#2CD3C1', '1:100': '#18C1CB', '1:10': '#0E99A3' }
-const PHASE_COLORS = { 'Indução': '#18C1CB', 'Manutenção': '#A78BFA' }
-const STATUS_COLORS = { 'Ativas': '#2CD3C1', 'Interrompidas': '#F4845F', 'Concluídas': '#22DD44' }
-const TYPE_COLORS = ['#0E99A3', '#18C1CB', '#2CD3C1', '#B6F2EC', '#3F98AF']
-const VOL_LEGEND = [
-  { label: '0,1ml', color: '#B6F2EC' }, { label: '0,2ml', color: '#2CD3C1' },
-  { label: '0,4ml', color: '#18C1CB' }, { label: '0,8ml', color: '#0E99A3' }, { label: '0,5ml', color: '#A78BFA' },
-]
-
-const VOLUME_KEYS = ['0,1ml', '0,2ml', '0,4ml', '0,5ml', '0,8ml'] as const
-const ALL_TYPES = ['Gramíneas', 'Ácaros', 'Cão e Gato', 'Cândida', 'Herpes']
 
 export function ExportReportPage() {
   const navigate = useNavigate()

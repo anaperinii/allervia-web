@@ -1,16 +1,17 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { usePatientStore } from '@/features/patient/patient-store'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useHasPermission, useUserStore } from '@/features/user/user-store'
-import { useAuditStore } from '@/features/audit/audit-store'
+import { usePatientStore } from '@/features/patient/stores/patient-store'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useHasPermission, useUserStore } from '@/shared/identity/user-store'
+import { useAuditStore } from '@/shared/audit/audit-store'
 import { Search, ArrowLeft, ClipboardList, Syringe, CalendarDays, Info } from 'lucide-react'
 import { addDays, format, differenceInDays, parse } from 'date-fns'
 import { cn } from '@/shared/lib/utils'
 import { validateVolume, validateConcentration } from '@/shared/lib/validators'
-import { calculateNextDose, parseDose } from '@/features/immunotherapy/scit-protocol'
+import { formatVolume, formatConcentration } from '@/shared/lib/formatters'
+import { calculateNextDose, parseDose } from '@/features/immunotherapy/constants/scit-protocol'
 import { useForm } from '@/shared/hooks/useForm'
-import { Modal, Button, IconButton, TextInput, TextArea, Select } from "@/shared/ui"
+import { Modal, Button, IconButton, TextInput, TextArea, Select } from "@/shared/components"
 
 const stepLabels = ['Paciente', 'Pré-Aplicação', 'Pós-Aplicação', 'Revisão dos Dados']
 
@@ -93,15 +94,6 @@ export function PatientEvolutionPage() {
     formState.set(field, value)
   }
 
-  const formatVolume = (v: string) => v.replace(/[^0-9,.]/g, '').replace(',', '.')
-  const formatConcentration = (v: string) => {
-    const cleaned = v.replace(/[^0-9.:]/g, '')
-    if (!cleaned.startsWith('1:') && cleaned.length > 0) {
-      const digits = cleaned.replace(/\D/g, '')
-      return digits.length > 0 ? `1:${digits}` : ''
-    }
-    return cleaned
-  }
 
   const validateStep1 = useCallback((): boolean => {
     const e: Partial<Record<keyof EvolutionForm, string>> = {}

@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { usePatientStore } from '@/features/patient/patient-store'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useHasPermission, useDoctorFilter } from '@/features/user/user-store'
+import { usePatientStore } from '@/features/patient/stores/patient-store'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useHasPermission, useDoctorFilter } from '@/shared/identity/user-store'
 import { Plus, ChevronLeft, ChevronRight, ExternalLink, CheckCircle, Calendar, Phone, Clock, Syringe, User } from 'lucide-react'
-import type { Application } from '@/features/patient/patient-store'
+import type { Application } from '@/features/patient/stores/patient-store'
 import { cn } from '@/shared/lib/utils'
-import { Modal, Button, Toast, SegmentedControl, TextInput, Select } from '@/shared/ui'
+import { Modal, Button, Toast, SegmentedControl, TextInput, Select } from '@/shared/components'
 import {
   format,
   startOfWeek,
@@ -22,14 +22,7 @@ import {
   subMonths,
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-
-const INTERVAL_COLORS: Record<number, { bg: string; text: string; dot: string }> = {
-  7: { bg: '#FDECF0', text: '#E8768E', dot: '#E8768E' },
-  14: { bg: '#FDEEE8', text: '#E8766A', dot: '#E8766A' },
-  21: { bg: '#DBEAFE', text: '#2563EB', dot: '#2563EB' },
-  28: { bg: '#EDE9FE', text: '#7C3AED', dot: '#7C3AED' },
-}
-const DEFAULT_COLOR = { bg: '#F3F4F6', text: '#374151', dot: '#6B7280' }
+import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 
 export function AppointmentsPage() {
   const { applications: allApplications } = usePatientStore()
@@ -82,7 +75,10 @@ export function AppointmentsPage() {
     return immunotherapies.find((i) => i.id === patientId)?.nome || ''
   }
 
-  const getPatientPhone = () => '(62) 99557-1423'
+  const getPatientPhone = (patientId?: string) => {
+    if (!patientId) return ''
+    return immunotherapies.find((i) => i.id === patientId)?.telefone ?? ''
+  }
 
   const openWhatsApp = (phone: string) => {
     const digits = phone.replace(/\D/g, '')
@@ -269,7 +265,7 @@ export function AppointmentsPage() {
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {selectedDayApps.map((app) => {
-                const color = INTERVAL_COLORS[app.ciclo.dias] || DEFAULT_COLOR
+                const color = getIntervalColor(app.ciclo.dias)
                 return (
                   <div key={app.id} onClick={() => setSelectedApp(app)} className="shrink-0 border border-(--border-custom) rounded-lg p-2.5 min-w-45 cursor-pointer hover:border-brand/50 hover:shadow-sm transition-all">
                     <div className="text-xs font-semibold text-(--text)">{getPatientName(app.patientId)}</div>
@@ -296,7 +292,7 @@ export function AppointmentsPage() {
         size="md"
         footer={selectedApp ? <>
           <button
-            onClick={() => sendReminder(getPatientPhone(), getPatientFullName(selectedApp.patientId).split(' ')[0], selectedApp.data, selectedApp.horaInicio)}
+            onClick={() => sendReminder(getPatientPhone(selectedApp.patientId), getPatientFullName(selectedApp.patientId).split(' ')[0], selectedApp.data, selectedApp.horaInicio)}
             className="text-[0.65rem] font-medium text-[#25D366] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none mr-auto"
           >
             <Phone size={11} />
@@ -317,10 +313,10 @@ export function AppointmentsPage() {
                   >
                     {getPatientFullName(selectedApp.patientId)}
                   </button>
-                  <div className="text-[0.65rem] text-(--text-muted)">{getPatientPhone()}</div>
+                  <div className="text-[0.65rem] text-(--text-muted)">{getPatientPhone(selectedApp.patientId)}</div>
                 </div>
                 <button
-                  onClick={() => openWhatsApp(getPatientPhone())}
+                  onClick={() => openWhatsApp(getPatientPhone(selectedApp.patientId))}
                   className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-[#25D366] text-white text-[0.65rem] font-semibold hover:bg-[#20BD5A] transition-all shrink-0"
                 >
                   <Phone size={12} />
@@ -353,8 +349,8 @@ export function AppointmentsPage() {
                 <div className="bg-white px-3.5 py-2.5">
                   <div className="text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">Intervalo</div>
                   <div className="text-xs font-medium text-(--text)">
-                    <span className="inline-flex items-center gap-1 px-2 py-px rounded-full text-[0.6rem] font-semibold border" style={{ backgroundColor: (INTERVAL_COLORS[selectedApp.ciclo.dias] || DEFAULT_COLOR).bg, color: (INTERVAL_COLORS[selectedApp.ciclo.dias] || DEFAULT_COLOR).text, borderColor: (INTERVAL_COLORS[selectedApp.ciclo.dias] || DEFAULT_COLOR).dot + '30' }}>
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: (INTERVAL_COLORS[selectedApp.ciclo.dias] || DEFAULT_COLOR).dot }} />
+                    <span className="inline-flex items-center gap-1 px-2 py-px rounded-full text-[0.6rem] font-semibold border" style={{ backgroundColor: (getIntervalColor(selectedApp.ciclo.dias)).bg, color: (getIntervalColor(selectedApp.ciclo.dias)).text, borderColor: (getIntervalColor(selectedApp.ciclo.dias)).dot + '30' }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: (getIntervalColor(selectedApp.ciclo.dias)).dot }} />
                       {selectedApp.ciclo.dias} dias
                     </span>
                   </div>

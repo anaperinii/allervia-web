@@ -1,9 +1,9 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate, useSearch, Link } from '@tanstack/react-router'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
-import { usePatientStore, seedInactivationsFor } from '@/features/patient/patient-store'
-import { useHasPermission, useDoctorFilter } from '@/features/user/user-store'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-types-store'
+import { usePatientStore, seedInactivationsFor } from '@/features/patient/stores/patient-store'
+import { useHasPermission, useDoctorFilter } from '@/shared/identity/user-store'
 import {
   Search,
   Plus,
@@ -17,16 +17,9 @@ import {
   CheckCircle,
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { Toast, Button, Select, TextInput } from '@/shared/ui'
+import { Toast, Button, Select, TextInput } from '@/shared/components'
 
-const INTERVAL_COLORS: Record<number, { bg: string; text: string; dot: string }> = {
-  7: { bg: '#FDECF0', text: '#E8768E', dot: '#E8768E' },
-  14: { bg: '#FDEEE8', text: '#E8766A', dot: '#E8766A' },
-  21: { bg: '#DBEAFE', text: '#2563EB', dot: '#2563EB' },
-  28: { bg: '#EDE9FE', text: '#7C3AED', dot: '#7C3AED' },
-}
-
-const DEFAULT_COLOR = { bg: '#F3F4F6', text: '#374151', dot: '#6B7280' }
+import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 
 export function ImmunotherapiesPage() {
   const navigate = useNavigate()
@@ -194,7 +187,7 @@ export function ImmunotherapiesPage() {
                 </tr>
               ) : (
                 paginated.map((item) => {
-                  const color = INTERVAL_COLORS[item.cicloIntervalo.dias] || DEFAULT_COLOR
+                  const color = getIntervalColor(item.cicloIntervalo.dias)
                   return (
                     <tr
                       key={item.id}

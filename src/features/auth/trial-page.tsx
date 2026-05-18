@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Shield, Check, Clock, Mail } from 'lucide-react'
-import { Modal, TextInput, Select } from '@/shared/ui'
+import { Modal, TextInput, Select } from '@/shared/components'
 import imunecareLogo from '@/assets/imunecare-logo.png'
 import imunecareWhiteLogo from '@/assets/imunecare-white-logo.png'
-import { validateEmail, formatPhone } from '@/shared/lib/validators'
+import { validateEmail } from '@/shared/lib/validators'
+import { formatPhone } from '@/shared/lib/formatters'
 
 interface TrialForm {
   nome: string

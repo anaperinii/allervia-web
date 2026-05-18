@@ -1,28 +1,17 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useHasPermission, useDoctorFilter } from '@/features/user/user-store'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useHasPermission, useDoctorFilter } from '@/shared/identity/user-store'
 import { Users, Syringe, Activity, TrendingUp, TrendingDown, Download, Archive, Pin, PinOff } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { Button, SegmentedControl, Select } from '@/shared/ui'
+import { Button, SegmentedControl, Select } from '@/shared/components'
 import {
   PieChart, Pie, Cell,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line,
 } from 'recharts'
 
-const CONC_COLORS: Record<string, string> = {
-  '1:10.000': '#B6F2EC',
-  '1:1.000': '#2CD3C1',
-  '1:100': '#18C1CB',
-  '1:10': '#0E99A3',
-}
-
-const PHASE_COLORS = { 'Indução': '#18C1CB', 'Manutenção': '#A78BFA' }
-
-const STATUS_COLORS = { 'Ativas': '#2CD3C1', 'Interrompidas': '#F4845F', 'Concluídas': '#22DD44' }
-
-const TYPE_COLORS = ['#0E99A3', '#18C1CB', '#2CD3C1', '#B6F2EC', '#3F98AF']
+import { CONC_COLORS, PHASE_COLORS, STATUS_COLORS, TYPE_COLORS } from '@/features/dashboard/constants/chart-colors'
 
 export function DashboardPage() {
   const navigate = useNavigate()

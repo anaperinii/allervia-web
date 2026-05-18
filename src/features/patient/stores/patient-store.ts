@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { INDUCTION_SEQUENCE, META_DOSE, META_STEP } from '@/features/immunotherapy/scit-protocol'
+import { INDUCTION_SEQUENCE, META_DOSE, META_STEP } from '@/features/immunotherapy/constants/scit-protocol'
 
 export type ProtocolAdjustmentType = 'reducao_dose' | 'aumento_intervalo' | 'alteracao_concentracao' | 'suspensao' | 'outro'
 

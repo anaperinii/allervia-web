@@ -2,13 +2,13 @@ import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, User, Syringe, Info } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { useHasPermission } from '@/features/user/user-store'
+import { useHasPermission } from '@/shared/identity/user-store'
 import { useForm } from '@/shared/hooks/useForm'
-import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/immunotherapies-store'
-import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
-import { Modal, Button, IconButton, TextInput, Select } from "@/shared/ui"
-import { PROFILES } from '@/features/user/user-store'
-import { usePatientStore, type Application } from '@/features/patient/patient-store'
+import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-types-store'
+import { Modal, Button, IconButton, TextInput, Select } from "@/shared/components"
+import { PROFILES } from '@/shared/identity/user-store'
+import { usePatientStore, type Application } from '@/features/patient/stores/patient-store'
 import {
   validateName,
   validateCPF,
@@ -19,14 +19,9 @@ import {
   validateExtrato,
   validateConcentration,
   validateVolume,
-  formatCPF,
-  formatPhone,
-  formatWeight,
-  formatConcentration,
-  formatVolume,
-  todayStr,
-  tomorrowStr,
 } from '@/shared/lib/validators'
+import { formatCPF, formatPhone, formatWeight, formatConcentration, formatVolume } from '@/shared/lib/formatters'
+import { todayStr, tomorrowStr } from '@/shared/lib/dates'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -46,6 +41,7 @@ export function AddImmunotherapyPage() {
     const newImm: Immunotherapy = {
       id: newId,
       nome: form.nome.trim(),
+      telefone: form.telefone.trim(),
       tipo: form.tipo.trim(),
       doseConcentracao: '1:10.000 - 0,1ml',
       cicloIntervalo: { numero: 1, dias: 7 },

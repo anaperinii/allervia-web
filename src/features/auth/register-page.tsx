@@ -3,8 +3,7 @@ import { validatePassword as sharedValidatePassword, validatePasswordConfirm } f
 import { Link } from '@tanstack/react-router'
 import { AuthCard } from '@/features/auth/auth-card'
 import { Eye, EyeOff, Smile, CheckCircle, Mail, ShieldCheck, ArrowRight } from 'lucide-react'
-import { useEnterReveal } from '@/shared/hooks/use-enter-reveal'
-import { TextInput, Select } from '@/shared/ui'
+import { TextInput, Select, Reveal } from '@/shared/components'
 
 const specialties = [
   'Alergologia e Imunologia',
@@ -28,8 +27,6 @@ export function RegisterPage() {
   const [specialty, setSpecialty] = useState('')
   const [code, setCode] = useState(['', '', '', '', '', ''])
   const [errors, setErrors] = useState<Record<string, string>>({})
-
-  const containerRef = useEnterReveal()
 
   const maskedEmail = (() => {
     const [local, domain] = email.split('@')
@@ -88,13 +85,15 @@ export function RegisterPage() {
   }
 
   return (
-    <div ref={containerRef} className="flex flex-col min-h-screen bg-white pt-17">
+    <div className="flex flex-col min-h-screen bg-white pt-17">
       <div className="flex flex-1 items-center justify-center px-6 sm:px-8 gap-16 max-w-6xl mx-auto w-full py-10">
         {/* Auth card — left side */}
-        <AuthCard initialSlide={1} className="reveal" style={{ transitionDelay: '0.1s' }} />
+        <Reveal delay={100}>
+          <AuthCard initialSlide={1} />
+        </Reveal>
 
         {/* Steps */}
-        <div className="reveal flex flex-col w-full max-w-sm gap-6" style={{ transitionDelay: '0.2s' }}>
+        <Reveal delay={200} className="flex flex-col w-full max-w-sm gap-6">
 
           {/* Step: Welcome */}
           {step === 'welcome' && (
@@ -366,7 +365,7 @@ export function RegisterPage() {
             </>
           )}
 
-        </div>
+        </Reveal>
       </div>
     </div>
   )

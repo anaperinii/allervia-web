@@ -1,16 +1,9 @@
-/**
- * Shared validation utilities for ImuneCare
- * Keep all reusable validators here to avoid duplication and maintain consistency.
- */
-
-// ─── Email ────────────────────────────────────────────────────────────────────
 export function validateEmail(value: string): string | null {
   if (!value.trim()) return 'E-mail é obrigatório'
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim())) return 'E-mail inválido'
   return null
 }
 
-// ─── Password ─────────────────────────────────────────────────────────────────
 export function validatePassword(value: string): string | null {
   if (!value) return 'Senha é obrigatória'
   if (value.length < 8) return 'Mínimo de 8 caracteres'
@@ -25,7 +18,6 @@ export function validatePasswordConfirm(password: string, confirm: string): stri
   return null
 }
 
-// ─── CPF ──────────────────────────────────────────────────────────────────────
 export function validateCPF(cpf: string): string | null {
   const digits = cpf.replace(/\D/g, '')
   if (digits.length !== 11) return 'CPF inválido'
@@ -43,7 +35,6 @@ export function validateCPF(cpf: string): string | null {
   return null
 }
 
-// ─── Phone ────────────────────────────────────────────────────────────────────
 export function validatePhone(phone: string): string | null {
   const digits = phone.replace(/\D/g, '')
   if (!digits) return 'Telefone é obrigatório'
@@ -51,7 +42,6 @@ export function validatePhone(phone: string): string | null {
   return null
 }
 
-// ─── Name ─────────────────────────────────────────────────────────────────────
 export function validateName(value: string, label = 'Nome'): string | null {
   if (!value.trim()) return `${label} é obrigatório`
   if (value.trim().length < 3) return `${label} deve ter ao menos 3 caracteres`
@@ -59,7 +49,6 @@ export function validateName(value: string, label = 'Nome'): string | null {
   return null
 }
 
-// ─── Weight ───────────────────────────────────────────────────────────────────
 export function validateWeight(value: string): string | null {
   if (!value.trim()) return 'Peso é obrigatório'
   const num = parseFloat(value.replace(',', '.'))
@@ -67,21 +56,18 @@ export function validateWeight(value: string): string | null {
   return null
 }
 
-// ─── Birthdate (no future) ────────────────────────────────────────────────────
 export function validateBirthdate(value: string): string | null {
   if (!value) return 'Data de nascimento é obrigatória'
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const date = new Date(value + 'T12:00')
   if (date > today) return 'Data de nascimento não pode ser futura'
-  // minimum age: 0, maximum: 130 years
   const minDate = new Date(today)
   minDate.setFullYear(minDate.getFullYear() - 130)
   if (date < minDate) return 'Data de nascimento inválida'
   return null
 }
 
-// ─── Start date (no past) ─────────────────────────────────────────────────────
 export function validateFutureDate(value: string, label = 'Data de início'): string | null {
   if (!value) return `${label} é obrigatória`
   const today = new Date()
@@ -91,20 +77,15 @@ export function validateFutureDate(value: string, label = 'Data de início'): st
   return null
 }
 
-// ─── Extrato (allergen extract field) ────────────────────────────────────────
 /**
- * Pattern: one or more word-groups (alphabetic, accented) followed by a number and %,
- * optionally chained with " + ". Sum of all percentages must equal 100%.
+ * Extrato de alérgenos: componentes "Rótulo número%" somando 100%.
+ * Rótulo aceita só letras e espaços (sem números, hífen ou pontuação).
  *
  * Valid:   "Der p 60% + Der f 10% + Blt 30%"
- * Valid:   "Blomia 100%"
- * Invalid: "Der-p 60%" (hyphen)
- * Invalid: "Der p 60% + Der f 30%" (sum ≠ 100)
+ * Valid:   "Blomia tropicalis 100%"
+ * Invalid: "Der-p 60%" (hífen no rótulo)
+ * Invalid: "Der p 60% + Der f 30%" (soma ≠ 100)
  */
-// Pattern per component: purely alphabetic words (incl. accented letters), then number%
-// Rótulo: apenas letras e espaços — SEM números, SEM hífen, SEM pontuação no rótulo
-// Valid:   "Der p 60%"  |  "Blomia tropicalis 100%"
-// Invalid: "Der-p 60%"  |  "Der2 60%"  |  "60%"
 const EXTRATO_COMPONENT_RE = /^[A-Za-zÀ-ÖØ-öø-ÿ]+(?:\s[A-Za-zÀ-ÖØ-öø-ÿ]+)*\s+\d+(?:\.\d+)?%$/
 
 export function validateExtrato(value: string): string | null {
@@ -119,13 +100,11 @@ export function validateExtrato(value: string): string | null {
     }
   }
 
-  // Sum of percentages must equal 100
   const total = parts.reduce((sum, part) => {
     const match = part.match(/(\d+(?:\.\d+)?)%$/)
     return sum + (match ? parseFloat(match[1]) : 0)
   }, 0)
 
-  // Use small epsilon for floating point
   if (Math.abs(total - 100) > 0.01) {
     return `A soma dos percentuais deve ser 100% (atual: ${total.toFixed(1)}%)`
   }
@@ -133,16 +112,14 @@ export function validateExtrato(value: string): string | null {
   return null
 }
 
-// ─── Concentration (meta concentração) ───────────────────────────────────────
-// Format: 1:N with optional "." thousand separators (pt-BR): 1:10, 1:1.000, 1:10.000
+/** Formato 1:N com separador de milhar opcional (pt-BR): 1:10, 1:1.000, 1:10.000. */
 export function validateConcentration(value: string): string | null {
   if (!value.trim()) return 'Concentração é obrigatória'
   if (!/^1:\d{1,3}(\.\d{3})*$/.test(value.trim())) return 'Formato inválido. Use 1:N (ex: 1:10, 1:1.000, 1:10.000)'
   return null
 }
 
-// ─── Volume (meta volume) ─────────────────────────────────────────────────────
-// Format: positive number, up to 3 digits after decimal point, max 10ml
+/** Número positivo com até 3 casas decimais, máximo 10 ml. */
 export function validateVolume(value: string): string | null {
   if (!value.trim()) return 'Volume é obrigatório'
   const normalized = value.replace(',', '.')
@@ -151,59 +128,4 @@ export function validateVolume(value: string): string | null {
   if (isNaN(num) || num <= 0) return 'Volume deve ser maior que 0'
   if (num > 10) return 'Volume inválido (máx. 10 ml)'
   return null
-}
-
-// ─── Formatters ───────────────────────────────────────────────────────────────
-export function formatCPF(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11)
-  if (digits.length <= 3) return digits
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
-}
-
-export function formatPhone(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11)
-  if (digits.length <= 2) return digits.length ? `(${digits}` : ''
-  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
-}
-
-export function formatWeight(value: string): string {
-  const cleaned = value.replace(/[^0-9,.]/g, '').replace(',', '.')
-  const parts = cleaned.split('.')
-  if (parts.length > 2) return parts[0] + '.' + parts.slice(1).join('')
-  return cleaned
-}
-
-// Enforce 1:NNNNN — at most 5 digits after colon
-export function formatConcentration(value: string): string {
-  const cleaned = value.replace(/[^0-9:]/g, '')
-  if (!cleaned.includes(':')) {
-    const digits = cleaned.replace(/\D/g, '').slice(0, 5)
-    return digits.length > 0 ? `1:${digits}` : ''
-  }
-  const [, after] = cleaned.split(':')
-  return `1:${(after || '').slice(0, 5)}`
-}
-
-// Enforce up to 3 decimal digits for volume
-export function formatVolume(value: string): string {
-  const cleaned = value.replace(/[^0-9,.]/g, '').replace(',', '.')
-  const parts = cleaned.split('.')
-  if (parts.length === 1) return parts[0]
-  return parts[0] + '.' + parts[1].slice(0, 3)
-}
-
-// Today string YYYY-MM-DD
-export function todayStr(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-// Tomorrow string YYYY-MM-DD
-export function tomorrowStr(): string {
-  const d = new Date()
-  d.setDate(d.getDate() + 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }

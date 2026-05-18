@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { AuthCard } from '@/features/auth/auth-card'
 import { Eye, EyeOff } from 'lucide-react'
-import { useEnterReveal } from '@/shared/hooks/use-enter-reveal'
 import { validateEmail } from '@/shared/lib/validators'
-import { TextInput } from '@/shared/ui'
+import { TextInput, Reveal } from '@/shared/components'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -13,8 +12,6 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
-
-  const containerRef = useEnterReveal()
 
   const touch = (field: string) => setTouched((t) => ({ ...t, [field]: true }))
 
@@ -43,9 +40,9 @@ export function LoginPage() {
     errors[field] && touched[field] ? <span className="text-[0.6rem] text-red-500 mt-0.5 block">{errors[field]}</span> : null
 
   return (
-    <div ref={containerRef} className="flex flex-col min-h-screen bg-white pt-17">
+    <div className="flex flex-col min-h-screen bg-white pt-17">
       <div className="flex flex-1 items-center justify-center px-6 sm:px-8 gap-16 max-w-6xl mx-auto w-full py-10">
-        <div className="reveal flex flex-col w-full max-w-sm gap-7" style={{ transitionDelay: '0.1s' }}>
+        <Reveal delay={100} className="flex flex-col w-full max-w-sm gap-7">
           <div className="flex flex-col items-center text-center gap-1.5">
             <h1 className="font-extrabold text-3xl text-(--text)">Bem-vindo(a) de volta</h1>
             <p className="text-sm text-(--text-muted)">
@@ -114,9 +111,11 @@ export function LoginPage() {
               <Link to="/forgot-password" className="text-xs font-medium text-brand hover:underline no-underline">Esqueceu a senha?</Link>
             </div>
           </div>
-        </div>
+        </Reveal>
 
-        <AuthCard initialSlide={0} className="reveal" style={{ transitionDelay: '0.2s' }} />
+        <Reveal delay={200}>
+          <AuthCard initialSlide={0} />
+        </Reveal>
       </div>
     </div>
   )

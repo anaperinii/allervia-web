@@ -1,4 +1,4 @@
-import { LandingCTA } from '@/features/landing-page/_ui'
+import { MarketingCTA, Reveal } from '@/shared/components'
 import patientImg from '@/assets/patient-hero-section.png'
 
 export function HeroSection() {
@@ -10,7 +10,7 @@ export function HeroSection() {
       <div className="pointer-events-none absolute -bottom-32 -right-20 w-95 h-95 rounded-full bg-linear-to-br from-teal-200/25 to-cyan-100/15 blur-3xl" />
       <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-75 h-75 rounded-full bg-teal-100/40 blur-3xl" />
       {/* Left content */}
-      <div className="reveal">
+      <Reveal>
         <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 px-4 py-1.5 rounded-full text-[0.8rem] font-semibold mb-6">
           <span className="bg-teal-500 text-white px-2 py-0.5 rounded-full text-[0.7rem]">Beta</span>
           Versão beta em 2026
@@ -25,14 +25,14 @@ export function HeroSection() {
         </p>
 
         <div className="flex gap-3 flex-wrap">
-          <LandingCTA to="/trial" variant="filled">
+          <MarketingCTA to="/trial" variant="filled">
             Solicitar demonstração
-          </LandingCTA>
+          </MarketingCTA>
         </div>
-      </div>
+      </Reveal>
 
       {/* Right: Tablet mockup with patient chart */}
-      <div className="hidden lg:flex items-center justify-center reveal overflow-visible" style={{ animationDelay: '0.1s', perspective: '1400px', perspectiveOrigin: '70% 50%' }}>
+      <Reveal delay={100} className="hidden lg:flex items-center justify-center overflow-visible" style={{ perspective: '1400px', perspectiveOrigin: '70% 50%' }}>
         <div className="relative w-full max-w-5xl">
           {/* Tablet frame with 3D depth effect */}
           <div
@@ -84,7 +84,7 @@ export function HeroSection() {
           </div>
 
         </div>
-      </div>
+      </Reveal>
     </section>
   )
 }

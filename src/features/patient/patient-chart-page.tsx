@@ -1,14 +1,14 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { usePatientStore, seedInactivationsFor, type Application, type ProtocolAdjustmentType, type InactivationCategory } from '@/features/patient/patient-store'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useHasPermission, useDoctorFilter, useUserStore } from '@/features/user/user-store'
-import { useAuditStore } from '@/features/audit/audit-store'
-import { META_DOSE, calculateNextDose } from '@/features/immunotherapy/scit-protocol'
+import { usePatientStore, seedInactivationsFor, type Application, type ProtocolAdjustmentType, type InactivationCategory } from '@/features/patient/stores/patient-store'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useHasPermission, useDoctorFilter, useUserStore } from '@/shared/identity/user-store'
+import { useAuditStore } from '@/shared/audit/audit-store'
+import { META_DOSE, calculateNextDose } from '@/features/immunotherapy/constants/scit-protocol'
 import { addDays, format, differenceInDays, parse } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/utils'
-import { Toast, Modal, Button, FieldLabel, TextInput, TextArea, Select, SegmentedControl } from '@/shared/ui'
+import { Toast, Modal, Button, FieldLabel, TextInput, TextArea, Select, SegmentedControl } from '@/shared/components'
 import { useForm } from '@/shared/hooks/useForm'
 import {
   Clock,
@@ -29,14 +29,7 @@ import {
   PowerOff,
   Info,
 } from 'lucide-react'
-
-const INTERVAL_COLORS: Record<number, { bg: string; text: string; dot: string }> = {
-  7: { bg: '#FDECF0', text: '#E8768E', dot: '#E8768E' },
-  14: { bg: '#FDEEE8', text: '#E8766A', dot: '#E8766A' },
-  21: { bg: '#DBEAFE', text: '#2563EB', dot: '#2563EB' },
-  28: { bg: '#EDE9FE', text: '#7C3AED', dot: '#7C3AED' },
-}
-const DEFAULT_COLOR = { bg: '#F3F4F6', text: '#374151', dot: '#6B7280' }
+import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 
 export function PatientChartPage() {
   const navigate = useNavigate()
@@ -869,7 +862,7 @@ export function PatientChartPage() {
                           <div className="absolute -left-3.75 top-0 bottom-0 w-px bg-gray-200 rounded-full" />
 
                           {apps.map((app, idx) => {
-                            const color = INTERVAL_COLORS[app.ciclo.dias] || DEFAULT_COLOR
+                            const color = getIntervalColor(app.ciclo.dias)
                             const isRealized = app.status === 'realizada'
                             const isNext = app.status === 'agendada'
                             const hasReaction = app.efeitoColateral === 'Sim'
@@ -971,7 +964,7 @@ export function PatientChartPage() {
                               const isRealized = app.status === 'realizada'
                               const isNext = app.status === 'agendada'
                               const hasReaction = app.efeitoColateral === 'Sim'
-                              const intColor = INTERVAL_COLORS[app.ciclo.dias] || DEFAULT_COLOR
+                              const intColor = getIntervalColor(app.ciclo.dias)
                               const style = hasReaction
                                 ? { backgroundColor: '#FFEDD5', color: '#9A3412', borderColor: '#EA580C' }
                                 : { backgroundColor: intColor.bg, color: intColor.text, borderColor: intColor.dot }

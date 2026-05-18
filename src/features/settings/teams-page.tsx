@@ -2,8 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import {} from '@tanstack/react-router'
 import { ArrowLeft, Plus, X, Mail, Shield, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal, Clock, Trash2, Pencil, UserX, UserCheck, Send, Lock } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { useHasPermission } from '@/features/user/user-store'
-import { Modal, Button, IconButton, TextInput, MediaRow } from "@/shared/ui"
+import { useHasPermission } from '@/shared/identity/user-store'
+import { Modal, Button, IconButton, TextInput, MediaRow } from "@/shared/components"
 
 interface TeamMember {
   id: string

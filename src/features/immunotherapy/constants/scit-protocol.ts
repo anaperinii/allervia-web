@@ -1,14 +1,3 @@
-/**
- * Protocolo SCIT — Imunoterapia Específica Subcutânea
- *
- * Indução: 16 passos linearizados ao longo de 4 concentrações (1:10.000 → 1:1.000 → 1:100 → 1:10).
- * Cada concentração inicia em 0,1ml e dobra até 0,8ml (último passo de 1:10 é 0,5ml = meta).
- * Intervalo padrão na indução: 7 dias.
- *
- * Manutenção: mantém 1:10 — 0,5ml (meta). Intervalo progride 14 → 21 → 28 dias
- * conforme tolerância do paciente.
- */
-
 export interface SCITStep {
   conc: string
   vol: string

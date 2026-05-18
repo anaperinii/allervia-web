@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { cn } from '@/shared/lib/utils'
+import { Reveal } from '@/shared/components'
 import type { LucideIcon } from 'lucide-react'
 import { FileText, CalendarDays, LayoutDashboard, User } from 'lucide-react'
 import dashboardImg from '@/assets/dashboard-landing.png'
@@ -65,7 +66,7 @@ export function TabsSection() {
       {/* Bottom seam (continues into CtaSection) */}
       <div className="pointer-events-none absolute -bottom-32 -left-16 w-100 h-100 rounded-full bg-linear-to-br from-teal-200/25 to-cyan-200/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-28 -right-20 w-95 h-95 rounded-full bg-teal-100/25 blur-3xl" />
-      <div className="reveal text-center max-w-150 mx-auto mb-12 relative">
+      <Reveal className="text-center max-w-150 mx-auto mb-12 relative">
         <span className="inline-block text-[0.75rem] font-bold tracking-[2px] uppercase text-teal-600 bg-white border border-teal-200 px-4 py-1.5 rounded-full mb-4">
           Aprofunde-se
         </span>
@@ -75,7 +76,7 @@ export function TabsSection() {
         <p className="text-base text-(--text-muted) mt-3 mx-auto leading-[1.7]">
           Cada funcionalidade reflete as necessidades reais de clínicas de imunoterapia alérgica.
         </p>
-      </div>
+      </Reveal>
 
       {/* Tab buttons */}
       <div className="flex gap-2 justify-center flex-wrap mb-12">
@@ -97,14 +98,14 @@ export function TabsSection() {
 
       {/* Tab content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-[4%] items-center">
-        <div className="reveal">
+        <Reveal>
           <h3 className="text-[1.4rem] font-extrabold mb-4">{active.title}</h3>
           <p className="text-[0.95rem] text-(--text-muted) leading-[1.7] mb-6">{active.description}</p>
           <a href="#" className="text-teal-600 font-semibold text-[0.9rem] no-underline hover:underline">
             {active.link} →
           </a>
-        </div>
-        <div className="reveal bg-gray-50/80 border border-(--border-custom) rounded-2xl p-3 relative overflow-hidden shadow-[0_8px_40px_rgba(0,70,40,0.08)]">
+        </Reveal>
+        <Reveal className="bg-gray-50/80 border border-(--border-custom) rounded-2xl p-3 relative overflow-hidden shadow-[0_8px_40px_rgba(0,70,40,0.08)]">
           {/* Fake browser chrome */}
           <div className="flex items-center gap-1.5 mb-2 px-1">
             <div className="w-2 h-2 rounded-full bg-red-400" />
@@ -136,7 +137,7 @@ export function TabsSection() {
               />
             ))}
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   )

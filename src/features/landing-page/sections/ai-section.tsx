@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Crosshair, RefreshCw, Sparkles, FolderKanban } from 'lucide-react'
+import { Reveal } from '@/shared/components'
 
 interface AiFeature {
   icon: LucideIcon
@@ -23,7 +24,7 @@ export function AiSection() {
       {/* Bottom seam (continues into PricingSection) */}
       <div className="pointer-events-none absolute -bottom-32 -left-20 w-100 h-100 rounded-full bg-linear-to-br from-teal-200/20 to-cyan-200/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-28 -right-20 w-95 h-95 rounded-full bg-cyan-200/20 blur-3xl" />
-      <div className="reveal bg-linear-to-br from-teal-800 via-teal-700 to-cyan-600 rounded-4xl p-8 sm:p-12 lg:p-16 mx-0 overflow-hidden relative">
+      <Reveal className="bg-linear-to-br from-teal-800 via-teal-700 to-cyan-600 rounded-4xl p-8 sm:p-12 lg:p-16 mx-0 overflow-hidden relative">
         {/* Radial overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_80%_50%,rgba(255,255,255,0.05)_0%,transparent_60%)]" />
 
@@ -56,7 +57,7 @@ export function AiSection() {
             })}
           </div>
         </div>
-      </div>
+      </Reveal>
     </section>
   )
 }

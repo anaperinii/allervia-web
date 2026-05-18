@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import { Reveal } from '@/shared/components'
 import {
   ClipboardList,
   Bell,
@@ -35,7 +36,7 @@ export function FeaturesGrid() {
       {/* Bottom seam (continues into SplitSection) */}
       <div className="pointer-events-none absolute -bottom-32 -left-24 w-105 h-105 rounded-full bg-linear-to-br from-teal-200/20 to-cyan-200/15 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-28 -right-20 w-90 h-90 rounded-full bg-cyan-200/20 blur-3xl" />
-      <div className="reveal relative">
+      <Reveal className="relative">
         <span className="inline-block text-[0.75rem] font-bold tracking-[2px] uppercase text-teal-600 bg-teal-50 border border-teal-200 px-4 py-1.5 rounded-full mb-4">
           Funcionalidades
         </span>
@@ -45,25 +46,25 @@ export function FeaturesGrid() {
         <p className="text-base text-(--text-muted) max-w-130 leading-[1.7] mb-12">
           Cada detalhe foi pensado para facilitar o dia a dia do alergista — do cadastro do paciente ao acompanhamento longitudinal do protocolo.
         </p>
-      </div>
+      </Reveal>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {features.map((feature, i) => {
           const Icon = feature.icon
           return (
-            <div
+            <Reveal
               key={feature.title}
-              className={`reveal bg-(--card) border-[1.5px] border-(--border-custom) rounded-(--radius) p-7 transition-all duration-250 cursor-default hover:border-teal-300 hover:shadow-[0_8px_32px_rgba(20,184,166,0.1)] hover:-translate-y-0.75 ${
+              delay={50 * (i + 1)}
+              className={`bg-(--card) border-[1.5px] border-(--border-custom) rounded-(--radius) p-7 transition-all duration-250 cursor-default hover:border-teal-300 hover:shadow-[0_8px_32px_rgba(20,184,166,0.1)] hover:-translate-y-0.75 ${
                 feature.large ? 'sm:col-span-2' : ''
               }`}
-              style={{ transitionDelay: `${0.05 * (i + 1)}s` }}
             >
               <div className="w-12 h-12 rounded-xl bg-[linear-gradient(135deg,var(--color-teal-50),var(--color-teal-100))] border border-teal-200 flex items-center justify-center mb-4">
                 <Icon size={22} className="text-teal-600" />
               </div>
               <h3 className="text-base font-bold mb-2">{feature.title}</h3>
               <p className="text-[0.875rem] text-(--text-muted) leading-[1.6]">{feature.description}</p>
-            </div>
+            </Reveal>
           )
         })}
       </div>
