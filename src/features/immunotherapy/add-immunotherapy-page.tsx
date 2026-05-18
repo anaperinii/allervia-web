@@ -1,25 +1,21 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, User, Syringe, Info } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useHasPermission } from '@/shared/identity/user-store'
-import { useForm } from '@/shared/hooks/useForm'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-types-store'
-import { Modal, Button, IconButton, TextInput, Select } from "@/shared/components"
+import { Modal, Button, IconButton, TextInput, Select } from '@/shared/components'
 import { PROFILES } from '@/shared/identity/user-store'
 import { usePatientStore, type Application } from '@/features/patient/stores/patient-store'
 import {
-  validateName,
-  validateCPF,
-  validatePhone,
-  validateWeight,
-  validateBirthdate,
-  validateFutureDate,
-  validateExtrato,
-  validateConcentration,
-  validateVolume,
-} from '@/shared/lib/validators'
+  addImmunotherapySchema,
+  type AddImmunotherapyForm,
+  STEP_1_FIELDS,
+  STEP_2_FIELDS,
+} from '@/features/immunotherapy/schemas/add-immunotherapy'
 import { formatCPF, formatPhone, formatWeight, formatConcentration, formatVolume } from '@/shared/lib/formatters'
 import { todayStr, tomorrowStr } from '@/shared/lib/dates'
 import { format } from 'date-fns'
@@ -35,23 +31,49 @@ export function AddImmunotherapyPage() {
   const scheduleApplication = usePatientStore((s) => s.scheduleApplication)
   useEffect(() => { if (!canAdd) navigate({ to: '/immunotherapies' }) }, [canAdd, navigate])
 
-  const handleFinish = () => {
-    const modalidade: Immunotherapy['modalidade'] = form.viaCutanea === 'sublingual' ? 'sublingual' : 'subcutânea'
+  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    trigger,
+    watch,
+    formState: { errors },
+  } = useForm<AddImmunotherapyForm>({
+    resolver: zodResolver(addImmunotherapySchema),
+    mode: 'onBlur',
+    defaultValues: {
+      nome: '', cpf: '', telefone: '', dataNascimento: '', peso: '', medicoResponsavel: '',
+      tipo: '', viaCutanea: '', dataInicio: tomorrowStr(), extrato: '', metaConcentracao: '', metaVolume: '',
+    },
+  })
+  const form = watch()
+
+  const handleContinue = async () => {
+    const fields = step === 1 ? STEP_1_FIELDS : STEP_2_FIELDS
+    const isValid = await trigger([...fields])
+    if (isValid) setStep((s) => (s + 1) as 1 | 2 | 3)
+  }
+
+  const onFinish = handleSubmit((data) => {
+    const modalidade: Immunotherapy['modalidade'] = data.viaCutanea === 'sublingual' ? 'sublingual' : 'subcutânea'
     const newId = `new-${Date.now()}`
     const newImm: Immunotherapy = {
       id: newId,
-      nome: form.nome.trim(),
-      telefone: form.telefone.trim(),
-      tipo: form.tipo.trim(),
+      nome: data.nome.trim(),
+      telefone: data.telefone.trim(),
+      tipo: data.tipo.trim(),
       doseConcentracao: '1:10.000 - 0,1ml',
       cicloIntervalo: { numero: 1, dias: 7 },
       modalidade,
       status: 'ativo',
-      medicoResponsavel: form.medicoResponsavel.trim(),
+      medicoResponsavel: data.medicoResponsavel.trim(),
     }
     addImmunotherapy(newImm)
 
-    const [yyyy, mm, dd] = form.dataInicio.split('-')
+    const [yyyy, mm, dd] = data.dataInicio.split('-')
     const dataPtBR = `${dd}/${mm}/${yyyy}`
     const meses = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO']
     const ano = Number(yyyy)
@@ -71,67 +93,15 @@ export function AddImmunotherapyPage() {
     }
     scheduleApplication(firstApp)
 
-    navigate({ to: '/immunotherapies', search: { success: true, patientName: form.nome, patientId: newId } })
-  }
-  const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [showCancelModal, setShowCancelModal] = useState(false)
-  type ImmForm = {
-    nome: string; cpf: string; telefone: string; dataNascimento: string; peso: string; medicoResponsavel: string
-    tipo: string; viaCutanea: string; dataInicio: string; extrato: string; metaConcentracao: string; metaVolume: string
-  }
-  const formState = useForm<ImmForm>({
-    initial: {
-      nome: '', cpf: '', telefone: '', dataNascimento: '', peso: '', medicoResponsavel: '',
-      tipo: '', viaCutanea: '', dataInicio: tomorrowStr(), extrato: '', metaConcentracao: '', metaVolume: '',
-    },
+    navigate({ to: '/immunotherapies', search: { success: true, patientName: data.nome, patientId: newId } })
   })
-  const form = formState.values
-  const errors = formState.errors
-  const touched = formState.touched
-  const touch = formState.touch
-  const set = <K extends keyof ImmForm>(field: K, value: ImmForm[K]) => formState.set(field, value)
 
-  const validateStep1 = useCallback((): boolean => {
-    const e: Partial<Record<keyof ImmForm, string>> = {}
-    { const err = validateName(form.nome); if (err) e.nome = err }
-    { const err = validateCPF(form.cpf); if (err) e.cpf = err }
-    { const err = validatePhone(form.telefone); if (err) e.telefone = err }
-    { const err = validateBirthdate(form.dataNascimento); if (err) e.dataNascimento = err }
-    { const err = validateWeight(form.peso); if (err) e.peso = err }
-    if (!form.medicoResponsavel.trim()) e.medicoResponsavel = 'Médico responsável é obrigatório'
-    formState.setErrors(e)
-    return Object.keys(e).length === 0
-  }, [form])
-
-  const validateStep2 = useCallback((): boolean => {
-    const e: Partial<Record<keyof ImmForm, string>> = {}
-    if (!form.tipo.trim()) e.tipo = 'Tipo é obrigatório'
-    if (!form.viaCutanea) e.viaCutanea = 'Via cutânea é obrigatória'
-    { const err = validateFutureDate(form.dataInicio, 'Data de início'); if (err) e.dataInicio = err }
-    { const err = validateExtrato(form.extrato); if (err) e.extrato = err }
-    { const err = validateConcentration(form.metaConcentracao); if (err) e.metaConcentracao = err }
-    { const err = validateVolume(form.metaVolume); if (err) e.metaVolume = err }
-    formState.setErrors(e)
-    return Object.keys(e).length === 0
-  }, [form])
-
-  const isInvalid = (field: keyof ImmForm) => !!(errors[field] && touched[field])
-
-  const ErrorMsg = ({ field }: { field: keyof ImmForm }) => {
-    if (!errors[field] || !touched[field]) return null
-    return <span className="text-[0.6rem] text-red-500 mt-0.5 block">{errors[field]}</span>
-  }
-
-  const handleContinue = () => {
-    if (step === 1 && !validateStep1()) return
-    if (step === 2 && !validateStep2()) return
-    setStep((s) => (s + 1) as 1 | 2 | 3)
-  }
+  const errMsg = (field: keyof AddImmunotherapyForm) =>
+    errors[field] ? <span className="text-[0.6rem] text-red-500 mt-0.5 block">{errors[field]?.message}</span> : null
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 p-4 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
-        {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
           <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
             <ArrowLeft size={16} />
@@ -139,7 +109,6 @@ export function AddImmunotherapyPage() {
           <h1 className="text-2xl font-bold text-(--text)">Adicionar Imunoterapia</h1>
         </div>
 
-        {/* Steps */}
         <div className="px-5 py-7 flex items-center justify-center gap-4">
           {stepLabels.map((label, i) => {
             const s = i + 1
@@ -157,193 +126,220 @@ export function AddImmunotherapyPage() {
           })}
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          {step === 1 && (
-            <div className="space-y-5">
-              <h2 className="text-sm font-bold text-(--text)">Dados do Paciente</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nome do Paciente</label>
-                  <TextInput placeholder="Nome completo" value={form.nome} onChange={(e) => set('nome', e.target.value)} onBlur={() => touch('nome')} invalid={isInvalid('nome')} />
-                  <ErrorMsg field="nome" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">CPF</label>
-                  <TextInput placeholder="000.000.000-00" value={form.cpf} onChange={(e) => set('cpf', formatCPF(e.target.value))} onBlur={() => touch('cpf')} invalid={isInvalid('cpf')} />
-                  <ErrorMsg field="cpf" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Telefone</label>
-                  <TextInput placeholder="(00) 00000-0000" value={form.telefone} onChange={(e) => set('telefone', formatPhone(e.target.value))} onBlur={() => touch('telefone')} invalid={isInvalid('telefone')} />
-                  <ErrorMsg field="telefone" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Nascimento</label>
-                  <TextInput type="date" max={todayStr()} value={form.dataNascimento} onChange={(e) => set('dataNascimento', e.target.value)} onBlur={() => touch('dataNascimento')} invalid={isInvalid('dataNascimento')} />
-                  <ErrorMsg field="dataNascimento" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Peso</label>
-                  <div className="relative">
-                    <TextInput placeholder="Ex: 72.5" value={form.peso} onChange={(e) => set('peso', formatWeight(e.target.value))} onBlur={() => touch('peso')} invalid={isInvalid('peso')} className="pr-10" />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">kg</span>
+        <form onSubmit={onFinish} noValidate className="flex flex-1 min-h-0 flex-col">
+          <div className="flex-1 overflow-y-auto px-5 py-4">
+            {step === 1 && (
+              <div className="space-y-5">
+                <h2 className="text-sm font-bold text-(--text)">Dados do Paciente</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nome do Paciente</label>
+                    <TextInput placeholder="Nome completo" invalid={!!errors.nome} {...register('nome')} />
+                    {errMsg('nome')}
                   </div>
-                  <ErrorMsg field="peso" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Médico Responsável</label>
-                  <Select value={form.medicoResponsavel} onChange={(e) => set('medicoResponsavel', e.target.value)} onBlur={() => touch('medicoResponsavel')} invalid={isInvalid('medicoResponsavel')}>
-                    <option value="" disabled>Selecione o médico</option>
-                    {PROFILES.filter((p) => p.role === 'medico').map((p) => (
-                      <option key={p.id} value={p.name}>{p.name} · {p.registration}</option>
-                    ))}
-                  </Select>
-                  <ErrorMsg field="medicoResponsavel" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-5">
-              <h2 className="text-sm font-bold text-(--text)">Dados da Imunoterapia</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Tipo</label>
-                  <Select value={form.tipo} onChange={(e) => set('tipo', e.target.value)} onBlur={() => touch('tipo')} invalid={isInvalid('tipo')}>
-                    <option value="" disabled>Selecione o tipo</option>
-                    {customTypes.map((t) => <option key={t.id} value={t.label}>{t.label}</option>)}
-                  </Select>
-                  <ErrorMsg field="tipo" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Via Cutânea</label>
-                  <Select value={form.viaCutanea} onChange={(e) => set('viaCutanea', e.target.value)} onBlur={() => touch('viaCutanea')} invalid={isInvalid('viaCutanea')}>
-                    <option value="" disabled>Selecione</option>
-                    <option value="Subcutânea">Subcutânea</option>
-                    <option value="Sublingual">Sublingual</option>
-                  </Select>
-                  <ErrorMsg field="viaCutanea" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Início</label>
-                  <TextInput type="date" min={todayStr()} value={form.dataInicio} onChange={(e) => set('dataInicio', e.target.value)} onBlur={() => touch('dataInicio')} invalid={isInvalid('dataInicio')} />
-                  <ErrorMsg field="dataInicio" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Extrato</label>
-                  <TextInput placeholder="Ex: Der p 60 + Der f 10% + Blt 30%" value={form.extrato} onChange={(e) => set('extrato', e.target.value)} onBlur={() => touch('extrato')} invalid={isInvalid('extrato')} />
-                  <ErrorMsg field="extrato" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Meta de Concentração</label>
-                  <TextInput placeholder="1:10" value={form.metaConcentracao} onChange={(e) => set('metaConcentracao', formatConcentration(e.target.value))} onBlur={() => touch('metaConcentracao')} invalid={isInvalid('metaConcentracao')} />
-                  <ErrorMsg field="metaConcentracao" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Meta de Volume</label>
-                  <div className="relative">
-                    <TextInput placeholder="Ex: 0.5" value={form.metaVolume} onChange={(e) => set('metaVolume', formatVolume(e.target.value))} onBlur={() => touch('metaVolume')} invalid={isInvalid('metaVolume')} className="pr-10" />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">ml</span>
+                  <div>
+                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">CPF</label>
+                    <Controller
+                      control={control}
+                      name="cpf"
+                      render={({ field }) => (
+                        <TextInput placeholder="000.000.000-00" invalid={!!errors.cpf} value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatCPF(e.target.value))} />
+                      )}
+                    />
+                    {errMsg('cpf')}
                   </div>
-                  <ErrorMsg field="metaVolume" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-3.5">
-              <div className="mb-4">
-                <h2 className="text-sm font-bold text-(--text)">Revisão dos dados</h2>
-                <p className="text-[0.7rem] text-(--text-muted) mt-1">Confirme os dados antes de salvar a prescrição.</p>
-              </div>
-
-              {/* Dados do Paciente */}
-              <div className="border border-(--border-custom) rounded-xl overflow-hidden">
-                <div className="flex items-center gap-2.5 px-4 py-3 border-b border-(--border-custom) bg-white">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-100 shrink-0">
-                    <User size={13} className="text-teal-600" />
+                  <div>
+                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Telefone</label>
+                    <Controller
+                      control={control}
+                      name="telefone"
+                      render={({ field }) => (
+                        <TextInput placeholder="(00) 00000-0000" invalid={!!errors.telefone} value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatPhone(e.target.value))} />
+                      )}
+                    />
+                    {errMsg('telefone')}
                   </div>
-                  <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-(--text-muted)">Dados do Paciente</span>
-                </div>
-                <div className="bg-gray-50/60 p-4">
-                  <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
-                    {[
-                      { label: 'Nome', value: form.nome || '—' },
-                      { label: 'CPF', value: form.cpf || '—' },
-                      { label: 'Telefone', value: form.telefone || '—' },
-                      { label: 'Data de Nascimento', value: form.dataNascimento ? format(new Date(form.dataNascimento + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : '—' },
-                      { label: 'Peso', value: form.peso ? `${form.peso} kg` : '—' },
-                      { label: 'Médico Responsável', value: form.medicoResponsavel || '—' },
-                    ].map((item) => (
-                      <div key={item.label} className="bg-white px-3.5 py-2.5">
-                        <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{item.label}</div>
-                        <div className="text-xs font-medium text-(--text)">{item.value}</div>
-                      </div>
-                    ))}
+                  <div>
+                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Nascimento</label>
+                    <TextInput type="date" max={todayStr()} invalid={!!errors.dataNascimento} {...register('dataNascimento')} />
+                    {errMsg('dataNascimento')}
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Peso</label>
+                    <div className="relative">
+                      <Controller
+                        control={control}
+                        name="peso"
+                        render={({ field }) => (
+                          <TextInput placeholder="Ex: 72.5" invalid={!!errors.peso} className="pr-10" value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatWeight(e.target.value))} />
+                        )}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">kg</span>
+                    </div>
+                    {errMsg('peso')}
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Médico Responsável</label>
+                    <Select invalid={!!errors.medicoResponsavel} {...register('medicoResponsavel')}>
+                      <option value="" disabled>Selecione o médico</option>
+                      {PROFILES.filter((p) => p.role === 'medico').map((p) => (
+                        <option key={p.id} value={p.name}>{p.name} · {p.registration}</option>
+                      ))}
+                    </Select>
+                    {errMsg('medicoResponsavel')}
                   </div>
                 </div>
               </div>
+            )}
 
-              {/* Dados da Imunoterapia */}
-              <div className="border border-(--border-custom) rounded-xl overflow-hidden">
-                <div className="flex items-center gap-2.5 px-4 py-3 border-b border-(--border-custom) bg-white">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-100 shrink-0">
-                    <Syringe size={13} className="text-teal-600" />
+            {step === 2 && (
+              <div className="space-y-5">
+                <h2 className="text-sm font-bold text-(--text)">Dados da Imunoterapia</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Tipo</label>
+                    <Select invalid={!!errors.tipo} {...register('tipo')}>
+                      <option value="" disabled>Selecione o tipo</option>
+                      {customTypes.map((t) => <option key={t.id} value={t.label}>{t.label}</option>)}
+                    </Select>
+                    {errMsg('tipo')}
                   </div>
-                  <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-(--text-muted)">Dados da Imunoterapia</span>
-                </div>
-                <div className="bg-gray-50/60 p-4">
-                  <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
-                    {[
-                      { label: 'Tipo', value: form.tipo || '—' },
-                      { label: 'Via Cutânea', value: form.viaCutanea || '—' },
-                      { label: 'Data de Início', value: form.dataInicio ? format(new Date(form.dataInicio + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : '—' },
-                      { label: 'Extrato', value: form.extrato || '—' },
-                      { label: 'Meta de Concentração', value: form.metaConcentracao || '—' },
-                      { label: 'Meta de Volume', value: form.metaVolume ? `${form.metaVolume} ml` : '—' },
-                    ].map((item) => (
-                      <div key={item.label} className="bg-white px-3.5 py-2.5">
-                        <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{item.label}</div>
-                        <div className="text-xs font-medium text-(--text)">{item.value}</div>
-                      </div>
-                    ))}
+                  <div>
+                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Via Cutânea</label>
+                    <Select invalid={!!errors.viaCutanea} {...register('viaCutanea')}>
+                      <option value="" disabled>Selecione</option>
+                      <option value="Subcutânea">Subcutânea</option>
+                      <option value="Sublingual">Sublingual</option>
+                    </Select>
+                    {errMsg('viaCutanea')}
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Início</label>
+                    <TextInput type="date" min={todayStr()} invalid={!!errors.dataInicio} {...register('dataInicio')} />
+                    {errMsg('dataInicio')}
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Extrato</label>
+                    <TextInput placeholder="Ex: Der p 60 + Der f 10% + Blt 30%" invalid={!!errors.extrato} {...register('extrato')} />
+                    {errMsg('extrato')}
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Meta de Concentração</label>
+                    <Controller
+                      control={control}
+                      name="metaConcentracao"
+                      render={({ field }) => (
+                        <TextInput placeholder="1:10" invalid={!!errors.metaConcentracao} value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatConcentration(e.target.value))} />
+                      )}
+                    />
+                    {errMsg('metaConcentracao')}
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Meta de Volume</label>
+                    <div className="relative">
+                      <Controller
+                        control={control}
+                        name="metaVolume"
+                        render={({ field }) => (
+                          <TextInput placeholder="Ex: 0.5" invalid={!!errors.metaVolume} className="pr-10" value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatVolume(e.target.value))} />
+                        )}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">ml</span>
+                    </div>
+                    {errMsg('metaVolume')}
                   </div>
                 </div>
               </div>
+            )}
 
-              {/* Alert box */}
-              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg p-3.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 shrink-0">
-                  <Info size={14} className="text-amber-600" />
+            {step === 3 && (
+              <div className="space-y-3.5">
+                <div className="mb-4">
+                  <h2 className="text-sm font-bold text-(--text)">Revisão dos dados</h2>
+                  <p className="text-[0.7rem] text-(--text-muted) mt-1">Confirme os dados antes de salvar a prescrição.</p>
                 </div>
-                <p className="text-xs text-amber-800 leading-relaxed">
-                  Após confirmar, o protocolo será iniciado e a primeira dose será agendada para <span className="font-bold">{form.dataInicio ? format(new Date(form.dataInicio + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : 'a data de início definida'}</span>.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
 
-        {/* Footer */}
-        <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
-          {step > 1 && (
-            <Button tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
-              Voltar
-            </Button>
-          )}
-          {step < 3 ? (
-            <Button tone="brand" variant="solid" onClick={handleContinue}>
-              Continuar
-            </Button>
-          ) : (
-            <Button tone="brand" variant="solid" onClick={handleFinish}>
-              Salvar Imunoterapia
-            </Button>
-          )}
-        </div>
+                <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+                  <div className="flex items-center gap-2.5 px-4 py-3 border-b border-(--border-custom) bg-white">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-100 shrink-0">
+                      <User size={13} className="text-teal-600" />
+                    </div>
+                    <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-(--text-muted)">Dados do Paciente</span>
+                  </div>
+                  <div className="bg-gray-50/60 p-4">
+                    <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
+                      {[
+                        { label: 'Nome', value: form.nome || '—' },
+                        { label: 'CPF', value: form.cpf || '—' },
+                        { label: 'Telefone', value: form.telefone || '—' },
+                        { label: 'Data de Nascimento', value: form.dataNascimento ? format(new Date(form.dataNascimento + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : '—' },
+                        { label: 'Peso', value: form.peso ? `${form.peso} kg` : '—' },
+                        { label: 'Médico Responsável', value: form.medicoResponsavel || '—' },
+                      ].map((item) => (
+                        <div key={item.label} className="bg-white px-3.5 py-2.5">
+                          <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{item.label}</div>
+                          <div className="text-xs font-medium text-(--text)">{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+                  <div className="flex items-center gap-2.5 px-4 py-3 border-b border-(--border-custom) bg-white">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-100 shrink-0">
+                      <Syringe size={13} className="text-teal-600" />
+                    </div>
+                    <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-(--text-muted)">Dados da Imunoterapia</span>
+                  </div>
+                  <div className="bg-gray-50/60 p-4">
+                    <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
+                      {[
+                        { label: 'Tipo', value: form.tipo || '—' },
+                        { label: 'Via Cutânea', value: form.viaCutanea || '—' },
+                        { label: 'Data de Início', value: form.dataInicio ? format(new Date(form.dataInicio + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : '—' },
+                        { label: 'Extrato', value: form.extrato || '—' },
+                        { label: 'Meta de Concentração', value: form.metaConcentracao || '—' },
+                        { label: 'Meta de Volume', value: form.metaVolume ? `${form.metaVolume} ml` : '—' },
+                      ].map((item) => (
+                        <div key={item.label} className="bg-white px-3.5 py-2.5">
+                          <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{item.label}</div>
+                          <div className="text-xs font-medium text-(--text)">{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg p-3.5">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 shrink-0">
+                    <Info size={14} className="text-amber-600" />
+                  </div>
+                  <p className="text-xs text-amber-800 leading-relaxed">
+                    Após confirmar, o protocolo será iniciado e a primeira dose será agendada para <span className="font-bold">{form.dataInicio ? format(new Date(form.dataInicio + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : 'a data de início definida'}</span>.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
+            {step > 1 && (
+              <Button type="button" tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
+                Voltar
+              </Button>
+            )}
+            {step < 3 ? (
+              <Button type="button" tone="brand" variant="solid" onClick={handleContinue}>
+                Continuar
+              </Button>
+            ) : (
+              <Button type="submit" tone="brand" variant="solid">
+                Salvar Imunoterapia
+              </Button>
+            )}
+          </div>
+        </form>
       </div>
 
       <Modal

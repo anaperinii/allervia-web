@@ -1,45 +1,53 @@
 import { useState } from 'react'
-import { validateEmail as sharedValidateEmail, validatePassword, validatePasswordConfirm } from '@/shared/lib/validators'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from '@tanstack/react-router'
 import { AuthCard } from '@/features/auth/auth-card'
 import { ArrowLeft, Mail, ShieldCheck, Clock, CheckCircle, KeyRound } from 'lucide-react'
+import {
+  forgotPasswordEmailSchema,
+  forgotPasswordResetSchema,
+  type ForgotPasswordEmailForm,
+  type ForgotPasswordResetForm,
+} from '@/features/auth/schemas/forgot-password'
 import { TextInput, Reveal } from '@/shared/components'
 
 type Step = 'request' | 'code' | 'reset' | 'done'
 
 export function ForgotPasswordPage() {
   const [step, setStep] = useState<Step>('request')
-  const [email, setEmail] = useState('')
+  const [submittedEmail, setSubmittedEmail] = useState('')
   const [code, setCode] = useState(['', '', '', '', '', ''])
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [codeError, setCodeError] = useState<string | null>(null)
 
-  const validateEmail = () => {
-    const e: Record<string, string> = {}
-    const err = sharedValidateEmail(email)
-    if (err) e.email = err
-    setErrors(e)
-    return Object.keys(e).length === 0
+  const emailForm = useForm<ForgotPasswordEmailForm>({
+    resolver: zodResolver(forgotPasswordEmailSchema),
+    mode: 'onBlur',
+    defaultValues: { email: '' },
+  })
+
+  const resetForm = useForm<ForgotPasswordResetForm>({
+    resolver: zodResolver(forgotPasswordResetSchema),
+    mode: 'onBlur',
+    defaultValues: { password: '', confirmPassword: '' },
+  })
+  const passwordValue = resetForm.watch('password')
+
+  const submitEmail = emailForm.handleSubmit((data) => {
+    setSubmittedEmail(data.email)
+    setStep('code')
+  })
+
+  const submitCode = () => {
+    if (code.join('').length !== 6) {
+      setCodeError('Insira o código completo de 6 dígitos')
+      return
+    }
+    setCodeError(null)
+    setStep('reset')
   }
 
-  const validateCode = () => {
-    const e: Record<string, string> = {}
-    const full = code.join('')
-    if (full.length !== 6) e.code = 'Insira o código completo de 6 dígitos'
-    setErrors(e)
-    return Object.keys(e).length === 0
-  }
-
-  const validatePasswordFields = () => {
-    const e: Record<string, string> = {}
-    const pwErr = validatePassword(password)
-    if (pwErr) e.password = pwErr
-    const confirmErr = validatePasswordConfirm(password, confirmPassword)
-    if (confirmErr) e.confirmPassword = confirmErr
-    setErrors(e)
-    return Object.keys(e).length === 0
-  }
+  const submitReset = resetForm.handleSubmit(() => setStep('done'))
 
   const handleCodeChange = (index: number, value: string) => {
     if (value.length > 1) value = value.slice(-1)
@@ -47,17 +55,13 @@ export function ForgotPasswordPage() {
     const newCode = [...code]
     newCode[index] = value
     setCode(newCode)
-    if (errors.code) setErrors({})
-    if (value && index < 5) {
-      const next = document.getElementById(`code-${index + 1}`)
-      next?.focus()
-    }
+    if (codeError) setCodeError(null)
+    if (value && index < 5) document.getElementById(`code-${index + 1}`)?.focus()
   }
 
   const handleCodeKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === 'Backspace' && !code[index] && index > 0) {
-      const prev = document.getElementById(`code-${index - 1}`)
-      prev?.focus()
+      document.getElementById(`code-${index - 1}`)?.focus()
     }
   }
 
@@ -66,20 +70,17 @@ export function ForgotPasswordPage() {
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
     if (pasted.length === 6) {
       setCode(pasted.split(''))
-      const last = document.getElementById('code-5')
-      last?.focus()
+      document.getElementById('code-5')?.focus()
     }
   }
 
   return (
     <div className="flex flex-col min-h-screen bg-white pt-17">
       <div className="flex flex-1 items-center justify-center px-6 sm:px-8 gap-16 max-w-6xl mx-auto w-full py-10">
-        {/* Form */}
         <Reveal delay={100} className="flex flex-col w-full max-w-sm gap-6">
 
-          {/* Step: Request */}
           {step === 'request' && (
-            <>
+            <form onSubmit={submitEmail} className="flex flex-col gap-6" noValidate>
               <div className="flex flex-col items-center text-center gap-1.5">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand/10 mb-2">
                   <KeyRound size={22} className="text-brand" />
@@ -90,28 +91,27 @@ export function ForgotPasswordPage() {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-(--text)/80">E-mail cadastrado</label>
-                  <TextInput
-                    type="email"
-                    placeholder="seu@email.com.br"
-                    value={email}
-                    onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors({}) }}
-                    invalid={!!errors.email}
-                  />
-                  {errors.email && <span className="text-[0.65rem] text-red-500">{errors.email}</span>}
-                </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="fp-email" className="text-xs font-medium text-(--text)/80">E-mail cadastrado</label>
+                <TextInput
+                  id="fp-email"
+                  type="email"
+                  placeholder="seu@email.com.br"
+                  invalid={!!emailForm.formState.errors.email}
+                  {...emailForm.register('email')}
+                />
+                {emailForm.formState.errors.email && (
+                  <span className="text-[0.65rem] text-red-500">{emailForm.formState.errors.email.message}</span>
+                )}
               </div>
 
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => { if (validateEmail()) setStep('code') }}
-                  className="w-full h-10 rounded-xl text-sm font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none"
-                >
-                  Enviar código de verificação
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={emailForm.formState.isSubmitting}
+                className="w-full h-10 rounded-xl text-sm font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none disabled:opacity-50"
+              >
+                Enviar código de verificação
+              </button>
 
               <div className="flex items-center gap-2 bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5">
                 <ShieldCheck size={14} className="text-brand shrink-0" />
@@ -124,10 +124,9 @@ export function ForgotPasswordPage() {
                 <ArrowLeft size={13} />
                 Voltar ao login
               </Link>
-            </>
+            </form>
           )}
 
-          {/* Step: Code Verification */}
           {step === 'code' && (
             <>
               <div className="flex flex-col items-center text-center gap-1.5">
@@ -136,7 +135,7 @@ export function ForgotPasswordPage() {
                 </div>
                 <h1 className="font-extrabold text-2xl text-(--text)">Verificação de identidade</h1>
                 <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
-                  Enviamos um código de 6 dígitos para <span className="font-semibold text-(--text)">{email}</span>. Insira-o abaixo para continuar.
+                  Enviamos um código de 6 dígitos para <span className="font-semibold text-(--text)">{submittedEmail}</span>. Insira-o abaixo para continuar.
                 </p>
               </div>
 
@@ -154,17 +153,17 @@ export function ForgotPasswordPage() {
                         value={digit}
                         onChange={(e) => handleCodeChange(i, e.target.value)}
                         onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                        className={`w-11 h-12 rounded-xl border text-center text-lg font-bold bg-gray-50/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all ${errors.code ? 'border-red-400 bg-red-50/30' : 'border-(--border-custom)'}`}
+                        className={`w-11 h-12 rounded-xl border text-center text-lg font-bold bg-gray-50/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all ${codeError ? 'border-red-400 bg-red-50/30' : 'border-(--border-custom)'}`}
                       />
                     ))}
                   </div>
-                  {errors.code && <span className="text-[0.65rem] text-red-500">{errors.code}</span>}
+                  {codeError && <span className="text-[0.65rem] text-red-500">{codeError}</span>}
                 </div>
               </div>
 
               <div className="flex flex-col gap-3">
                 <button
-                  onClick={() => { if (validateCode()) setStep('reset') }}
+                  onClick={submitCode}
                   className="w-full h-10 rounded-xl text-sm font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none"
                 >
                   Verificar código
@@ -189,9 +188,8 @@ export function ForgotPasswordPage() {
             </>
           )}
 
-          {/* Step: Reset Password */}
           {step === 'reset' && (
-            <>
+            <form onSubmit={submitReset} className="flex flex-col gap-6" noValidate>
               <div className="flex flex-col items-center text-center gap-1.5">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand/10 mb-2">
                   <ShieldCheck size={22} className="text-brand" />
@@ -204,38 +202,41 @@ export function ForgotPasswordPage() {
 
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-(--text)/80">Nova senha</label>
+                  <label htmlFor="fp-password" className="text-xs font-medium text-(--text)/80">Nova senha</label>
                   <TextInput
+                    id="fp-password"
                     type="password"
                     placeholder="Mínimo 8 caracteres"
-                    value={password}
-                    onChange={(e) => { setPassword(e.target.value); if (errors.password) setErrors((er) => { const n = { ...er }; delete n.password; return n }) }}
-                    invalid={!!errors.password}
+                    invalid={!!resetForm.formState.errors.password}
+                    {...resetForm.register('password')}
                   />
-                  {errors.password && <span className="text-[0.65rem] text-red-500">{errors.password}</span>}
+                  {resetForm.formState.errors.password && (
+                    <span className="text-[0.65rem] text-red-500">{resetForm.formState.errors.password.message}</span>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-(--text)/80">Confirmar nova senha</label>
+                  <label htmlFor="fp-confirm" className="text-xs font-medium text-(--text)/80">Confirmar nova senha</label>
                   <TextInput
+                    id="fp-confirm"
                     type="password"
                     placeholder="Repita a nova senha"
-                    value={confirmPassword}
-                    onChange={(e) => { setConfirmPassword(e.target.value); if (errors.confirmPassword) setErrors((er) => { const n = { ...er }; delete n.confirmPassword; return n }) }}
-                    invalid={!!errors.confirmPassword}
+                    invalid={!!resetForm.formState.errors.confirmPassword}
+                    {...resetForm.register('confirmPassword')}
                   />
-                  {errors.confirmPassword && <span className="text-[0.65rem] text-red-500">{errors.confirmPassword}</span>}
+                  {resetForm.formState.errors.confirmPassword && (
+                    <span className="text-[0.65rem] text-red-500">{resetForm.formState.errors.confirmPassword.message}</span>
+                  )}
                 </div>
 
-                {/* Password requirements */}
                 <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-3">
                   <p className="text-[0.65rem] font-semibold text-(--text-muted) mb-2">Requisitos da senha:</p>
                   <div className="flex flex-col gap-1.5">
                     {[
-                      { label: 'Mínimo de 8 caracteres', met: password.length >= 8 },
-                      { label: 'Pelo menos uma letra maiúscula', met: /[A-Z]/.test(password) },
-                      { label: 'Pelo menos uma letra minúscula', met: /[a-z]/.test(password) },
-                      { label: 'Pelo menos um número', met: /\d/.test(password) },
+                      { label: 'Mínimo de 8 caracteres', met: passwordValue.length >= 8 },
+                      { label: 'Pelo menos uma letra maiúscula', met: /[A-Z]/.test(passwordValue) },
+                      { label: 'Pelo menos uma letra minúscula', met: /[a-z]/.test(passwordValue) },
+                      { label: 'Pelo menos um número', met: /\d/.test(passwordValue) },
                     ].map((req) => (
                       <div key={req.label} className="flex items-center gap-1.5">
                         <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center ${req.met ? 'bg-emerald-100' : 'bg-gray-200'}`}>
@@ -249,15 +250,15 @@ export function ForgotPasswordPage() {
               </div>
 
               <button
-                onClick={() => { if (validatePasswordFields()) setStep('done') }}
-                className="w-full h-10 rounded-xl text-sm font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none"
+                type="submit"
+                disabled={resetForm.formState.isSubmitting}
+                className="w-full h-10 rounded-xl text-sm font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none disabled:opacity-50"
               >
                 Redefinir senha
               </button>
-            </>
+            </form>
           )}
 
-          {/* Step: Done */}
           {step === 'done' && (
             <>
               <div className="flex flex-col items-center text-center gap-1.5">

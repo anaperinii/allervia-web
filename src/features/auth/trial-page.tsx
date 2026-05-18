@@ -1,66 +1,35 @@
 import { useState } from 'react'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Shield, Check, Clock, Mail } from 'lucide-react'
 import { Modal, TextInput, Select } from '@/shared/components'
 import imunecareLogo from '@/assets/imunecare-logo.png'
 import imunecareWhiteLogo from '@/assets/imunecare-white-logo.png'
-import { validateEmail } from '@/shared/lib/validators'
+import { trialSchema, type TrialForm } from '@/features/auth/schemas/trial'
 import { formatPhone } from '@/shared/lib/formatters'
 
-interface TrialForm {
-  nome: string
-  sobrenome: string
-  email: string
-  telefone: string
-  atuacao: string
-  solucao: string
-  especialidade: string
-  profissionais: string
-}
-
 export function TrialPage() {
-  const [form, setForm] = useState<TrialForm>({
-    nome: '', sobrenome: '', email: '', telefone: '',
-    atuacao: '', solucao: '', especialidade: '', profissionais: '',
-  })
-  const [errors, setErrors] = useState<Partial<TrialForm>>({})
-  const [touched, setTouched] = useState<Partial<Record<keyof TrialForm, boolean>>>({})
   const [showModal, setShowModal] = useState(false)
 
-  const set = (f: keyof TrialForm, v: string) => {
-    setForm((p) => ({ ...p, [f]: v }))
-    if (errors[f]) setErrors((p) => { const n = { ...p }; delete n[f]; return n })
-  }
-  const touch = (f: keyof TrialForm) => setTouched((p) => ({ ...p, [f]: true }))
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<TrialForm>({
+    resolver: zodResolver(trialSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      nome: '', sobrenome: '', email: '', telefone: '',
+      atuacao: '', solucao: '', especialidade: '', profissionais: '',
+    },
+  })
 
-  const validate = (): boolean => {
-    const e: Partial<TrialForm> = {}
-    if (!form.nome.trim()) e.nome = 'Nome é obrigatório'
-    else if (form.nome.trim().length < 2) e.nome = 'Nome muito curto'
-    if (!form.sobrenome.trim()) e.sobrenome = 'Sobrenome é obrigatório'
-    const emailErr = validateEmail(form.email)
-    if (emailErr) e.email = emailErr
-    const digits = form.telefone.replace(/\D/g, '')
-    if (!digits) e.telefone = 'Telefone é obrigatório'
-    else if (digits.length < 10 || digits.length > 11) e.telefone = 'Telefone inválido'
-    if (!form.atuacao) e.atuacao = 'Selecione sua atuação'
-    if (!form.solucao) e.solucao = 'Selecione uma opção'
-    if (!form.especialidade.trim()) e.especialidade = 'Especialidade é obrigatória'
-    const prof = parseInt(form.profissionais)
-    if (!form.profissionais) e.profissionais = 'Informe o número'
-    else if (isNaN(prof) || prof < 1 || prof > 9999) e.profissionais = 'Número inválido'
-    setErrors(e)
-    setTouched({ nome: true, sobrenome: true, email: true, telefone: true, atuacao: true, solucao: true, especialidade: true, profissionais: true })
-    return Object.keys(e).length === 0
-  }
-
-  const isInvalid = (f: keyof TrialForm) => !!(errors[f] && touched[f])
-  const Err = ({ f }: { f: keyof TrialForm }) =>
-    errors[f] && touched[f] ? <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors[f]}</span> : null
+  const onSubmit = handleSubmit(() => setShowModal(true))
 
   return (
     <div className="flex min-h-screen">
-      {/* Left panel */}
       <div className="hidden lg:flex flex-col justify-center w-[52%] bg-linear-to-br from-[#0d8e6e] via-brand to-teal-400 relative overflow-hidden p-10 xl:p-14">
         <div className="absolute -top-30 -right-35 w-130 h-130 rounded-full border-2 border-white/20 pointer-events-none" />
         <div className="absolute top-50 right-5 w-80 h-80 rounded-full border-2 border-white/15 pointer-events-none" />
@@ -95,9 +64,8 @@ export function TrialPage() {
         </div>
       </div>
 
-      {/* Right panel */}
       <div className="flex-1 flex items-center justify-center bg-gray-50/80 px-6 py-8 overflow-y-auto">
-        <div className="bg-white rounded-2xl border border-(--border-custom) shadow-[0_2px_40px_rgba(24,193,203,0.07)] p-6 xl:p-8 w-full max-w-110">
+        <form onSubmit={onSubmit} noValidate className="bg-white rounded-2xl border border-(--border-custom) shadow-[0_2px_40px_rgba(24,193,203,0.07)] p-6 xl:p-8 w-full max-w-110">
           <div className="flex items-center gap-2 mb-6 lg:hidden">
             <img src={imunecareLogo} alt="ImuneCare" className="w-7 h-7 rounded-md" />
             <span className="text-base font-bold gradient-text">ImuneCare</span>
@@ -109,42 +77,49 @@ export function TrialPage() {
 
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
             <div>
-              <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Nome <span className="text-red-400">*</span></label>
-              <TextInput value={form.nome} onChange={(e) => set('nome', e.target.value)} onBlur={() => touch('nome')} placeholder="Insira aqui" invalid={isInvalid('nome')} className="h-8" maxLength={60} />
-              <Err f="nome" />
+              <label htmlFor="tr-nome" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Nome <span className="text-red-400">*</span></label>
+              <TextInput id="tr-nome" placeholder="Insira aqui" invalid={!!errors.nome} className="h-8" maxLength={60} {...register('nome')} />
+              {errors.nome && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.nome.message}</span>}
             </div>
             <div>
-              <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Sobrenome <span className="text-red-400">*</span></label>
-              <TextInput value={form.sobrenome} onChange={(e) => set('sobrenome', e.target.value)} onBlur={() => touch('sobrenome')} placeholder="Insira aqui" invalid={isInvalid('sobrenome')} className="h-8" maxLength={80} />
-              <Err f="sobrenome" />
+              <label htmlFor="tr-sobrenome" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Sobrenome <span className="text-red-400">*</span></label>
+              <TextInput id="tr-sobrenome" placeholder="Insira aqui" invalid={!!errors.sobrenome} className="h-8" maxLength={80} {...register('sobrenome')} />
+              {errors.sobrenome && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.sobrenome.message}</span>}
             </div>
           </div>
 
           <div className="mb-2.5">
-            <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">E-mail profissional <span className="text-red-400">*</span></label>
-            <TextInput type="email" value={form.email} onChange={(e) => set('email', e.target.value)} onBlur={() => touch('email')} placeholder="voce@clinica.com.br" invalid={isInvalid('email')} className="h-8" maxLength={254} autoComplete="email" />
-            <Err f="email" />
+            <label htmlFor="tr-email" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">E-mail profissional <span className="text-red-400">*</span></label>
+            <TextInput id="tr-email" type="email" placeholder="voce@clinica.com.br" invalid={!!errors.email} className="h-8" maxLength={254} autoComplete="email" {...register('email')} />
+            {errors.email && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.email.message}</span>}
           </div>
 
           <div className="mb-2.5">
-            <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Telefone / WhatsApp <span className="text-red-400">*</span></label>
-            <TextInput
-              type="tel"
-              value={form.telefone}
-              onChange={(e) => set('telefone', formatPhone(e.target.value))}
-              onBlur={() => touch('telefone')}
-              placeholder="(00) 00000-0000"
-              invalid={isInvalid('telefone')}
-              className="h-8"
-              maxLength={16}
+            <label htmlFor="tr-telefone" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Telefone / WhatsApp <span className="text-red-400">*</span></label>
+            <Controller
+              control={control}
+              name="telefone"
+              render={({ field }) => (
+                <TextInput
+                  id="tr-telefone"
+                  type="tel"
+                  placeholder="(00) 00000-0000"
+                  invalid={!!errors.telefone}
+                  className="h-8"
+                  maxLength={16}
+                  value={field.value}
+                  onBlur={field.onBlur}
+                  onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                />
+              )}
             />
-            <Err f="telefone" />
+            {errors.telefone && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.telefone.message}</span>}
           </div>
 
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
             <div>
-              <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Qual é a sua atuação? <span className="text-red-400">*</span></label>
-              <Select value={form.atuacao} onChange={(e) => set('atuacao', e.target.value)} onBlur={() => touch('atuacao')} invalid={isInvalid('atuacao')} className="h-8">
+              <label htmlFor="tr-atuacao" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Qual é a sua atuação? <span className="text-red-400">*</span></label>
+              <Select id="tr-atuacao" invalid={!!errors.atuacao} className="h-8" {...register('atuacao')}>
                 <option value="" disabled>Selecionar</option>
                 <option>Médico(a)</option>
                 <option>Gestor(a) de clínica</option>
@@ -152,46 +127,46 @@ export function TrialPage() {
                 <option>Enfermeiro(a)</option>
                 <option>Outro</option>
               </Select>
-              <Err f="atuacao" />
+              {errors.atuacao && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.atuacao.message}</span>}
             </div>
             <div>
-              <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Solução digital para quem? <span className="text-red-400">*</span></label>
-              <Select value={form.solucao} onChange={(e) => set('solucao', e.target.value)} onBlur={() => touch('solucao')} invalid={isInvalid('solucao')} className="h-8">
+              <label htmlFor="tr-solucao" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Solução digital para quem? <span className="text-red-400">*</span></label>
+              <Select id="tr-solucao" invalid={!!errors.solucao} className="h-8" {...register('solucao')}>
                 <option value="" disabled>Selecionar</option>
                 <option>Para mim (uso próprio)</option>
                 <option>Para minha clínica</option>
                 <option>Para uma rede de clínicas</option>
               </Select>
-              <Err f="solucao" />
+              {errors.solucao && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.solucao.message}</span>}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5 mb-4">
             <div>
-              <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Especialidade da clínica <span className="text-red-400">*</span></label>
-              <TextInput value={form.especialidade} onChange={(e) => set('especialidade', e.target.value)} onBlur={() => touch('especialidade')} placeholder="Ex.: Alergia e Imunologia" invalid={isInvalid('especialidade')} className="h-8" maxLength={80} />
-              <Err f="especialidade" />
+              <label htmlFor="tr-especialidade" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Especialidade da clínica <span className="text-red-400">*</span></label>
+              <TextInput id="tr-especialidade" placeholder="Ex.: Alergia e Imunologia" invalid={!!errors.especialidade} className="h-8" maxLength={80} {...register('especialidade')} />
+              {errors.especialidade && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.especialidade.message}</span>}
             </div>
             <div>
-              <label className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Nº de profissionais <span className="text-red-400">*</span></label>
+              <label htmlFor="tr-profissionais" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Nº de profissionais <span className="text-red-400">*</span></label>
               <TextInput
+                id="tr-profissionais"
                 type="number"
                 min="1"
                 max="9999"
-                value={form.profissionais}
-                onChange={(e) => set('profissionais', e.target.value)}
-                onBlur={() => touch('profissionais')}
                 placeholder="Ex.: 5"
-                invalid={isInvalid('profissionais')}
+                invalid={!!errors.profissionais}
                 className="h-8"
+                {...register('profissionais')}
               />
-              <Err f="profissionais" />
+              {errors.profissionais && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.profissionais.message}</span>}
             </div>
           </div>
 
           <button
-            onClick={() => { if (validate()) setShowModal(true) }}
-            className="w-full h-9 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-bold flex items-center justify-center gap-2 hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(24,193,203,0.35)] transition-all cursor-pointer"
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-9 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-bold flex items-center justify-center gap-2 hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(24,193,203,0.35)] transition-all cursor-pointer disabled:opacity-50"
           >
             Quero testar gratuitamente
             <ArrowRight size={16} />
@@ -220,7 +195,7 @@ export function TrialPage() {
               )
             })}
           </div>
-        </div>
+        </form>
       </div>
 
       <Modal
