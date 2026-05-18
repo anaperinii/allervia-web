@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {} from '@tanstack/react-router'
 import { ArrowLeft, Database, Bell, Server, Calendar, ExternalLink, CheckCircle, Palette, Plus, X, Lock, Syringe, Pencil, Trash2, Check } from 'lucide-react'
-import { useCan } from '@/features/user/user-store'
+import { useHasPermission } from '@/features/user/user-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
 import { IconButton, Switch, Button, Select, TextInput, MediaRow } from "@/shared/ui"
 
@@ -12,7 +12,7 @@ const defaultEventColors = [
 ]
 
 export function AdvancedSettingsPage() {
-  const canAdvanced = useCan('advanced_settings')
+  const canAdvanced = useHasPermission('advanced_settings')
   const [autoBackup, setAutoBackup] = useState(true)
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [pushNotifications, setPushNotifications] = useState(false)

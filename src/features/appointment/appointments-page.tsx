@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { usePatientStore } from '@/features/patient/patient-store'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useCan, useDoctorFilter } from '@/features/user/user-store'
+import { useHasPermission, useDoctorFilter } from '@/features/user/user-store'
 import { Plus, ChevronLeft, ChevronRight, ExternalLink, CheckCircle, Calendar, Phone, Clock, Syringe, User } from 'lucide-react'
 import type { Application } from '@/features/patient/patient-store'
 import { cn } from '@/shared/lib/utils'
@@ -34,7 +34,7 @@ const DEFAULT_COLOR = { bg: '#F3F4F6', text: '#374151', dot: '#6B7280' }
 export function AppointmentsPage() {
   const { applications: allApplications } = usePatientStore()
   const { immunotherapies } = useImmunotherapiesStore()
-  const canNewAppointment = useCan('new_appointment')
+  const canNewAppointment = useHasPermission('new_appointment')
   const doctorFilter = useDoctorFilter()
   const navigate = useNavigate()
 
@@ -48,6 +48,7 @@ export function AppointmentsPage() {
     const ownedIds = new Set(immunotherapies.filter((i) => i.medicoResponsavel === doctorFilter).map((i) => i.id))
     return allApplications.filter((a) => ownedIds.has(a.patientId))
   }, [allApplications, immunotherapies, doctorFilter])
+  
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -121,7 +122,7 @@ export function AppointmentsPage() {
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        {/* Header */}
+
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-(--text)">Agendamentos</h1>
           {canNewAppointment && (
@@ -139,7 +140,6 @@ export function AppointmentsPage() {
           )}
         </div>
 
-        {/* Nav bar */}
         <div className="border-b border-(--border-custom) px-5 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button onClick={goToPrev} className="h-7 w-7 flex items-center justify-center rounded-md border border-(--border-custom) text-(--text-muted) hover:border-brand hover:text-brand transition-all">
@@ -165,7 +165,6 @@ export function AppointmentsPage() {
           />
         </div>
 
-        {/* Calendar grid */}
         <div className="flex-1 overflow-auto">
           {viewMode === 'week' ? (
             <div className="grid grid-cols-7 h-full">
@@ -183,7 +182,7 @@ export function AppointmentsPage() {
                       selected && !today && 'bg-teal-50/50',
                     )}
                   >
-                    {/* Top accent line for today */}
+          
                     {today && (
                       <div className="absolute top-0 left-0 right-0 h-0.75 bg-brand rounded-b-sm" />
                     )}
@@ -231,7 +230,7 @@ export function AppointmentsPage() {
                         selected && 'ring-2 ring-brand ring-inset',
                       )}
                     >
-                      {/* Top accent line for today */}
+
                       {today && (
                         <div className="absolute top-0 left-0 right-0 h-0.5 bg-brand" />
                       )}
@@ -255,7 +254,6 @@ export function AppointmentsPage() {
           )}
         </div>
 
-        {/* Selected day sidebar */}
         {selectedDayApps.length > 0 && (
           <div className="border-t border-(--border-custom) px-5 py-3">
             <div className="flex items-center justify-between mb-2">
@@ -308,7 +306,6 @@ export function AppointmentsPage() {
         </> : null}
       >
         {selectedApp && <>
-          {/* Patient info */}
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-sm font-bold text-white shrink-0">
                   {getPatientFullName(selectedApp.patientId).split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
@@ -331,7 +328,6 @@ export function AppointmentsPage() {
                 </button>
               </div>
 
-              {/* Details grid */}
               <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
                 <div className="bg-white px-3.5 py-2.5">
                   <div className="flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
@@ -380,7 +376,6 @@ export function AppointmentsPage() {
                 </div>
               </div>
 
-          {/* Google Calendar sync status */}
           {googleConnected && (
             <div className="flex items-center gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2">
               <Calendar size={13} className="text-brand shrink-0" />

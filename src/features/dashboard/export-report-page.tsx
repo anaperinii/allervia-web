@@ -4,7 +4,7 @@ import { ArrowLeft, FileText, FileSpreadsheet, FileDown, Check, Settings, Shield
 import { cn } from '@/shared/lib/utils'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer } from 'recharts'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useCan, useDoctorFilter } from '@/features/user/user-store'
+import { useHasPermission, useDoctorFilter } from '@/features/user/user-store'
 import { Modal, Button, IconButton, TextInput, Select } from "@/shared/ui"
 
 const formats = [
@@ -38,7 +38,7 @@ const ALL_TYPES = ['Gramíneas', 'Ácaros', 'Cão e Gato', 'Cândida', 'Herpes']
 export function ExportReportPage() {
   const navigate = useNavigate()
   const { immunotherapies: allImmunotherapies } = useImmunotherapiesStore()
-  const canViewDashboard = useCan('view_dashboard')
+  const canViewDashboard = useHasPermission('view_dashboard')
   const doctorFilter = useDoctorFilter()
 
   useEffect(() => { if (!canViewDashboard) navigate({ to: '/immunotherapies' }) }, [canViewDashboard, navigate])

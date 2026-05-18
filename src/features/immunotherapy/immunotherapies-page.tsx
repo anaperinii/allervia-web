@@ -3,7 +3,7 @@ import { useNavigate, useSearch, Link } from '@tanstack/react-router'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
 import { usePatientStore, seedInactivationsFor } from '@/features/patient/patient-store'
-import { useCan, useDoctorFilter } from '@/features/user/user-store'
+import { useHasPermission, useDoctorFilter } from '@/features/user/user-store'
 import {
   Search,
   Plus,
@@ -43,8 +43,8 @@ export function ImmunotherapiesPage() {
   }, [success])
 
   const { setSelectedPatient } = usePatientStore()
-  const canAddImmunotherapy = useCan('add_immunotherapy')
-  const canEvolve = useCan('evolve_patient')
+  const canAddImmunotherapy = useHasPermission('add_immunotherapy')
+  const canEvolve = useHasPermission('evolve_patient')
   const doctorFilter = useDoctorFilter()
   const {
     immunotherapies,

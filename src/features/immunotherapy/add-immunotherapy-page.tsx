@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, User, Syringe, Info } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { useCan } from '@/features/user/user-store'
+import { useHasPermission } from '@/features/user/user-store'
 import { useForm } from '@/shared/hooks/useForm'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/immunotherapies-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/custom-types-store'
@@ -34,7 +34,7 @@ const stepLabels = ['Dados do Paciente', 'Dados da Imunoterapia', 'Revisão dos 
 
 export function AddImmunotherapyPage() {
   const navigate = useNavigate()
-  const canAdd = useCan('add_immunotherapy')
+  const canAdd = useHasPermission('add_immunotherapy')
   const addImmunotherapy = useImmunotherapiesStore((s) => s.addImmunotherapy)
   const customTypes = useCustomTypesStore((s) => s.types)
   const scheduleApplication = usePatientStore((s) => s.scheduleApplication)

@@ -59,7 +59,7 @@ export const useUserStore = create<UserState>((set) => ({
   },
 }))
 
-export function useCan(permission: Permission): boolean {
+export function useHasPermission(permission: Permission): boolean {
   const role = useUserStore((s) => s.current.role)
   return ROLE_PERMISSIONS[role].includes(permission)
 }

@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { usePatientStore, seedInactivationsFor, type Application, type ProtocolAdjustmentType, type InactivationCategory } from '@/features/patient/patient-store'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useCan, useDoctorFilter, useUserStore } from '@/features/user/user-store'
+import { useHasPermission, useDoctorFilter, useUserStore } from '@/features/user/user-store'
 import { useAuditStore } from '@/features/audit/audit-store'
 import { META_DOSE, calculateNextDose } from '@/features/immunotherapy/scit-protocol'
 import { addDays, format, differenceInDays, parse } from 'date-fns'
@@ -42,12 +42,12 @@ export function PatientChartPage() {
   const navigate = useNavigate()
   const { patientId } = useParams({ from: '/patient/$patientId' })
   const { selectedPatient, applications, setSelectedPatient, inactivateImunoterapia, reactivateImunoterapia } = usePatientStore()
-  const canAdjustProtocol = useCan('adjust_protocol')
-  const canInactivate = useCan('inactivate_immunotherapy')
-  const canReactivate = useCan('reactivate_patient')
-  const canEditPatient = useCan('edit_patient_data')
-  const canEvolve = useCan('evolve_patient')
-  const canEmitReport = useCan('emit_report')
+  const canAdjustProtocol = useHasPermission('adjust_protocol')
+  const canInactivate = useHasPermission('inactivate_immunotherapy')
+  const canReactivate = useHasPermission('reactivate_patient')
+  const canEditPatient = useHasPermission('edit_patient_data')
+  const canEvolve = useHasPermission('evolve_patient')
+  const canEmitReport = useHasPermission('emit_report')
   const doctorFilter = useDoctorFilter()
 
   useEffect(() => {

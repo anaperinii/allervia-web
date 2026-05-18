@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { usePatientStore } from '@/features/patient/patient-store'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useCan, useUserStore } from '@/features/user/user-store'
+import { useHasPermission, useUserStore } from '@/features/user/user-store'
 import { useAuditStore } from '@/features/audit/audit-store'
 import { Search, ArrowLeft, ClipboardList, Syringe, CalendarDays, Info } from 'lucide-react'
 import { addDays, format, differenceInDays, parse } from 'date-fns'
@@ -28,7 +28,7 @@ export function PatientEvolutionPage() {
   const currentUser = useUserStore((s) => s.current)
   const logAccess = useAuditStore((s) => s.logAccess)
   const { immunotherapies } = useImmunotherapiesStore()
-  const canEvolve = useCan('evolve_patient')
+  const canEvolve = useHasPermission('evolve_patient')
   useEffect(() => { if (!canEvolve) navigate({ to: '/immunotherapies' }) }, [canEvolve, navigate])
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0)
   const [showCancelModal, setShowCancelModal] = useState(false)

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { usePatientStore } from '@/features/patient/patient-store'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useCan, useDoctorFilter } from '@/features/user/user-store'
+import { useHasPermission, useDoctorFilter } from '@/features/user/user-store'
 import { useAuditStore, ACTION_LABELS } from '@/features/audit/audit-store'
 import { ArrowLeft, FileText, FileSpreadsheet, FileDown, Check, Download, Printer, ShieldCheck, EyeOff, FileJson, Info, CheckSquare } from 'lucide-react'
 import { jsPDF } from 'jspdf'
@@ -38,8 +38,8 @@ export function PatientReportPage() {
   const [showExportModal, setShowExportModal] = useState(false)
   const [reportMode, setReportMode] = useState<'clinico' | 'lgpd'>('clinico')
   const [lgpdFormat, setLgpdFormat] = useState<'json' | 'csv'>('json')
-  const canLgpdPortability = useCan('lgpd_portability')
-  const canEmitReport = useCan('emit_report')
+  const canLgpdPortability = useHasPermission('lgpd_portability')
+  const canEmitReport = useHasPermission('emit_report')
   const doctorFilter = useDoctorFilter()
 
   useEffect(() => {

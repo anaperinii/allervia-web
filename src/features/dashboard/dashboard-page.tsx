@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useCan, useDoctorFilter } from '@/features/user/user-store'
+import { useHasPermission, useDoctorFilter } from '@/features/user/user-store'
 import { Users, Syringe, Activity, TrendingUp, TrendingDown, Download, Archive, Pin, PinOff } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button, SegmentedControl, Select } from '@/shared/ui'
@@ -27,7 +27,7 @@ const TYPE_COLORS = ['#0E99A3', '#18C1CB', '#2CD3C1', '#B6F2EC', '#3F98AF']
 export function DashboardPage() {
   const navigate = useNavigate()
   const { immunotherapies: allImmunotherapies } = useImmunotherapiesStore()
-  const canViewDashboard = useCan('view_dashboard')
+  const canViewDashboard = useHasPermission('view_dashboard')
   const doctorFilter = useDoctorFilter()
 
   useEffect(() => { if (!canViewDashboard) navigate({ to: '/immunotherapies' }) }, [canViewDashboard, navigate])
