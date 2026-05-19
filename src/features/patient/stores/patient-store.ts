@@ -1,21 +1,26 @@
 import { create } from 'zustand'
 import { INDUCTION_SEQUENCE, META_DOSE, META_STEP } from '@/features/immunotherapy/constants/scit-protocol'
 
-export type ProtocolAdjustmentType = 'reducao_dose' | 'aumento_intervalo' | 'alteracao_concentracao' | 'suspensao' | 'outro'
+export type ProtocolAdjustmentType =
+  | 'dose_reduction'
+  | 'interval_increase'
+  | 'concentration_change'
+  | 'suspension'
+  | 'other'
 
 export type InactivationCategory =
-  | 'conclusao_tratamento'
-  | 'reacao_adversa_leve'
-  | 'reacao_adversa_grave'
-  | 'infeccao_aguda'
-  | 'gestacao'
-  | 'cirurgia_programada'
-  | 'vacinacao_recente'
-  | 'contraindicacao_clinica'
-  | 'mudanca_conduta'
-  | 'falta_adesao'
-  | 'solicitacao_paciente'
-  | 'outro'
+  | 'treatment_completion'
+  | 'mild_adverse_reaction'
+  | 'severe_adverse_reaction'
+  | 'acute_infection'
+  | 'pregnancy'
+  | 'scheduled_surgery'
+  | 'recent_vaccination'
+  | 'clinical_contraindication'
+  | 'protocol_change'
+  | 'lack_of_adherence'
+  | 'patient_request'
+  | 'other'
 
 export interface Inactivation {
   id: string
@@ -23,49 +28,49 @@ export interface Inactivation {
   detail: string
   startDate: string
   expectedReturnDate: string | null
-  responsavel: string
-  snapshotConcentracao: string
-  snapshotIntervalo: number
+  responsibleDoctor: string
+  snapshotConcentration: string
+  snapshotInterval: number
   reactivatedAt?: string
   reactivateNote?: string
   reactivatedBy?: string
-  reactivateConcentracao?: string
-  reactivateIntervalo?: number
-  reactivateJustificativa?: string
+  reactivateConcentration?: string
+  reactivateInterval?: number
+  reactivateJustification?: string
 }
 
 export interface ProtocolAdjustment {
   id: string
   date: string
   type: ProtocolAdjustmentType
-  previousConcentracao: string
-  previousIntervalo: number
-  newConcentracao: string
-  newIntervalo: number
-  justificativa: string
-  responsavel: string
+  previousConcentration: string
+  previousInterval: number
+  newConcentration: string
+  newInterval: number
+  justification: string
+  responsibleDoctor: string
 }
 
 export interface Patient {
   id: string
-  nome: string
-  dataNascimento: string
-  idade: number
-  telefone: string
-  peso: string
+  name: string
+  birthDate: string
+  age: number
+  phone: string
+  weight: string
   cpf: string
-  medicoResponsavel: string
-  status: 'ativo' | 'inativo'
-  tipoImunoterapia: string
-  inicioInducao: string
-  inicioManutencao: string | null
-  viaAdministracao: string
-  extrato: string
-  concentracaoVolumeMeta: string
-  metaAtingida: boolean
-  intervaloAtual: number
-  dataProximaAplicacao: string
-  concentracaoDoseAtuais: string
+  responsibleDoctor: string
+  status: 'active' | 'inactive'
+  immunotherapyType: string
+  inductionStart: string
+  maintenanceStart: string | null
+  administrationRoute: string
+  extract: string
+  targetConcentrationVolume: string
+  targetReached: boolean
+  currentInterval: number
+  nextApplicationDate: string
+  currentDoseConcentration: string
   protocolAdjustments?: ProtocolAdjustment[]
   inactivations?: Inactivation[]
 }
@@ -98,23 +103,29 @@ interface PatientState {
   setSelectedPatient: (patient: Patient | null) => void
   addProtocolAdjustment: (adjustment: ProtocolAdjustment) => void
   inactivateImunoterapia: (inactivation: Inactivation) => void
-  reactivateImunoterapia: (payload: { note: string; reactivatedBy: string; reactivateConcentracao: string; reactivateIntervalo: number; justificativa: string }) => void
+  reactivateImunoterapia: (payload: {
+    note: string
+    reactivatedBy: string
+    reactivateConcentration: string
+    reactivateInterval: number
+    justification: string
+  }) => void
   /** Agenda uma aplicação inicial (RNE-026 — geração automática no cadastro de imunoterapia). */
   scheduleApplication: (app: Application) => void
   /** Registra uma aplicação realizada e agenda a próxima automaticamente. */
   recordEvolution: (payload: { realizada: Application; proxima: Application }) => void
 }
 
-const INACTIVATION_SEEDS: Record<string, Omit<Inactivation, 'id' | 'snapshotConcentracao' | 'snapshotIntervalo'>> = {
-  '10': { category: 'solicitacao_paciente', detail: 'Paciente optou por interromper o tratamento por motivos pessoais. Retorno será reavaliado após estabilização da rotina.', startDate: '15/02/2026 às 09:15', expectedReturnDate: '15/05/2026', responsavel: 'Dra. Karina Martins' },
-  '11': { category: 'gestacao', detail: 'Paciente comunicou gestação; tratamento pausado conforme protocolo para reavaliação no pós-parto.', startDate: '22/01/2026 às 11:30', expectedReturnDate: '01/10/2026', responsavel: 'Dra. Karina Martins' },
-  '12': { category: 'reacao_adversa_grave', detail: 'Reação moderada durante aplicação 1:1.000 - 0,2ml com necessidade de anti-histamínico. Conduta revista com alergologista responsável.', startDate: '10/01/2026 às 15:45', expectedReturnDate: null, responsavel: 'Dr. André Lima' },
+const INACTIVATION_SEEDS: Record<string, Omit<Inactivation, 'id' | 'snapshotConcentration' | 'snapshotInterval'>> = {
+  '10': { category: 'patient_request', detail: 'Paciente optou por interromper o tratamento por motivos pessoais. Retorno será reavaliado após estabilização da rotina.', startDate: '15/02/2026 às 09:15', expectedReturnDate: '15/05/2026', responsibleDoctor: 'Dra. Karina Martins' },
+  '11': { category: 'pregnancy', detail: 'Paciente comunicou gestação; tratamento pausado conforme protocolo para reavaliação no pós-parto.', startDate: '22/01/2026 às 11:30', expectedReturnDate: '01/10/2026', responsibleDoctor: 'Dra. Karina Martins' },
+  '12': { category: 'severe_adverse_reaction', detail: 'Reação moderada durante aplicação 1:1.000 - 0,2ml com necessidade de anti-histamínico. Conduta revista com alergologista responsável.', startDate: '10/01/2026 às 15:45', expectedReturnDate: null, responsibleDoctor: 'Dr. André Lima' },
 }
 
-export function seedInactivationsFor(patientId: string, snapshotConcentracao: string, snapshotIntervalo: number): Inactivation[] | undefined {
+export function seedInactivationsFor(patientId: string, snapshotConcentration: string, snapshotInterval: number): Inactivation[] | undefined {
   const seed = INACTIVATION_SEEDS[patientId]
   if (!seed) return undefined
-  return [{ id: `inact-seed-${patientId}`, ...seed, snapshotConcentracao, snapshotIntervalo }]
+  return [{ id: `inact-seed-${patientId}`, ...seed, snapshotConcentration, snapshotInterval }]
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -294,9 +305,9 @@ export const usePatientStore = create<PatientState>((set) => ({
       applications: [...filtered, realizada, proxima],
       selectedPatient: s.selectedPatient && s.selectedPatient.id === realizada.patientId ? {
         ...s.selectedPatient,
-        concentracaoDoseAtuais: realizada.dose,
-        intervaloAtual: proxima.ciclo.dias,
-        dataProximaAplicacao: proxima.data,
+        currentDoseConcentration: realizada.dose,
+        currentInterval: proxima.ciclo.dias,
+        nextApplicationDate: proxima.data,
       } : s.selectedPatient,
     }
   }),
@@ -305,8 +316,8 @@ export const usePatientStore = create<PatientState>((set) => ({
     return {
       selectedPatient: {
         ...s.selectedPatient,
-        concentracaoDoseAtuais: adjustment.newConcentracao,
-        intervaloAtual: adjustment.newIntervalo,
+        currentDoseConcentration: adjustment.newConcentration,
+        currentInterval: adjustment.newInterval,
         protocolAdjustments: [...(s.selectedPatient.protocolAdjustments || []), adjustment],
       },
     }
@@ -316,12 +327,12 @@ export const usePatientStore = create<PatientState>((set) => ({
     return {
       selectedPatient: {
         ...s.selectedPatient,
-        status: 'inativo',
+        status: 'inactive',
         inactivations: [...(s.selectedPatient.inactivations || []), inactivation],
       },
     }
   }),
-  reactivateImunoterapia: ({ note, reactivatedBy, reactivateConcentracao, reactivateIntervalo, justificativa }) => set((s) => {
+  reactivateImunoterapia: ({ note, reactivatedBy, reactivateConcentration, reactivateInterval, justification }) => set((s) => {
     if (!s.selectedPatient) return s
     const list = s.selectedPatient.inactivations || []
     if (list.length === 0) return s
@@ -333,16 +344,16 @@ export const usePatientStore = create<PatientState>((set) => ({
       reactivatedAt,
       reactivateNote: note,
       reactivatedBy,
-      reactivateConcentracao,
-      reactivateIntervalo,
-      reactivateJustificativa: justificativa,
+      reactivateConcentration,
+      reactivateInterval,
+      reactivateJustification: justification,
     }
     return {
       selectedPatient: {
         ...s.selectedPatient,
-        status: 'ativo',
-        concentracaoDoseAtuais: reactivateConcentracao,
-        intervaloAtual: reactivateIntervalo,
+        status: 'active',
+        currentDoseConcentration: reactivateConcentration,
+        currentInterval: reactivateInterval,
         inactivations: updated,
       },
     }

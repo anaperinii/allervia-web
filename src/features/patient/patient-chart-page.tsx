@@ -60,7 +60,7 @@ export function PatientChartPage() {
   const doctorFilter = useDoctorFilter()
 
   useEffect(() => {
-    if (doctorFilter && selectedPatient && selectedPatient.medicoResponsavel !== doctorFilter) {
+    if (doctorFilter && selectedPatient && selectedPatient.responsibleDoctor !== doctorFilter) {
       navigate({ to: '/immunotherapies' })
     }
   }, [doctorFilter, selectedPatient, navigate])
@@ -104,7 +104,7 @@ export function PatientChartPage() {
   const reactivateErrors = reactivateForm.formState.errors
   const [showInactivationHistory, setShowInactivationHistory] = useState(false)
   const [editForm, setEditForm] = useState({
-    nome: '', telefone: '', peso: '', medicoResponsavel: '',
+    name: '', phone: '', weight: '', responsibleDoctor: '',
   })
   const monthsScrollRef = useRef<HTMLDivElement | null>(null)
   const [monthsCanScrollLeft, setMonthsCanScrollLeft] = useState(false)
@@ -117,18 +117,18 @@ export function PatientChartPage() {
   }
 
   const INACTIVATION_CATEGORY_LABELS: Record<InactivationCategory, string> = {
-    conclusao_tratamento: 'Conclusão do tratamento',
-    reacao_adversa_leve: 'Reação adversa leve',
-    reacao_adversa_grave: 'Reação adversa grave',
-    infeccao_aguda: 'Infecção aguda',
-    gestacao: 'Gestação',
-    cirurgia_programada: 'Cirurgia programada',
-    vacinacao_recente: 'Vacinação recente',
-    contraindicacao_clinica: 'Contraindicação clínica',
-    mudanca_conduta: 'Mudança de conduta clínica',
-    falta_adesao: 'Falta de adesão',
-    solicitacao_paciente: 'Solicitação do paciente',
-    outro: 'Outro',
+    treatment_completion: 'Conclusão do tratamento',
+    mild_adverse_reaction: 'Reação adversa leve',
+    severe_adverse_reaction: 'Reação adversa grave',
+    acute_infection: 'Infecção aguda',
+    pregnancy: 'Gestação',
+    scheduled_surgery: 'Cirurgia programada',
+    recent_vaccination: 'Vacinação recente',
+    clinical_contraindication: 'Contraindicação clínica',
+    protocol_change: 'Mudança de conduta clínica',
+    lack_of_adherence: 'Falta de adesão',
+    patient_request: 'Solicitação do paciente',
+    other: 'Outro',
   }
 
   useEffect(() => {
@@ -137,14 +137,14 @@ export function PatientChartPage() {
       const imm = immunotherapies.find((i) => i.id === patientId)
       if (imm) {
         setSelectedPatient({
-          id: imm.id, nome: imm.name, dataNascimento: '02/07/2000', idade: 25,
-          telefone: '(62) 99557-1423', peso: '89.7 kg', cpf: '711.905.744-89',
-          medicoResponsavel: imm.responsibleDoctor, status: imm.status === 'active' ? 'ativo' as const : 'inativo' as const,
-          tipoImunoterapia: imm.type, inicioInducao: '01/01/2020', inicioManutencao: null,
-          viaAdministracao: 'Subcutânea', extrato: 'Der p 60 + der f 10% + blt 30%',
-          concentracaoVolumeMeta: '1:10 - 0,5ml', metaAtingida: false,
-          intervaloAtual: imm.cycleInterval.days, dataProximaAplicacao: '21/05/2025',
-          concentracaoDoseAtuais: imm.doseConcentration,
+          id: imm.id, name: imm.name, birthDate: '02/07/2000', age: 25,
+          phone: '(62) 99557-1423', weight: '89.7 kg', cpf: '711.905.744-89',
+          responsibleDoctor: imm.responsibleDoctor, status: imm.status === 'active' ? 'active' as const : 'inactive' as const,
+          immunotherapyType: imm.type, inductionStart: '01/01/2020', maintenanceStart: null,
+          administrationRoute: 'Subcutânea', extract: 'Der p 60 + der f 10% + blt 30%',
+          targetConcentrationVolume: '1:10 - 0,5ml', targetReached: false,
+          currentInterval: imm.cycleInterval.days, nextApplicationDate: '21/05/2025',
+          currentDoseConcentration: imm.doseConcentration,
           inactivations: imm.status === 'inactive' ? seedInactivationsFor(imm.id, imm.doseConcentration, imm.cycleInterval.days) : undefined,
         })
       } else {
@@ -167,7 +167,7 @@ export function PatientChartPage() {
       userRole: currentUser.role,
       userRegistration: currentUser.registration,
       patientId: selectedPatient.id,
-      patientName: selectedPatient.nome,
+      patientName: selectedPatient.name,
       action: 'view_chart',
       description: 'Consultou o prontuário',
     })
@@ -207,15 +207,15 @@ export function PatientChartPage() {
     return firstMeta.data
   }, [patientApps])
 
-  const currentInterval = lastRealized?.ciclo.dias ?? selectedPatient?.intervaloAtual ?? 7
+  const currentInterval = lastRealized?.ciclo.dias ?? selectedPatient?.currentInterval ?? 7
   const currentDose = lastRealized
     ? `${lastRealized.concentracaoExtrato || lastRealized.dose.split(' - ')[0]} - ${lastRealized.volumeAplicado || lastRealized.dose.split(' - ')[1]}`
-    : selectedPatient?.concentracaoDoseAtuais ?? '-'
+    : selectedPatient?.currentDoseConcentration ?? '-'
 
   const nextCalc = useMemo(() => calculateNextDose(currentDose, currentInterval), [currentDose, currentInterval])
 
   const nextDate = useMemo(() => {
-    if (!lastRealized) return selectedPatient?.dataProximaAplicacao ?? '-'
+    if (!lastRealized) return selectedPatient?.nextApplicationDate ?? '-'
     try {
       const [d, m, y] = lastRealized.data.split('/')
       return format(addDays(new Date(+y, +m - 1, +d), nextCalc.interval), 'dd/MM/yyyy')
@@ -223,7 +223,7 @@ export function PatientChartPage() {
   }, [lastRealized, nextCalc.interval, selectedPatient])
 
   const treatmentTime = useMemo(() => {
-    const inicio = inicioInducaoCalc || selectedPatient?.inicioInducao
+    const inicio = inicioInducaoCalc || selectedPatient?.inductionStart
     if (!inicio) return null
     try {
       const start = parse(inicio, 'dd/MM/yyyy', new Date())
@@ -318,7 +318,7 @@ export function PatientChartPage() {
     { conc: '1:10', vols: ['0,1ml', '0,2ml', '0,4ml', '0,5ml'] },
   ]
   const allSteps = inductionSteps.flatMap((s) => s.vols.map((v) => `${s.conc} - ${v}`))
-  const currentDoseStr = lastRealized?.dose || selectedPatient?.concentracaoDoseAtuais || '1:10.000 - 0,1ml'
+  const currentDoseStr = lastRealized?.dose || selectedPatient?.currentDoseConcentration || '1:10.000 - 0,1ml'
   const currentStepIndex = useMemo(() => {
     const parts = currentDoseStr.split(' - ')
     const conc = parts[0]?.trim() || ''
@@ -344,8 +344,8 @@ export function PatientChartPage() {
   const inactivationCount = selectedPatient?.inactivations?.length ?? 0
 
   const suggestedNextDose = useMemo(() => {
-    if (isMaintenance) return selectedPatient?.concentracaoDoseAtuais ?? '1:10 - 0,5ml'
-    if (currentStepIndex < 0) return selectedPatient?.concentracaoDoseAtuais ?? ''
+    if (isMaintenance) return selectedPatient?.currentDoseConcentration ?? '1:10 - 0,5ml'
+    if (currentStepIndex < 0) return selectedPatient?.currentDoseConcentration ?? ''
     const nextIdx = Math.min(currentStepIndex + 1, allSteps.length - 1)
     return allSteps[nextIdx]
   }, [isMaintenance, currentStepIndex, allSteps, selectedPatient])
@@ -376,12 +376,12 @@ export function PatientChartPage() {
           <div className="border-b border-(--border-custom) px-5 py-4">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-base font-bold text-white shrink-0">
-                {getInitials(selectedPatient.nome)}
+                {getInitials(selectedPatient.name)}
               </div>
               <div className="min-w-0">
-                <h1 className="text-base font-extrabold text-(--text) leading-tight">{selectedPatient.nome}</h1>
+                <h1 className="text-base font-extrabold text-(--text) leading-tight">{selectedPatient.name}</h1>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                  {selectedPatient.status === 'ativo' ? (
+                  {selectedPatient.status === 'active' ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[0.6rem] font-semibold border border-emerald-200">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                       Tratamento Ativo
@@ -400,7 +400,7 @@ export function PatientChartPage() {
                 </div>
               </div>
             </div>
-            {selectedPatient.status === 'inativo' && activeInactivation && (
+            {selectedPatient.status === 'inactive' && activeInactivation && (
               <div className="mt-2.5 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
                 <div className="flex items-center justify-between mb-0.5">
                   <div className="text-[0.6rem] font-semibold text-yellow-700 flex items-center gap-1">
@@ -414,15 +414,15 @@ export function PatientChartPage() {
                 {activeInactivation.expectedReturnDate && (
                   <div className="text-[0.55rem] text-yellow-700/80 mt-1">Retorno previsto: <span className="font-semibold">{activeInactivation.expectedReturnDate}</span></div>
                 )}
-                <div className="text-[0.55rem] text-yellow-700/80 mt-0.5">Responsável: <span className="font-semibold">{activeInactivation.responsavel}</span></div>
+                <div className="text-[0.55rem] text-yellow-700/80 mt-0.5">Responsável: <span className="font-semibold">{activeInactivation.responsibleDoctor}</span></div>
               </div>
             )}
             <div className="mt-3 flex gap-1.5">
-              {selectedPatient.status === 'inativo' ? (
+              {selectedPatient.status === 'inactive' ? (
                 canReactivate && (
                   <button
                     onClick={() => {
-                      const snapshotInterval = activeInactivation?.snapshotIntervalo ?? selectedPatient.intervaloAtual
+                      const snapshotInterval = activeInactivation?.snapshotInterval ?? selectedPatient.currentInterval
                       reactivateForm.reset({
                         concentracao: suggestedNextDose,
                         intervalo: String(snapshotInterval),
@@ -477,12 +477,12 @@ export function PatientChartPage() {
               <div className={cn("overflow-hidden transition-all duration-300", showPersonal ? "max-h-80 opacity-100" : "max-h-0 opacity-0")}>
                 <div className="px-3.5 pb-3 space-y-2">
                   {[
-                    ['Data de Nascimento', selectedPatient.dataNascimento],
-                    ['Idade', `${selectedPatient.idade} anos`],
+                    ['Data de Nascimento', selectedPatient.birthDate],
+                    ['Idade', `${selectedPatient.age} anos`],
                     ['CPF', selectedPatient.cpf],
-                    ['Telefone', selectedPatient.telefone],
-                    ['Peso', selectedPatient.peso],
-                    ['Médico Responsável', selectedPatient.medicoResponsavel],
+                    ['Telefone', selectedPatient.phone],
+                    ['Peso', selectedPatient.weight],
+                    ['Médico Responsável', selectedPatient.responsibleDoctor],
                   ].map(([label, value]) => (
                     <div key={label} className="flex justify-between text-[0.7rem]">
                       <span className="text-(--text-muted)">{label}:</span>
@@ -494,10 +494,10 @@ export function PatientChartPage() {
                       <button
                         onClick={() => {
                           setEditForm({
-                            nome: selectedPatient.nome,
-                            telefone: selectedPatient.telefone,
-                            peso: selectedPatient.peso,
-                            medicoResponsavel: selectedPatient.medicoResponsavel,
+                            name: selectedPatient.name,
+                            phone: selectedPatient.phone,
+                            weight: selectedPatient.weight,
+                            responsibleDoctor: selectedPatient.responsibleDoctor,
                           })
                           setShowEditModal(true)
                         }}
@@ -535,11 +535,11 @@ export function PatientChartPage() {
                     </div>
                   )}
                   {[
-                    ['Tipo', selectedPatient.tipoImunoterapia],
-                    ['Via de Administração', selectedPatient.viaAdministracao],
-                    ['Início Indução', inicioInducaoCalc || selectedPatient.inicioInducao],
-                    ['Início Manutenção', inicioManutencaoCalc || selectedPatient.inicioManutencao || '-'],
-                    ['Meta Concentração e Volume', selectedPatient.concentracaoVolumeMeta],
+                    ['Tipo', selectedPatient.immunotherapyType],
+                    ['Via de Administração', selectedPatient.administrationRoute],
+                    ['Início Indução', inicioInducaoCalc || selectedPatient.inductionStart],
+                    ['Início Manutenção', inicioManutencaoCalc || selectedPatient.maintenanceStart || '-'],
+                    ['Meta Concentração e Volume', selectedPatient.targetConcentrationVolume],
                   ].map(([label, value]) => (
                     <div key={label} className="flex justify-between text-[0.7rem]">
                       <span className="text-(--text-muted)">{label}:</span>
@@ -548,7 +548,7 @@ export function PatientChartPage() {
                   ))}
                   <div className="flex justify-between text-[0.7rem]">
                     <span className="text-(--text-muted) shrink-0">Extrato:</span>
-                    <span className="font-medium text-(--text) text-right max-w-[55%] wrap-break-word leading-relaxed">{selectedPatient.extrato}</span>
+                    <span className="font-medium text-(--text) text-right max-w-[55%] wrap-break-word leading-relaxed">{selectedPatient.extract}</span>
                   </div>
                   {/* Action buttons */}
                   {(canAdjustProtocol || canInactivate || (selectedPatient.protocolAdjustments && selectedPatient.protocolAdjustments.length > 0) || (inactivationCount > 0)) && (
@@ -561,17 +561,17 @@ export function PatientChartPage() {
                             adjustForm.reset({
                               type: '',
                               outroMotivo: '',
-                              newConcentracao: selectedPatient.concentracaoDoseAtuais,
-                              newIntervalo: String(selectedPatient.intervaloAtual),
-                              newTipo: selectedPatient.tipoImunoterapia,
-                              newVia: selectedPatient.viaAdministracao,
-                              newExtrato: selectedPatient.extrato,
+                              newConcentracao: selectedPatient.currentDoseConcentration,
+                              newIntervalo: String(selectedPatient.currentInterval),
+                              newTipo: selectedPatient.immunotherapyType,
+                              newVia: selectedPatient.administrationRoute,
+                              newExtrato: selectedPatient.extract,
                               justificativa: '',
                             })
                             setShowAdjustModal(true)
                           }}
-                          disabled={selectedPatient.status === 'inativo'}
-                          className={cn("flex-1 h-7 rounded-lg text-[0.65rem] font-semibold transition-all flex items-center justify-center gap-1.5 border-[1.5px]", selectedPatient.status === 'inativo' ? "border-gray-200 text-gray-300 cursor-not-allowed" : "border-brand text-brand hover:bg-teal-50 cursor-pointer")}
+                          disabled={selectedPatient.status === 'inactive'}
+                          className={cn("flex-1 h-7 rounded-lg text-[0.65rem] font-semibold transition-all flex items-center justify-center gap-1.5 border-[1.5px]", selectedPatient.status === 'inactive' ? "border-gray-200 text-gray-300 cursor-not-allowed" : "border-brand text-brand hover:bg-teal-50 cursor-pointer")}
                         >
                           <SlidersHorizontal size={11} />
                           Ajustar protocolo
@@ -588,7 +588,7 @@ export function PatientChartPage() {
                       )}
                     </div>
                     )}
-                    {canInactivate && selectedPatient.status === 'ativo' && (
+                    {canInactivate && selectedPatient.status === 'active' && (
                       <Button
                         tone="warning"
                         variant="outline"
@@ -1017,22 +1017,22 @@ export function PatientChartPage() {
           </h4>
           <div className="grid grid-cols-2 gap-3">
             <FieldLabel label="Nome completo">
-              <TextInput value={editForm.nome} onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })} />
+              <TextInput value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
             </FieldLabel>
             <FieldLabel label="Telefone">
-              <TextInput value={editForm.telefone} onChange={(e) => setEditForm({ ...editForm, telefone: e.target.value })} />
+              <TextInput value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
             </FieldLabel>
             <FieldLabel label="Peso">
-              <TextInput value={editForm.peso} onChange={(e) => setEditForm({ ...editForm, peso: e.target.value })} />
+              <TextInput value={editForm.weight} onChange={(e) => setEditForm({ ...editForm, weight: e.target.value })} />
             </FieldLabel>
             <FieldLabel label="Médico responsável">
-              <TextInput value={editForm.medicoResponsavel} onChange={(e) => setEditForm({ ...editForm, medicoResponsavel: e.target.value })} />
+              <TextInput value={editForm.responsibleDoctor} onChange={(e) => setEditForm({ ...editForm, responsibleDoctor: e.target.value })} />
             </FieldLabel>
             <FieldLabel label="CPF">
               <TextInput value={selectedPatient.cpf} disabled className="bg-gray-100/80 text-(--text-muted) cursor-not-allowed" />
             </FieldLabel>
             <FieldLabel label="Data de nascimento">
-              <TextInput value={selectedPatient.dataNascimento} disabled className="bg-gray-100/80 text-(--text-muted) cursor-not-allowed" />
+              <TextInput value={selectedPatient.birthDate} disabled className="bg-gray-100/80 text-(--text-muted) cursor-not-allowed" />
             </FieldLabel>
           </div>
         </div>
@@ -1048,27 +1048,27 @@ export function PatientChartPage() {
             variant="primary"
             leftIcon={<Save size={13} />}
             onClick={adjustForm.handleSubmit((v) => {
-              const justificativaFinal = v.type === 'outro' && v.outroMotivo.trim()
+              const justificativaFinal = v.type === 'other' && v.outroMotivo.trim()
                 ? `[${v.outroMotivo.trim()}] ${v.justificativa.trim()}`
                 : v.justificativa.trim()
               const adjustment = {
                 id: `adj-${Date.now()}`,
                 date: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
                 type: v.type as ProtocolAdjustmentType,
-                previousConcentracao: selectedPatient.concentracaoDoseAtuais,
-                previousIntervalo: selectedPatient.intervaloAtual,
-                newConcentracao: v.newConcentracao,
-                newIntervalo: Number(v.newIntervalo.trim()),
-                justificativa: justificativaFinal,
-                responsavel: selectedPatient.medicoResponsavel,
+                previousConcentration: selectedPatient.currentDoseConcentration,
+                previousInterval: selectedPatient.currentInterval,
+                newConcentration: v.newConcentracao,
+                newInterval: Number(v.newIntervalo.trim()),
+                justification: justificativaFinal,
+                responsibleDoctor: selectedPatient.responsibleDoctor,
               }
               setSelectedPatient({
                 ...selectedPatient,
-                tipoImunoterapia: v.newTipo,
-                viaAdministracao: v.newVia,
-                extrato: v.newExtrato,
-                concentracaoDoseAtuais: v.newConcentracao,
-                intervaloAtual: Number(v.newIntervalo.trim()),
+                immunotherapyType: v.newTipo,
+                administrationRoute: v.newVia,
+                extract: v.newExtrato,
+                currentDoseConcentration: v.newConcentracao,
+                currentInterval: Number(v.newIntervalo.trim()),
                 protocolAdjustments: [...(selectedPatient.protocolAdjustments || []), adjustment],
               })
               setShowAdjustModal(false)
@@ -1099,7 +1099,7 @@ export function PatientChartPage() {
             <option value="outro">Outro</option>
           </Select>
         </FieldLabel>
-        {adjustValues.type === 'outro' && (
+        {adjustValues.type === 'other' && (
           <div>
             <TextInput
               placeholder="Especifique o motivo do ajuste"
@@ -1146,7 +1146,7 @@ export function PatientChartPage() {
 
           <FieldLabel label="Concentração e volume" error={adjustErrors.newConcentracao?.message}>
             <div className="flex items-center gap-2">
-              <span className="text-[0.65rem] text-(--text-muted) line-through shrink-0">{selectedPatient.concentracaoDoseAtuais}</span>
+              <span className="text-[0.65rem] text-(--text-muted) line-through shrink-0">{selectedPatient.currentDoseConcentration}</span>
               <span className="text-(--text-muted) text-xs">→</span>
               <TextInput
                 placeholder="Ex: 1:1.000 — 0,2ml"
@@ -1160,7 +1160,7 @@ export function PatientChartPage() {
 
           <FieldLabel label="Intervalo entre doses" error={adjustErrors.newIntervalo?.message}>
             <div className="flex items-center gap-2">
-              <span className="text-[0.65rem] text-(--text-muted) line-through shrink-0">{selectedPatient.intervaloAtual} dias</span>
+              <span className="text-[0.65rem] text-(--text-muted) line-through shrink-0">{selectedPatient.currentInterval} dias</span>
               <span className="text-(--text-muted) text-xs">→</span>
               <div className="flex-1">
                 {(() => {
@@ -1221,11 +1221,11 @@ export function PatientChartPage() {
       >
         {selectedPatient.protocolAdjustments && [...selectedPatient.protocolAdjustments].reverse().map((adj) => {
           const typeLabels: Record<ProtocolAdjustmentType, string> = {
-            reducao_dose: 'Redução de dose',
-            aumento_intervalo: 'Aumento de intervalo',
-            alteracao_concentracao: 'Alteração de concentração',
-            suspensao: 'Suspensão temporária',
-            outro: 'Outro',
+            dose_reduction: 'Redução de dose',
+            interval_increase: 'Aumento de intervalo',
+            concentration_change: 'Alteração de concentração',
+            suspension: 'Suspensão temporária',
+            other: 'Outro',
           }
           return (
             <div key={adj.id} className="border border-(--border-custom) rounded-lg p-3">
@@ -1236,18 +1236,18 @@ export function PatientChartPage() {
               <div className="space-y-1 mb-2">
                 <div className="flex items-center justify-between text-[0.65rem]">
                   <span className="text-(--text-muted)">Concentração:</span>
-                  <span className="font-medium"><span className="text-(--text-muted) line-through">{adj.previousConcentracao}</span> → <span className="text-brand font-bold">{adj.newConcentracao}</span></span>
+                  <span className="font-medium"><span className="text-(--text-muted) line-through">{adj.previousConcentration}</span> → <span className="text-brand font-bold">{adj.newConcentration}</span></span>
                 </div>
                 <div className="flex items-center justify-between text-[0.65rem]">
                   <span className="text-(--text-muted)">Intervalo:</span>
-                  <span className="font-medium"><span className="text-(--text-muted) line-through">{adj.previousIntervalo}d</span> → <span className="text-brand font-bold">{adj.newIntervalo}d</span></span>
+                  <span className="font-medium"><span className="text-(--text-muted) line-through">{adj.previousInterval}d</span> → <span className="text-brand font-bold">{adj.newInterval}d</span></span>
                 </div>
               </div>
               <div className="bg-gray-50 rounded px-2.5 py-1.5 border-l-2 border-amber-400">
                 <div className="text-[0.55rem] font-semibold text-(--text-muted) uppercase tracking-wider mb-0.5">Justificativa</div>
-                <div className="text-[0.65rem] text-(--text) leading-relaxed">{adj.justificativa}</div>
+                <div className="text-[0.65rem] text-(--text) leading-relaxed">{adj.justification}</div>
               </div>
-              <div className="text-[0.55rem] text-(--text-muted) mt-1.5">Responsável: <span className="font-semibold text-(--text)">{adj.responsavel}</span></div>
+              <div className="text-[0.55rem] text-(--text-muted) mt-1.5">Responsável: <span className="font-semibold text-(--text)">{adj.responsibleDoctor}</span></div>
             </div>
           )
         })}
@@ -1283,7 +1283,7 @@ export function PatientChartPage() {
               const expectedReturn = v.expectedReturnDate
                 ? format(new Date(v.expectedReturnDate + 'T00:00:00'), 'dd/MM/yyyy')
                 : null
-              const detailFinal = v.category === 'outro' && v.outroMotivo.trim()
+              const detailFinal = v.category === 'other' && v.outroMotivo.trim()
                 ? `[${v.outroMotivo.trim()}] ${v.detail.trim()}`
                 : v.detail.trim()
               inactivateImunoterapia({
@@ -1292,9 +1292,9 @@ export function PatientChartPage() {
                 detail: detailFinal,
                 startDate: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
                 expectedReturnDate: expectedReturn,
-                responsavel: selectedPatient.medicoResponsavel,
-                snapshotConcentracao: selectedPatient.concentracaoDoseAtuais,
-                snapshotIntervalo: selectedPatient.intervaloAtual,
+                responsibleDoctor: selectedPatient.responsibleDoctor,
+                snapshotConcentration: selectedPatient.currentDoseConcentration,
+                snapshotInterval: selectedPatient.currentInterval,
               })
               setShowInactivateModal(false)
               setShowInactivateToast(true)
@@ -1322,7 +1322,7 @@ export function PatientChartPage() {
             ))}
           </Select>
         </FieldLabel>
-        {inactivateValues.category === 'outro' && (
+        {inactivateValues.category === 'other' && (
           <div>
             <TextInput
               placeholder="Especifique o motivo da inativação"
@@ -1363,7 +1363,7 @@ export function PatientChartPage() {
 
         <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3 py-2 flex items-center justify-between">
           <span className="text-[0.65rem] text-(--text-muted)">Responsável pela inativação</span>
-          <span className="text-[0.7rem] font-semibold text-(--text)">{selectedPatient.medicoResponsavel}</span>
+          <span className="text-[0.7rem] font-semibold text-(--text)">{selectedPatient.responsibleDoctor}</span>
         </div>
       </Modal>
 
@@ -1380,7 +1380,7 @@ export function PatientChartPage() {
               if (!activeInactivation) return
               const schema = createReactivateSchema({
                 suggestedConcentracao: suggestedNextDose,
-                snapshotIntervalo: activeInactivation.snapshotIntervalo,
+                snapshotIntervalo: activeInactivation.snapshotInterval,
               })
               const parsed = schema.safeParse(reactivateForm.getValues())
               if (!parsed.success) {
@@ -1394,10 +1394,10 @@ export function PatientChartPage() {
               const v = parsed.data
               reactivateImunoterapia({
                 note: v.note.trim(),
-                reactivatedBy: selectedPatient.medicoResponsavel,
-                reactivateConcentracao: v.concentracao.trim(),
-                reactivateIntervalo: Number(v.intervalo.trim()),
-                justificativa: v.justificativa.trim(),
+                reactivatedBy: selectedPatient.responsibleDoctor,
+                reactivateConcentration: v.concentracao.trim(),
+                reactivateInterval: Number(v.intervalo.trim()),
+                justification: v.justificativa.trim(),
               })
               setShowReactivateModal(false)
               setShowReactivateToast(true)
@@ -1453,11 +1453,11 @@ export function PatientChartPage() {
             )}
             <div className="flex items-center justify-between text-[0.65rem]">
               <span className="text-(--text-muted)">Concentração/volume atual</span>
-              <span className="font-medium text-(--text)">{activeInactivation.snapshotConcentracao}</span>
+              <span className="font-medium text-(--text)">{activeInactivation.snapshotConcentration}</span>
             </div>
             <div className="flex items-center justify-between text-[0.65rem]">
               <span className="text-(--text-muted)">Intervalo</span>
-              <span className="font-medium text-(--text)">{activeInactivation.snapshotIntervalo} dias</span>
+              <span className="font-medium text-(--text)">{activeInactivation.snapshotInterval} dias</span>
             </div>
             <div className="flex items-center justify-between text-[0.65rem]">
               <span className="text-(--text-muted)">Etapa</span>
@@ -1473,7 +1473,7 @@ export function PatientChartPage() {
                 type="button"
                 onClick={() => {
                   reactivateForm.setValue('concentracao', suggestedNextDose)
-                  reactivateForm.setValue('intervalo', String(activeInactivation.snapshotIntervalo))
+                  reactivateForm.setValue('intervalo', String(activeInactivation.snapshotInterval))
                 }}
                 className="text-[0.55rem] font-semibold text-brand hover:underline cursor-pointer"
               >
@@ -1533,7 +1533,7 @@ export function PatientChartPage() {
           </div>
 
           {(() => {
-            const diverges = reactivateValues.concentracao.trim() !== suggestedNextDose.trim() || reactivateValues.intervalo.trim() !== String(activeInactivation.snapshotIntervalo)
+            const diverges = reactivateValues.concentracao.trim() !== suggestedNextDose.trim() || reactivateValues.intervalo.trim() !== String(activeInactivation.snapshotInterval)
             return (
               <FieldLabel
                 label="Justificativa do ponto de retomada"
@@ -1563,7 +1563,7 @@ export function PatientChartPage() {
 
           <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3 py-2 flex items-center justify-between">
             <span className="text-[0.65rem] text-(--text-muted)">Responsável pela retomada</span>
-            <span className="text-[0.7rem] font-semibold text-(--text)">{selectedPatient.medicoResponsavel}</span>
+            <span className="text-[0.7rem] font-semibold text-(--text)">{selectedPatient.responsibleDoctor}</span>
           </div>
         </>}
       </Modal>
@@ -1591,28 +1591,28 @@ export function PatientChartPage() {
                     {s.expectedReturnDate && (
                       <div className="text-[0.6rem] text-(--text-muted) mb-1">Retorno previsto: <span className="font-semibold text-(--text)">{s.expectedReturnDate}</span></div>
                     )}
-                    <div className="text-[0.55rem] text-(--text-muted)">Responsável: <span className="font-semibold text-(--text)">{s.responsavel}</span></div>
+                    <div className="text-[0.55rem] text-(--text-muted)">Responsável: <span className="font-semibold text-(--text)">{s.responsibleDoctor}</span></div>
                     {s.reactivatedAt && (
                       <div className="mt-2 pt-2 border-t border-(--border-custom) space-y-1.5">
                         <div className="text-[0.6rem] text-emerald-700 font-semibold">
                           Reativado em {s.reactivatedAt}
                         </div>
-                        {s.reactivateConcentracao && s.reactivateIntervalo !== undefined && (
+                        {s.reactivateConcentration && s.reactivateInterval !== undefined && (
                           <div className="grid grid-cols-2 gap-1.5">
                             <div className="bg-gray-50 rounded px-2 py-1">
                               <div className="text-[0.5rem] text-(--text-muted) font-semibold uppercase tracking-wider">Ponto de retorno</div>
-                              <div className="text-[0.6rem] font-medium text-(--text)">{s.reactivateConcentracao}</div>
+                              <div className="text-[0.6rem] font-medium text-(--text)">{s.reactivateConcentration}</div>
                             </div>
                             <div className="bg-gray-50 rounded px-2 py-1">
                               <div className="text-[0.5rem] text-(--text-muted) font-semibold uppercase tracking-wider">Intervalo</div>
-                              <div className="text-[0.6rem] font-medium text-(--text)">{s.reactivateIntervalo} dias</div>
+                              <div className="text-[0.6rem] font-medium text-(--text)">{s.reactivateInterval} dias</div>
                             </div>
                           </div>
                         )}
-                        {s.reactivateJustificativa && (
+                        {s.reactivateJustification && (
                           <div className="bg-emerald-50/50 border-l-2 border-emerald-300 rounded px-2.5 py-1.5">
                             <div className="text-[0.5rem] font-semibold text-emerald-700 uppercase tracking-wider mb-0.5">Justificativa</div>
-                            <div className="text-[0.6rem] text-(--text) leading-relaxed">{s.reactivateJustificativa}</div>
+                            <div className="text-[0.6rem] text-(--text) leading-relaxed">{s.reactivateJustification}</div>
                           </div>
                         )}
                         {s.reactivateNote && (
@@ -1659,10 +1659,10 @@ export function PatientChartPage() {
             onClick={() => {
               setSelectedPatient({
                 ...selectedPatient,
-                nome: editForm.nome,
-                telefone: editForm.telefone,
-                peso: editForm.peso,
-                medicoResponsavel: editForm.medicoResponsavel,
+                name: editForm.name,
+                phone: editForm.phone,
+                weight: editForm.weight,
+                responsibleDoctor: editForm.responsibleDoctor,
               })
               setShowEditConfirm(false)
               setShowEditModal(false)
@@ -1676,10 +1676,10 @@ export function PatientChartPage() {
 
         <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5 space-y-1.5">
           {[
-            { label: 'Nome', prev: selectedPatient.nome, next: editForm.nome },
-            { label: 'Telefone', prev: selectedPatient.telefone, next: editForm.telefone },
-            { label: 'Peso', prev: selectedPatient.peso, next: editForm.peso },
-            { label: 'Médico', prev: selectedPatient.medicoResponsavel, next: editForm.medicoResponsavel },
+            { label: 'Nome', prev: selectedPatient.name, next: editForm.name },
+            { label: 'Telefone', prev: selectedPatient.phone, next: editForm.phone },
+            { label: 'Peso', prev: selectedPatient.weight, next: editForm.weight },
+            { label: 'Médico', prev: selectedPatient.responsibleDoctor, next: editForm.responsibleDoctor },
           ].filter((f) => f.prev !== f.next).map((f) => (
             <div key={f.label} className="flex items-center justify-between gap-2">
               <span className="text-[0.6rem] text-(--text-muted) shrink-0">{f.label}</span>
@@ -1691,10 +1691,10 @@ export function PatientChartPage() {
             </div>
           ))}
           {[
-            { prev: selectedPatient.nome, next: editForm.nome },
-            { prev: selectedPatient.telefone, next: editForm.telefone },
-            { prev: selectedPatient.peso, next: editForm.peso },
-            { prev: selectedPatient.medicoResponsavel, next: editForm.medicoResponsavel },
+            { prev: selectedPatient.name, next: editForm.name },
+            { prev: selectedPatient.phone, next: editForm.phone },
+            { prev: selectedPatient.weight, next: editForm.weight },
+            { prev: selectedPatient.responsibleDoctor, next: editForm.responsibleDoctor },
           ].every((f) => f.prev === f.next) && (
             <span className="text-[0.6rem] text-(--text-muted)">Nenhuma alteração detectada.</span>
           )}

@@ -2,18 +2,18 @@ import { z } from 'zod'
 
 const inactivationCategories = [
   '',
-  'conclusao_tratamento',
-  'reacao_adversa_leve',
-  'reacao_adversa_grave',
-  'infeccao_aguda',
-  'gestacao',
-  'cirurgia_programada',
-  'vacinacao_recente',
-  'contraindicacao_clinica',
-  'mudanca_conduta',
-  'falta_adesao',
-  'solicitacao_paciente',
-  'outro',
+  'treatment_completion',
+  'mild_adverse_reaction',
+  'severe_adverse_reaction',
+  'acute_infection',
+  'pregnancy',
+  'scheduled_surgery',
+  'recent_vaccination',
+  'clinical_contraindication',
+  'protocol_change',
+  'lack_of_adherence',
+  'patient_request',
+  'other',
 ] as const
 
 export const inactivateSchema = z
@@ -30,7 +30,7 @@ export const inactivateSchema = z
     if (!data.category) {
       ctx.addIssue({ path: ['category'], code: z.ZodIssueCode.custom, message: 'Selecione a categoria da inativação' })
     }
-    if (data.category === 'outro' && !data.outroMotivo.trim()) {
+    if (data.category === 'other' && !data.outroMotivo.trim()) {
       ctx.addIssue({ path: ['outroMotivo'], code: z.ZodIssueCode.custom, message: 'Especifique o motivo' })
     }
   })

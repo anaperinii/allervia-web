@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import type { ProtocolAdjustmentType } from '@/features/patient/stores/patient-store'
 
-const adjustmentTypes = ['', 'reducao_dose', 'aumento_intervalo', 'alteracao_concentracao', 'suspensao', 'outro'] as const
+const adjustmentTypes = ['', 'dose_reduction', 'interval_increase', 'concentration_change', 'suspension', 'other'] as const
 
 export const adjustProtocolSchema = z
   .object({
@@ -21,7 +21,7 @@ export const adjustProtocolSchema = z
     if (!data.type) {
       ctx.addIssue({ path: ['type'], code: z.ZodIssueCode.custom, message: 'Selecione o tipo de ajuste' })
     }
-    if (data.type === 'outro' && !data.outroMotivo.trim()) {
+    if (data.type === 'other' && !data.outroMotivo.trim()) {
       ctx.addIssue({ path: ['outroMotivo'], code: z.ZodIssueCode.custom, message: 'Especifique o motivo' })
     }
     const intervalo = data.newIntervalo.trim()

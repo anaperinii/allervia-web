@@ -247,12 +247,12 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             )}
           >
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand text-white text-[0.6rem] font-bold">
-              {getInitials(selectedPatient.nome)}
+              {getInitials(selectedPatient.name)}
             </div>
             {!isCollapsed && (
               <div className="flex flex-1 items-center justify-between min-w-0">
                 <span className="text-xs font-semibold truncate">
-                  {selectedPatient.nome.split(' ').slice(0, 2).join(' ')}
+                  {selectedPatient.name.split(' ').slice(0, 2).join(' ')}
                 </span>
                 <button
                   onClick={(e) => {
