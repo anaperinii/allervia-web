@@ -13,36 +13,36 @@ import {
 import type { FieldPath } from 'react-hook-form'
 
 export const addImmunotherapySchema = z.object({
-  nome: nameSchema,
+  name: nameSchema,
   cpf: cpfSchema,
-  telefone: phoneSchema,
-  dataNascimento: birthdateSchema,
-  peso: weightSchema,
-  medicoResponsavel: z.string().min(1, 'Médico responsável é obrigatório'),
-  tipo: z.string().min(1, 'Tipo é obrigatório'),
-  viaCutanea: z.string().min(1, 'Via cutânea é obrigatória'),
-  dataInicio: futureDateSchema,
-  extrato: extratoSchema,
-  metaConcentracao: concentrationSchema,
-  metaVolume: volumeSchema,
+  phone: phoneSchema,
+  birthDate: birthdateSchema,
+  weight: weightSchema,
+  responsibleDoctor: z.string().min(1, 'Médico responsável é obrigatório'),
+  type: z.string().min(1, 'Tipo é obrigatório'),
+  modality: z.string().min(1, 'Via cutânea é obrigatória'),
+  startDate: futureDateSchema,
+  extract: extratoSchema,
+  targetConcentration: concentrationSchema,
+  targetVolume: volumeSchema,
 })
 
 export type AddImmunotherapyForm = z.infer<typeof addImmunotherapySchema>
 
 export const STEP_1_FIELDS = [
-  'nome',
+  'name',
   'cpf',
-  'telefone',
-  'dataNascimento',
-  'peso',
-  'medicoResponsavel',
+  'phone',
+  'birthDate',
+  'weight',
+  'responsibleDoctor',
 ] as const satisfies readonly FieldPath<AddImmunotherapyForm>[]
 
 export const STEP_2_FIELDS = [
-  'tipo',
-  'viaCutanea',
-  'dataInicio',
-  'extrato',
-  'metaConcentracao',
-  'metaVolume',
+  'type',
+  'modality',
+  'startDate',
+  'extract',
+  'targetConcentration',
+  'targetVolume',
 ] as const satisfies readonly FieldPath<AddImmunotherapyForm>[]

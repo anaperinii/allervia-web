@@ -424,9 +424,9 @@ export function PatientChartPage() {
                     onClick={() => {
                       const snapshotInterval = activeInactivation?.snapshotInterval ?? selectedPatient.currentInterval
                       reactivateForm.reset({
-                        concentracao: suggestedNextDose,
-                        intervalo: String(snapshotInterval),
-                        justificativa: '',
+                        concentration: suggestedNextDose,
+                        interval: String(snapshotInterval),
+                        justification: '',
                         note: '',
                       })
                       setShowReactivateModal(true)
@@ -560,13 +560,13 @@ export function PatientChartPage() {
                           onClick={() => {
                             adjustForm.reset({
                               type: '',
-                              outroMotivo: '',
-                              newConcentracao: selectedPatient.currentDoseConcentration,
-                              newIntervalo: String(selectedPatient.currentInterval),
-                              newTipo: selectedPatient.immunotherapyType,
-                              newVia: selectedPatient.administrationRoute,
-                              newExtrato: selectedPatient.extract,
-                              justificativa: '',
+                              otherReason: '',
+                              newConcentration: selectedPatient.currentDoseConcentration,
+                              newInterval: String(selectedPatient.currentInterval),
+                              newType: selectedPatient.immunotherapyType,
+                              newRoute: selectedPatient.administrationRoute,
+                              newExtract: selectedPatient.extract,
+                              justification: '',
                             })
                             setShowAdjustModal(true)
                           }}
@@ -1048,27 +1048,27 @@ export function PatientChartPage() {
             variant="primary"
             leftIcon={<Save size={13} />}
             onClick={adjustForm.handleSubmit((v) => {
-              const justificativaFinal = v.type === 'other' && v.outroMotivo.trim()
-                ? `[${v.outroMotivo.trim()}] ${v.justificativa.trim()}`
-                : v.justificativa.trim()
+              const justificationFinal = v.type === 'other' && v.otherReason.trim()
+                ? `[${v.otherReason.trim()}] ${v.justification.trim()}`
+                : v.justification.trim()
               const adjustment = {
                 id: `adj-${Date.now()}`,
                 date: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
                 type: v.type as ProtocolAdjustmentType,
                 previousConcentration: selectedPatient.currentDoseConcentration,
                 previousInterval: selectedPatient.currentInterval,
-                newConcentration: v.newConcentracao,
-                newInterval: Number(v.newIntervalo.trim()),
-                justification: justificativaFinal,
+                newConcentration: v.newConcentration,
+                newInterval: Number(v.newInterval.trim()),
+                justification: justificationFinal,
                 responsibleDoctor: selectedPatient.responsibleDoctor,
               }
               setSelectedPatient({
                 ...selectedPatient,
-                immunotherapyType: v.newTipo,
-                administrationRoute: v.newVia,
-                extract: v.newExtrato,
-                currentDoseConcentration: v.newConcentracao,
-                currentInterval: Number(v.newIntervalo.trim()),
+                immunotherapyType: v.newType,
+                administrationRoute: v.newRoute,
+                extract: v.newExtract,
+                currentDoseConcentration: v.newConcentration,
+                currentInterval: Number(v.newInterval.trim()),
                 protocolAdjustments: [...(selectedPatient.protocolAdjustments || []), adjustment],
               })
               setShowAdjustModal(false)
@@ -1092,22 +1092,22 @@ export function PatientChartPage() {
             invalid={!!adjustErrors.type}
           >
             <option value="" disabled>Selecione o motivo do ajuste</option>
-            <option value="reducao_dose">Redução de dose</option>
-            <option value="aumento_intervalo">Aumento de intervalo</option>
-            <option value="alteracao_concentracao">Alteração de concentração</option>
-            <option value="suspensao">Suspensão temporária</option>
-            <option value="outro">Outro</option>
+            <option value="dose_reduction">Redução de dose</option>
+            <option value="interval_increase">Aumento de intervalo</option>
+            <option value="concentration_change">Alteração de concentração</option>
+            <option value="suspension">Suspensão temporária</option>
+            <option value="other">Outro</option>
           </Select>
         </FieldLabel>
         {adjustValues.type === 'other' && (
           <div>
             <TextInput
               placeholder="Especifique o motivo do ajuste"
-              value={adjustValues.outroMotivo}
-              onChange={(e) => adjustForm.setValue('outroMotivo', e.target.value)}
-              invalid={!!adjustErrors.outroMotivo}
+              value={adjustValues.otherReason}
+              onChange={(e) => adjustForm.setValue('otherReason', e.target.value)}
+              invalid={!!adjustErrors.otherReason}
             />
-            {adjustErrors.outroMotivo?.message && <span className="text-[0.6rem] text-red-500 mt-0.5 block">{adjustErrors.outroMotivo?.message}</span>}
+            {adjustErrors.otherReason?.message && <span className="text-[0.6rem] text-red-500 mt-0.5 block">{adjustErrors.otherReason?.message}</span>}
           </div>
         )}
 
@@ -1115,7 +1115,7 @@ export function PatientChartPage() {
           <div className="text-[0.6rem] font-bold text-(--text-muted) uppercase tracking-wider">Dados da imunoterapia</div>
           <div className="grid grid-cols-2 gap-2">
             <FieldLabel label="Tipo">
-              <Select value={adjustValues.newTipo} onChange={(e) => adjustForm.setValue('newTipo', e.target.value)}>
+              <Select value={adjustValues.newType} onChange={(e) => adjustForm.setValue('newType', e.target.value)}>
                 <option value="Ácaros">Ácaros</option>
                 <option value="Gramíneas">Gramíneas</option>
                 <option value="Cão e Gato">Cão e Gato</option>
@@ -1126,7 +1126,7 @@ export function PatientChartPage() {
               </Select>
             </FieldLabel>
             <FieldLabel label="Via">
-              <Select value={adjustValues.newVia} onChange={(e) => adjustForm.setValue('newVia', e.target.value)}>
+              <Select value={adjustValues.newRoute} onChange={(e) => adjustForm.setValue('newRoute', e.target.value)}>
                 <option value="Subcutânea">Subcutânea</option>
                 <option value="Sublingual">Sublingual</option>
               </Select>
@@ -1135,8 +1135,8 @@ export function PatientChartPage() {
           <FieldLabel label="Extrato">
             <TextInput
               placeholder="Ex: Der p 60 + Der f 10%"
-              value={adjustValues.newExtrato}
-              onChange={(e) => adjustForm.setValue('newExtrato', e.target.value)}
+              value={adjustValues.newExtract}
+              onChange={(e) => adjustForm.setValue('newExtract', e.target.value)}
             />
           </FieldLabel>
         </div>
@@ -1144,36 +1144,36 @@ export function PatientChartPage() {
         <div className="bg-gray-50 border border-(--border-custom) rounded-lg p-3 space-y-2.5">
           <div className="text-[0.6rem] font-bold text-(--text-muted) uppercase tracking-wider">Parâmetros do protocolo</div>
 
-          <FieldLabel label="Concentração e volume" error={adjustErrors.newConcentracao?.message}>
+          <FieldLabel label="Concentração e volume" error={adjustErrors.newConcentration?.message}>
             <div className="flex items-center gap-2">
               <span className="text-[0.65rem] text-(--text-muted) line-through shrink-0">{selectedPatient.currentDoseConcentration}</span>
               <span className="text-(--text-muted) text-xs">→</span>
               <TextInput
                 placeholder="Ex: 1:1.000 — 0,2ml"
-                value={adjustValues.newConcentracao}
-                onChange={(e) => adjustForm.setValue('newConcentracao', e.target.value)}
-                invalid={!!adjustErrors.newConcentracao}
+                value={adjustValues.newConcentration}
+                onChange={(e) => adjustForm.setValue('newConcentration', e.target.value)}
+                invalid={!!adjustErrors.newConcentration}
                 className="flex-1"
               />
             </div>
           </FieldLabel>
 
-          <FieldLabel label="Intervalo entre doses" error={adjustErrors.newIntervalo?.message}>
+          <FieldLabel label="Intervalo entre doses" error={adjustErrors.newInterval?.message}>
             <div className="flex items-center gap-2">
               <span className="text-[0.65rem] text-(--text-muted) line-through shrink-0">{selectedPatient.currentInterval} dias</span>
               <span className="text-(--text-muted) text-xs">→</span>
               <div className="flex-1">
                 {(() => {
-                  const isCustom = adjustValues.newIntervalo && !['7', '14', '21', '28'].includes(adjustValues.newIntervalo)
-                  const selectValue = isCustom ? 'outro' : adjustValues.newIntervalo
+                  const isCustom = adjustValues.newInterval && !['7', '14', '21', '28'].includes(adjustValues.newInterval)
+                  const selectValue = isCustom ? 'outro' : adjustValues.newInterval
                   return (
                     <Select
                       value={selectValue}
                       onChange={(e) => {
                         const v = e.target.value
-                        adjustForm.setValue('newIntervalo', v === 'outro' ? ' ' : v)
+                        adjustForm.setValue('newInterval', v === 'outro' ? ' ' : v)
                       }}
-                      invalid={!!adjustErrors.newIntervalo}
+                      invalid={!!adjustErrors.newInterval}
                     >
                       <option value="" disabled>Selecione</option>
                       <option value="7">7 dias</option>
@@ -1186,15 +1186,15 @@ export function PatientChartPage() {
                 })()}
               </div>
             </div>
-            {(adjustValues.newIntervalo === ' ' || (adjustValues.newIntervalo && !['7','14','21','28'].includes(adjustValues.newIntervalo))) && (
+            {(adjustValues.newInterval === ' ' || (adjustValues.newInterval && !['7','14','21','28'].includes(adjustValues.newInterval))) && (
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-[0.6rem] text-(--text-muted) shrink-0">Especifique:</span>
                 <TextInput
                   type="number"
                   min="1"
                   placeholder="Ex: 35"
-                  value={adjustValues.newIntervalo.trim()}
-                  onChange={(e) => adjustForm.setValue('newIntervalo', e.target.value.replace(/[^0-9]/g, ''))}
+                  value={adjustValues.newInterval.trim()}
+                  onChange={(e) => adjustForm.setValue('newInterval', e.target.value.replace(/[^0-9]/g, ''))}
                   className="flex-1"
                 />
                 <span className="text-[0.6rem] text-(--text-muted) shrink-0">dias</span>
@@ -1203,13 +1203,13 @@ export function PatientChartPage() {
           </FieldLabel>
         </div>
 
-        <FieldLabel label="Justificativa clínica" required error={adjustErrors.justificativa?.message}>
+        <FieldLabel label="Justificativa clínica" required error={adjustErrors.justification?.message}>
           <TextArea
             rows={3}
             placeholder="Descreva o motivo clínico do ajuste (obrigatório conforme protocolo)"
-            value={adjustValues.justificativa}
-            onChange={(e) => adjustForm.setValue('justificativa', e.target.value)}
-            invalid={!!adjustErrors.justificativa}
+            value={adjustValues.justification}
+            onChange={(e) => adjustForm.setValue('justification', e.target.value)}
+            invalid={!!adjustErrors.justification}
           />
         </FieldLabel>
       </Modal>
@@ -1283,8 +1283,8 @@ export function PatientChartPage() {
               const expectedReturn = v.expectedReturnDate
                 ? format(new Date(v.expectedReturnDate + 'T00:00:00'), 'dd/MM/yyyy')
                 : null
-              const detailFinal = v.category === 'other' && v.outroMotivo.trim()
-                ? `[${v.outroMotivo.trim()}] ${v.detail.trim()}`
+              const detailFinal = v.category === 'other' && v.otherReason.trim()
+                ? `[${v.otherReason.trim()}] ${v.detail.trim()}`
                 : v.detail.trim()
               inactivateImmunotherapy({
                 id: `inact-${Date.now()}`,
@@ -1326,11 +1326,11 @@ export function PatientChartPage() {
           <div>
             <TextInput
               placeholder="Especifique o motivo da inativação"
-              value={inactivateValues.outroMotivo}
-              onChange={(e) => inactivateForm.setValue('outroMotivo', e.target.value)}
-              invalid={!!inactivateErrors.outroMotivo}
+              value={inactivateValues.otherReason}
+              onChange={(e) => inactivateForm.setValue('otherReason', e.target.value)}
+              invalid={!!inactivateErrors.otherReason}
             />
-            {inactivateErrors.outroMotivo?.message && <span className="text-[0.6rem] text-red-500 mt-0.5 block">{inactivateErrors.outroMotivo?.message}</span>}
+            {inactivateErrors.otherReason?.message && <span className="text-[0.6rem] text-red-500 mt-0.5 block">{inactivateErrors.otherReason?.message}</span>}
           </div>
         )}
 
@@ -1379,8 +1379,8 @@ export function PatientChartPage() {
             onClick={() => {
               if (!activeInactivation) return
               const schema = createReactivateSchema({
-                suggestedConcentracao: suggestedNextDose,
-                snapshotIntervalo: activeInactivation.snapshotInterval,
+                suggestedConcentration: suggestedNextDose,
+                snapshotInterval: activeInactivation.snapshotInterval,
               })
               const parsed = schema.safeParse(reactivateForm.getValues())
               if (!parsed.success) {
@@ -1395,9 +1395,9 @@ export function PatientChartPage() {
               reactivateImmunotherapy({
                 note: v.note.trim(),
                 reactivatedBy: selectedPatient.responsibleDoctor,
-                reactivateConcentration: v.concentracao.trim(),
-                reactivateInterval: Number(v.intervalo.trim()),
-                justification: v.justificativa.trim(),
+                reactivateConcentration: v.concentration.trim(),
+                reactivateInterval: Number(v.interval.trim()),
+                justification: v.justification.trim(),
               })
               setShowReactivateModal(false)
               setShowReactivateToast(true)
@@ -1472,8 +1472,8 @@ export function PatientChartPage() {
               <button
                 type="button"
                 onClick={() => {
-                  reactivateForm.setValue('concentracao', suggestedNextDose)
-                  reactivateForm.setValue('intervalo', String(activeInactivation.snapshotInterval))
+                  reactivateForm.setValue('concentration', suggestedNextDose)
+                  reactivateForm.setValue('interval', String(activeInactivation.snapshotInterval))
                 }}
                 className="text-[0.55rem] font-semibold text-brand hover:underline cursor-pointer"
               >
@@ -1481,31 +1481,31 @@ export function PatientChartPage() {
               </button>
             </div>
 
-            <FieldLabel label="Próxima concentração e volume" required error={reactivateErrors.concentracao?.message}>
+            <FieldLabel label="Próxima concentração e volume" required error={reactivateErrors.concentration?.message}>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[0.6rem] text-(--text-muted) shrink-0">Sugestão:</span>
                 <span className="text-[0.65rem] font-semibold text-brand shrink-0">{suggestedNextDose}</span>
               </div>
               <TextInput
                 placeholder="Ex: 1:1.000 — 0,4ml"
-                value={reactivateValues.concentracao}
-                onChange={(e) => reactivateForm.setValue('concentracao', e.target.value)}
-                invalid={!!reactivateErrors.concentracao}
+                value={reactivateValues.concentration}
+                onChange={(e) => reactivateForm.setValue('concentration', e.target.value)}
+                invalid={!!reactivateErrors.concentration}
               />
             </FieldLabel>
 
-            <FieldLabel label="Intervalo entre doses" required error={reactivateErrors.intervalo?.message}>
+            <FieldLabel label="Intervalo entre doses" required error={reactivateErrors.interval?.message}>
               {(() => {
-                const isCustom = reactivateValues.intervalo && !['7', '14', '21', '28'].includes(reactivateValues.intervalo)
-                const selectValue = isCustom ? 'outro' : reactivateValues.intervalo
+                const isCustom = reactivateValues.interval && !['7', '14', '21', '28'].includes(reactivateValues.interval)
+                const selectValue = isCustom ? 'outro' : reactivateValues.interval
                 return (
                   <Select
                     value={selectValue}
                     onChange={(e) => {
                       const v = e.target.value
-                      reactivateForm.setValue('intervalo', v === 'outro' ? ' ' : v)
+                      reactivateForm.setValue('interval', v === 'outro' ? ' ' : v)
                     }}
-                    invalid={!!reactivateErrors.intervalo}
+                    invalid={!!reactivateErrors.interval}
                   >
                     <option value="" disabled>Selecione</option>
                     <option value="7">7 dias</option>
@@ -1516,14 +1516,14 @@ export function PatientChartPage() {
                   </Select>
                 )
               })()}
-              {(reactivateValues.intervalo === ' ' || (reactivateValues.intervalo && !['7','14','21','28'].includes(reactivateValues.intervalo))) && (
+              {(reactivateValues.interval === ' ' || (reactivateValues.interval && !['7','14','21','28'].includes(reactivateValues.interval))) && (
                 <div className="flex items-center gap-2 mt-2">
                   <TextInput
                     type="number"
                     min="1"
                     placeholder="Ex: 35"
-                    value={reactivateValues.intervalo.trim()}
-                    onChange={(e) => reactivateForm.setValue('intervalo', e.target.value.replace(/[^0-9]/g, ''))}
+                    value={reactivateValues.interval.trim()}
+                    onChange={(e) => reactivateForm.setValue('interval', e.target.value.replace(/[^0-9]/g, ''))}
                     className="flex-1"
                   />
                   <span className="text-[0.6rem] text-(--text-muted) shrink-0">dias</span>
@@ -1533,20 +1533,20 @@ export function PatientChartPage() {
           </div>
 
           {(() => {
-            const diverges = reactivateValues.concentracao.trim() !== suggestedNextDose.trim() || reactivateValues.intervalo.trim() !== String(activeInactivation.snapshotInterval)
+            const diverges = reactivateValues.concentration.trim() !== suggestedNextDose.trim() || reactivateValues.interval.trim() !== String(activeInactivation.snapshotInterval)
             return (
               <FieldLabel
                 label="Justificativa do ponto de retomada"
                 required={diverges}
                 hint={!diverges ? '(opcional)' : undefined}
-                error={reactivateErrors.justificativa?.message}
+                error={reactivateErrors.justification?.message}
               >
                 <TextArea
                   rows={2}
                   placeholder={diverges ? "Justifique por que o ponto de retomada difere da sugestão do protocolo." : "Ex: paciente apto, seguir protocolo."}
-                  value={reactivateValues.justificativa}
-                  onChange={(e) => reactivateForm.setValue('justificativa', e.target.value)}
-                  invalid={!!reactivateErrors.justificativa}
+                  value={reactivateValues.justification}
+                  onChange={(e) => reactivateForm.setValue('justification', e.target.value)}
+                  invalid={!!reactivateErrors.justification}
                 />
               </FieldLabel>
             )

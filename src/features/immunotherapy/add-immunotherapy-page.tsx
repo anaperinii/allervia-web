@@ -45,8 +45,8 @@ export function AddImmunotherapyPage() {
     resolver: zodResolver(addImmunotherapySchema),
     mode: 'onBlur',
     defaultValues: {
-      nome: '', cpf: '', telefone: '', dataNascimento: '', peso: '', medicoResponsavel: '',
-      tipo: '', viaCutanea: '', dataInicio: tomorrowStr(), extrato: '', metaConcentracao: '', metaVolume: '',
+      name: '', cpf: '', phone: '', birthDate: '', weight: '', responsibleDoctor: '',
+      type: '', modality: '', startDate: tomorrowStr(), extract: '', targetConcentration: '', targetVolume: '',
     },
   })
   const form = watch()
@@ -58,22 +58,22 @@ export function AddImmunotherapyPage() {
   }
 
   const onFinish = handleSubmit((data) => {
-    const isSublingual = data.viaCutanea === 'sublingual'
+    const isSublingual = data.modality === 'sublingual'
     const newId = `new-${Date.now()}`
     const newImm: Immunotherapy = {
       id: newId,
-      name: data.nome.trim(),
-      phone: data.telefone.trim(),
-      type: data.tipo.trim(),
+      name: data.name.trim(),
+      phone: data.phone.trim(),
+      type: data.type.trim(),
       doseConcentration: '1:10.000 - 0,1ml',
       cycleInterval: { number: 1, days: 7 },
       modality: isSublingual ? 'sublingual' : 'subcutaneous',
       status: 'active',
-      responsibleDoctor: data.medicoResponsavel.trim(),
+      responsibleDoctor: data.responsibleDoctor.trim(),
     }
     addImmunotherapy(newImm)
 
-    const [yyyy, mm, dd] = data.dataInicio.split('-')
+    const [yyyy, mm, dd] = data.startDate.split('-')
     const dataPtBR = `${dd}/${mm}/${yyyy}`
     const meses = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO']
     const ano = Number(yyyy)
@@ -93,7 +93,7 @@ export function AddImmunotherapyPage() {
     }
     scheduleApplication(firstApp)
 
-    navigate({ to: '/immunotherapies', search: { success: true, patientName: data.nome, patientId: newId } })
+    navigate({ to: '/immunotherapies', search: { success: true, patientName: data.name, patientId: newId } })
   })
 
   const errMsg = (field: keyof AddImmunotherapyForm) =>
@@ -134,8 +134,8 @@ export function AddImmunotherapyPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nome do Paciente</label>
-                    <TextInput placeholder="Nome completo" invalid={!!errors.nome} {...register('nome')} />
-                    {errMsg('nome')}
+                    <TextInput placeholder="Nome completo" invalid={!!errors.name} {...register('name')} />
+                    {errMsg('name')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">CPF</label>
@@ -152,41 +152,41 @@ export function AddImmunotherapyPage() {
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Telefone</label>
                     <Controller
                       control={control}
-                      name="telefone"
+                      name="phone"
                       render={({ field }) => (
-                        <TextInput placeholder="(00) 00000-0000" invalid={!!errors.telefone} value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatPhone(e.target.value))} />
+                        <TextInput placeholder="(00) 00000-0000" invalid={!!errors.phone} value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatPhone(e.target.value))} />
                       )}
                     />
-                    {errMsg('telefone')}
+                    {errMsg('phone')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Nascimento</label>
-                    <TextInput type="date" max={todayStr()} invalid={!!errors.dataNascimento} {...register('dataNascimento')} />
-                    {errMsg('dataNascimento')}
+                    <TextInput type="date" max={todayStr()} invalid={!!errors.birthDate} {...register('birthDate')} />
+                    {errMsg('birthDate')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Peso</label>
                     <div className="relative">
                       <Controller
                         control={control}
-                        name="peso"
+                        name="weight"
                         render={({ field }) => (
-                          <TextInput placeholder="Ex: 72.5" invalid={!!errors.peso} className="pr-10" value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatWeight(e.target.value))} />
+                          <TextInput placeholder="Ex: 72.5" invalid={!!errors.weight} className="pr-10" value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatWeight(e.target.value))} />
                         )}
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">kg</span>
                     </div>
-                    {errMsg('peso')}
+                    {errMsg('weight')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Médico Responsável</label>
-                    <Select invalid={!!errors.medicoResponsavel} {...register('medicoResponsavel')}>
+                    <Select invalid={!!errors.responsibleDoctor} {...register('responsibleDoctor')}>
                       <option value="" disabled>Selecione o médico</option>
                       {PROFILES.filter((p) => p.role === 'medico').map((p) => (
                         <option key={p.id} value={p.name}>{p.name} · {p.registration}</option>
                       ))}
                     </Select>
-                    {errMsg('medicoResponsavel')}
+                    {errMsg('responsibleDoctor')}
                   </div>
                 </div>
               </div>
@@ -198,55 +198,55 @@ export function AddImmunotherapyPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Tipo</label>
-                    <Select invalid={!!errors.tipo} {...register('tipo')}>
+                    <Select invalid={!!errors.type} {...register('type')}>
                       <option value="" disabled>Selecione o tipo</option>
                       {customTypes.map((t) => <option key={t.id} value={t.label}>{t.label}</option>)}
                     </Select>
-                    {errMsg('tipo')}
+                    {errMsg('type')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Via Cutânea</label>
-                    <Select invalid={!!errors.viaCutanea} {...register('viaCutanea')}>
+                    <Select invalid={!!errors.modality} {...register('modality')}>
                       <option value="" disabled>Selecione</option>
                       <option value="Subcutânea">Subcutânea</option>
                       <option value="Sublingual">Sublingual</option>
                     </Select>
-                    {errMsg('viaCutanea')}
+                    {errMsg('modality')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Início</label>
-                    <TextInput type="date" min={todayStr()} invalid={!!errors.dataInicio} {...register('dataInicio')} />
-                    {errMsg('dataInicio')}
+                    <TextInput type="date" min={todayStr()} invalid={!!errors.startDate} {...register('startDate')} />
+                    {errMsg('startDate')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Extrato</label>
-                    <TextInput placeholder="Ex: Der p 60 + Der f 10% + Blt 30%" invalid={!!errors.extrato} {...register('extrato')} />
-                    {errMsg('extrato')}
+                    <TextInput placeholder="Ex: Der p 60 + Der f 10% + Blt 30%" invalid={!!errors.extract} {...register('extract')} />
+                    {errMsg('extract')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Meta de Concentração</label>
                     <Controller
                       control={control}
-                      name="metaConcentracao"
+                      name="targetConcentration"
                       render={({ field }) => (
-                        <TextInput placeholder="1:10" invalid={!!errors.metaConcentracao} value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatConcentration(e.target.value))} />
+                        <TextInput placeholder="1:10" invalid={!!errors.targetConcentration} value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatConcentration(e.target.value))} />
                       )}
                     />
-                    {errMsg('metaConcentracao')}
+                    {errMsg('targetConcentration')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Meta de Volume</label>
                     <div className="relative">
                       <Controller
                         control={control}
-                        name="metaVolume"
+                        name="targetVolume"
                         render={({ field }) => (
-                          <TextInput placeholder="Ex: 0.5" invalid={!!errors.metaVolume} className="pr-10" value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatVolume(e.target.value))} />
+                          <TextInput placeholder="Ex: 0.5" invalid={!!errors.targetVolume} className="pr-10" value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatVolume(e.target.value))} />
                         )}
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">ml</span>
                     </div>
-                    {errMsg('metaVolume')}
+                    {errMsg('targetVolume')}
                   </div>
                 </div>
               </div>
@@ -269,12 +269,12 @@ export function AddImmunotherapyPage() {
                   <div className="bg-gray-50/60 p-4">
                     <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
                       {[
-                        { label: 'Nome', value: form.nome || '—' },
+                        { label: 'Nome', value: form.name || '—' },
                         { label: 'CPF', value: form.cpf || '—' },
-                        { label: 'Telefone', value: form.telefone || '—' },
-                        { label: 'Data de Nascimento', value: form.dataNascimento ? format(new Date(form.dataNascimento + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : '—' },
-                        { label: 'Peso', value: form.peso ? `${form.peso} kg` : '—' },
-                        { label: 'Médico Responsável', value: form.medicoResponsavel || '—' },
+                        { label: 'Telefone', value: form.phone || '—' },
+                        { label: 'Data de Nascimento', value: form.birthDate ? format(new Date(form.birthDate + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : '—' },
+                        { label: 'Peso', value: form.weight ? `${form.weight} kg` : '—' },
+                        { label: 'Médico Responsável', value: form.responsibleDoctor || '—' },
                       ].map((item) => (
                         <div key={item.label} className="bg-white px-3.5 py-2.5">
                           <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{item.label}</div>
@@ -295,12 +295,12 @@ export function AddImmunotherapyPage() {
                   <div className="bg-gray-50/60 p-4">
                     <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
                       {[
-                        { label: 'Tipo', value: form.tipo || '—' },
-                        { label: 'Via Cutânea', value: form.viaCutanea || '—' },
-                        { label: 'Data de Início', value: form.dataInicio ? format(new Date(form.dataInicio + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : '—' },
-                        { label: 'Extrato', value: form.extrato || '—' },
-                        { label: 'Meta de Concentração', value: form.metaConcentracao || '—' },
-                        { label: 'Meta de Volume', value: form.metaVolume ? `${form.metaVolume} ml` : '—' },
+                        { label: 'Tipo', value: form.type || '—' },
+                        { label: 'Via Cutânea', value: form.modality || '—' },
+                        { label: 'Data de Início', value: form.startDate ? format(new Date(form.startDate + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : '—' },
+                        { label: 'Extrato', value: form.extract || '—' },
+                        { label: 'Meta de Concentração', value: form.targetConcentration || '—' },
+                        { label: 'Meta de Volume', value: form.targetVolume ? `${form.targetVolume} ml` : '—' },
                       ].map((item) => (
                         <div key={item.label} className="bg-white px-3.5 py-2.5">
                           <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{item.label}</div>
@@ -316,7 +316,7 @@ export function AddImmunotherapyPage() {
                     <Info size={14} className="text-amber-600" />
                   </div>
                   <p className="text-xs text-amber-800 leading-relaxed">
-                    Após confirmar, o protocolo será iniciado e a primeira dose será agendada para <span className="font-bold">{form.dataInicio ? format(new Date(form.dataInicio + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : 'a data de início definida'}</span>.
+                    Após confirmar, o protocolo será iniciado e a primeira dose será agendada para <span className="font-bold">{form.startDate ? format(new Date(form.startDate + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : 'a data de início definida'}</span>.
                   </p>
                 </div>
               </div>

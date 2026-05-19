@@ -19,7 +19,7 @@ const inactivationCategories = [
 export const inactivateSchema = z
   .object({
     category: z.enum(inactivationCategories),
-    outroMotivo: z.string(),
+    otherReason: z.string(),
     detail: z
       .string()
       .min(1, 'Detalhamento é obrigatório')
@@ -30,8 +30,8 @@ export const inactivateSchema = z
     if (!data.category) {
       ctx.addIssue({ path: ['category'], code: z.ZodIssueCode.custom, message: 'Selecione a categoria da inativação' })
     }
-    if (data.category === 'other' && !data.outroMotivo.trim()) {
-      ctx.addIssue({ path: ['outroMotivo'], code: z.ZodIssueCode.custom, message: 'Especifique o motivo' })
+    if (data.category === 'other' && !data.otherReason.trim()) {
+      ctx.addIssue({ path: ['otherReason'], code: z.ZodIssueCode.custom, message: 'Especifique o motivo' })
     }
   })
 
@@ -39,7 +39,7 @@ export type InactivateForm = z.infer<typeof inactivateSchema>
 
 export const INACTIVATE_DEFAULTS: InactivateForm = {
   category: '',
-  outroMotivo: '',
+  otherReason: '',
   detail: '',
   expectedReturnDate: '',
 }
