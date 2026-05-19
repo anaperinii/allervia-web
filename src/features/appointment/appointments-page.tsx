@@ -38,7 +38,7 @@ export function AppointmentsPage() {
 
   const applications = useMemo(() => {
     if (!doctorFilter) return allApplications
-    const ownedIds = new Set(immunotherapies.filter((i) => i.medicoResponsavel === doctorFilter).map((i) => i.id))
+    const ownedIds = new Set(immunotherapies.filter((i) => i.responsibleDoctor === doctorFilter).map((i) => i.id))
     return allApplications.filter((a) => ownedIds.has(a.patientId))
   }, [allApplications, immunotherapies, doctorFilter])
   
@@ -67,17 +67,17 @@ export function AppointmentsPage() {
 
   const getPatientName = (patientId?: string) => {
     if (!patientId) return ''
-    return immunotherapies.find((i) => i.id === patientId)?.nome.split(' ').slice(0, 2).join(' ') || ''
+    return immunotherapies.find((i) => i.id === patientId)?.name.split(' ').slice(0, 2).join(' ') || ''
   }
 
   const getPatientFullName = (patientId?: string) => {
     if (!patientId) return ''
-    return immunotherapies.find((i) => i.id === patientId)?.nome || ''
+    return immunotherapies.find((i) => i.id === patientId)?.name || ''
   }
 
   const getPatientPhone = (patientId?: string) => {
     if (!patientId) return ''
-    return immunotherapies.find((i) => i.id === patientId)?.telefone ?? ''
+    return immunotherapies.find((i) => i.id === patientId)?.phone ?? ''
   }
 
   const openWhatsApp = (phone: string) => {
@@ -421,8 +421,8 @@ export function AppointmentsPage() {
                 <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Paciente</label>
                 <Select defaultValue="">
                   <option value="" disabled>Selecione o paciente</option>
-                  {immunotherapies.filter((i) => i.status === 'ativo').map((i) => (
-                    <option key={i.id} value={i.id}>{i.nome}</option>
+                  {immunotherapies.filter((i) => i.status === 'active').map((i) => (
+                    <option key={i.id} value={i.id}>{i.name}</option>
                   ))}
                 </Select>
               </div>

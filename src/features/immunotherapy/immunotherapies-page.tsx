@@ -42,14 +42,14 @@ export function ImmunotherapiesPage() {
   const {
     immunotherapies,
     searchTerm,
-    tipoFilter,
-    cicloFilter,
-    showInativas,
+    typeFilter,
+    intervalFilter,
+    showInactive,
     currentPage,
     setSearchTerm,
-    setTipoFilter,
-    setCicloFilter,
-    setShowInativas,
+    setTypeFilter,
+    setIntervalFilter,
+    setShowInactive,
     setCurrentPage,
   } = useImmunotherapiesStore()
 
@@ -57,26 +57,26 @@ export function ImmunotherapiesPage() {
 
   const customTypes = useCustomTypesStore((s) => s.types)
   const tipos = useMemo(() => {
-    return Array.from(new Set([...immunotherapies.map((i) => i.tipo), ...customTypes.map((t) => t.label)]))
+    return Array.from(new Set([...immunotherapies.map((i) => i.type), ...customTypes.map((t) => t.label)]))
   }, [immunotherapies, customTypes])
 
   const ciclos = useMemo(() => {
-    return Array.from(new Set(immunotherapies.map((i) => i.cicloIntervalo.dias.toString()))).sort(
+    return Array.from(new Set(immunotherapies.map((i) => i.cycleInterval.days.toString()))).sort(
       (a, b) => Number(a) - Number(b)
     )
   }, [immunotherapies])
 
   const filtered = useMemo(() => {
     return immunotherapies.filter((item) => {
-      const matchDoctor = !doctorFilter || item.medicoResponsavel === doctorFilter
-      const matchSearch = !searchTerm || item.nome.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchTipo = tipoFilter === 'Todos os tipos' || item.tipo === tipoFilter
+      const matchDoctor = !doctorFilter || item.responsibleDoctor === doctorFilter
+      const matchSearch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchTipo = typeFilter === 'Todos os tipos' || item.type === typeFilter
       const matchCiclo =
-        cicloFilter === 'Todos os intervalos' || item.cicloIntervalo.dias.toString() === cicloFilter
-      const matchStatus = showInativas ? item.status === 'inativo' : item.status === 'ativo'
+        intervalFilter === 'Todos os intervalos' || item.cycleInterval.days.toString() === intervalFilter
+      const matchStatus = showInactive ? item.status === 'inactive' : item.status === 'active'
       return matchDoctor && matchSearch && matchTipo && matchCiclo && matchStatus
     })
-  }, [immunotherapies, searchTerm, tipoFilter, cicloFilter, showInativas, doctorFilter])
+  }, [immunotherapies, searchTerm, typeFilter, intervalFilter, showInactive, doctorFilter])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
 
@@ -87,7 +87,7 @@ export function ImmunotherapiesPage() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, tipoFilter, cicloFilter, itemsPerPage, setCurrentPage])
+  }, [searchTerm, typeFilter, intervalFilter, itemsPerPage, setCurrentPage])
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
@@ -110,8 +110,8 @@ export function ImmunotherapiesPage() {
 
             {/* Tipo filter */}
             <Select
-              value={tipoFilter}
-              onChange={(e) => setTipoFilter(e.target.value)}
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
               className="h-8 bg-white w-auto"
             >
               <option value="Todos os tipos">Todos os tipos</option>
@@ -122,8 +122,8 @@ export function ImmunotherapiesPage() {
 
             {/* Ciclo filter */}
             <Select
-              value={cicloFilter}
-              onChange={(e) => setCicloFilter(e.target.value)}
+              value={intervalFilter}
+              onChange={(e) => setIntervalFilter(e.target.value)}
               className="h-8 bg-white w-auto"
             >
               <option value="Todos os intervalos">Todos os intervalos</option>
@@ -134,10 +134,10 @@ export function ImmunotherapiesPage() {
 
             {/* Inativas toggle */}
             <button
-              onClick={() => setShowInativas(!showInativas)}
+              onClick={() => setShowInactive(!showInactive)}
               className={cn(
                 "h-8 w-8 flex items-center justify-center rounded-lg border-[1.5px] transition-all",
-                showInativas
+                showInactive
                   ? "border-brand bg-teal-50 text-brand"
                   : "border-(--border-custom) text-(--text-muted) hover:border-brand hover:text-brand hover:bg-teal-50"
               )}
@@ -187,38 +187,38 @@ export function ImmunotherapiesPage() {
                 </tr>
               ) : (
                 paginated.map((item) => {
-                  const color = getIntervalColor(item.cicloIntervalo.dias)
+                  const color = getIntervalColor(item.cycleInterval.days)
                   return (
                     <tr
                       key={item.id}
                       className="border-b border-(--border-custom) last:border-0 cursor-pointer hover:bg-teal-50/40 transition-colors duration-150"
                       onClick={() => {
                         setSelectedPatient({
-                          id: item.id, nome: item.nome, dataNascimento: '02/07/2000', idade: 25,
+                          id: item.id, nome: item.name, dataNascimento: '02/07/2000', idade: 25,
                           telefone: '(62) 99557-1423', peso: '89.7 kg', cpf: '711.905.744-89',
-                          medicoResponsavel: item.medicoResponsavel, status: item.status === 'ativo' ? 'ativo' as const : 'inativo' as const,
-                          tipoImunoterapia: item.tipo, inicioInducao: '01/01/2020', inicioManutencao: null,
+                          medicoResponsavel: item.responsibleDoctor, status: item.status === 'active' ? 'ativo' as const : 'inativo' as const,
+                          tipoImunoterapia: item.type, inicioInducao: '01/01/2020', inicioManutencao: null,
                           viaAdministracao: 'Subcutânea', extrato: 'Der p 60 + der f 10% + blt 30%',
                           concentracaoVolumeMeta: '1:10 - 0,5ml', metaAtingida: false,
-                          intervaloAtual: item.cicloIntervalo.dias, dataProximaAplicacao: '21/05/2025',
-                          concentracaoDoseAtuais: item.doseConcentracao,
-                          inactivations: item.status === 'inativo' ? seedInactivationsFor(item.id, item.doseConcentracao, item.cicloIntervalo.dias) : undefined,
+                          intervaloAtual: item.cycleInterval.days, dataProximaAplicacao: '21/05/2025',
+                          concentracaoDoseAtuais: item.doseConcentration,
+                          inactivations: item.status === 'inactive' ? seedInactivationsFor(item.id, item.doseConcentration, item.cycleInterval.days) : undefined,
                         })
                         navigate({ to: '/patient/$patientId', params: { patientId: item.id } })
                       }}
                     >
-                      <td className={cn("px-4 py-2 text-xs font-medium", item.status === 'inativo' ? "text-(--text-muted)" : "text-(--text)")}>
+                      <td className={cn("px-4 py-2 text-xs font-medium", item.status === 'inactive' ? "text-(--text-muted)" : "text-(--text)")}>
                         <div className="flex items-center gap-2">
-                          {item.nome}
-                          {item.status === 'inativo' && <span className="text-[0.55rem] font-semibold px-1.5 py-px rounded-full bg-gray-100 text-(--text-muted) border border-gray-200">Inativo</span>}
+                          {item.name}
+                          {item.status === 'inactive' && <span className="text-[0.55rem] font-semibold px-1.5 py-px rounded-full bg-gray-100 text-(--text-muted) border border-gray-200">Inativo</span>}
                         </div>
                       </td>
                       <td className="px-4 py-2">
                         <span className="inline-block px-2 py-0.5 rounded-md bg-gray-100 text-[0.7rem] font-medium text-(--text-muted)">
-                          {item.tipo}
+                          {item.type}
                         </span>
                       </td>
-                      <td className="px-4 py-2 text-xs text-(--text-muted)">{item.doseConcentracao}</td>
+                      <td className="px-4 py-2 text-xs text-(--text-muted)">{item.doseConcentration}</td>
                       <td className="px-4 py-2">
                         <span
                           className="inline-flex items-center gap-1.5 px-2 py-px rounded-full text-[0.65rem] font-semibold border"
@@ -228,7 +228,7 @@ export function ImmunotherapiesPage() {
                             className="w-1.5 h-1.5 rounded-full shrink-0"
                             style={{ backgroundColor: color.dot }}
                           />
-                          {item.cicloIntervalo.dias} dias
+                          {item.cycleInterval.days} dias
                         </span>
                       </td>
                     </tr>

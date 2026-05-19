@@ -58,18 +58,18 @@ export function AddImmunotherapyPage() {
   }
 
   const onFinish = handleSubmit((data) => {
-    const modalidade: Immunotherapy['modalidade'] = data.viaCutanea === 'sublingual' ? 'sublingual' : 'subcutânea'
+    const isSublingual = data.viaCutanea === 'sublingual'
     const newId = `new-${Date.now()}`
     const newImm: Immunotherapy = {
       id: newId,
-      nome: data.nome.trim(),
-      telefone: data.telefone.trim(),
-      tipo: data.tipo.trim(),
-      doseConcentracao: '1:10.000 - 0,1ml',
-      cicloIntervalo: { numero: 1, dias: 7 },
-      modalidade,
-      status: 'ativo',
-      medicoResponsavel: data.medicoResponsavel.trim(),
+      name: data.nome.trim(),
+      phone: data.telefone.trim(),
+      type: data.tipo.trim(),
+      doseConcentration: '1:10.000 - 0,1ml',
+      cycleInterval: { number: 1, days: 7 },
+      modality: isSublingual ? 'sublingual' : 'subcutaneous',
+      status: 'active',
+      responsibleDoctor: data.medicoResponsavel.trim(),
     }
     addImmunotherapy(newImm)
 
@@ -89,7 +89,7 @@ export function AddImmunotherapyPage() {
       ciclo: { numero: 1, dias: 7 },
       mes: meses[mesIdx],
       ano,
-      modalidade,
+      modalidade: isSublingual ? 'sublingual' : 'subcutânea',
     }
     scheduleApplication(firstApp)
 

@@ -48,23 +48,23 @@ export function ExportReportPage() {
   const [showExportModal, setShowExportModal] = useState(false)
 
   const filtered = useMemo(() => {
-    const mod = modality === 'sub' ? 'subcutânea' : 'sublingual'
+    const mod = modality === 'sub' ? 'subcutaneous' : 'sublingual'
     return allImmunotherapies.filter((i) => {
-      const matchDoctor = !doctorFilter || i.medicoResponsavel === doctorFilter
-      return matchDoctor && i.modalidade === mod
+      const matchDoctor = !doctorFilter || i.responsibleDoctor === doctorFilter
+      return matchDoctor && i.modality === mod
     })
   }, [allImmunotherapies, modality, doctorFilter])
 
-  const activeFiltered = useMemo(() => filtered.filter((i) => i.status === 'ativo'), [filtered])
-  const inactiveFiltered = useMemo(() => filtered.filter((i) => i.status === 'inativo'), [filtered])
+  const activeFiltered = useMemo(() => filtered.filter((i) => i.status === 'active'), [filtered])
+  const inactiveFiltered = useMemo(() => filtered.filter((i) => i.status === 'inactive'), [filtered])
   const totalActive = activeFiltered.length
-  const inductionCount = activeFiltered.filter((i) => i.cicloIntervalo.dias === 7).length
+  const inductionCount = activeFiltered.filter((i) => i.cycleInterval.days === 7).length
   const maintenanceCount = totalActive - inductionCount
 
   const concData = useMemo(() => {
     const counts: Record<string, number> = {}
     activeFiltered.forEach((i) => {
-      const conc = i.doseConcentracao.split(' - ')[0].trim()
+      const conc = i.doseConcentration.split(' - ')[0].trim()
       counts[conc] = (counts[conc] || 0) + 1
     })
     return Object.entries(counts).map(([name, value]) => ({ name, value }))
@@ -87,7 +87,7 @@ export function ExportReportPage() {
   const typeData = useMemo(() => {
     const counts: Record<string, number> = {}
     ALL_TYPES.forEach((t) => { counts[t] = 0 })
-    activeFiltered.forEach((i) => { counts[i.tipo] = (counts[i.tipo] || 0) + 1 })
+    activeFiltered.forEach((i) => { counts[i.type] = (counts[i.type] || 0) + 1 })
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .map(([name, value]) => ({ name, value, pct: totalActive > 0 ? Math.round((value / totalActive) * 100) : 0 }))
@@ -96,7 +96,7 @@ export function ExportReportPage() {
   const volumeChartData = useMemo(() => {
     const matrix: Record<string, Record<string, number>> = {}
     activeFiltered.forEach((i) => {
-      const [conc, vol] = i.doseConcentracao.split(' - ').map((s) => s.trim())
+      const [conc, vol] = i.doseConcentration.split(' - ').map((s) => s.trim())
       if (!conc || !vol) return
       if (!matrix[conc]) matrix[conc] = {}
       matrix[conc][vol] = (matrix[conc][vol] || 0) + 1

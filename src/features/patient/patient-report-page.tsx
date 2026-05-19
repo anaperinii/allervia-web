@@ -55,7 +55,7 @@ export function PatientReportPage() {
     const targetId = selectedPatient?.id ?? patientId
     if (!targetId) return
     const patientDoctor = selectedPatient?.medicoResponsavel
-      ?? immunotherapies.find((i) => i.id === targetId)?.medicoResponsavel
+      ?? immunotherapies.find((i) => i.id === targetId)?.responsibleDoctor
     if (patientDoctor && patientDoctor !== doctorFilter) navigate({ to: '/immunotherapies' })
   }, [doctorFilter, selectedPatient, patientId, immunotherapies, navigate])
 
@@ -64,14 +64,14 @@ export function PatientReportPage() {
     const imm = immunotherapies.find((i) => i.id === patientId)
     if (!imm) return null
     return {
-      id: imm.id, nome: imm.nome, dataNascimento: '02/07/2000', idade: 25,
+      id: imm.id, nome: imm.name, dataNascimento: '02/07/2000', idade: 25,
       telefone: '(62) 99557-1423', peso: '89.7 kg', cpf: '711.905.744-89',
-      medicoResponsavel: imm.medicoResponsavel, status: imm.status === 'ativo' ? 'ativo' as const : 'inativo' as const,
-      tipoImunoterapia: imm.tipo, inicioInducao: '01/01/2020', inicioManutencao: null,
+      medicoResponsavel: imm.responsibleDoctor, status: imm.status === 'active' ? 'ativo' as const : 'inativo' as const,
+      tipoImunoterapia: imm.type, inicioInducao: '01/01/2020', inicioManutencao: null,
       viaAdministracao: 'Subcutânea', extrato: 'Der p 60 + der f 10% + blt 30%',
       concentracaoVolumeMeta: '1:10 - 0,5ml', metaAtingida: false,
-      intervaloAtual: imm.cicloIntervalo.dias, dataProximaAplicacao: '21/05/2025',
-      concentracaoDoseAtuais: imm.doseConcentracao,
+      intervaloAtual: imm.cycleInterval.days, dataProximaAplicacao: '21/05/2025',
+      concentracaoDoseAtuais: imm.doseConcentration,
     }
   })()
 

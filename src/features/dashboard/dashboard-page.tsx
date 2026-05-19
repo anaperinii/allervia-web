@@ -22,7 +22,7 @@ export function DashboardPage() {
   useEffect(() => { if (!canViewDashboard) navigate({ to: '/immunotherapies' }) }, [canViewDashboard, navigate])
 
   const immunotherapies = useMemo(
-    () => doctorFilter ? allImmunotherapies.filter((i) => i.medicoResponsavel === doctorFilter) : allImmunotherapies,
+    () => doctorFilter ? allImmunotherapies.filter((i) => i.responsibleDoctor === doctorFilter) : allImmunotherapies,
     [allImmunotherapies, doctorFilter]
   )
 
@@ -52,27 +52,27 @@ export function DashboardPage() {
     )
   }
 
-  const tipos = useMemo(() => Array.from(new Set(immunotherapies.map((i) => i.tipo))), [immunotherapies])
+  const tipos = useMemo(() => Array.from(new Set(immunotherapies.map((i) => i.type))), [immunotherapies])
 
   const filtered = useMemo(() => {
-    const mod = modality === 'sub' ? 'subcutânea' : 'sublingual'
+    const mod = modality === 'sub' ? 'subcutaneous' : 'sublingual'
     return immunotherapies.filter((i) => {
-      const matchMod = i.modalidade === mod
-      const matchTipo = tipoFilter === 'Todos' || i.tipo === tipoFilter
+      const matchMod = i.modality === mod
+      const matchTipo = tipoFilter === 'Todos' || i.type === tipoFilter
       return matchMod && matchTipo
     })
   }, [immunotherapies, modality, tipoFilter])
 
-  const activeFiltered = useMemo(() => filtered.filter((i) => i.status === 'ativo'), [filtered])
-  const inactiveFiltered = useMemo(() => filtered.filter((i) => i.status === 'inativo'), [filtered])
+  const activeFiltered = useMemo(() => filtered.filter((i) => i.status === 'active'), [filtered])
+  const inactiveFiltered = useMemo(() => filtered.filter((i) => i.status === 'inactive'), [filtered])
   const totalPatients = activeFiltered.length
-  const induction = activeFiltered.filter((i) => i.cicloIntervalo.dias === 7).length
+  const induction = activeFiltered.filter((i) => i.cycleInterval.days === 7).length
   const maintenance = totalPatients - induction
 
   const concData = useMemo(() => {
     const counts: Record<string, number> = {}
     activeFiltered.forEach((i) => {
-      const conc = i.doseConcentracao.split(' - ')[0].trim()
+      const conc = i.doseConcentration.split(' - ')[0].trim()
       counts[conc] = (counts[conc] || 0) + 1
     })
     return Object.entries(counts).map(([name, value]) => ({ name, value }))
@@ -96,7 +96,7 @@ export function DashboardPage() {
   const typeData = useMemo(() => {
     const counts: Record<string, number> = {}
     allTypes.forEach((t) => { counts[t] = 0 })
-    activeFiltered.forEach((i) => { counts[i.tipo] = (counts[i.tipo] || 0) + 1 })
+    activeFiltered.forEach((i) => { counts[i.type] = (counts[i.type] || 0) + 1 })
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .map(([name, value]) => ({ name, value, pct: totalPatients > 0 ? Math.round((value / totalPatients) * 100) : 0 }))

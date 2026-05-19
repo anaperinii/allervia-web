@@ -85,17 +85,17 @@ export function PatientEvolutionPage() {
 
   const handleSelect = (item: typeof immunotherapies[0]) => {
     setSelected(item)
-    setSearch(item.nome)
+    setSearch(item.name)
     setShowSuggestions(false)
     setStorePatient({
-      id: item.id, nome: item.nome, dataNascimento: '02/07/2000', idade: 25,
+      id: item.id, nome: item.name, dataNascimento: '02/07/2000', idade: 25,
       telefone: '(62) 99557-1423', peso: '89.7 kg', cpf: '711.905.744-89',
       medicoResponsavel: 'Dra. Karina Martins', status: 'ativo',
-      tipoImunoterapia: item.tipo, inicioInducao: '01/01/2020', inicioManutencao: null,
+      tipoImunoterapia: item.type, inicioInducao: '01/01/2020', inicioManutencao: null,
       viaAdministracao: 'Subcutânea', extrato: 'Der p 60 + der f 10% + blt 30%',
       concentracaoVolumeMeta: '1:10 - 0,5ml', metaAtingida: false,
-      intervaloAtual: item.cicloIntervalo.dias, dataProximaAplicacao: '21/05/2025',
-      concentracaoDoseAtuais: item.doseConcentracao,
+      intervaloAtual: item.cycleInterval.days, dataProximaAplicacao: '21/05/2025',
+      concentracaoDoseAtuais: item.doseConcentration,
     })
   }
 
@@ -162,7 +162,7 @@ export function PatientEvolutionPage() {
 
   const filtered = useMemo(() => {
     if (!search) return immunotherapies.slice(0, 8)
-    return immunotherapies.filter((i) => i.nome.toLowerCase().includes(search.toLowerCase()))
+    return immunotherapies.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()))
   }, [search, immunotherapies])
 
   useEffect(() => { setHighlightedIndex(-1) }, [filtered.length, showSuggestions])
@@ -192,7 +192,7 @@ export function PatientEvolutionPage() {
   }
 
   const handleContinue = async () => {
-    if (step === 0 && (!selectedPatient || selectedPatient.status === 'inativo')) return
+    if (step === 0 && (!selectedPatient || selectedPatient.status === 'inactive')) return
     if (step === 1) {
       const ok = await trigger([...STEP_1_FIELDS])
       if (!ok) return
@@ -267,12 +267,12 @@ export function PatientEvolutionPage() {
       userRole: currentUser.role,
       userRegistration: currentUser.registration,
       patientId: selectedPatient.id,
-      patientName: selectedPatient.nome,
+      patientName: selectedPatient.name,
       action: 'apply_dose',
       description: `Aplicou ${doseStr} em ${dataRealizada} (ciclo ${ciclo} · intervalo ${interval} dias) · responsável: ${data.responsavel}`,
     })
 
-    navigate({ to: '/immunotherapies', search: { success: true, patientName: selectedPatient.nome } })
+    navigate({ to: '/immunotherapies', search: { success: true, patientName: selectedPatient.name } })
   })
 
   const handleEnterKey = (e: React.KeyboardEvent) => {
@@ -334,8 +334,8 @@ export function PatientEvolutionPage() {
                           onMouseEnter={() => setHighlightedIndex(idx)}
                           className={cn("w-full text-left px-4 py-2.5 transition-colors flex items-center justify-between", highlightedIndex === idx ? "bg-teal-50" : "hover:bg-teal-50")}
                         >
-                          <span className="text-xs font-medium text-(--text)">{p.nome}</span>
-                          <span className="text-[0.65rem] text-(--text-muted)">{p.tipo}</span>
+                          <span className="text-xs font-medium text-(--text)">{p.name}</span>
+                          <span className="text-[0.65rem] text-(--text-muted)">{p.type}</span>
                         </button>
                       ))}
                     </div>
@@ -345,16 +345,16 @@ export function PatientEvolutionPage() {
                   <div className="border border-(--border-custom) rounded-xl mt-4 overflow-hidden">
                     <div className="px-4 py-3.5 border-b border-(--border-custom) flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-sm font-bold text-white shrink-0">
-                        {selectedPatient.nome.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
+                        {selectedPatient.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-bold text-(--text)">{selectedPatient.nome}</div>
+                        <div className="text-sm font-bold text-(--text)">{selectedPatient.name}</div>
                         <div className="text-[0.7rem] text-(--text-muted)">
                           25 anos · 89.7 kg · Dra. Karina Martins
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 text-[0.6rem] font-semibold border border-teal-200">{selectedPatient.tipo}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 text-[0.6rem] font-semibold border border-teal-200">{selectedPatient.type}</span>
                         {treatmentTime && <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 text-[0.6rem] font-medium border border-amber-200">{treatmentTime}</span>}
                       </div>
                     </div>
@@ -406,7 +406,7 @@ export function PatientEvolutionPage() {
                     </div>
                   </div>
                 )}
-                {selectedPatient && selectedPatient.status === 'inativo' && (
+                {selectedPatient && selectedPatient.status === 'inactive' && (
                   <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 rounded-lg px-3.5 py-3 mt-3">
                     <Info size={14} className="text-red-500 shrink-0" />
                     <p className="text-xs text-red-700">Este paciente está <span className="font-semibold">inativo</span>. Não é possível registrar uma evolução para pacientes inativos.</p>
@@ -780,7 +780,7 @@ export function PatientEvolutionPage() {
                 tone="brand"
                 variant="solid"
                 onClick={handleContinue}
-                disabled={step === 0 && (!selectedPatient || selectedPatient.status === 'inativo')}
+                disabled={step === 0 && (!selectedPatient || selectedPatient.status === 'inactive')}
               >
                 Continuar
               </Button>
