@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {} from '@tanstack/react-router'
 import { ArrowLeft, Contrast, MousePointer, Eye } from 'lucide-react'
-import { IconButton, Switch } from "@/shared/ui"
+import { IconButton, Switch } from "@/shared/components"
 
 export function AccessibilityPage() {
   const [highContrast, setHighContrast] = useState(false)

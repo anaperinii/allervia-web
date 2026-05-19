@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { usePatientStore } from '@/features/patient/patient-store'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useCan, useDoctorFilter } from '@/features/user/user-store'
+import { usePatientStore } from '@/features/patient/stores/patient-store'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useHasPermission, useDoctorFilter } from '@/shared/identity/user-store'
 import { Plus, ChevronLeft, ChevronRight, ExternalLink, CheckCircle, Calendar, Phone, Clock, Syringe, User } from 'lucide-react'
-import type { Application } from '@/features/patient/patient-store'
+import type { Application } from '@/features/patient/stores/patient-store'
 import { cn } from '@/shared/lib/utils'
-import { Modal, Button, Toast, SegmentedControl, TextInput, Select } from '@/shared/ui'
+import { Modal, Button, Toast, SegmentedControl, TextInput, Select } from '@/shared/components'
 import {
   format,
   startOfWeek,
@@ -22,19 +22,12 @@ import {
   subMonths,
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-
-const INTERVAL_COLORS: Record<number, { bg: string; text: string; dot: string }> = {
-  7: { bg: '#FDECF0', text: '#E8768E', dot: '#E8768E' },
-  14: { bg: '#FDEEE8', text: '#E8766A', dot: '#E8766A' },
-  21: { bg: '#DBEAFE', text: '#2563EB', dot: '#2563EB' },
-  28: { bg: '#EDE9FE', text: '#7C3AED', dot: '#7C3AED' },
-}
-const DEFAULT_COLOR = { bg: '#F3F4F6', text: '#374151', dot: '#6B7280' }
+import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 
 export function AppointmentsPage() {
   const { applications: allApplications } = usePatientStore()
   const { immunotherapies } = useImmunotherapiesStore()
-  const canNewAppointment = useCan('new_appointment')
+  const canNewAppointment = useHasPermission('new_appointment')
   const doctorFilter = useDoctorFilter()
   const navigate = useNavigate()
 
@@ -45,9 +38,10 @@ export function AppointmentsPage() {
 
   const applications = useMemo(() => {
     if (!doctorFilter) return allApplications
-    const ownedIds = new Set(immunotherapies.filter((i) => i.medicoResponsavel === doctorFilter).map((i) => i.id))
+    const ownedIds = new Set(immunotherapies.filter((i) => i.responsibleDoctor === doctorFilter).map((i) => i.id))
     return allApplications.filter((a) => ownedIds.has(a.patientId))
   }, [allApplications, immunotherapies, doctorFilter])
+  
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -73,15 +67,18 @@ export function AppointmentsPage() {
 
   const getPatientName = (patientId?: string) => {
     if (!patientId) return ''
-    return immunotherapies.find((i) => i.id === patientId)?.nome.split(' ').slice(0, 2).join(' ') || ''
+    return immunotherapies.find((i) => i.id === patientId)?.name.split(' ').slice(0, 2).join(' ') || ''
   }
 
   const getPatientFullName = (patientId?: string) => {
     if (!patientId) return ''
-    return immunotherapies.find((i) => i.id === patientId)?.nome || ''
+    return immunotherapies.find((i) => i.id === patientId)?.name || ''
   }
 
-  const getPatientPhone = () => '(62) 99557-1423'
+  const getPatientPhone = (patientId?: string) => {
+    if (!patientId) return ''
+    return immunotherapies.find((i) => i.id === patientId)?.phone ?? ''
+  }
 
   const openWhatsApp = (phone: string) => {
     const digits = phone.replace(/\D/g, '')
@@ -121,7 +118,7 @@ export function AppointmentsPage() {
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        {/* Header */}
+
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-(--text)">Agendamentos</h1>
           {canNewAppointment && (
@@ -139,7 +136,6 @@ export function AppointmentsPage() {
           )}
         </div>
 
-        {/* Nav bar */}
         <div className="border-b border-(--border-custom) px-5 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button onClick={goToPrev} className="h-7 w-7 flex items-center justify-center rounded-md border border-(--border-custom) text-(--text-muted) hover:border-brand hover:text-brand transition-all">
@@ -165,7 +161,6 @@ export function AppointmentsPage() {
           />
         </div>
 
-        {/* Calendar grid */}
         <div className="flex-1 overflow-auto">
           {viewMode === 'week' ? (
             <div className="grid grid-cols-7 h-full">
@@ -183,7 +178,7 @@ export function AppointmentsPage() {
                       selected && !today && 'bg-teal-50/50',
                     )}
                   >
-                    {/* Top accent line for today */}
+          
                     {today && (
                       <div className="absolute top-0 left-0 right-0 h-0.75 bg-brand rounded-b-sm" />
                     )}
@@ -231,7 +226,7 @@ export function AppointmentsPage() {
                         selected && 'ring-2 ring-brand ring-inset',
                       )}
                     >
-                      {/* Top accent line for today */}
+
                       {today && (
                         <div className="absolute top-0 left-0 right-0 h-0.5 bg-brand" />
                       )}
@@ -255,7 +250,6 @@ export function AppointmentsPage() {
           )}
         </div>
 
-        {/* Selected day sidebar */}
         {selectedDayApps.length > 0 && (
           <div className="border-t border-(--border-custom) px-5 py-3">
             <div className="flex items-center justify-between mb-2">
@@ -271,7 +265,7 @@ export function AppointmentsPage() {
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {selectedDayApps.map((app) => {
-                const color = INTERVAL_COLORS[app.ciclo.dias] || DEFAULT_COLOR
+                const color = getIntervalColor(app.ciclo.dias)
                 return (
                   <div key={app.id} onClick={() => setSelectedApp(app)} className="shrink-0 border border-(--border-custom) rounded-lg p-2.5 min-w-45 cursor-pointer hover:border-brand/50 hover:shadow-sm transition-all">
                     <div className="text-xs font-semibold text-(--text)">{getPatientName(app.patientId)}</div>
@@ -298,7 +292,7 @@ export function AppointmentsPage() {
         size="md"
         footer={selectedApp ? <>
           <button
-            onClick={() => sendReminder(getPatientPhone(), getPatientFullName(selectedApp.patientId).split(' ')[0], selectedApp.data, selectedApp.horaInicio)}
+            onClick={() => sendReminder(getPatientPhone(selectedApp.patientId), getPatientFullName(selectedApp.patientId).split(' ')[0], selectedApp.data, selectedApp.horaInicio)}
             className="text-[0.65rem] font-medium text-[#25D366] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none mr-auto"
           >
             <Phone size={11} />
@@ -308,7 +302,6 @@ export function AppointmentsPage() {
         </> : null}
       >
         {selectedApp && <>
-          {/* Patient info */}
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-sm font-bold text-white shrink-0">
                   {getPatientFullName(selectedApp.patientId).split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
@@ -320,10 +313,10 @@ export function AppointmentsPage() {
                   >
                     {getPatientFullName(selectedApp.patientId)}
                   </button>
-                  <div className="text-[0.65rem] text-(--text-muted)">{getPatientPhone()}</div>
+                  <div className="text-[0.65rem] text-(--text-muted)">{getPatientPhone(selectedApp.patientId)}</div>
                 </div>
                 <button
-                  onClick={() => openWhatsApp(getPatientPhone())}
+                  onClick={() => openWhatsApp(getPatientPhone(selectedApp.patientId))}
                   className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-[#25D366] text-white text-[0.65rem] font-semibold hover:bg-[#20BD5A] transition-all shrink-0"
                 >
                   <Phone size={12} />
@@ -331,7 +324,6 @@ export function AppointmentsPage() {
                 </button>
               </div>
 
-              {/* Details grid */}
               <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
                 <div className="bg-white px-3.5 py-2.5">
                   <div className="flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
@@ -357,8 +349,8 @@ export function AppointmentsPage() {
                 <div className="bg-white px-3.5 py-2.5">
                   <div className="text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">Intervalo</div>
                   <div className="text-xs font-medium text-(--text)">
-                    <span className="inline-flex items-center gap-1 px-2 py-px rounded-full text-[0.6rem] font-semibold border" style={{ backgroundColor: (INTERVAL_COLORS[selectedApp.ciclo.dias] || DEFAULT_COLOR).bg, color: (INTERVAL_COLORS[selectedApp.ciclo.dias] || DEFAULT_COLOR).text, borderColor: (INTERVAL_COLORS[selectedApp.ciclo.dias] || DEFAULT_COLOR).dot + '30' }}>
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: (INTERVAL_COLORS[selectedApp.ciclo.dias] || DEFAULT_COLOR).dot }} />
+                    <span className="inline-flex items-center gap-1 px-2 py-px rounded-full text-[0.6rem] font-semibold border" style={{ backgroundColor: (getIntervalColor(selectedApp.ciclo.dias)).bg, color: (getIntervalColor(selectedApp.ciclo.dias)).text, borderColor: (getIntervalColor(selectedApp.ciclo.dias)).dot + '30' }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: (getIntervalColor(selectedApp.ciclo.dias)).dot }} />
                       {selectedApp.ciclo.dias} dias
                     </span>
                   </div>
@@ -380,7 +372,6 @@ export function AppointmentsPage() {
                 </div>
               </div>
 
-          {/* Google Calendar sync status */}
           {googleConnected && (
             <div className="flex items-center gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2">
               <Calendar size={13} className="text-brand shrink-0" />
@@ -430,8 +421,8 @@ export function AppointmentsPage() {
                 <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Paciente</label>
                 <Select defaultValue="">
                   <option value="" disabled>Selecione o paciente</option>
-                  {immunotherapies.filter((i) => i.status === 'ativo').map((i) => (
-                    <option key={i.id} value={i.id}>{i.nome}</option>
+                  {immunotherapies.filter((i) => i.status === 'active').map((i) => (
+                    <option key={i.id} value={i.id}>{i.name}</option>
                   ))}
                 </Select>
               </div>

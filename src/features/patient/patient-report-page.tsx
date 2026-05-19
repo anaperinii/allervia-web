@@ -1,15 +1,15 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { usePatientStore } from '@/features/patient/patient-store'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useCan, useDoctorFilter } from '@/features/user/user-store'
-import { useAuditStore, ACTION_LABELS } from '@/features/audit/audit-store'
+import { usePatientStore } from '@/features/patient/stores/patient-store'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useHasPermission, useDoctorFilter } from '@/shared/identity/user-store'
+import { useAuditStore, ACTION_LABELS } from '@/shared/audit/audit-store'
 import { ArrowLeft, FileText, FileSpreadsheet, FileDown, Check, Download, Printer, ShieldCheck, EyeOff, FileJson, Info, CheckSquare } from 'lucide-react'
 import { jsPDF } from 'jspdf'
 import { cn } from '@/shared/lib/utils'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Modal, Button, IconButton, SegmentedControl, TextArea } from "@/shared/ui"
+import { Modal, Button, IconButton, SegmentedControl, TextArea } from "@/shared/components"
 
 const formats = [
   { id: 'pdf', label: 'PDF', icon: FileText },
@@ -38,8 +38,8 @@ export function PatientReportPage() {
   const [showExportModal, setShowExportModal] = useState(false)
   const [reportMode, setReportMode] = useState<'clinico' | 'lgpd'>('clinico')
   const [lgpdFormat, setLgpdFormat] = useState<'json' | 'csv'>('json')
-  const canLgpdPortability = useCan('lgpd_portability')
-  const canEmitReport = useCan('emit_report')
+  const canLgpdPortability = useHasPermission('lgpd_portability')
+  const canEmitReport = useHasPermission('emit_report')
   const doctorFilter = useDoctorFilter()
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export function PatientReportPage() {
     const targetId = selectedPatient?.id ?? patientId
     if (!targetId) return
     const patientDoctor = selectedPatient?.medicoResponsavel
-      ?? immunotherapies.find((i) => i.id === targetId)?.medicoResponsavel
+      ?? immunotherapies.find((i) => i.id === targetId)?.responsibleDoctor
     if (patientDoctor && patientDoctor !== doctorFilter) navigate({ to: '/immunotherapies' })
   }, [doctorFilter, selectedPatient, patientId, immunotherapies, navigate])
 
@@ -64,14 +64,14 @@ export function PatientReportPage() {
     const imm = immunotherapies.find((i) => i.id === patientId)
     if (!imm) return null
     return {
-      id: imm.id, nome: imm.nome, dataNascimento: '02/07/2000', idade: 25,
+      id: imm.id, nome: imm.name, dataNascimento: '02/07/2000', idade: 25,
       telefone: '(62) 99557-1423', peso: '89.7 kg', cpf: '711.905.744-89',
-      medicoResponsavel: imm.medicoResponsavel, status: imm.status === 'ativo' ? 'ativo' as const : 'inativo' as const,
-      tipoImunoterapia: imm.tipo, inicioInducao: '01/01/2020', inicioManutencao: null,
+      medicoResponsavel: imm.responsibleDoctor, status: imm.status === 'active' ? 'ativo' as const : 'inativo' as const,
+      tipoImunoterapia: imm.type, inicioInducao: '01/01/2020', inicioManutencao: null,
       viaAdministracao: 'Subcutânea', extrato: 'Der p 60 + der f 10% + blt 30%',
       concentracaoVolumeMeta: '1:10 - 0,5ml', metaAtingida: false,
-      intervaloAtual: imm.cicloIntervalo.dias, dataProximaAplicacao: '21/05/2025',
-      concentracaoDoseAtuais: imm.doseConcentracao,
+      intervaloAtual: imm.cycleInterval.days, dataProximaAplicacao: '21/05/2025',
+      concentracaoDoseAtuais: imm.doseConcentration,
     }
   })()
 

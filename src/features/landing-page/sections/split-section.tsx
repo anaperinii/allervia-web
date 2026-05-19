@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { Eye, Dna, Zap, Map } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { Reveal } from '@/shared/components'
 
 interface SplitFeature {
   icon: LucideIcon
@@ -24,7 +25,7 @@ export function SplitSection() {
       {/* Bottom seam (continues into AiSection) */}
       <div className="pointer-events-none absolute -bottom-28 -left-16 w-95 h-95 rounded-full bg-linear-to-br from-cyan-200/20 to-teal-300/15 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 -right-24 w-100 h-100 rounded-full bg-teal-200/20 blur-3xl" />
-    <div id="about" className="reveal grid grid-cols-1 lg:grid-cols-2 gap-[5%] items-center bg-(--bg2) rounded-4xl p-6 sm:p-8 lg:p-16 mx-[5%] relative">
+    <Reveal id="about" className="grid grid-cols-1 lg:grid-cols-2 gap-[5%] items-center bg-(--bg2) rounded-4xl p-6 sm:p-8 lg:p-16 mx-[5%] relative">
       {/* Visual panel */}
       <div className="bg-linear-to-br from-teal-500 to-cyan-400 rounded-3xl p-8 sm:p-10 min-h-70 sm:min-h-80 flex flex-col justify-between relative overflow-hidden">
         {/* Decorative waves */}
@@ -79,7 +80,7 @@ export function SplitSection() {
           )
         })}
       </div>
-    </div>
+    </Reveal>
     </section>
   )
 }

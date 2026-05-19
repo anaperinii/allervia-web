@@ -3,9 +3,10 @@ import { useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, FileText, FileSpreadsheet, FileDown, Check, Settings, ShieldCheck, EyeOff } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer } from 'recharts'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/immunotherapies-store'
-import { useCan, useDoctorFilter } from '@/features/user/user-store'
-import { Modal, Button, IconButton, TextInput, Select } from "@/shared/ui"
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useHasPermission, useDoctorFilter } from '@/shared/identity/user-store'
+import { Modal, Button, IconButton, TextInput, Select } from "@/shared/components"
+import { CONC_COLORS, PHASE_COLORS, STATUS_COLORS, TYPE_COLORS, VOL_LEGEND, VOLUME_KEYS, ALL_TYPES } from '@/features/dashboard/constants/chart-colors'
 
 const formats = [
   { id: 'pdf', label: 'PDF', icon: FileText },
@@ -23,22 +24,10 @@ const chartOptions = [
   { id: 'volume', label: 'Volume vs Concentração' },
 ]
 
-const CONC_COLORS: Record<string, string> = { '1:10.000': '#B6F2EC', '1:1.000': '#2CD3C1', '1:100': '#18C1CB', '1:10': '#0E99A3' }
-const PHASE_COLORS = { 'Indução': '#18C1CB', 'Manutenção': '#A78BFA' }
-const STATUS_COLORS = { 'Ativas': '#2CD3C1', 'Interrompidas': '#F4845F', 'Concluídas': '#22DD44' }
-const TYPE_COLORS = ['#0E99A3', '#18C1CB', '#2CD3C1', '#B6F2EC', '#3F98AF']
-const VOL_LEGEND = [
-  { label: '0,1ml', color: '#B6F2EC' }, { label: '0,2ml', color: '#2CD3C1' },
-  { label: '0,4ml', color: '#18C1CB' }, { label: '0,8ml', color: '#0E99A3' }, { label: '0,5ml', color: '#A78BFA' },
-]
-
-const VOLUME_KEYS = ['0,1ml', '0,2ml', '0,4ml', '0,5ml', '0,8ml'] as const
-const ALL_TYPES = ['Gramíneas', 'Ácaros', 'Cão e Gato', 'Cândida', 'Herpes']
-
 export function ExportReportPage() {
   const navigate = useNavigate()
   const { immunotherapies: allImmunotherapies } = useImmunotherapiesStore()
-  const canViewDashboard = useCan('view_dashboard')
+  const canViewDashboard = useHasPermission('view_dashboard')
   const doctorFilter = useDoctorFilter()
 
   useEffect(() => { if (!canViewDashboard) navigate({ to: '/immunotherapies' }) }, [canViewDashboard, navigate])
@@ -59,23 +48,23 @@ export function ExportReportPage() {
   const [showExportModal, setShowExportModal] = useState(false)
 
   const filtered = useMemo(() => {
-    const mod = modality === 'sub' ? 'subcutânea' : 'sublingual'
+    const mod = modality === 'sub' ? 'subcutaneous' : 'sublingual'
     return allImmunotherapies.filter((i) => {
-      const matchDoctor = !doctorFilter || i.medicoResponsavel === doctorFilter
-      return matchDoctor && i.modalidade === mod
+      const matchDoctor = !doctorFilter || i.responsibleDoctor === doctorFilter
+      return matchDoctor && i.modality === mod
     })
   }, [allImmunotherapies, modality, doctorFilter])
 
-  const activeFiltered = useMemo(() => filtered.filter((i) => i.status === 'ativo'), [filtered])
-  const inactiveFiltered = useMemo(() => filtered.filter((i) => i.status === 'inativo'), [filtered])
+  const activeFiltered = useMemo(() => filtered.filter((i) => i.status === 'active'), [filtered])
+  const inactiveFiltered = useMemo(() => filtered.filter((i) => i.status === 'inactive'), [filtered])
   const totalActive = activeFiltered.length
-  const inductionCount = activeFiltered.filter((i) => i.cicloIntervalo.dias === 7).length
+  const inductionCount = activeFiltered.filter((i) => i.cycleInterval.days === 7).length
   const maintenanceCount = totalActive - inductionCount
 
   const concData = useMemo(() => {
     const counts: Record<string, number> = {}
     activeFiltered.forEach((i) => {
-      const conc = i.doseConcentracao.split(' - ')[0].trim()
+      const conc = i.doseConcentration.split(' - ')[0].trim()
       counts[conc] = (counts[conc] || 0) + 1
     })
     return Object.entries(counts).map(([name, value]) => ({ name, value }))
@@ -98,7 +87,7 @@ export function ExportReportPage() {
   const typeData = useMemo(() => {
     const counts: Record<string, number> = {}
     ALL_TYPES.forEach((t) => { counts[t] = 0 })
-    activeFiltered.forEach((i) => { counts[i.tipo] = (counts[i.tipo] || 0) + 1 })
+    activeFiltered.forEach((i) => { counts[i.type] = (counts[i.type] || 0) + 1 })
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .map(([name, value]) => ({ name, value, pct: totalActive > 0 ? Math.round((value / totalActive) * 100) : 0 }))
@@ -107,7 +96,7 @@ export function ExportReportPage() {
   const volumeChartData = useMemo(() => {
     const matrix: Record<string, Record<string, number>> = {}
     activeFiltered.forEach((i) => {
-      const [conc, vol] = i.doseConcentracao.split(' - ').map((s) => s.trim())
+      const [conc, vol] = i.doseConcentration.split(' - ').map((s) => s.trim())
       if (!conc || !vol) return
       if (!matrix[conc]) matrix[conc] = {}
       matrix[conc][vol] = (matrix[conc][vol] || 0) + 1

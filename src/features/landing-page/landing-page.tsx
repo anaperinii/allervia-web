@@ -7,13 +7,10 @@ import { TabsSection } from '@/features/landing-page/sections/tabs-section'
 import { PricingSection } from '@/features/landing-page/sections/pricing-section'
 import { CtaSection } from '@/features/landing-page/sections/cta-section'
 import { Footer } from '@/features/landing-page/sections/footer'
-import { useScrollReveal } from '@/shared/hooks/use-scroll-reveal'
 
 export function LandingPage() {
-  const containerRef = useScrollReveal()
-
   return (
-    <div ref={containerRef} className="min-h-screen bg-linear-to-b from-teal-50/30 via-white via-50% to-teal-50/40">
+    <div className="min-h-screen bg-linear-to-b from-teal-50/30 via-white via-50% to-teal-50/40">
       <HeroSection />
       <FeaturesGrid />
       <SplitSection />

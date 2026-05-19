@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {} from '@tanstack/react-router'
 import { ArrowLeft, Type, Layout, Contrast, MousePointer, Eye } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { IconButton, Switch } from "@/shared/ui"
+import { IconButton, Switch } from "@/shared/components"
 
 export function PersonalizationPage() {
   const [theme, setTheme] = useState('light')

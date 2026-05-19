@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {} from '@tanstack/react-router'
 import { ArrowLeft, Camera, Save } from 'lucide-react'
-import { Modal, Button, IconButton, TextInput } from "@/shared/ui"
+import { Modal, Button, IconButton, TextInput } from "@/shared/components"
 
 export function ProfilePage() {
   const [editing, setEditing] = useState(false)

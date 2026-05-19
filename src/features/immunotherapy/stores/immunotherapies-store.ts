@@ -1,0 +1,60 @@
+import { create } from 'zustand'
+
+export interface Immunotherapy {
+  id: string
+  name: string
+  phone: string
+  type: string
+  doseConcentration: string
+  cycleInterval: {
+    number: number
+    days: number
+  }
+  modality: 'subcutaneous' | 'sublingual'
+  status: 'active' | 'inactive'
+  responsibleDoctor: string
+}
+
+interface ImmunotherapiesState {
+  immunotherapies: Immunotherapy[]
+  searchTerm: string
+  typeFilter: string
+  intervalFilter: string
+  showInactive: boolean
+  currentPage: number
+  setSearchTerm: (term: string) => void
+  setTypeFilter: (type: string) => void
+  setIntervalFilter: (interval: string) => void
+  setShowInactive: (show: boolean) => void
+  setCurrentPage: (page: number) => void
+  addImmunotherapy: (imm: Immunotherapy) => void
+}
+
+export const useImmunotherapiesStore = create<ImmunotherapiesState>((set) => ({
+  immunotherapies: [
+    { id: '1', name: 'Bárbara Sofia Diniz', phone: '(62) 98412-3076', type: 'Gramíneas', doseConcentration: '1:10.000 - 0,1ml', cycleInterval: { number: 1, days: 7 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dra. Karina Martins' },
+    { id: '2', name: 'Camilla Martins', phone: '(62) 99127-4581', type: 'Gramíneas', doseConcentration: '1:1.000 - 0,2ml', cycleInterval: { number: 1, days: 7 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dra. Karina Martins' },
+    { id: '3', name: 'Ana Clara de Souza Martins', phone: '(62) 98765-2109', type: 'Cão e Gato', doseConcentration: '1:100 - 0,4ml', cycleInterval: { number: 1, days: 7 }, modality: 'sublingual', status: 'active', responsibleDoctor: 'Dr. André Lima' },
+    { id: '4', name: 'Valentina Bittencourt Farias', phone: '(62) 99304-8612', type: 'Cândida', doseConcentration: '1:10 - 0,8ml', cycleInterval: { number: 1, days: 7 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dr. André Lima' },
+    { id: '5', name: 'Heitor Guimarães de Assis', phone: '(62) 98556-7423', type: 'Ácaros', doseConcentration: '1:10 - 0,5ml', cycleInterval: { number: 1, days: 14 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dra. Karina Martins' },
+    { id: '6', name: 'Caroline Ferreira de Abreu', phone: '(62) 99557-1423', type: 'Herpes', doseConcentration: '1:10 - 0,5ml', cycleInterval: { number: 2, days: 21 }, modality: 'sublingual', status: 'active', responsibleDoctor: 'Dr. André Lima' },
+    { id: '7', name: 'Marta Gabriela de Sousa', phone: '(62) 98213-9054', type: 'Gramíneas', doseConcentration: '1:10 - 0,5ml', cycleInterval: { number: 3, days: 28 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dr. André Lima' },
+    { id: '8', name: 'Patrício Gomes Cardoso', phone: '(62) 99876-3148', type: 'Cândida', doseConcentration: '1:1.000 - 0,1ml', cycleInterval: { number: 1, days: 7 }, modality: 'sublingual', status: 'active', responsibleDoctor: 'Dr. André Lima' },
+    { id: '9', name: 'Pedro Luccas Pereira', phone: '(62) 98432-5167', type: 'Gramíneas', doseConcentration: '1:100 - 0,2ml', cycleInterval: { number: 1, days: 7 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dra. Karina Martins' },
+    // Inativos
+    { id: '10', name: 'Lucas Ferreira Lima', phone: '(62) 99654-2018', type: 'Ácaros', doseConcentration: '1:100 - 0,4ml', cycleInterval: { number: 1, days: 7 }, modality: 'subcutaneous', status: 'inactive', responsibleDoctor: 'Dra. Karina Martins' },
+    { id: '11', name: 'Juliana Mendes Costa', phone: '(62) 98708-3592', type: 'Gramíneas', doseConcentration: '1:10 - 0,5ml', cycleInterval: { number: 2, days: 14 }, modality: 'subcutaneous', status: 'inactive', responsibleDoctor: 'Dra. Karina Martins' },
+    { id: '12', name: 'Roberto Alves Neto', phone: '(62) 99245-7081', type: 'Cândida', doseConcentration: '1:1.000 - 0,2ml', cycleInterval: { number: 1, days: 7 }, modality: 'sublingual', status: 'inactive', responsibleDoctor: 'Dr. André Lima' },
+  ],
+  searchTerm: '',
+  typeFilter: 'Todos os tipos',
+  intervalFilter: 'Todos os intervalos',
+  showInactive: false,
+  currentPage: 1,
+  setSearchTerm: (term) => set({ searchTerm: term }),
+  setTypeFilter: (type) => set({ typeFilter: type }),
+  setIntervalFilter: (interval) => set({ intervalFilter: interval }),
+  setShowInactive: (show) => set({ showInactive: show }),
+  setCurrentPage: (page) => set({ currentPage: page }),
+  addImmunotherapy: (imm) => set((state) => ({ immunotherapies: [imm, ...state.immunotherapies] })),
+}))

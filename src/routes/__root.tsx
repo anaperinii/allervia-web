@@ -2,7 +2,7 @@ import { createRootRoute, Outlet, useLocation } from '@tanstack/react-router'
 import { Header } from '@/layout/header'
 import { Sidebar } from '@/layout/sidebar'
 import { useState, useEffect } from 'react'
-import { useSidebarStore } from '@/layout/sidebar-store'
+import { useSidebarStore } from '@/layout/stores/sidebar-store'
 import { cn } from '@/shared/lib/utils'
 
 const publicRoutes = ['/', '/login', '/register', '/trial', '/forgot-password']

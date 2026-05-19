@@ -1,6 +1,6 @@
 import { Check, Zap, Building, Crown } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { LandingCTA } from '@/features/landing-page/_ui'
+import { MarketingCTA, Reveal } from '@/shared/components'
 
 const plans = [
   {
@@ -48,7 +48,7 @@ export function PricingSection() {
       {/* Bottom seam (continues into TestimonialsSection) */}
       <div className="pointer-events-none absolute -bottom-32 -left-16 w-95 h-95 rounded-full bg-cyan-100/25 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-28 -right-24 w-105 h-105 rounded-full bg-teal-200/20 blur-3xl" />
-      <div className="reveal mb-14 relative">
+      <Reveal className="mb-14 relative">
         <span className="inline-block text-[0.75rem] font-bold tracking-[2px] uppercase text-teal-600 bg-teal-50 border border-teal-200 px-4 py-1.5 rounded-full mb-4">
           Preços
         </span>
@@ -58,16 +58,16 @@ export function PricingSection() {
         <p className="text-base text-(--text-muted) max-w-130 leading-[1.7] mt-3">
           Comece gratuitamente e escale conforme sua demanda cresce. Sem surpresas.
         </p>
-      </div>
+      </Reveal>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {plans.map((plan) => {
           const Icon = plan.icon
           return (
-            <div
+            <Reveal
               key={plan.name}
               className={cn(
-                "reveal rounded-2xl overflow-hidden flex flex-col transition-all",
+                "rounded-2xl overflow-hidden flex flex-col transition-all",
                 plan.highlighted
                   ? "border-2 border-brand shadow-[0_8px_32px_rgba(24,193,203,0.15)] scale-[1.02]"
                   : "border border-(--border-custom)"
@@ -113,20 +113,20 @@ export function PricingSection() {
 
                 {/* CTA */}
                 <div className="mt-7">
-                  <LandingCTA to="/trial" shape="block" variant={plan.highlighted ? 'filled' : 'outline'}>
+                  <MarketingCTA to="/trial" shape="block" variant={plan.highlighted ? 'filled' : 'outline'}>
                     {plan.cta}
-                  </LandingCTA>
+                  </MarketingCTA>
                 </div>
               </div>
-            </div>
+            </Reveal>
           )
         })}
       </div>
 
       {/* Bottom note */}
-      <div className="reveal text-center mt-10 text-sm text-(--text-muted)">
+      <Reveal className="text-center mt-10 text-sm text-(--text-muted)">
         Todos os planos incluem criptografia end-to-end e conformidade com a LGPD.
-      </div>
+      </Reveal>
     </section>
   )
 }

@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { validatePassword as sharedValidatePassword, validatePasswordConfirm } from '@/shared/lib/validators'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from '@tanstack/react-router'
 import { AuthCard } from '@/features/auth/auth-card'
 import { Eye, EyeOff, Smile, CheckCircle, Mail, ShieldCheck, ArrowRight } from 'lucide-react'
-import { useEnterReveal } from '@/shared/hooks/use-enter-reveal'
-import { TextInput, Select } from '@/shared/ui'
+import { registerSchema, type RegisterForm } from '@/features/auth/schemas/register'
+import { TextInput, Select, Reveal } from '@/shared/components'
 
 const specialties = [
   'Alergologia e Imunologia',
@@ -17,44 +18,40 @@ const specialties = [
 
 type Step = 'welcome' | 'form' | 'verify' | 'done'
 
+const REGISTER_EMAIL = 'jaque.rod55@gmail.com'
+
 export function RegisterPage() {
   const [step, setStep] = useState<Step>('welcome')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [name, setName] = useState('')
-  const [email] = useState('jaque.rod55@gmail.com')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [specialty, setSpecialty] = useState('')
   const [code, setCode] = useState(['', '', '', '', '', ''])
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [codeError, setCodeError] = useState<string | null>(null)
+  const [submittedData, setSubmittedData] = useState<RegisterForm | null>(null)
 
-  const containerRef = useEnterReveal()
+  const form = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
+    mode: 'onBlur',
+    defaultValues: { name: '', password: '', confirmPassword: '', specialty: '' },
+  })
+  const password = form.watch('password')
 
   const maskedEmail = (() => {
-    const [local, domain] = email.split('@')
+    const [local, domain] = REGISTER_EMAIL.split('@')
     return `${local.slice(0, 3)}${'*'.repeat(Math.max(local.length - 3, 3))}@${domain}`
   })()
 
+  const submitForm = form.handleSubmit((data) => {
+    setSubmittedData(data)
+    setStep('verify')
+  })
 
-  const validateForm = () => {
-    const e: Record<string, string> = {}
-    if (!name.trim()) e.name = 'Nome é obrigatório'
-    else if (name.trim().length < 3) e.name = 'Nome deve ter ao menos 3 caracteres'
-    const pwErr = sharedValidatePassword(password)
-    if (pwErr) e.password = pwErr
-    const confirmErr = validatePasswordConfirm(password, confirmPassword)
-    if (confirmErr) e.confirmPassword = confirmErr
-    if (!specialty) e.specialty = 'Selecione uma especialidade'
-    setErrors(e)
-    return Object.keys(e).length === 0
-  }
-
-  const validateCode = () => {
-    const e: Record<string, string> = {}
-    if (code.join('').length !== 6) e.code = 'Insira o código completo de 6 dígitos'
-    setErrors(e)
-    return Object.keys(e).length === 0
+  const submitCode = () => {
+    if (code.join('').length !== 6) {
+      setCodeError('Insira o código completo de 6 dígitos')
+      return
+    }
+    setCodeError(null)
+    setStep('done')
   }
 
   const handleCodeChange = (index: number, value: string) => {
@@ -63,17 +60,13 @@ export function RegisterPage() {
     const newCode = [...code]
     newCode[index] = value
     setCode(newCode)
-    if (errors.code) setErrors({})
-    if (value && index < 5) {
-      const next = document.getElementById(`reg-code-${index + 1}`)
-      next?.focus()
-    }
+    if (codeError) setCodeError(null)
+    if (value && index < 5) document.getElementById(`reg-code-${index + 1}`)?.focus()
   }
 
   const handleCodeKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === 'Backspace' && !code[index] && index > 0) {
-      const prev = document.getElementById(`reg-code-${index - 1}`)
-      prev?.focus()
+      document.getElementById(`reg-code-${index - 1}`)?.focus()
     }
   }
 
@@ -82,21 +75,21 @@ export function RegisterPage() {
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
     if (pasted.length === 6) {
       setCode(pasted.split(''))
-      const last = document.getElementById('reg-code-5')
-      last?.focus()
+      document.getElementById('reg-code-5')?.focus()
     }
   }
 
+  const errors = form.formState.errors
+
   return (
-    <div ref={containerRef} className="flex flex-col min-h-screen bg-white pt-17">
+    <div className="flex flex-col min-h-screen bg-white pt-17">
       <div className="flex flex-1 items-center justify-center px-6 sm:px-8 gap-16 max-w-6xl mx-auto w-full py-10">
-        {/* Auth card — left side */}
-        <AuthCard initialSlide={1} className="reveal" style={{ transitionDelay: '0.1s' }} />
+        <Reveal delay={100}>
+          <AuthCard initialSlide={1} />
+        </Reveal>
 
-        {/* Steps */}
-        <div className="reveal flex flex-col w-full max-w-sm gap-6" style={{ transitionDelay: '0.2s' }}>
+        <Reveal delay={200} className="flex flex-col w-full max-w-sm gap-6">
 
-          {/* Step: Welcome */}
           {step === 'welcome' && (
             <>
               <div className="flex flex-col items-center text-center gap-2">
@@ -138,13 +131,11 @@ export function RegisterPage() {
                 Completar meu cadastro
                 <ArrowRight size={14} />
               </button>
-
             </>
           )}
 
-          {/* Step: Form */}
           {step === 'form' && (
-            <>
+            <form onSubmit={submitForm} className="flex flex-col gap-6" noValidate>
               <div className="flex flex-col items-center text-center gap-1.5">
                 <h1 className="font-extrabold text-2xl text-(--text)">
                   Complete seu cadastro
@@ -156,15 +147,15 @@ export function RegisterPage() {
 
               <div className="flex flex-col gap-3.5">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-(--text)/80">Nome completo</label>
+                  <label htmlFor="reg-name" className="text-xs font-medium text-(--text)/80">Nome completo</label>
                   <TextInput
+                    id="reg-name"
                     type="text"
                     placeholder="Seu nome completo"
-                    value={name}
-                    onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((er) => { const n = { ...er }; delete n.name; return n }) }}
                     invalid={!!errors.name}
+                    {...form.register('name')}
                   />
-                  {errors.name && <span className="text-[0.6rem] text-red-500">{errors.name}</span>}
+                  {errors.name && <span className="text-[0.6rem] text-red-500">{errors.name.message}</span>}
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -182,43 +173,42 @@ export function RegisterPage() {
 
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-(--text)/80">Senha</label>
+                    <label htmlFor="reg-password" className="text-xs font-medium text-(--text)/80">Senha</label>
                     <div className="relative">
                       <TextInput
+                        id="reg-password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Mín. 8 caracteres"
-                        value={password}
-                        onChange={(e) => { setPassword(e.target.value); if (errors.password) setErrors((er) => { const n = { ...er }; delete n.password; return n }) }}
                         invalid={!!errors.password}
                         className="pr-9"
+                        {...form.register('password')}
                       />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted)/60 hover:text-(--text-muted) transition-colors" tabIndex={-1}>
                         {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                       </button>
                     </div>
-                    {errors.password && <span className="text-[0.6rem] text-red-500">{errors.password}</span>}
+                    {errors.password && <span className="text-[0.6rem] text-red-500">{errors.password.message}</span>}
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-(--text)/80">Confirmar senha</label>
+                    <label htmlFor="reg-confirm" className="text-xs font-medium text-(--text)/80">Confirmar senha</label>
                     <div className="relative">
                       <TextInput
+                        id="reg-confirm"
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="Repita a senha"
-                        value={confirmPassword}
-                        onChange={(e) => { setConfirmPassword(e.target.value); if (errors.confirmPassword) setErrors((er) => { const n = { ...er }; delete n.confirmPassword; return n }) }}
                         invalid={!!errors.confirmPassword}
                         className="pr-9"
+                        {...form.register('confirmPassword')}
                       />
                       <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted)/60 hover:text-(--text-muted) transition-colors" tabIndex={-1}>
                         {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                       </button>
                     </div>
-                    {errors.confirmPassword && <span className="text-[0.6rem] text-red-500">{errors.confirmPassword}</span>}
+                    {errors.confirmPassword && <span className="text-[0.6rem] text-red-500">{errors.confirmPassword.message}</span>}
                   </div>
                 </div>
 
-                {/* Password requirements */}
                 <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3 py-2.5">
                   <div className="flex flex-col gap-1">
                     {[
@@ -238,24 +228,25 @@ export function RegisterPage() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-(--text)/80">Especialidade</label>
+                  <label htmlFor="reg-specialty" className="text-xs font-medium text-(--text)/80">Especialidade</label>
                   <Select
-                    value={specialty}
-                    onChange={(e) => { setSpecialty(e.target.value); if (errors.specialty) setErrors((er) => { const n = { ...er }; delete n.specialty; return n }) }}
+                    id="reg-specialty"
                     invalid={!!errors.specialty}
+                    {...form.register('specialty')}
                   >
                     <option value="" disabled>Selecionar</option>
                     {specialties.map((s) => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </Select>
-                  {errors.specialty && <span className="text-[0.6rem] text-red-500">{errors.specialty}</span>}
+                  {errors.specialty && <span className="text-[0.6rem] text-red-500">{errors.specialty.message}</span>}
                 </div>
               </div>
 
               <button
-                onClick={() => { if (validateForm()) setStep('verify') }}
-                className="w-full h-10 rounded-xl text-xs font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none"
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                className="w-full h-10 rounded-xl text-xs font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none disabled:opacity-50"
               >
                 Criar conta
               </button>
@@ -265,10 +256,9 @@ export function RegisterPage() {
                 <a href="#" className="text-brand no-underline hover:underline">Termos de Uso</a> e a{' '}
                 <a href="#" className="text-brand no-underline hover:underline">Política de Privacidade</a> do ImuneCare.
               </p>
-            </>
+            </form>
           )}
 
-          {/* Step: Verify */}
           {step === 'verify' && (
             <>
               <div className="flex flex-col items-center text-center gap-1.5">
@@ -294,15 +284,15 @@ export function RegisterPage() {
                       value={digit}
                       onChange={(e) => handleCodeChange(i, e.target.value)}
                       onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                      className={`w-11 h-12 rounded-xl border text-center text-lg font-bold bg-gray-50/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all ${errors.code ? 'border-red-400 bg-red-50/30' : 'border-(--border-custom)'}`}
+                      className={`w-11 h-12 rounded-xl border text-center text-lg font-bold bg-gray-50/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all ${codeError ? 'border-red-400 bg-red-50/30' : 'border-(--border-custom)'}`}
                     />
                   ))}
                 </div>
-                {errors.code && <span className="text-[0.6rem] text-red-500">{errors.code}</span>}
+                {codeError && <span className="text-[0.6rem] text-red-500">{codeError}</span>}
               </div>
 
               <button
-                onClick={() => { if (validateCode()) setStep('done') }}
+                onClick={submitCode}
                 className="w-full h-10 rounded-xl text-xs font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none"
               >
                 Verificar e ativar conta
@@ -323,8 +313,7 @@ export function RegisterPage() {
             </>
           )}
 
-          {/* Step: Done */}
-          {step === 'done' && (
+          {step === 'done' && submittedData && (
             <>
               <div className="flex flex-col items-center text-center gap-2">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 mb-1">
@@ -343,7 +332,7 @@ export function RegisterPage() {
                 <div className="px-4 py-3 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[0.7rem] text-(--text-muted)">Nome</span>
-                    <span className="text-[0.7rem] font-semibold text-(--text)">{name}</span>
+                    <span className="text-[0.7rem] font-semibold text-(--text)">{submittedData.name}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[0.7rem] text-(--text-muted)">E-mail</span>
@@ -351,7 +340,7 @@ export function RegisterPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[0.7rem] text-(--text-muted)">Especialidade</span>
-                    <span className="text-[0.7rem] font-semibold text-(--text)">{specialty}</span>
+                    <span className="text-[0.7rem] font-semibold text-(--text)">{submittedData.specialty}</span>
                   </div>
                 </div>
               </div>
@@ -366,7 +355,7 @@ export function RegisterPage() {
             </>
           )}
 
-        </div>
+        </Reveal>
       </div>
     </div>
   )

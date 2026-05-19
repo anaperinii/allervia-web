@@ -1,3 +1,5 @@
+import { Reveal } from '@/shared/components'
+
 const testimonials = [
   { quote: 'O ImuneCare transformou a gestão da nossa clínica. Antes dependíamos de planilhas — agora temos controle total dos protocolos.', name: 'Dra. Sofia Andrade', handle: '@sofia.alergista', initials: 'SA' },
   { quote: 'O cálculo automático de doses eliminou os erros manuais. Minha equipe confia muito mais no processo agora.', name: 'Dr. Marcos Rezende', handle: '@mrezende_imuno', initials: 'MR' },
@@ -37,14 +39,14 @@ export function TestimonialsSection() {
       {/* Bottom seam (continues into TabsSection) */}
       <div className="pointer-events-none absolute -bottom-28 -left-20 w-95 h-95 rounded-full bg-teal-200/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 -right-20 w-100 h-100 rounded-full bg-cyan-100/25 blur-3xl" />
-      <div className="reveal px-[5%] pb-12 relative">
+      <Reveal className="px-[5%] pb-12 relative">
         <span className="inline-block text-[0.75rem] font-bold tracking-[2px] uppercase text-teal-600 bg-teal-50 border border-teal-200 px-4 py-1.5 rounded-full mb-4">
           Depoimentos
         </span>
         <h2 className="text-[clamp(1.4rem,2.8vw,2.1rem)] font-extrabold tracking-[-0.5px] leading-[1.15] max-w-160">
           Quem usa, recomenda
         </h2>
-      </div>
+      </Reveal>
 
       <div
         className="flex gap-6 hover:paused"

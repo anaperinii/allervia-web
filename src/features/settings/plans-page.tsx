@@ -1,7 +1,7 @@
 import {} from '@tanstack/react-router'
 import { ArrowLeft, Check, Zap, Building, Crown, CreditCard, Calendar, Receipt } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { IconButton, Button } from "@/shared/ui"
+import { IconButton, Button } from "@/shared/components"
 
 const plans = [
   {

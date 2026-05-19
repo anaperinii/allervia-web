@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {} from '@tanstack/react-router'
 import { ArrowLeft, Lock, Smartphone, Eye, FileDown, UserX, LogOut, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { Modal, Button, IconButton, Switch, TextInput, MediaRow } from "@/shared/ui"
+import { Modal, Button, IconButton, Switch, TextInput, MediaRow } from "@/shared/components"
 
 const sessions = [
   { id: '1', device: 'Chrome · Windows 11', location: 'Anápolis, GO', time: 'Agora (sessão atual)', current: true },

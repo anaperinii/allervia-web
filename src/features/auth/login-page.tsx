@@ -1,51 +1,34 @@
 import { useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { AuthCard } from '@/features/auth/auth-card'
 import { Eye, EyeOff } from 'lucide-react'
-import { useEnterReveal } from '@/shared/hooks/use-enter-reveal'
-import { validateEmail } from '@/shared/lib/validators'
-import { TextInput } from '@/shared/ui'
+import { loginSchema, type LoginForm } from '@/features/auth/schemas/login'
+import { TextInput, Reveal } from '@/shared/components'
 
 export function LoginPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [touched, setTouched] = useState<Record<string, boolean>>({})
 
-  const containerRef = useEnterReveal()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    mode: 'onBlur',
+    defaultValues: { email: '', password: '' },
+  })
 
-  const touch = (field: string) => setTouched((t) => ({ ...t, [field]: true }))
-
-  const clearError = (field: string) => {
-    if (errors[field]) setErrors((prev) => { const n = { ...prev }; delete n[field]; return n })
-  }
-
-  const validate = (): boolean => {
-    const e: Record<string, string> = {}
-    const emailErr = validateEmail(email)
-    if (emailErr) e.email = emailErr
-    if (!password) e.password = 'Senha é obrigatória'
-    else if (password.length < 8) e.password = 'A senha deve ter no mínimo 8 caracteres'
-    setErrors(e)
-    setTouched({ email: true, password: true })
-    return Object.keys(e).length === 0
-  }
-
-  function handleLogin() {
-    if (!validate()) return
+  const onSubmit = handleSubmit(() => {
     navigate({ to: '/immunotherapies' })
-  }
-
-  const isInvalid = (field: string) => !!(errors[field] && touched[field])
-  const ErrMsg = ({ field }: { field: string }) =>
-    errors[field] && touched[field] ? <span className="text-[0.6rem] text-red-500 mt-0.5 block">{errors[field]}</span> : null
+  })
 
   return (
-    <div ref={containerRef} className="flex flex-col min-h-screen bg-white pt-17">
+    <div className="flex flex-col min-h-screen bg-white pt-17">
       <div className="flex flex-1 items-center justify-center px-6 sm:px-8 gap-16 max-w-6xl mx-auto w-full py-10">
-        <div className="reveal flex flex-col w-full max-w-sm gap-7" style={{ transitionDelay: '0.1s' }}>
+        <Reveal delay={100} className="flex flex-col w-full max-w-sm gap-7">
           <div className="flex flex-col items-center text-center gap-1.5">
             <h1 className="font-extrabold text-3xl text-(--text)">Bem-vindo(a) de volta</h1>
             <p className="text-sm text-(--text-muted)">
@@ -54,40 +37,33 @@ export function LoginPage() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-(--text)/80">Email</label>
+              <label htmlFor="login-email" className="text-xs font-medium text-(--text)/80">Email</label>
               <TextInput
+                id="login-email"
                 type="email"
                 placeholder="seu@email.com.br"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); clearError('email') }}
-                onBlur={() => {
-                  touch('email')
-                  const err = validateEmail(email)
-                  if (err) setErrors((p) => ({ ...p, email: err }))
-                }}
-                invalid={isInvalid('email')}
+                invalid={!!errors.email}
                 autoComplete="email"
                 maxLength={254}
+                {...register('email')}
               />
-              <ErrMsg field="email" />
+              {errors.email && <span className="text-[0.6rem] text-red-500 mt-0.5 block">{errors.email.message}</span>}
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-(--text)/80">Senha</label>
+              <label htmlFor="login-password" className="text-xs font-medium text-(--text)/80">Senha</label>
               <div className="relative">
                 <TextInput
+                  id="login-password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Insira aqui"
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); clearError('password') }}
-                  onBlur={() => touch('password')}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleLogin() }}
-                  invalid={isInvalid('password')}
+                  invalid={!!errors.password}
                   className="h-11 pr-10 text-sm"
                   autoComplete="current-password"
                   maxLength={128}
+                  {...register('password')}
                 />
                 <button
                   type="button"
@@ -99,24 +75,27 @@ export function LoginPage() {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              <ErrMsg field="password" />
+              {errors.password && <span className="text-[0.6rem] text-red-500 mt-0.5 block">{errors.password.message}</span>}
             </div>
-          </div>
 
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={handleLogin}
-              className="w-full h-10 rounded-xl text-sm font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none"
-            >
-              Log in
-            </button>
-            <div className="flex justify-end">
-              <Link to="/forgot-password" className="text-xs font-medium text-brand hover:underline no-underline">Esqueceu a senha?</Link>
+            <div className="flex flex-col gap-3">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-10 rounded-xl text-sm font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Log in
+              </button>
+              <div className="flex justify-end">
+                <Link to="/forgot-password" className="text-xs font-medium text-brand hover:underline no-underline">Esqueceu a senha?</Link>
+              </div>
             </div>
-          </div>
-        </div>
+          </form>
+        </Reveal>
 
-        <AuthCard initialSlide={0} className="reveal" style={{ transitionDelay: '0.2s' }} />
+        <Reveal delay={200}>
+          <AuthCard initialSlide={0} />
+        </Reveal>
       </div>
     </div>
   )

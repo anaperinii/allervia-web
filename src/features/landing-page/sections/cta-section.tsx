@@ -1,4 +1,4 @@
-import { LandingCTA } from '@/features/landing-page/_ui'
+import { MarketingCTA, Reveal } from '@/shared/components'
 
 export function CtaSection() {
   return (
@@ -9,7 +9,7 @@ export function CtaSection() {
       {/* Bottom corners */}
       <div className="pointer-events-none absolute -bottom-20 -left-32 w-100 h-100 rounded-full bg-cyan-200/15 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 -right-32 w-100 h-100 rounded-full bg-teal-300/10 blur-3xl" />
-      <div className="reveal relative">
+      <Reveal className="relative">
         <h2 className="text-[clamp(1.5rem,3vw,2.3rem)] font-extrabold tracking-[-0.5px] leading-[1.15] max-w-160 mx-auto mb-5 bg-[linear-gradient(135deg,var(--text),var(--color-teal-700))] bg-clip-text [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">
           Gestão imunoterápica com controle e precisão
         </h2>
@@ -17,19 +17,19 @@ export function CtaSection() {
           Comece gratuitamente. Sem cartão de crédito. Cancele quando quiser.
         </p>
         <div className="flex gap-3 justify-center flex-wrap">
-          <LandingCTA to="/trial" variant="filled">
+          <MarketingCTA to="/trial" variant="filled">
             Começar agora
-          </LandingCTA>
-          <LandingCTA
+          </MarketingCTA>
+          <MarketingCTA
             href="https://wa.me/5562995571423?text=Ol%C3%A1%21%20Gostaria%20de%20falar%20com%20um%20especialista%20do%20ImuneCare."
             target="_blank"
             rel="noopener noreferrer"
             variant="outline"
           >
             Falar com especialista
-          </LandingCTA>
+          </MarketingCTA>
         </div>
-      </div>
+      </Reveal>
     </section>
   )
 }
