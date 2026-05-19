@@ -78,7 +78,7 @@ export function PatientReportPage() {
   const patientApps = useMemo(() => {
     if (!patient) return []
     return applications.filter((a) => a.patientId === patient.id).sort((a, b) => {
-      const da = a.data.split('/'), db = b.data.split('/')
+      const da = a.date.split('/'), db = b.date.split('/')
       return new Date(+db[2], +db[1] - 1, +db[0]).getTime() - new Date(+da[2], +da[1] - 1, +da[0]).getTime()
     })
   }, [patient, applications])
@@ -91,8 +91,8 @@ export function PatientReportPage() {
     )
   }, [auditLogs, patient])
 
-  const realizedApps = patientApps.filter((a) => a.status === 'realizada')
-  const reactionsCount = realizedApps.filter((a) => a.efeitoColateral === 'Sim').length
+  const realizedApps = patientApps.filter((a) => a.status === 'completed')
+  const reactionsCount = realizedApps.filter((a) => a.sideEffect === 'yes').length
 
   const mask = (value: string) => {
     if (!anonimizar) return value
@@ -153,13 +153,13 @@ export function PatientReportPage() {
     if (selectedSections.includes('applications')) {
       lines.push('"=== HISTÓRICO DE APLICAÇÕES ==="')
       lines.push('Data,Dose,Intervalo,Reação,Responsável')
-      d.realizedApps.forEach((a) => lines.push(`"${a.data}","${a.dose}","${a.ciclo.dias}d","${a.efeitoColateral || 'Não'}","${a.responsavel || '-'}"`))
+      d.realizedApps.forEach((a) => lines.push(`"${a.date}","${a.dose}","${a.cycle.days}d","${a.sideEffect || 'Não'}","${a.administrator || '-'}"`))
       lines.push('')
     }
     if (selectedSections.includes('reactions')) {
       lines.push('"=== REAÇÕES ADVERSAS ==="')
       lines.push('Data,Dose,Medicação,Observação')
-      d.realizedApps.filter((a) => a.efeitoColateral === 'Sim').forEach((a) => lines.push(`"${a.data}","${a.dose}","${a.necessidadeMedicacao || '-'}","${(a.notaResponsavel || '').replace(/"/g, '""')}"`))
+      d.realizedApps.filter((a) => a.sideEffect === 'yes').forEach((a) => lines.push(`"${a.date}","${a.dose}","${a.medicationNeeded || '-'}","${(a.administratorNote || '').replace(/"/g, '""')}"`))
       lines.push('')
     }
     if (selectedSections.includes('progress')) {
@@ -192,7 +192,7 @@ export function PatientReportPage() {
     }
     if (selectedSections.includes('applications')) {
       rows.push(`<tr><th colspan="2" style="background:#B6F2EC;padding:6px;text-align:left;font-size:12px;">Histórico de Aplicações (${d.realizedApps.length})</th></tr>`)
-      rows.push(`<tr><td colspan="2" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tr><th style="padding:4px 8px;font-size:10px;background:#eee;">Data</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Dose</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Intervalo</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Reação</th></tr>${d.realizedApps.map((a) => `<tr><td style="padding:3px 8px;font-size:10px;">${a.data}</td><td style="padding:3px 8px;font-size:10px;">${a.dose}</td><td style="padding:3px 8px;font-size:10px;">${a.ciclo.dias}d</td><td style="padding:3px 8px;font-size:10px;">${a.efeitoColateral || 'Não'}</td></tr>`).join('')}</table></td></tr>`)
+      rows.push(`<tr><td colspan="2" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tr><th style="padding:4px 8px;font-size:10px;background:#eee;">Data</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Dose</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Intervalo</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Reação</th></tr>${d.realizedApps.map((a) => `<tr><td style="padding:3px 8px;font-size:10px;">${a.date}</td><td style="padding:3px 8px;font-size:10px;">${a.dose}</td><td style="padding:3px 8px;font-size:10px;">${a.cycle.days}d</td><td style="padding:3px 8px;font-size:10px;">${a.sideEffect || 'Não'}</td></tr>`).join('')}</table></td></tr>`)
       rows.push(`<tr><td colspan="2" style="height:8px;"></td></tr>`)
     }
     if (selectedSections.includes('progress')) {
@@ -308,10 +308,10 @@ export function PatientReportPage() {
       doc.setFontSize(9)
       d.realizedApps.forEach((a) => {
         ensureSpace(6)
-        doc.text(a.data, margin + 2, y + 4)
+        doc.text(a.date, margin + 2, y + 4)
         doc.text(a.dose, margin + 35, y + 4)
-        doc.text(`${a.ciclo.dias} dias`, margin + 100, y + 4)
-        doc.text(a.efeitoColateral || 'Não', margin + 140, y + 4)
+        doc.text(`${a.cycle.days} dias`, margin + 100, y + 4)
+        doc.text(a.sideEffect || 'Não', margin + 140, y + 4)
         doc.setDrawColor(240, 240, 240)
         doc.line(margin, y + 6, pageW - margin, y + 6)
         y += 6
@@ -329,7 +329,7 @@ export function PatientReportPage() {
         doc.text('Nenhuma reação adversa registrada.', margin, y)
         y += 6
       } else {
-        d.realizedApps.filter((a) => a.efeitoColateral === 'Sim').forEach((a) => {
+        d.realizedApps.filter((a) => a.sideEffect === 'yes').forEach((a) => {
           ensureSpace(12)
           doc.setFillColor(255, 248, 235)
           doc.rect(margin, y, pageW - margin * 2, 10, 'F')
@@ -340,10 +340,10 @@ export function PatientReportPage() {
           doc.setFontSize(9)
           doc.setFont('helvetica', 'bold')
           doc.setTextColor(180, 83, 9)
-          doc.text(`${a.data} — ${a.dose}`, margin + 3, y + 4)
+          doc.text(`${a.date} — ${a.dose}`, margin + 3, y + 4)
           doc.setFontSize(8)
           doc.setFont('helvetica', 'normal')
-          doc.text(a.necessidadeMedicacao === 'Sim' ? 'Com medicação' : 'Sem medicação', margin + 3, y + 8)
+          doc.text(a.medicationNeeded === 'yes' ? 'Com medicação' : 'Sem medicação', margin + 3, y + 8)
           y += 12
         })
       }
@@ -810,12 +810,12 @@ export function PatientReportPage() {
                           <tbody>
                             {realizedApps.slice(0, 15).map((app) => (
                               <tr key={app.id} className="border-b border-(--border-custom) last:border-0">
-                                <td className="py-1.5 text-[0.65rem] text-(--text)">{app.data}</td>
+                                <td className="py-1.5 text-[0.65rem] text-(--text)">{app.date}</td>
                                 <td className="py-1.5 text-[0.65rem] text-(--text)">{app.dose}</td>
-                                <td className="py-1.5 text-[0.65rem] text-(--text)">{app.ciclo.dias}d</td>
+                                <td className="py-1.5 text-[0.65rem] text-(--text)">{app.cycle.days}d</td>
                                 <td className="py-1.5 text-[0.65rem]">
-                                  <span className={cn("font-medium", app.efeitoColateral === 'Sim' ? "text-amber-600" : "text-green-600")}>
-                                    {app.efeitoColateral || 'Não'}
+                                  <span className={cn("font-medium", app.sideEffect === 'yes' ? "text-amber-600" : "text-green-600")}>
+                                    {app.sideEffect || 'Não'}
                                   </span>
                                 </td>
                               </tr>
@@ -836,14 +836,14 @@ export function PatientReportPage() {
                           <p className="text-[0.7rem] text-(--text-muted)">Nenhuma reação adversa registrada.</p>
                         ) : (
                           <div className="space-y-2">
-                            {realizedApps.filter((a) => a.efeitoColateral === 'Sim').map((app) => (
+                            {realizedApps.filter((a) => a.sideEffect === 'yes').map((app) => (
                               <div key={app.id} className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[0.65rem] font-semibold text-amber-700">{app.data} — {app.dose}</span>
-                                  <span className="text-[0.55rem] text-amber-600">{app.necessidadeMedicacao === 'Sim' ? 'Com medicação' : 'Sem medicação'}</span>
+                                  <span className="text-[0.65rem] font-semibold text-amber-700">{app.date} — {app.dose}</span>
+                                  <span className="text-[0.55rem] text-amber-600">{app.medicationNeeded === 'yes' ? 'Com medicação' : 'Sem medicação'}</span>
                                 </div>
-                                {app.notaResponsavel && app.notaResponsavel !== '-' && (
-                                  <div className="text-[0.6rem] text-amber-600 mt-1">{app.notaResponsavel}</div>
+                                {app.administratorNote && app.administratorNote !== '-' && (
+                                  <div className="text-[0.6rem] text-amber-600 mt-1">{app.administratorNote}</div>
                                 )}
                               </div>
                             ))}

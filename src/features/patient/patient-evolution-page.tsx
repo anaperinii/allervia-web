@@ -101,24 +101,24 @@ export function PatientEvolutionPage() {
 
   const lastApp = useMemo(() => {
     if (!selectedPatient) return null
-    const realized = applications.filter((a) => a.status === 'realizada' && a.patientId === selectedPatient.id)
+    const realized = applications.filter((a) => a.status === 'completed' && a.patientId === selectedPatient.id)
     if (!realized.length) return null
     return [...realized].sort((a, b) => {
-      const da = a.data.split('/'), db = b.data.split('/')
+      const da = a.date.split('/'), db = b.date.split('/')
       return new Date(+db[2], +db[1] - 1, +db[0]).getTime() - new Date(+da[2], +da[1] - 1, +da[0]).getTime()
     })[0]
   }, [selectedPatient, applications])
 
   const doseNumber = useMemo(() => {
     if (!selectedPatient) return 0
-    return applications.filter((a) => a.status === 'realizada' && a.patientId === selectedPatient.id).length
+    return applications.filter((a) => a.status === 'completed' && a.patientId === selectedPatient.id).length
   }, [selectedPatient, applications])
 
   const nextDose = useMemo(() => {
     if (!lastApp || !selectedPatient) return null
-    const [d, m, y] = lastApp.data.split('/')
-    const currentDose = `${lastApp.concentracaoExtrato || lastApp.dose.split(' - ')[0]} - ${lastApp.volumeAplicado || lastApp.dose.split(' - ')[1]}`
-    const currentInterval = lastApp.ciclo.dias
+    const [d, m, y] = lastApp.date.split('/')
+    const currentDose = `${lastApp.extractConcentration || lastApp.dose.split(' - ')[0]} - ${lastApp.appliedVolume || lastApp.dose.split(' - ')[1]}`
+    const currentInterval = lastApp.cycle.days
     const calc = calculateNextDose(currentDose, currentInterval)
     const nextDate = addDays(new Date(+y, +m - 1, +d), calc.interval)
     const next = parseDose(calc.dose)
@@ -224,42 +224,42 @@ export function PatientEvolutionPage() {
     const nextDateParts = plannedNext.date.split('/')
     const nextMonth = pt[parseInt(nextDateParts[1], 10) - 1]
 
-    const realizada = {
+    const completed = {
       id: `evo-${Date.now()}-r`,
       patientId: selectedPatient.id,
-      data: dataRealizada,
-      horaInicio: data.horaInicio,
-      horaFim: data.horaFim,
-      status: 'realizada' as const,
+      date: dataRealizada,
+      startTime: data.horaInicio,
+      endTime: data.horaFim,
+      status: 'completed' as const,
       dose: doseStr,
-      ciclo: { numero: ciclo, dias: interval },
-      mes: mesRealizada,
-      ano: parseInt(y, 10),
-      volumeAplicado: volStr,
-      concentracaoExtrato: data.concentracao,
-      efeitoColateral: data.efeitoColateralPos,
-      efeitosRelatados: data.efeitoColateralPos === 'Sim' ? data.efeitosRelatadosPos : undefined,
-      necessidadeMedicacao: data.necessidadeMedicacaoPos,
-      medicacoes: data.necessidadeMedicacaoPos === 'Sim' ? data.medicacoesPos : undefined,
-      responsavel: data.responsavel,
-      notaResponsavel: data.notasPos || '-',
+      cycle: { number: ciclo, days: interval },
+      month: mesRealizada,
+      year: parseInt(y, 10),
+      appliedVolume: volStr,
+      extractConcentration: data.concentracao,
+      sideEffect: data.efeitoColateralPos === 'Sim' ? 'yes' : 'no',
+      reportedEffects: data.efeitoColateralPos === 'Sim' ? data.efeitosRelatadosPos : undefined,
+      medicationNeeded: data.necessidadeMedicacaoPos === 'Sim' ? 'yes' : 'no',
+      medications: data.necessidadeMedicacaoPos === 'Sim' ? data.medicacoesPos : undefined,
+      administrator: data.responsavel,
+      administratorNote: data.notasPos || '-',
     }
 
     const nextCalc = calculateNextDose(doseStr, interval)
-    const proxima = {
+    const next = {
       id: `evo-${Date.now()}-n`,
       patientId: selectedPatient.id,
-      data: plannedNext.date,
-      horaInicio: data.horaInicio,
-      horaFim: data.horaFim,
-      status: 'agendada' as const,
+      date: plannedNext.date,
+      startTime: data.horaInicio,
+      endTime: data.horaFim,
+      status: 'scheduled' as const,
       dose: nextCalc.dose,
-      ciclo: { numero: ciclo, dias: nextCalc.interval },
-      mes: nextMonth,
-      ano: parseInt(nextDateParts[2], 10),
+      cycle: { number: ciclo, days: nextCalc.interval },
+      month: nextMonth,
+      year: parseInt(nextDateParts[2], 10),
     }
 
-    recordEvolution({ realizada, proxima })
+    recordEvolution({ completed, next })
 
     logAccess({
       userId: currentUser.id,
@@ -369,15 +369,15 @@ export function PatientEvolutionPage() {
                           </div>
                           <div>
                             <div className="text-[0.6rem] text-(--text-muted) font-medium">Volume</div>
-                            <div className="text-xs font-bold text-(--text)">{lastApp?.volumeAplicado || lastApp?.dose.split(' - ')[1] || '-'}</div>
+                            <div className="text-xs font-bold text-(--text)">{lastApp?.appliedVolume || lastApp?.dose.split(' - ')[1] || '-'}</div>
                           </div>
                           <div>
                             <div className="text-[0.6rem] text-(--text-muted) font-medium">Concentração</div>
-                            <div className="text-xs font-bold text-(--text)">{lastApp?.concentracaoExtrato || lastApp?.dose.split(' - ')[0] || '-'}</div>
+                            <div className="text-xs font-bold text-(--text)">{lastApp?.extractConcentration || lastApp?.dose.split(' - ')[0] || '-'}</div>
                           </div>
                           <div>
                             <div className="text-[0.6rem] text-(--text-muted) font-medium">Data</div>
-                            <div className="text-xs font-bold text-(--text)">{lastApp?.data || '-'}</div>
+                            <div className="text-xs font-bold text-(--text)">{lastApp?.date || '-'}</div>
                           </div>
                         </div>
                       </div>

@@ -78,23 +78,23 @@ export interface Patient {
 export interface Application {
   id: string
   patientId: string
-  data: string
-  horaInicio: string
-  horaFim: string
-  status: 'agendada' | 'realizada' | 'cancelada' | 'ausente'
+  date: string
+  startTime: string
+  endTime: string
+  status: 'scheduled' | 'completed' | 'canceled' | 'missed'
   dose: string
-  ciclo: { numero: number; dias: number }
-  mes: string
-  ano: number
-  volumeAplicado?: string
-  concentracaoExtrato?: string
-  efeitoColateral?: string
-  efeitosRelatados?: string
-  necessidadeMedicacao?: string
-  medicacoes?: string
-  responsavel?: string
-  notaResponsavel?: string
-  modalidade?: 'subcutânea' | 'sublingual'
+  cycle: { number: number; days: number }
+  month: string
+  year: number
+  appliedVolume?: string
+  extractConcentration?: string
+  sideEffect?: string
+  reportedEffects?: string
+  medicationNeeded?: string
+  medications?: string
+  administrator?: string
+  administratorNote?: string
+  modality?: 'subcutaneous' | 'sublingual'
 }
 
 interface PatientState {
@@ -102,8 +102,8 @@ interface PatientState {
   applications: Application[]
   setSelectedPatient: (patient: Patient | null) => void
   addProtocolAdjustment: (adjustment: ProtocolAdjustment) => void
-  inactivateImunoterapia: (inactivation: Inactivation) => void
-  reactivateImunoterapia: (payload: {
+  inactivateImmunotherapy: (inactivation: Inactivation) => void
+  reactivateImmunotherapy: (payload: {
     note: string
     reactivatedBy: string
     reactivateConcentration: string
@@ -113,7 +113,7 @@ interface PatientState {
   /** Agenda uma aplicação inicial (RNE-026 — geração automática no cadastro de imunoterapia). */
   scheduleApplication: (app: Application) => void
   /** Registra uma aplicação realizada e agenda a próxima automaticamente. */
-  recordEvolution: (payload: { realizada: Application; proxima: Application }) => void
+  recordEvolution: (payload: { completed: Application; next: Application }) => void
 }
 
 const INACTIVATION_SEEDS: Record<string, Omit<Inactivation, 'id' | 'snapshotConcentration' | 'snapshotInterval'>> = {
@@ -137,7 +137,7 @@ const PT_MONTHS = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', '
 function fmtDate(d: Date) {
   const day = String(d.getDate()).padStart(2, '0')
   const mo = String(d.getMonth() + 1).padStart(2, '0')
-  return { data: `${day}/${mo}/${d.getFullYear()}`, mes: PT_MONTHS[d.getMonth()], ano: d.getFullYear() }
+  return { date: `${day}/${mo}/${d.getFullYear()}`, month: PT_MONTHS[d.getMonth()], year: d.getFullYear() }
 }
 
 function daysOffset(base: Date, n: number): Date {
@@ -146,47 +146,47 @@ function daysOffset(base: Date, n: number): Date {
   return r
 }
 
-function inductionFlow(patientId: string, prefix: string, stepIndex: number, lastRealizedDate: Date, nextScheduledDate: Date | null, horaInicio: string, horaFim: string, responsavel: string): Application[] {
+function inductionFlow(patientId: string, prefix: string, stepIndex: number, lastRealizedDate: Date, nextScheduledDate: Date | null, startTime: string, endTime: string, administrator: string): Application[] {
   const apps: Application[] = []
   for (let i = 0; i <= stepIndex; i++) {
-    const date = daysOffset(lastRealizedDate, -7 * (stepIndex - i))
+    const dateBase = daysOffset(lastRealizedDate, -7 * (stepIndex - i))
     const step = INDUCTION_SEQUENCE[i]
-    const { data, mes, ano } = fmtDate(date)
+    const { date, month, year } = fmtDate(dateBase)
     apps.push({
-      id: `${prefix}${i + 1}`, patientId, data, mes, ano,
-      horaInicio, horaFim, status: 'realizada',
+      id: `${prefix}${i + 1}`, patientId, date, month, year,
+      startTime, endTime, status: 'completed',
       dose: `${step.conc} - ${step.vol}`,
-      ciclo: { numero: 1, dias: 7 },
-      volumeAplicado: step.vol, concentracaoExtrato: step.conc,
-      efeitoColateral: 'Não', necessidadeMedicacao: 'Não', responsavel,
-      notaResponsavel: i === 0 ? 'Primeira aplicação' : (i % 4 === 0 ? `Avançou para ${step.conc}` : '-'),
+      cycle: { number: 1, days: 7 },
+      appliedVolume: step.vol, extractConcentration: step.conc,
+      sideEffect: 'no', medicationNeeded: 'no', administrator,
+      administratorNote: i === 0 ? 'Primeira aplicação' : (i % 4 === 0 ? `Avançou para ${step.conc}` : '-'),
     })
   }
   if (nextScheduledDate && stepIndex < INDUCTION_SEQUENCE.length - 1) {
     const nextStep = INDUCTION_SEQUENCE[stepIndex + 1]
-    const { data, mes, ano } = fmtDate(nextScheduledDate)
+    const { date, month, year } = fmtDate(nextScheduledDate)
     apps.push({
-      id: `${prefix}next`, patientId, data, mes, ano,
-      horaInicio, horaFim, status: 'agendada',
+      id: `${prefix}next`, patientId, date, month, year,
+      startTime, endTime, status: 'scheduled',
       dose: `${nextStep.conc} - ${nextStep.vol}`,
-      ciclo: { numero: 1, dias: 7 },
+      cycle: { number: 1, days: 7 },
     })
   }
   return apps
 }
 
-function maintenanceFlow(patientId: string, prefix: string, finalInterval: 14 | 21 | 28, lastRealizedDate: Date, nextScheduledDate: Date | null, horaInicio: string, horaFim: string, responsavel: string): Application[] {
-  type H = { dose: string; conc: string; vol: string; interval: number; ciclo: number; note?: string }
+function maintenanceFlow(patientId: string, prefix: string, finalInterval: 14 | 21 | 28, lastRealizedDate: Date, nextScheduledDate: Date | null, startTime: string, endTime: string, administrator: string): Application[] {
+  type H = { dose: string; conc: string; vol: string; interval: number; cycle: number; note?: string }
   const hist: H[] = []
   for (let i = 0; i < INDUCTION_SEQUENCE.length; i++) {
     const s = INDUCTION_SEQUENCE[i]
     hist.push({
-      dose: `${s.conc} - ${s.vol}`, conc: s.conc, vol: s.vol, interval: 7, ciclo: 1,
+      dose: `${s.conc} - ${s.vol}`, conc: s.conc, vol: s.vol, interval: 7, cycle: 1,
       note: i === 0 ? 'Primeira aplicação' : i === INDUCTION_SEQUENCE.length - 1 ? 'Meta atingida! Transição para manutenção' : (i % 4 === 0 ? `Avançou para ${s.conc}` : '-'),
     })
   }
-  const pushMeta = (interval: 14 | 21 | 28, ciclo: number, note?: string) =>
-    hist.push({ dose: META_DOSE, conc: META_STEP.conc, vol: META_STEP.vol, interval, ciclo, note: note || '-' })
+  const pushMeta = (interval: 14 | 21 | 28, cycle: number, note?: string) =>
+    hist.push({ dose: META_DOSE, conc: META_STEP.conc, vol: META_STEP.vol, interval, cycle, note: note || '-' })
 
   if (finalInterval >= 14) {
     pushMeta(14, 1, 'Início manutenção 14 dias')
@@ -210,48 +210,48 @@ function maintenanceFlow(patientId: string, prefix: string, finalInterval: 14 | 
   const apps: Application[] = []
   for (let i = 0; i < hist.length; i++) {
     const h = hist[i]
-    const { data, mes, ano } = fmtDate(dates[i])
+    const { date, month, year } = fmtDate(dates[i])
     apps.push({
-      id: `${prefix}${i + 1}`, patientId, data, mes, ano,
-      horaInicio, horaFim, status: 'realizada',
-      dose: h.dose, ciclo: { numero: h.ciclo, dias: h.interval },
-      volumeAplicado: h.vol, concentracaoExtrato: h.conc,
-      efeitoColateral: 'Não', necessidadeMedicacao: 'Não', responsavel,
-      notaResponsavel: h.note,
+      id: `${prefix}${i + 1}`, patientId, date, month, year,
+      startTime, endTime, status: 'completed',
+      dose: h.dose, cycle: { number: h.cycle, days: h.interval },
+      appliedVolume: h.vol, extractConcentration: h.conc,
+      sideEffect: 'no', medicationNeeded: 'no', administrator,
+      administratorNote: h.note,
     })
   }
   if (nextScheduledDate) {
-    const ciclo = finalInterval === 14 ? 1 : finalInterval === 21 ? 2 : 3
-    const { data, mes, ano } = fmtDate(nextScheduledDate)
+    const cycle = finalInterval === 14 ? 1 : finalInterval === 21 ? 2 : 3
+    const { date, month, year } = fmtDate(nextScheduledDate)
     apps.push({
-      id: `${prefix}next`, patientId, data, mes, ano,
-      horaInicio, horaFim, status: 'agendada',
-      dose: META_DOSE, ciclo: { numero: ciclo, dias: finalInterval },
+      id: `${prefix}next`, patientId, date, month, year,
+      startTime, endTime, status: 'scheduled',
+      dose: META_DOSE, cycle: { number: cycle, days: finalInterval },
     })
   }
   return apps
 }
 
-const REACTION_SEEDS: Record<string, { efeitosRelatados: string; medicacoes: string; nota: string }> = {
+const REACTION_SEEDS: Record<string, { reportedEffects: string; medications: string; note: string }> = {
   'a4': {
-    efeitosRelatados: 'Prurido local leve e eritema no ponto da aplicação',
-    medicacoes: 'Anti-histamínico tópico (Polaramine creme)',
-    nota: 'Reação local leve. Conduta: manter protocolo com monitoramento.',
+    reportedEffects: 'Prurido local leve e eritema no ponto da aplicação',
+    medications: 'Anti-histamínico tópico (Polaramine creme)',
+    note: 'Reação local leve. Conduta: manter protocolo com monitoramento.',
   },
   'pt4': {
-    efeitosRelatados: 'Eritema leve no local da aplicação (< 2cm)',
-    medicacoes: 'Compressas frias locais',
-    nota: 'Paciente tolerou; segue protocolo.',
+    reportedEffects: 'Eritema leve no local da aplicação (< 2cm)',
+    medications: 'Compressas frias locais',
+    note: 'Paciente tolerou; segue protocolo.',
   },
   'l11': {
-    efeitosRelatados: 'Placa urticariforme peri-aplicação (~5cm) com prurido intenso',
-    medicacoes: 'Loratadina 10mg VO + Dexclorfeniramina creme',
-    nota: 'Reação moderada motivou solicitação de interrupção pelo paciente.',
+    reportedEffects: 'Placa urticariforme peri-aplicação (~5cm) com prurido intenso',
+    medications: 'Loratadina 10mg VO + Dexclorfeniramina creme',
+    note: 'Reação moderada motivou solicitação de interrupção pelo paciente.',
   },
   'r6': {
-    efeitosRelatados: 'Urticária generalizada + prurido difuso 20min pós-aplicação',
-    medicacoes: 'Anti-histamínico VO + corticoide (Prednisona 20mg)',
-    nota: 'Reação moderada. Tratamento suspenso a pedido médico.',
+    reportedEffects: 'Urticária generalizada + prurido difuso 20min pós-aplicação',
+    medications: 'Anti-histamínico VO + corticoide (Prednisona 20mg)',
+    note: 'Reação moderada. Tratamento suspenso a pedido médico.',
   },
 }
 
@@ -261,11 +261,11 @@ function applyReactions(apps: Application[]): Application[] {
     if (!seed) return a
     return {
       ...a,
-      efeitoColateral: 'Sim',
-      efeitosRelatados: seed.efeitosRelatados,
-      necessidadeMedicacao: 'Sim',
-      medicacoes: seed.medicacoes,
-      notaResponsavel: seed.nota,
+      sideEffect: 'yes',
+      reportedEffects: seed.reportedEffects,
+      medicationNeeded: 'yes',
+      medications: seed.medications,
+      administratorNote: seed.note,
     }
   })
 }
@@ -295,19 +295,19 @@ export const usePatientStore = create<PatientState>((set) => ({
   applications: buildSeedApplications(),
   setSelectedPatient: (patient) => set({ selectedPatient: patient }),
   scheduleApplication: (app) => set((s) => ({ applications: [...s.applications, app] })),
-  recordEvolution: ({ realizada, proxima }) => set((s) => {
+  recordEvolution: ({ completed, next }) => set((s) => {
     // Remove aplicação agendada anterior do mesmo paciente (evita duplicar) e
     // adiciona a realizada + a nova agendada.
     const filtered = s.applications.filter((a) =>
-      !(a.patientId === realizada.patientId && a.status === 'agendada')
+      !(a.patientId === completed.patientId && a.status === 'scheduled')
     )
     return {
-      applications: [...filtered, realizada, proxima],
-      selectedPatient: s.selectedPatient && s.selectedPatient.id === realizada.patientId ? {
+      applications: [...filtered, completed, next],
+      selectedPatient: s.selectedPatient && s.selectedPatient.id === completed.patientId ? {
         ...s.selectedPatient,
-        currentDoseConcentration: realizada.dose,
-        currentInterval: proxima.ciclo.dias,
-        nextApplicationDate: proxima.data,
+        currentDoseConcentration: completed.dose,
+        currentInterval: next.cycle.days,
+        nextApplicationDate: next.date,
       } : s.selectedPatient,
     }
   }),
@@ -322,7 +322,7 @@ export const usePatientStore = create<PatientState>((set) => ({
       },
     }
   }),
-  inactivateImunoterapia: (inactivation) => set((s) => {
+  inactivateImmunotherapy: (inactivation) => set((s) => {
     if (!s.selectedPatient) return s
     return {
       selectedPatient: {
@@ -332,7 +332,7 @@ export const usePatientStore = create<PatientState>((set) => ({
       },
     }
   }),
-  reactivateImunoterapia: ({ note, reactivatedBy, reactivateConcentration, reactivateInterval, justification }) => set((s) => {
+  reactivateImmunotherapy: ({ note, reactivatedBy, reactivateConcentration, reactivateInterval, justification }) => set((s) => {
     if (!s.selectedPatient) return s
     const list = s.selectedPatient.inactivations || []
     if (list.length === 0) return s

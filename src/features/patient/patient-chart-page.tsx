@@ -50,7 +50,7 @@ import { getIntervalColor } from '@/features/immunotherapy/constants/interval-co
 export function PatientChartPage() {
   const navigate = useNavigate()
   const { patientId } = useParams({ from: '/patient/$patientId' })
-  const { selectedPatient, applications, setSelectedPatient, inactivateImunoterapia, reactivateImunoterapia } = usePatientStore()
+  const { selectedPatient, applications, setSelectedPatient, inactivateImmunotherapy, reactivateImmunotherapy } = usePatientStore()
   const canAdjustProtocol = useHasPermission('adjust_protocol')
   const canInactivate = useHasPermission('inactivate_immunotherapy')
   const canReactivate = useHasPermission('reactivate_patient')
@@ -179,37 +179,37 @@ export function PatientChartPage() {
   }, [applications, selectedPatient])
 
   const lastRealized = useMemo(() => {
-    const realized = patientApps.filter((a) => a.status === 'realizada')
+    const realized = patientApps.filter((a) => a.status === 'completed')
     if (!realized.length) return null
     return [...realized].sort((a, b) => {
-      const da = a.data.split('/'), db = b.data.split('/')
+      const da = a.date.split('/'), db = b.date.split('/')
       return new Date(+db[2], +db[1] - 1, +db[0]).getTime() - new Date(+da[2], +da[1] - 1, +da[0]).getTime()
     })[0]
   }, [patientApps])
 
   const inicioInducaoCalc = useMemo(() => {
-    const realized = patientApps.filter((a) => a.status === 'realizada')
+    const realized = patientApps.filter((a) => a.status === 'completed')
     if (!realized.length) return null
     const firstApp = [...realized].sort((a, b) => {
-      const da = a.data.split('/'), db = b.data.split('/')
+      const da = a.date.split('/'), db = b.date.split('/')
       return new Date(+da[2], +da[1] - 1, +da[0]).getTime() - new Date(+db[2], +db[1] - 1, +db[0]).getTime()
     })[0]
-    return firstApp.data
+    return firstApp.date
   }, [patientApps])
 
   const inicioManutencaoCalc = useMemo(() => {
-    const meta = patientApps.filter((a) => a.status === 'realizada' && a.dose === META_DOSE)
+    const meta = patientApps.filter((a) => a.status === 'completed' && a.dose === META_DOSE)
     if (!meta.length) return null
     const firstMeta = [...meta].sort((a, b) => {
-      const da = a.data.split('/'), db = b.data.split('/')
+      const da = a.date.split('/'), db = b.date.split('/')
       return new Date(+da[2], +da[1] - 1, +da[0]).getTime() - new Date(+db[2], +db[1] - 1, +db[0]).getTime()
     })[0]
-    return firstMeta.data
+    return firstMeta.date
   }, [patientApps])
 
-  const currentInterval = lastRealized?.ciclo.dias ?? selectedPatient?.currentInterval ?? 7
+  const currentInterval = lastRealized?.cycle.days ?? selectedPatient?.currentInterval ?? 7
   const currentDose = lastRealized
-    ? `${lastRealized.concentracaoExtrato || lastRealized.dose.split(' - ')[0]} - ${lastRealized.volumeAplicado || lastRealized.dose.split(' - ')[1]}`
+    ? `${lastRealized.extractConcentration || lastRealized.dose.split(' - ')[0]} - ${lastRealized.appliedVolume || lastRealized.dose.split(' - ')[1]}`
     : selectedPatient?.currentDoseConcentration ?? '-'
 
   const nextCalc = useMemo(() => calculateNextDose(currentDose, currentInterval), [currentDose, currentInterval])
@@ -217,7 +217,7 @@ export function PatientChartPage() {
   const nextDate = useMemo(() => {
     if (!lastRealized) return selectedPatient?.nextApplicationDate ?? '-'
     try {
-      const [d, m, y] = lastRealized.data.split('/')
+      const [d, m, y] = lastRealized.date.split('/')
       return format(addDays(new Date(+y, +m - 1, +d), nextCalc.interval), 'dd/MM/yyyy')
     } catch { return '-' }
   }, [lastRealized, nextCalc.interval, selectedPatient])
@@ -238,7 +238,7 @@ export function PatientChartPage() {
 
   const sortedApps = useMemo(() => {
     return [...patientApps].sort((a, b) => {
-      const da = a.data.split('/'), db = b.data.split('/')
+      const da = a.date.split('/'), db = b.date.split('/')
       return new Date(+db[2], +db[1] - 1, +db[0]).getTime() - new Date(+da[2], +da[1] - 1, +da[0]).getTime()
     })
   }, [patientApps])
@@ -246,8 +246,8 @@ export function PatientChartPage() {
   const availableMonths = useMemo(() => {
     const set = new Map<string, string>()
     sortedApps.forEach((a) => {
-      const key = `${a.ano}-${a.mes}`
-      if (!set.has(key)) set.set(key, `${a.mes} ${a.ano}`)
+      const key = `${a.year}-${a.month}`
+      if (!set.has(key)) set.set(key, `${a.month} ${a.year}`)
     })
     return Array.from(set.entries()).map(([key, label]) => ({ key, label }))
   }, [sortedApps])
@@ -275,13 +275,13 @@ export function PatientChartPage() {
 
   const filteredApps = useMemo(() => {
     if (monthFilter === 'all') return sortedApps
-    return sortedApps.filter((a) => `${a.ano}-${a.mes}` === monthFilter)
+    return sortedApps.filter((a) => `${a.year}-${a.month}` === monthFilter)
   }, [sortedApps, monthFilter])
 
   const grouped = useMemo(() => {
     const g: Record<string, Application[]> = {}
     filteredApps.forEach((a) => {
-      const key = `${a.mes} ${a.ano}`
+      const key = `${a.month} ${a.year}`
       if (!g[key]) g[key] = []
       g[key].push(a)
     })
@@ -291,8 +291,8 @@ export function PatientChartPage() {
   const appsByDate = useMemo(() => {
     const m: Record<string, Application[]> = {}
     patientApps.forEach((a) => {
-      if (!m[a.data]) m[a.data] = []
-      m[a.data].push(a)
+      if (!m[a.date]) m[a.date] = []
+      m[a.date].push(a)
     })
     return m
   }, [patientApps])
@@ -734,7 +734,7 @@ export function PatientChartPage() {
                     <div className="absolute top-2.25 left-6 h-px bg-[#A78BFA] transition-all duration-700" style={{ width: isMaintenance ? (currentInterval >= 28 ? 'calc(100% - 48px)' : currentInterval >= 21 ? 'calc(50%)' : 'calc(0%)') : '0%' }} />
 
                     {(() => {
-                      const maintenanceApps = patientApps.filter((a) => a.status === 'realizada' && a.ciclo.dias >= 14)
+                      const maintenanceApps = patientApps.filter((a) => a.status === 'completed' && a.cycle.days >= 14)
                       const intervals = [
                         { dias: 14, label: '14 dias' },
                         { dias: 21, label: '21 dias' },
@@ -742,7 +742,7 @@ export function PatientChartPage() {
                       ]
                       return intervals.map((step) => {
                         const isActive = isMaintenance && currentInterval >= step.dias
-                        const firstApp = maintenanceApps.find((a) => a.ciclo.dias === step.dias)
+                        const firstApp = maintenanceApps.find((a) => a.cycle.days === step.dias)
                         return (
                           <div key={step.dias} className="flex flex-col items-center z-10">
                             <div className={cn(
@@ -759,7 +759,7 @@ export function PatientChartPage() {
                                 {step.label}
                               </div>
                               <div className="text-[0.45rem] text-(--text-muted)">
-                                {firstApp ? firstApp.data : '—'}
+                                {firstApp ? firstApp.date : '—'}
                               </div>
                             </div>
                           </div>
@@ -861,10 +861,10 @@ export function PatientChartPage() {
                           <div className="absolute -left-3.75 top-0 bottom-0 w-px bg-gray-200 rounded-full" />
 
                           {apps.map((app, idx) => {
-                            const color = getIntervalColor(app.ciclo.dias)
-                            const isRealized = app.status === 'realizada'
-                            const isNext = app.status === 'agendada'
-                            const hasReaction = app.efeitoColateral === 'Sim'
+                            const color = getIntervalColor(app.cycle.days)
+                            const isRealized = app.status === 'completed'
+                            const isNext = app.status === 'scheduled'
+                            const hasReaction = app.sideEffect === 'yes'
                             const nodeColor = hasReaction ? '#EA580C' : isNext ? '#0d9488' : '#2dd4bf'
                             return (
                               <div
@@ -898,7 +898,7 @@ export function PatientChartPage() {
                                           {hasReaction && <span className="text-[0.55rem] font-bold text-orange-700 bg-orange-100 border border-orange-200 px-1.5 py-px rounded-full">REAÇÃO</span>}
                                         </div>
                                         <div className="text-[0.65rem] text-(--text-muted) mt-0.5">
-                                          {app.data} · {app.horaInicio}–{app.horaFim}
+                                          {app.date} · {app.startTime}–{app.endTime}
                                         </div>
                                       </div>
                                     </div>
@@ -909,7 +909,7 @@ export function PatientChartPage() {
                                         style={{ backgroundColor: color.bg, color: color.text, borderColor: color.dot + '30' }}
                                       >
                                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color.dot }} />
-                                        {app.ciclo.dias} dias
+                                        {app.cycle.days} dias
                                       </span>
                                     </div>
                                   </div>
@@ -960,10 +960,10 @@ export function PatientChartPage() {
                         {dayApps.length > 0 && (
                           <div className="space-y-0.5">
                             {dayApps.slice(0, 2).map((app) => {
-                              const isRealized = app.status === 'realizada'
-                              const isNext = app.status === 'agendada'
-                              const hasReaction = app.efeitoColateral === 'Sim'
-                              const intColor = getIntervalColor(app.ciclo.dias)
+                              const isRealized = app.status === 'completed'
+                              const isNext = app.status === 'scheduled'
+                              const hasReaction = app.sideEffect === 'yes'
+                              const intColor = getIntervalColor(app.cycle.days)
                               const style = hasReaction
                                 ? { backgroundColor: '#FFEDD5', color: '#9A3412', borderColor: '#EA580C' }
                                 : { backgroundColor: intColor.bg, color: intColor.text, borderColor: intColor.dot }
@@ -1286,7 +1286,7 @@ export function PatientChartPage() {
               const detailFinal = v.category === 'other' && v.outroMotivo.trim()
                 ? `[${v.outroMotivo.trim()}] ${v.detail.trim()}`
                 : v.detail.trim()
-              inactivateImunoterapia({
+              inactivateImmunotherapy({
                 id: `inact-${Date.now()}`,
                 category: v.category as InactivationCategory,
                 detail: detailFinal,
@@ -1392,7 +1392,7 @@ export function PatientChartPage() {
                 return
               }
               const v = parsed.data
-              reactivateImunoterapia({
+              reactivateImmunotherapy({
                 note: v.note.trim(),
                 reactivatedBy: selectedPatient.responsibleDoctor,
                 reactivateConcentration: v.concentracao.trim(),
@@ -1448,7 +1448,7 @@ export function PatientChartPage() {
             {lastRealized && (
               <div className="flex items-center justify-between text-[0.65rem]">
                 <span className="text-(--text-muted)">Última aplicação</span>
-                <span className="font-medium text-(--text)">{lastRealized.data} · {lastRealized.dose}</span>
+                <span className="font-medium text-(--text)">{lastRealized.date} · {lastRealized.dose}</span>
               </div>
             )}
             <div className="flex items-center justify-between text-[0.65rem]">
@@ -1734,26 +1734,26 @@ export function PatientChartPage() {
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                   <div className="col-span-2">
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-1">Como o paciente passou durante o intervalo da última aplicação?</div>
-                    <div className="text-xs text-(--text) leading-relaxed">{selectedApp.notaResponsavel || 'Sem intercorrências relatadas durante o intervalo.'}</div>
+                    <div className="text-xs text-(--text) leading-relaxed">{selectedApp.administratorNote || 'Sem intercorrências relatadas durante o intervalo.'}</div>
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Presença de efeito colateral</div>
-                    <div className="text-xs text-(--text)">{selectedApp.efeitoColateral || 'Não'}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.sideEffect || 'Não'}</div>
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Necessidade de medicação</div>
-                    <div className="text-xs text-(--text)">{selectedApp.necessidadeMedicacao || 'Não'}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.medicationNeeded || 'Não'}</div>
                   </div>
-                  {selectedApp.efeitoColateral === 'Sim' && (
+                  {selectedApp.sideEffect === 'yes' && (
                     <div className="col-span-2">
                       <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Efeitos colaterais relatados</div>
-                      <div className="text-xs text-(--text) leading-relaxed">{selectedApp.efeitosRelatados || '—'}</div>
+                      <div className="text-xs text-(--text) leading-relaxed">{selectedApp.reportedEffects || '—'}</div>
                     </div>
                   )}
-                  {selectedApp.necessidadeMedicacao === 'Sim' && (
+                  {selectedApp.medicationNeeded === 'yes' && (
                     <div className="col-span-2">
                       <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Medicações administradas</div>
-                      <div className="text-xs text-(--text) leading-relaxed">{selectedApp.medicacoes || '—'}</div>
+                      <div className="text-xs text-(--text) leading-relaxed">{selectedApp.medications || '—'}</div>
                     </div>
                   )}
                 </div>
@@ -1761,51 +1761,51 @@ export function PatientChartPage() {
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Horário</div>
-                    <div className="text-xs text-(--text)">{selectedApp.horaInicio} – {selectedApp.horaFim}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.startTime} – {selectedApp.endTime}</div>
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Data</div>
-                    <div className="text-xs text-(--text)">{selectedApp.data}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.date}</div>
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Volume aplicado</div>
-                    <div className="text-xs text-(--text)">{selectedApp.volumeAplicado || '-'}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.appliedVolume || '-'}</div>
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Concentração aplicada</div>
-                    <div className="text-xs text-(--text)">{selectedApp.concentracaoExtrato || '-'}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.extractConcentration || '-'}</div>
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Intervalo associado da dose</div>
-                    <div className="text-xs text-(--text)">{selectedApp.ciclo.dias} dias</div>
+                    <div className="text-xs text-(--text)">{selectedApp.cycle.days} dias</div>
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Responsável</div>
-                    <div className="text-xs text-(--text)">{selectedApp.responsavel || '-'}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.administrator || '-'}</div>
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Presença de efeito colateral</div>
-                    <div className="text-xs text-(--text)">{selectedApp.efeitoColateral || 'Não'}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.sideEffect || 'Não'}</div>
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Necessidade de medicação</div>
-                    <div className="text-xs text-(--text)">{selectedApp.necessidadeMedicacao || 'Não'}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.medicationNeeded || 'Não'}</div>
                   </div>
-                  {selectedApp.efeitoColateral === 'Sim' && (
+                  {selectedApp.sideEffect === 'yes' && (
                     <div className="col-span-2">
                       <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Efeitos colaterais relatados</div>
-                      <div className="text-xs text-(--text) leading-relaxed">{selectedApp.efeitosRelatados || '—'}</div>
+                      <div className="text-xs text-(--text) leading-relaxed">{selectedApp.reportedEffects || '—'}</div>
                     </div>
                   )}
-                  {selectedApp.necessidadeMedicacao === 'Sim' && (
+                  {selectedApp.medicationNeeded === 'yes' && (
                     <div className="col-span-2">
                       <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Medicações administradas</div>
-                      <div className="text-xs text-(--text) leading-relaxed">{selectedApp.medicacoes || '—'}</div>
+                      <div className="text-xs text-(--text) leading-relaxed">{selectedApp.medications || '—'}</div>
                     </div>
                   )}
                   <div className="col-span-2">
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Notas do responsável</div>
-                    <div className="text-xs text-(--text)">{selectedApp.notaResponsavel || '-'}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.administratorNote || '-'}</div>
                   </div>
                 </div>
               )}

@@ -81,15 +81,15 @@ export function AddImmunotherapyPage() {
     const firstApp: Application = {
       id: `app-${newId}-1`,
       patientId: newId,
-      data: dataPtBR,
-      horaInicio: '09:00',
-      horaFim: '09:30',
-      status: 'agendada',
+      date: dataPtBR,
+      startTime: '09:00',
+      endTime: '09:30',
+      status: 'scheduled',
       dose: '1:10.000 - 0,1ml',
-      ciclo: { numero: 1, dias: 7 },
-      mes: meses[mesIdx],
-      ano,
-      modalidade: isSublingual ? 'sublingual' : 'subcutânea',
+      cycle: { number: 1, days: 7 },
+      month: meses[mesIdx],
+      year: ano,
+      modality: isSublingual ? 'sublingual' : 'subcutaneous',
     }
     scheduleApplication(firstApp)
 
