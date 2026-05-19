@@ -153,13 +153,13 @@ export function PatientReportPage() {
     if (selectedSections.includes('applications')) {
       lines.push('"=== HISTÓRICO DE APLICAÇÕES ==="')
       lines.push('Data,Dose,Intervalo,Reação,Responsável')
-      d.realizedApps.forEach((a) => lines.push(`"${a.date}","${a.dose}","${a.cycle.days}d","${a.sideEffect || 'Não'}","${a.administrator || '-'}"`))
+      d.realizedApps.forEach((a) => lines.push(`"${a.date}","${a.dose}","${a.cycle.days}d","${a.sideEffect === 'yes' ? 'Sim' : 'Não'}","${a.administrator || '-'}"`))
       lines.push('')
     }
     if (selectedSections.includes('reactions')) {
       lines.push('"=== REAÇÕES ADVERSAS ==="')
       lines.push('Data,Dose,Medicação,Observação')
-      d.realizedApps.filter((a) => a.sideEffect === 'yes').forEach((a) => lines.push(`"${a.date}","${a.dose}","${a.medicationNeeded || '-'}","${(a.administratorNote || '').replace(/"/g, '""')}"`))
+      d.realizedApps.filter((a) => a.sideEffect === 'yes').forEach((a) => lines.push(`"${a.date}","${a.dose}","${a.medicationNeeded === 'yes' ? 'Sim' : a.medicationNeeded === 'no' ? 'Não' : '-'}","${(a.administratorNote || '').replace(/"/g, '""')}"`))
       lines.push('')
     }
     if (selectedSections.includes('progress')) {
@@ -192,7 +192,7 @@ export function PatientReportPage() {
     }
     if (selectedSections.includes('applications')) {
       rows.push(`<tr><th colspan="2" style="background:#B6F2EC;padding:6px;text-align:left;font-size:12px;">Histórico de Aplicações (${d.realizedApps.length})</th></tr>`)
-      rows.push(`<tr><td colspan="2" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tr><th style="padding:4px 8px;font-size:10px;background:#eee;">Data</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Dose</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Intervalo</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Reação</th></tr>${d.realizedApps.map((a) => `<tr><td style="padding:3px 8px;font-size:10px;">${a.date}</td><td style="padding:3px 8px;font-size:10px;">${a.dose}</td><td style="padding:3px 8px;font-size:10px;">${a.cycle.days}d</td><td style="padding:3px 8px;font-size:10px;">${a.sideEffect || 'Não'}</td></tr>`).join('')}</table></td></tr>`)
+      rows.push(`<tr><td colspan="2" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tr><th style="padding:4px 8px;font-size:10px;background:#eee;">Data</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Dose</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Intervalo</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Reação</th></tr>${d.realizedApps.map((a) => `<tr><td style="padding:3px 8px;font-size:10px;">${a.date}</td><td style="padding:3px 8px;font-size:10px;">${a.dose}</td><td style="padding:3px 8px;font-size:10px;">${a.cycle.days}d</td><td style="padding:3px 8px;font-size:10px;">${a.sideEffect === 'yes' ? 'Sim' : 'Não'}</td></tr>`).join('')}</table></td></tr>`)
       rows.push(`<tr><td colspan="2" style="height:8px;"></td></tr>`)
     }
     if (selectedSections.includes('progress')) {
@@ -311,7 +311,7 @@ export function PatientReportPage() {
         doc.text(a.date, margin + 2, y + 4)
         doc.text(a.dose, margin + 35, y + 4)
         doc.text(`${a.cycle.days} dias`, margin + 100, y + 4)
-        doc.text(a.sideEffect || 'Não', margin + 140, y + 4)
+        doc.text(a.sideEffect === 'yes' ? 'Sim' : 'Não', margin + 140, y + 4)
         doc.setDrawColor(240, 240, 240)
         doc.line(margin, y + 6, pageW - margin, y + 6)
         y += 6
@@ -815,7 +815,7 @@ export function PatientReportPage() {
                                 <td className="py-1.5 text-[0.65rem] text-(--text)">{app.cycle.days}d</td>
                                 <td className="py-1.5 text-[0.65rem]">
                                   <span className={cn("font-medium", app.sideEffect === 'yes' ? "text-amber-600" : "text-green-600")}>
-                                    {app.sideEffect || 'Não'}
+                                    {app.sideEffect === 'yes' ? 'Sim' : 'Não'}
                                   </span>
                                 </td>
                               </tr>

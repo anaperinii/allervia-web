@@ -713,8 +713,8 @@ export function PatientEvolutionPage() {
                     )}
                     <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
                       {[
-                        { label: 'Efeito Colateral', value: form.sideEffect },
-                        { label: 'Necessidade de Medicação', value: form.medicationNeeded },
+                        { label: 'Efeito Colateral', value: form.sideEffect === 'yes' ? 'Sim' : 'Não' },
+                        { label: 'Necessidade de Medicação', value: form.medicationNeeded === 'yes' ? 'Sim' : 'Não' },
                         ...(form.sideEffect === 'yes' ? [{ label: 'Efeitos Relatados', value: form.reportedEffects || '—' }] : []),
                         ...(form.medicationNeeded === 'yes' ? [{ label: 'Medicações', value: form.medications || '—' }] : []),
                         ...(form.notesPre ? [{ label: 'Notas', value: form.notesPre }] : []),
@@ -744,8 +744,8 @@ export function PatientEvolutionPage() {
                         { label: 'Concentração', value: form.concentration || '—' },
                         { label: 'Intervalo Próxima Dose', value: form.nextInterval ? `${form.nextInterval} dias` : '—' },
                         { label: 'Responsável', value: form.administrator || '—' },
-                        { label: 'Efeito Colateral', value: form.sideEffectPost },
-                        { label: 'Necessidade de Medicação', value: form.medicationNeededPost },
+                        { label: 'Efeito Colateral', value: form.sideEffectPost === 'yes' ? 'Sim' : 'Não' },
+                        { label: 'Necessidade de Medicação', value: form.medicationNeededPost === 'yes' ? 'Sim' : 'Não' },
                         ...(form.notesPost ? [{ label: 'Notas', value: form.notesPost }] : []),
                       ].map((item) => (
                         <div key={item.label} className="bg-white px-3.5 py-2.5">

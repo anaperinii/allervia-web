@@ -1738,11 +1738,11 @@ export function PatientChartPage() {
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Presença de efeito colateral</div>
-                    <div className="text-xs text-(--text)">{selectedApp.sideEffect || 'Não'}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.sideEffect === 'yes' ? 'Sim' : 'Não'}</div>
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Necessidade de medicação</div>
-                    <div className="text-xs text-(--text)">{selectedApp.medicationNeeded || 'Não'}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.medicationNeeded === 'yes' ? 'Sim' : 'Não'}</div>
                   </div>
                   {selectedApp.sideEffect === 'yes' && (
                     <div className="col-span-2">
@@ -1785,11 +1785,11 @@ export function PatientChartPage() {
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Presença de efeito colateral</div>
-                    <div className="text-xs text-(--text)">{selectedApp.sideEffect || 'Não'}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.sideEffect === 'yes' ? 'Sim' : 'Não'}</div>
                   </div>
                   <div>
                     <div className="text-[0.65rem] font-semibold text-(--text-muted) mb-0.5">Necessidade de medicação</div>
-                    <div className="text-xs text-(--text)">{selectedApp.medicationNeeded || 'Não'}</div>
+                    <div className="text-xs text-(--text)">{selectedApp.medicationNeeded === 'yes' ? 'Sim' : 'Não'}</div>
                   </div>
                   {selectedApp.sideEffect === 'yes' && (
                     <div className="col-span-2">
