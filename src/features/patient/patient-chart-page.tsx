@@ -15,17 +15,17 @@ import {
   adjustProtocolSchema,
   type AdjustProtocolForm,
   ADJUST_PROTOCOL_DEFAULTS,
-} from '@/features/patient/schemas/adjust-protocol'
+} from '@/features/patient/forms/adjust-protocol'
 import {
   inactivateSchema,
   type InactivateForm,
   INACTIVATE_DEFAULTS,
-} from '@/features/patient/schemas/inactivate'
+} from '@/features/patient/forms/inactivate'
 import {
   createReactivateSchema,
   type ReactivateForm,
   REACTIVATE_DEFAULTS,
-} from '@/features/patient/schemas/reactivate'
+} from '@/features/patient/forms/reactivate'
 import {
   Clock,
   CalendarDays,

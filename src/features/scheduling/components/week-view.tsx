@@ -1,7 +1,7 @@
 import { format, isSameDay, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/utils'
-import { getApplicationEventColor } from '@/features/appointment/constants/application-colors'
+import { getApplicationEventColor } from '@/features/scheduling/constants/application-colors'
 import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/immunotherapies-store'
 import type { Application } from '@/features/patient/stores/patient-store'
 

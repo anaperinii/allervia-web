@@ -9,7 +9,7 @@ import {
   newAppointmentSchema,
   NEW_APPOINTMENT_DEFAULTS,
   type NewAppointmentForm,
-} from '@/features/appointment/schemas/new-appointment'
+} from '@/features/scheduling/forms/new-appointment'
 
 interface NewAppointmentModalProps {
   open: boolean

@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { SegmentedControl } from '@/shared/components'
-import type { CalendarViewMode } from '@/features/appointment/hooks/use-calendar-nav'
+import type { CalendarViewMode } from '@/features/scheduling/hooks/use-calendar-nav'
 
 interface CalendarToolbarProps {
   viewMode: CalendarViewMode

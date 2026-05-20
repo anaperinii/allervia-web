@@ -16,7 +16,7 @@ import {
   type AddImmunotherapyForm,
   STEP_1_FIELDS,
   STEP_2_FIELDS,
-} from '@/features/immunotherapy/schemas/add-immunotherapy'
+} from '@/features/immunotherapy/forms/add-immunotherapy'
 import { formatCPF, formatPhone, formatWeight, formatConcentration, formatVolume } from '@/shared/lib/formatters'
 import { todayStr, tomorrowStr } from '@/shared/lib/dates'
 import { format } from 'date-fns'

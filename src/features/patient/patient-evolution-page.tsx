@@ -18,7 +18,7 @@ import {
   STEP_1_FIELDS,
   STEP_2_FIELDS,
   EVOLUTION_DEFAULTS,
-} from '@/features/patient/schemas/evolution'
+} from '@/features/patient/forms/evolution'
 
 const stepLabels = ['Paciente', 'Pré-Aplicação', 'Pós-Aplicação', 'Revisão dos Dados']
 

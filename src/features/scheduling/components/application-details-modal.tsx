@@ -4,7 +4,7 @@ import { cn } from '@/shared/lib/utils'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/immunotherapies-store'
 import { openWhatsApp, sendReminder } from '@/shared/lib/whatsapp'
-import { APPLICATION_STATUS_DISPLAY } from '@/features/appointment/constants/application-status'
+import { APPLICATION_STATUS_DISPLAY } from '@/features/scheduling/constants/application-status'
 import type { Application } from '@/features/patient/stores/patient-store'
 
 interface ApplicationDetailsModalProps {

@@ -6,7 +6,7 @@ import { ArrowRight, Shield, Check, Clock, Mail } from 'lucide-react'
 import { Modal, TextInput, Select } from '@/shared/components'
 import imunecareLogo from '@/assets/imunecare-logo.png'
 import imunecareWhiteLogo from '@/assets/imunecare-white-logo.png'
-import { trialSchema, type TrialForm } from '@/features/auth/schemas/trial'
+import { trialSchema, type TrialForm } from '@/features/auth/forms/trial'
 import { formatPhone } from '@/shared/lib/formatters'
 
 export function TrialPage() {
