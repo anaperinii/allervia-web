@@ -1,19 +1,5 @@
 import { Heart } from 'lucide-react'
-
-const footerColumns = [
-  {
-    title: 'Produto',
-    links: ['Funcionalidades', 'Preços', 'Changelog', 'Roadmap'],
-  },
-  {
-    title: 'Empresa',
-    links: ['Sobre nós', 'Blog', 'Carreiras', 'Contato'],
-  },
-  {
-    title: 'Legal',
-    links: ['Privacidade', 'Termos de uso', 'LGPD', 'Segurança'],
-  },
-]
+import { FOOTER_COLUMNS } from '@/features/landing-page/data/footer-columns'
 
 export function Footer() {
   return (
@@ -26,18 +12,27 @@ export function Footer() {
           </p>
         </div>
 
-        {footerColumns.map((col) => (
-          <div key={col.title}>
-            <h4 className="text-[0.85rem] font-bold mb-4">{col.title}</h4>
+        {FOOTER_COLUMNS.map((column) => (
+          <div key={column.title}>
+            <h4 className="text-[0.85rem] font-bold mb-4">{column.title}</h4>
             <ul className="list-none flex flex-col gap-2.5">
-              {col.links.map((link) => (
-                <li key={link}>
-                  <a
-                    href="#"
-                    className="text-[0.85rem] text-(--text-muted) no-underline transition-colors duration-200 hover:text-teal-600"
-                  >
-                    {link}
-                  </a>
+              {column.links.map((link) => (
+                <li key={link.label}>
+                  {link.href ? (
+                    <a
+                      href={link.href}
+                      className="text-[0.85rem] text-(--text-muted) no-underline transition-colors duration-200 hover:text-teal-600"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <span
+                      aria-disabled="true"
+                      className="text-[0.85rem] text-(--text-muted)/60 cursor-default"
+                    >
+                      {link.label}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -47,7 +42,7 @@ export function Footer() {
 
       <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t border-(--border-custom) gap-3">
         <p className="text-[0.8rem] text-(--text-muted)">
-          &copy; 2025 ImuneCare. Todos os direitos reservados.
+          &copy; {new Date().getFullYear()} ImuneCare. Todos os direitos reservados.
         </p>
         <p className="text-[0.8rem] text-(--text-muted) inline-flex items-center gap-1">
           Feito com <Heart size={13} className="text-red-400 fill-red-400" /> para a alergologia brasileira
