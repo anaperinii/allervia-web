@@ -88,37 +88,37 @@ export function PatientEvolutionPage() {
     setSearch(item.name)
     setShowSuggestions(false)
     setStorePatient({
-      id: item.id, nome: item.name, dataNascimento: '02/07/2000', idade: 25,
-      telefone: '(62) 99557-1423', peso: '89.7 kg', cpf: '711.905.744-89',
-      medicoResponsavel: 'Dra. Karina Martins', status: 'ativo',
-      tipoImunoterapia: item.type, inicioInducao: '01/01/2020', inicioManutencao: null,
-      viaAdministracao: 'Subcutânea', extrato: 'Der p 60 + der f 10% + blt 30%',
-      concentracaoVolumeMeta: '1:10 - 0,5ml', metaAtingida: false,
-      intervaloAtual: item.cycleInterval.days, dataProximaAplicacao: '21/05/2025',
-      concentracaoDoseAtuais: item.doseConcentration,
+      id: item.id, name: item.name, birthDate: '02/07/2000', age: 25,
+      phone: '(62) 99557-1423', weight: '89.7 kg', cpf: '711.905.744-89',
+      responsibleDoctor: 'Dra. Karina Martins', status: 'active',
+      immunotherapyType: item.type, inductionStart: '01/01/2020', maintenanceStart: null,
+      administrationRoute: 'Subcutânea', extract: 'Der p 60 + der f 10% + blt 30%',
+      targetConcentrationVolume: '1:10 - 0,5ml', targetReached: false,
+      currentInterval: item.cycleInterval.days, nextApplicationDate: '21/05/2025',
+      currentDoseConcentration: item.doseConcentration,
     })
   }
 
   const lastApp = useMemo(() => {
     if (!selectedPatient) return null
-    const realized = applications.filter((a) => a.status === 'realizada' && a.patientId === selectedPatient.id)
+    const realized = applications.filter((a) => a.status === 'completed' && a.patientId === selectedPatient.id)
     if (!realized.length) return null
     return [...realized].sort((a, b) => {
-      const da = a.data.split('/'), db = b.data.split('/')
+      const da = a.date.split('/'), db = b.date.split('/')
       return new Date(+db[2], +db[1] - 1, +db[0]).getTime() - new Date(+da[2], +da[1] - 1, +da[0]).getTime()
     })[0]
   }, [selectedPatient, applications])
 
   const doseNumber = useMemo(() => {
     if (!selectedPatient) return 0
-    return applications.filter((a) => a.status === 'realizada' && a.patientId === selectedPatient.id).length
+    return applications.filter((a) => a.status === 'completed' && a.patientId === selectedPatient.id).length
   }, [selectedPatient, applications])
 
   const nextDose = useMemo(() => {
     if (!lastApp || !selectedPatient) return null
-    const [d, m, y] = lastApp.data.split('/')
-    const currentDose = `${lastApp.concentracaoExtrato || lastApp.dose.split(' - ')[0]} - ${lastApp.volumeAplicado || lastApp.dose.split(' - ')[1]}`
-    const currentInterval = lastApp.ciclo.dias
+    const [d, m, y] = lastApp.date.split('/')
+    const currentDose = `${lastApp.extractConcentration || lastApp.dose.split(' - ')[0]} - ${lastApp.appliedVolume || lastApp.dose.split(' - ')[1]}`
+    const currentInterval = lastApp.cycle.days
     const calc = calculateNextDose(currentDose, currentInterval)
     const nextDate = addDays(new Date(+y, +m - 1, +d), calc.interval)
     const next = parseDose(calc.dose)
@@ -133,16 +133,16 @@ export function PatientEvolutionPage() {
   }, [lastApp, selectedPatient, doseNumber])
 
   const plannedNext = useMemo(() => {
-    if (!form.dataAplicacao || !form.intervaloProxima || !form.intervaloProxima.trim()) return null
-    const [y, m, d] = form.dataAplicacao.split('-')
+    if (!form.applicationDate || !form.nextInterval || !form.nextInterval.trim()) return null
+    const [y, m, d] = form.applicationDate.split('-')
     if (!y || !m || !d) return null
     const applicationDate = new Date(+y, +m - 1, +d)
     if (isNaN(applicationDate.getTime())) return null
-    const intervalDays = parseInt(form.intervaloProxima.trim(), 10)
+    const intervalDays = parseInt(form.nextInterval.trim(), 10)
     if (isNaN(intervalDays) || intervalDays <= 0) return null
     const nextDate = addDays(applicationDate, intervalDays)
     return { date: format(nextDate, 'dd/MM/yyyy'), interval: intervalDays, applicationDate }
-  }, [form.dataAplicacao, form.intervaloProxima])
+  }, [form.applicationDate, form.nextInterval])
 
   const treatmentTime = useMemo(() => {
     if (!selectedPatient) return null
@@ -198,10 +198,10 @@ export function PatientEvolutionPage() {
       if (!ok) return
       if (nextDose) {
         const p = getValues()
-        if (!p.dataAplicacao) setValue('dataAplicacao', nextDose.date.split('/').reverse().join('-'))
-        if (!p.volumeAplicado) setValue('volumeAplicado', nextDose.vol.replace('ml', '').replace(',', '.'))
-        if (!p.concentracao) setValue('concentracao', nextDose.conc)
-        if (!p.intervaloProxima) setValue('intervaloProxima', String(nextDose.interval))
+        if (!p.applicationDate) setValue('applicationDate', nextDose.date.split('/').reverse().join('-'))
+        if (!p.appliedVolume) setValue('appliedVolume', nextDose.vol.replace('ml', '').replace(',', '.'))
+        if (!p.concentration) setValue('concentration', nextDose.conc)
+        if (!p.nextInterval) setValue('nextInterval', String(nextDose.interval))
       }
     }
     if (step === 2) {
@@ -213,53 +213,53 @@ export function PatientEvolutionPage() {
 
   const onSaveEvolution = handleSubmit((data) => {
     if (!selectedPatient || !plannedNext) return
-    const [y, m, d] = data.dataAplicacao.split('-')
+    const [y, m, d] = data.applicationDate.split('-')
     const pt = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO']
     const dataRealizada = `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`
     const mesRealizada = pt[parseInt(m, 10) - 1]
-    const volStr = data.volumeAplicado.replace('.', ',') + 'ml'
-    const doseStr = `${data.concentracao} - ${volStr}`
+    const volStr = data.appliedVolume.replace('.', ',') + 'ml'
+    const doseStr = `${data.concentration} - ${volStr}`
     const interval = plannedNext.interval
     const ciclo = interval === 7 ? 1 : interval === 14 ? 1 : interval === 21 ? 2 : interval === 28 ? 3 : 1
     const nextDateParts = plannedNext.date.split('/')
     const nextMonth = pt[parseInt(nextDateParts[1], 10) - 1]
 
-    const realizada = {
+    const completed = {
       id: `evo-${Date.now()}-r`,
       patientId: selectedPatient.id,
-      data: dataRealizada,
-      horaInicio: data.horaInicio,
-      horaFim: data.horaFim,
-      status: 'realizada' as const,
+      date: dataRealizada,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      status: 'completed' as const,
       dose: doseStr,
-      ciclo: { numero: ciclo, dias: interval },
-      mes: mesRealizada,
-      ano: parseInt(y, 10),
-      volumeAplicado: volStr,
-      concentracaoExtrato: data.concentracao,
-      efeitoColateral: data.efeitoColateralPos,
-      efeitosRelatados: data.efeitoColateralPos === 'Sim' ? data.efeitosRelatadosPos : undefined,
-      necessidadeMedicacao: data.necessidadeMedicacaoPos,
-      medicacoes: data.necessidadeMedicacaoPos === 'Sim' ? data.medicacoesPos : undefined,
-      responsavel: data.responsavel,
-      notaResponsavel: data.notasPos || '-',
+      cycle: { number: ciclo, days: interval },
+      month: mesRealizada,
+      year: parseInt(y, 10),
+      appliedVolume: volStr,
+      extractConcentration: data.concentration,
+      sideEffect: data.sideEffectPost,
+      reportedEffects: data.sideEffectPost === 'yes' ? data.reportedEffectsPost : undefined,
+      medicationNeeded: data.medicationNeededPost,
+      medications: data.medicationNeededPost === 'yes' ? data.medicationsPost : undefined,
+      administrator: data.administrator,
+      administratorNote: data.notesPost || '-',
     }
 
     const nextCalc = calculateNextDose(doseStr, interval)
-    const proxima = {
+    const next = {
       id: `evo-${Date.now()}-n`,
       patientId: selectedPatient.id,
-      data: plannedNext.date,
-      horaInicio: data.horaInicio,
-      horaFim: data.horaFim,
-      status: 'agendada' as const,
+      date: plannedNext.date,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      status: 'scheduled' as const,
       dose: nextCalc.dose,
-      ciclo: { numero: ciclo, dias: nextCalc.interval },
-      mes: nextMonth,
-      ano: parseInt(nextDateParts[2], 10),
+      cycle: { number: ciclo, days: nextCalc.interval },
+      month: nextMonth,
+      year: parseInt(nextDateParts[2], 10),
     }
 
-    recordEvolution({ realizada, proxima })
+    recordEvolution({ completed, next })
 
     logAccess({
       userId: currentUser.id,
@@ -269,7 +269,7 @@ export function PatientEvolutionPage() {
       patientId: selectedPatient.id,
       patientName: selectedPatient.name,
       action: 'apply_dose',
-      description: `Aplicou ${doseStr} em ${dataRealizada} (ciclo ${ciclo} · intervalo ${interval} dias) · responsável: ${data.responsavel}`,
+      description: `Aplicou ${doseStr} em ${dataRealizada} (ciclo ${ciclo} · intervalo ${interval} dias) · responsável: ${data.administrator}`,
     })
 
     navigate({ to: '/immunotherapies', search: { success: true, patientName: selectedPatient.name } })
@@ -369,15 +369,15 @@ export function PatientEvolutionPage() {
                           </div>
                           <div>
                             <div className="text-[0.6rem] text-(--text-muted) font-medium">Volume</div>
-                            <div className="text-xs font-bold text-(--text)">{lastApp?.volumeAplicado || lastApp?.dose.split(' - ')[1] || '-'}</div>
+                            <div className="text-xs font-bold text-(--text)">{lastApp?.appliedVolume || lastApp?.dose.split(' - ')[1] || '-'}</div>
                           </div>
                           <div>
                             <div className="text-[0.6rem] text-(--text-muted) font-medium">Concentração</div>
-                            <div className="text-xs font-bold text-(--text)">{lastApp?.concentracaoExtrato || lastApp?.dose.split(' - ')[0] || '-'}</div>
+                            <div className="text-xs font-bold text-(--text)">{lastApp?.extractConcentration || lastApp?.dose.split(' - ')[0] || '-'}</div>
                           </div>
                           <div>
                             <div className="text-[0.6rem] text-(--text-muted) font-medium">Data</div>
-                            <div className="text-xs font-bold text-(--text)">{lastApp?.data || '-'}</div>
+                            <div className="text-xs font-bold text-(--text)">{lastApp?.date || '-'}</div>
                           </div>
                         </div>
                       </div>
@@ -421,48 +421,48 @@ export function PatientEvolutionPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Como o paciente passou durante o intervalo? <span className="text-red-400">*</span></label>
-                    <TextArea rows={3} placeholder="Descreva aqui" invalid={!!errors.intervaloRelato} {...register('intervaloRelato')} />
-                    {errMsg('intervaloRelato')}
+                    <TextArea rows={3} placeholder="Descreva aqui" invalid={!!errors.intervalReport} {...register('intervalReport')} />
+                    {errMsg('intervalReport')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Efeito colateral</label>
-                    <Select {...register('efeitoColateral')}>
-                      <option value="Não">Não</option>
-                      <option value="Sim">Sim</option>
+                    <Select {...register('sideEffect')}>
+                      <option value="no">Não</option>
+                      <option value="yes">Sim</option>
                     </Select>
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Necessidade de medicação</label>
-                    <Select {...register('necessidadeMedicacao')}>
-                      <option value="Não">Não</option>
-                      <option value="Sim">Sim</option>
+                    <Select {...register('medicationNeeded')}>
+                      <option value="no">Não</option>
+                      <option value="yes">Sim</option>
                     </Select>
                   </div>
                   <div>
-                    <label className={cn("text-xs font-semibold mb-1.5 block", form.efeitoColateral === 'Sim' ? "text-(--text-muted)" : "text-(--text-muted)/40")}>Efeitos colaterais relatados {form.efeitoColateral === 'Sim' && <span className="text-red-400">*</span>}</label>
+                    <label className={cn("text-xs font-semibold mb-1.5 block", form.sideEffect === 'yes' ? "text-(--text-muted)" : "text-(--text-muted)/40")}>Efeitos colaterais relatados {form.sideEffect === 'yes' && <span className="text-red-400">*</span>}</label>
                     <TextInput
                       placeholder="Insira aqui"
-                      disabled={form.efeitoColateral !== 'Sim'}
-                      invalid={form.efeitoColateral === 'Sim' && !!errors.efeitosRelatados}
-                      className={cn(form.efeitoColateral !== 'Sim' && "opacity-40 cursor-not-allowed")}
-                      {...register('efeitosRelatados')}
+                      disabled={form.sideEffect !== 'yes'}
+                      invalid={form.sideEffect === 'yes' && !!errors.reportedEffects}
+                      className={cn(form.sideEffect !== 'yes' && "opacity-40 cursor-not-allowed")}
+                      {...register('reportedEffects')}
                     />
-                    {form.efeitoColateral === 'Sim' && errMsg('efeitosRelatados')}
+                    {form.sideEffect === 'yes' && errMsg('reportedEffects')}
                   </div>
                   <div>
-                    <label className={cn("text-xs font-semibold mb-1.5 block", form.necessidadeMedicacao === 'Sim' ? "text-(--text-muted)" : "text-(--text-muted)/40")}>Medicações administradas {form.necessidadeMedicacao === 'Sim' && <span className="text-red-400">*</span>}</label>
+                    <label className={cn("text-xs font-semibold mb-1.5 block", form.medicationNeeded === 'yes' ? "text-(--text-muted)" : "text-(--text-muted)/40")}>Medicações administradas {form.medicationNeeded === 'yes' && <span className="text-red-400">*</span>}</label>
                     <TextInput
                       placeholder="Insira aqui"
-                      disabled={form.necessidadeMedicacao !== 'Sim'}
-                      invalid={form.necessidadeMedicacao === 'Sim' && !!errors.medicacoes}
-                      className={cn(form.necessidadeMedicacao !== 'Sim' && "opacity-40 cursor-not-allowed")}
-                      {...register('medicacoes')}
+                      disabled={form.medicationNeeded !== 'yes'}
+                      invalid={form.medicationNeeded === 'yes' && !!errors.medications}
+                      className={cn(form.medicationNeeded !== 'yes' && "opacity-40 cursor-not-allowed")}
+                      {...register('medications')}
                     />
-                    {form.necessidadeMedicacao === 'Sim' && errMsg('medicacoes')}
+                    {form.medicationNeeded === 'yes' && errMsg('medications')}
                   </div>
                   <div className="col-span-2">
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Notas do responsável</label>
-                    <TextArea rows={2} placeholder="Insira aqui" {...register('notasPre')} />
+                    <TextArea rows={2} placeholder="Insira aqui" {...register('notesPre')} />
                   </div>
                 </div>
               </div>
@@ -474,15 +474,15 @@ export function PatientEvolutionPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data da aplicação</label>
-                    <TextInput type="date" invalid={!!errors.dataAplicacao} {...register('dataAplicacao')} />
-                    {errMsg('dataAplicacao')}
+                    <TextInput type="date" invalid={!!errors.applicationDate} {...register('applicationDate')} />
+                    {errMsg('applicationDate')}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Hora início</label>
                       <Controller
                         control={control}
-                        name="horaInicio"
+                        name="startTime"
                         render={({ field }) => (
                           <TextInput
                             type="time"
@@ -491,18 +491,18 @@ export function PatientEvolutionPage() {
                             onChange={(e) => {
                               const v = e.target.value
                               field.onChange(v)
-                              if (v && !getValues('horaFim')) setValue('horaFim', addMinutesToTime(v, 30))
+                              if (v && !getValues('endTime')) setValue('endTime', addMinutesToTime(v, 30))
                             }}
-                            invalid={!!errors.horaInicio}
+                            invalid={!!errors.startTime}
                           />
                         )}
                       />
-                      {errMsg('horaInicio')}
+                      {errMsg('startTime')}
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Hora fim</label>
-                      <TextInput type="time" invalid={!!errors.horaFim} {...register('horaFim')} />
-                      {errMsg('horaFim')}
+                      <TextInput type="time" invalid={!!errors.endTime} {...register('endTime')} />
+                      {errMsg('endTime')}
                     </div>
                   </div>
                   <div>
@@ -510,31 +510,31 @@ export function PatientEvolutionPage() {
                     <div className="relative">
                       <Controller
                         control={control}
-                        name="volumeAplicado"
+                        name="appliedVolume"
                         render={({ field }) => (
-                          <TextInput placeholder="Ex: 0.5" invalid={!!errors.volumeAplicado} className="pr-10" value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatVolume(e.target.value))} />
+                          <TextInput placeholder="Ex: 0.5" invalid={!!errors.appliedVolume} className="pr-10" value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatVolume(e.target.value))} />
                         )}
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">ml</span>
                     </div>
-                    {errMsg('volumeAplicado')}
+                    {errMsg('appliedVolume')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Concentração do extrato</label>
                     <Controller
                       control={control}
-                      name="concentracao"
+                      name="concentration"
                       render={({ field }) => (
-                        <TextInput placeholder="1:10" invalid={!!errors.concentracao} value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatConcentration(e.target.value))} />
+                        <TextInput placeholder="1:10" invalid={!!errors.concentration} value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatConcentration(e.target.value))} />
                       )}
                     />
-                    {errMsg('concentracao')}
+                    {errMsg('concentration')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Intervalo próxima aplicação</label>
                     <Controller
                       control={control}
-                      name="intervaloProxima"
+                      name="nextInterval"
                       render={({ field }) => {
                         const isCustom = field.value && !['7', '14', '21', '28'].includes(field.value)
                         const selectValue = isCustom ? 'outro' : field.value
@@ -543,7 +543,7 @@ export function PatientEvolutionPage() {
                             value={selectValue}
                             onChange={(e) => field.onChange(e.target.value === 'outro' ? ' ' : e.target.value)}
                             onBlur={field.onBlur}
-                            invalid={!!errors.intervaloProxima}
+                            invalid={!!errors.nextInterval}
                           >
                             <option value="" disabled>Selecione</option>
                             <option value="7">7 dias</option>
@@ -555,12 +555,12 @@ export function PatientEvolutionPage() {
                         )
                       }}
                     />
-                    {(form.intervaloProxima === ' ' || (form.intervaloProxima && !['7','14','21','28'].includes(form.intervaloProxima))) && (
+                    {(form.nextInterval === ' ' || (form.nextInterval && !['7','14','21','28'].includes(form.nextInterval))) && (
                       <div className="mt-2 space-y-2">
                         <div className="flex items-center gap-2">
                           <Controller
                             control={control}
-                            name="intervaloProxima"
+                            name="nextInterval"
                             render={({ field }) => (
                               <TextInput
                                 type="number"
@@ -568,7 +568,7 @@ export function PatientEvolutionPage() {
                                 placeholder="Ex: 35"
                                 value={field.value.trim()}
                                 onChange={(e) => field.onChange(e.target.value.replace(/[^0-9]/g, ''))}
-                                invalid={!!errors.intervaloProxima}
+                                invalid={!!errors.nextInterval}
                                 className="flex-1"
                               />
                             )}
@@ -576,7 +576,7 @@ export function PatientEvolutionPage() {
                           <span className="text-[0.65rem] text-(--text-muted) shrink-0">dias</span>
                         </div>
                         {(() => {
-                          const n = parseInt(form.intervaloProxima.trim(), 10)
+                          const n = parseInt(form.nextInterval.trim(), 10)
                           if (isNaN(n) || n <= 0) return null
                           if (n < 4) return <div className="text-[0.65rem] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">⚠ Intervalo muito curto desrespeita o tempo mínimo de segurança entre doses. Reavalie o protocolo.</div>
                           if (n > 15) return <div className="text-[0.65rem] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">⚠ Intervalo muito longo na indução pode comprometer a progressão. Confirme a conduta clínica.</div>
@@ -587,51 +587,51 @@ export function PatientEvolutionPage() {
                           <TextArea
                             rows={2}
                             placeholder="Descreva o motivo clínico para um intervalo fora do protocolo padrão"
-                            invalid={!!errors.intervaloJustificativa}
+                            invalid={!!errors.intervalJustification}
                             className="focus:ring-amber-400"
-                            {...register('intervaloJustificativa')}
+                            {...register('intervalJustification')}
                           />
-                          {errMsg('intervaloJustificativa')}
+                          {errMsg('intervalJustification')}
                         </div>
                       </div>
                     )}
-                    {errMsg('intervaloProxima')}
+                    {errMsg('nextInterval')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Responsável</label>
-                    <Select invalid={!!errors.responsavel} {...register('responsavel')}>
+                    <Select invalid={!!errors.administrator} {...register('administrator')}>
                       <option value="" disabled>Selecione o responsável pela aplicação</option>
                       {RESPONSAVEIS_APLICACAO.map((r) => (
                         <option key={r.name} value={r.name}>{r.name} — {r.role}</option>
                       ))}
                     </Select>
-                    {errMsg('responsavel')}
+                    {errMsg('administrator')}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Efeito colateral</label>
-                    <Select {...register('efeitoColateralPos')}>
-                      <option value="Não">Não</option>
-                      <option value="Sim">Sim</option>
+                    <Select {...register('sideEffectPost')}>
+                      <option value="no">Não</option>
+                      <option value="yes">Sim</option>
                     </Select>
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Necessidade de medicação</label>
-                    <Select {...register('necessidadeMedicacaoPos')}>
-                      <option value="Não">Não</option>
-                      <option value="Sim">Sim</option>
+                    <Select {...register('medicationNeededPost')}>
+                      <option value="no">Não</option>
+                      <option value="yes">Sim</option>
                     </Select>
                   </div>
-                  <div className={cn("transition-all duration-300 overflow-hidden", form.efeitoColateralPos === 'Sim' ? "max-h-24 opacity-100" : "max-h-0 opacity-0")}>
+                  <div className={cn("transition-all duration-300 overflow-hidden", form.sideEffectPost === 'yes' ? "max-h-24 opacity-100" : "max-h-0 opacity-0")}>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Efeitos colaterais relatados</label>
-                    <TextInput placeholder="Insira aqui" invalid={!!errors.efeitosRelatadosPos} {...register('efeitosRelatadosPos')} />
-                    {errMsg('efeitosRelatadosPos')}
+                    <TextInput placeholder="Insira aqui" invalid={!!errors.reportedEffectsPost} {...register('reportedEffectsPost')} />
+                    {errMsg('reportedEffectsPost')}
                   </div>
-                  <div className={cn("transition-all duration-300 overflow-hidden", form.necessidadeMedicacaoPos === 'Sim' ? "max-h-24 opacity-100" : "max-h-0 opacity-0")}>
+                  <div className={cn("transition-all duration-300 overflow-hidden", form.medicationNeededPost === 'yes' ? "max-h-24 opacity-100" : "max-h-0 opacity-0")}>
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Medicações administradas</label>
-                    <TextInput placeholder="Insira aqui" invalid={!!errors.medicacoesPos} {...register('medicacoesPos')} />
-                    {errMsg('medicacoesPos')}
+                    <TextInput placeholder="Insira aqui" invalid={!!errors.medicationsPost} {...register('medicationsPost')} />
+                    {errMsg('medicationsPost')}
                   </div>
-                  <div className={cn("col-span-2 transition-all duration-300 overflow-hidden", form.efeitoColateralPos === 'Sim' && form.necessidadeMedicacaoPos === 'Sim' ? "max-h-96 opacity-100" : "max-h-0 opacity-0")}>
+                  <div className={cn("col-span-2 transition-all duration-300 overflow-hidden", form.sideEffectPost === 'yes' && form.medicationNeededPost === 'yes' ? "max-h-96 opacity-100" : "max-h-0 opacity-0")}>
                     <div className="bg-amber-50/60 border border-amber-200 rounded-lg p-3 space-y-2.5">
                       <div className="flex items-start gap-2">
                         <Info size={14} className="text-amber-700 shrink-0 mt-0.5" />
@@ -641,21 +641,21 @@ export function PatientEvolutionPage() {
                       </div>
                       <Controller
                         control={control}
-                        name="ajusteReacao"
+                        name="reactionAdjustment"
                         render={({ field }) => (
                           <div className="grid grid-cols-2 gap-2">
                             {[
-                              { v: 'reduzir_dose', label: 'Reduzir dose', desc: 'Retornar ao volume anterior' },
-                              { v: 'aumentar_intervalo', label: 'Aumentar intervalo', desc: 'Ampliar espaçamento entre doses' },
-                              { v: 'suspender', label: 'Suspender temporariamente', desc: 'Pausar até avaliação médica' },
-                              { v: 'manter', label: 'Manter protocolo', desc: 'Mantém dose e intervalo' },
+                              { v: 'reduce_dose', label: 'Reduzir dose', desc: 'Retornar ao volume anterior' },
+                              { v: 'increase_interval', label: 'Aumentar intervalo', desc: 'Ampliar espaçamento entre doses' },
+                              { v: 'suspend', label: 'Suspender temporariamente', desc: 'Pausar até avaliação médica' },
+                              { v: 'maintain', label: 'Manter protocolo', desc: 'Mantém dose e intervalo' },
                             ].map((opt) => {
                               const selected = field.value === opt.v
                               return (
                                 <button
                                   key={opt.v}
                                   type="button"
-                                  onClick={() => field.onChange(opt.v as EvolutionForm['ajusteReacao'])}
+                                  onClick={() => field.onChange(opt.v as EvolutionForm['reactionAdjustment'])}
                                   className={cn("text-left px-2.5 py-2 rounded-lg border-[1.5px] transition-all cursor-pointer", selected ? "border-amber-500 bg-amber-100/50" : "border-amber-200 bg-white hover:border-amber-400")}
                                 >
                                   <div className="text-[0.65rem] font-bold text-(--text)">{opt.label}</div>
@@ -666,25 +666,25 @@ export function PatientEvolutionPage() {
                           </div>
                         )}
                       />
-                      {form.ajusteReacao && (
+                      {form.reactionAdjustment && (
                         <div>
                           <label className="text-[0.6rem] font-semibold text-(--text-muted) mb-1 block">
-                            Justificativa clínica {form.ajusteReacao === 'manter' && <span className="text-red-400">*</span>}
+                            Justificativa clínica {form.reactionAdjustment === 'maintain' && <span className="text-red-400">*</span>}
                           </label>
                           <textarea
                             rows={2}
-                            placeholder={form.ajusteReacao === 'manter' ? 'Justifique por que o protocolo será mantido mesmo com reação adversa' : 'Contexto clínico da conduta (opcional)'}
+                            placeholder={form.reactionAdjustment === 'maintain' ? 'Justifique por que o protocolo será mantido mesmo com reação adversa' : 'Contexto clínico da conduta (opcional)'}
                             className="w-full rounded-lg border border-(--border-custom) bg-white px-2.5 py-1.5 text-[0.7rem] placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all resize-none"
-                            {...register('ajusteReacaoJustificativa')}
+                            {...register('reactionAdjustmentJustification')}
                           />
-                          {errMsg('ajusteReacaoJustificativa')}
+                          {errMsg('reactionAdjustmentJustification')}
                         </div>
                       )}
                     </div>
                   </div>
                   <div className="col-span-2">
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Notas do responsável</label>
-                    <TextArea rows={2} placeholder="Insira aqui" {...register('notasPos')} />
+                    <TextArea rows={2} placeholder="Insira aqui" {...register('notesPost')} />
                   </div>
                 </div>
               </div>
@@ -705,19 +705,19 @@ export function PatientEvolutionPage() {
                     <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-(--text-muted)">Pré-Aplicação</span>
                   </div>
                   <div className="bg-gray-50/60 p-4">
-                    {form.intervaloRelato && (
+                    {form.intervalReport && (
                       <div className="mb-3 bg-teal-50 border-l-2 border-teal-400 rounded-r-lg px-3 py-2.5">
                         <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-teal-700 mb-1">Relato do intervalo</div>
-                        <div className="text-xs text-teal-900 leading-relaxed">{form.intervaloRelato}</div>
+                        <div className="text-xs text-teal-900 leading-relaxed">{form.intervalReport}</div>
                       </div>
                     )}
                     <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
                       {[
-                        { label: 'Efeito Colateral', value: form.efeitoColateral },
-                        { label: 'Necessidade de Medicação', value: form.necessidadeMedicacao },
-                        ...(form.efeitoColateral === 'Sim' ? [{ label: 'Efeitos Relatados', value: form.efeitosRelatados || '—' }] : []),
-                        ...(form.necessidadeMedicacao === 'Sim' ? [{ label: 'Medicações', value: form.medicacoes || '—' }] : []),
-                        ...(form.notasPre ? [{ label: 'Notas', value: form.notasPre }] : []),
+                        { label: 'Efeito Colateral', value: form.sideEffect === 'yes' ? 'Sim' : 'Não' },
+                        { label: 'Necessidade de Medicação', value: form.medicationNeeded === 'yes' ? 'Sim' : 'Não' },
+                        ...(form.sideEffect === 'yes' ? [{ label: 'Efeitos Relatados', value: form.reportedEffects || '—' }] : []),
+                        ...(form.medicationNeeded === 'yes' ? [{ label: 'Medicações', value: form.medications || '—' }] : []),
+                        ...(form.notesPre ? [{ label: 'Notas', value: form.notesPre }] : []),
                       ].map((item) => (
                         <div key={item.label} className="bg-white px-3.5 py-2.5">
                           <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{item.label}</div>
@@ -738,15 +738,15 @@ export function PatientEvolutionPage() {
                   <div className="bg-gray-50/60 p-4">
                     <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
                       {[
-                        { label: 'Data', value: form.dataAplicacao ? format(parse(form.dataAplicacao, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy') : '—' },
-                        { label: 'Horário', value: form.horaInicio && form.horaFim ? `${form.horaInicio} – ${form.horaFim}` : '—' },
-                        { label: 'Volume Aplicado', value: form.volumeAplicado ? `${form.volumeAplicado} ml` : '—' },
-                        { label: 'Concentração', value: form.concentracao || '—' },
-                        { label: 'Intervalo Próxima Dose', value: form.intervaloProxima ? `${form.intervaloProxima} dias` : '—' },
-                        { label: 'Responsável', value: form.responsavel || '—' },
-                        { label: 'Efeito Colateral', value: form.efeitoColateralPos },
-                        { label: 'Necessidade de Medicação', value: form.necessidadeMedicacaoPos },
-                        ...(form.notasPos ? [{ label: 'Notas', value: form.notasPos }] : []),
+                        { label: 'Data', value: form.applicationDate ? format(parse(form.applicationDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy') : '—' },
+                        { label: 'Horário', value: form.startTime && form.endTime ? `${form.startTime} – ${form.endTime}` : '—' },
+                        { label: 'Volume Aplicado', value: form.appliedVolume ? `${form.appliedVolume} ml` : '—' },
+                        { label: 'Concentração', value: form.concentration || '—' },
+                        { label: 'Intervalo Próxima Dose', value: form.nextInterval ? `${form.nextInterval} dias` : '—' },
+                        { label: 'Responsável', value: form.administrator || '—' },
+                        { label: 'Efeito Colateral', value: form.sideEffectPost === 'yes' ? 'Sim' : 'Não' },
+                        { label: 'Necessidade de Medicação', value: form.medicationNeededPost === 'yes' ? 'Sim' : 'Não' },
+                        ...(form.notesPost ? [{ label: 'Notas', value: form.notesPost }] : []),
                       ].map((item) => (
                         <div key={item.label} className="bg-white px-3.5 py-2.5">
                           <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{item.label}</div>

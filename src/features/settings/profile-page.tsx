@@ -8,13 +8,13 @@ export function ProfilePage() {
   const [showSaveModal, setShowSaveModal] = useState(false)
 
   const [form, setForm] = useState({
-    nome: 'Dr. Usuário',
+    name: 'Dr. Usuário',
     email: 'usuario@clinica.com',
-    telefone: '(62) 99557-1423',
+    phone: '(62) 99557-1423',
     crm: 'CRM/GO 12345',
-    especialidade: 'Alergologia e Imunologia',
-    instituicao: 'Clínica Integrada Princípios',
-    dataNascimento: '1985-03-15',
+    specialty: 'Alergologia e Imunologia',
+    institution: 'Clínica Integrada Princípios',
+    birthDate: '1985-03-15',
     cpf: '711.905.744-89',
   })
 
@@ -62,9 +62,9 @@ export function ProfilePage() {
                 )}
               </div>
               <div>
-                <div className="text-lg font-bold text-(--text)">{form.nome}</div>
-                <div className="text-xs text-(--text-muted)">{form.especialidade}</div>
-                <div className="text-xs text-(--text-muted) mt-0.5">{form.instituicao}</div>
+                <div className="text-lg font-bold text-(--text)">{form.name}</div>
+                <div className="text-xs text-(--text-muted)">{form.specialty}</div>
+                <div className="text-xs text-(--text-muted) mt-0.5">{form.institution}</div>
               </div>
             </div>
 
@@ -77,9 +77,9 @@ export function ProfilePage() {
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nome completo</label>
                   {editing ? (
-                    <TextInput value={form.nome} onChange={(e) => set('nome', e.target.value)}  />
+                    <TextInput value={form.name} onChange={(e) => set('name', e.target.value)}  />
                   ) : (
-                    <div className={disabledClass + " flex items-center"}>{form.nome}</div>
+                    <div className={disabledClass + " flex items-center"}>{form.name}</div>
                   )}
                 </div>
                 <div>
@@ -89,7 +89,7 @@ export function ProfilePage() {
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de nascimento</label>
                   {editing ? (
-                    <TextInput type="date" value={form.dataNascimento} onChange={(e) => set('dataNascimento', e.target.value)}  />
+                    <TextInput type="date" value={form.birthDate} onChange={(e) => set('birthDate', e.target.value)}  />
                   ) : (
                     <div className={disabledClass + " flex items-center"}>15/03/1985</div>
                   )}
@@ -97,9 +97,9 @@ export function ProfilePage() {
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Telefone</label>
                   {editing ? (
-                    <TextInput value={form.telefone} onChange={(e) => set('telefone', e.target.value)}  />
+                    <TextInput value={form.phone} onChange={(e) => set('phone', e.target.value)}  />
                   ) : (
-                    <div className={disabledClass + " flex items-center"}>{form.telefone}</div>
+                    <div className={disabledClass + " flex items-center"}>{form.phone}</div>
                   )}
                 </div>
               </div>
@@ -126,17 +126,17 @@ export function ProfilePage() {
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Especialidade</label>
                   {editing ? (
-                    <TextInput value={form.especialidade} onChange={(e) => set('especialidade', e.target.value)}  />
+                    <TextInput value={form.specialty} onChange={(e) => set('specialty', e.target.value)}  />
                   ) : (
-                    <div className={disabledClass + " flex items-center"}>{form.especialidade}</div>
+                    <div className={disabledClass + " flex items-center"}>{form.specialty}</div>
                   )}
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Instituição</label>
                   {editing ? (
-                    <TextInput value={form.instituicao} onChange={(e) => set('instituicao', e.target.value)}  />
+                    <TextInput value={form.institution} onChange={(e) => set('institution', e.target.value)}  />
                   ) : (
-                    <div className={disabledClass + " flex items-center"}>{form.instituicao}</div>
+                    <div className={disabledClass + " flex items-center"}>{form.institution}</div>
                   )}
                 </div>
               </div>

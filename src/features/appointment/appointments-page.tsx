@@ -52,17 +52,17 @@ export function AppointmentsPage() {
   const googleConnected = true
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
 
-  const scheduled = useMemo(() => applications.filter((a) => a.status === 'agendada' || a.status === 'ausente'), [applications])
+  const scheduled = useMemo(() => applications.filter((a) => a.status === 'scheduled' || a.status === 'missed'), [applications])
 
   const getEventColor = (app: typeof applications[0]) => {
-    if (app.status === 'ausente') return { bg: '#FEE2E2', text: '#991B1B', border: '#EF4444' }
-    if (app.modalidade === 'sublingual') return { bg: '#EDE9FE', text: '#5B21B6', border: '#8B5CF6' }
+    if (app.status === 'missed') return { bg: '#FEE2E2', text: '#991B1B', border: '#EF4444' }
+    if (app.modality === 'sublingual') return { bg: '#EDE9FE', text: '#5B21B6', border: '#8B5CF6' }
     return { bg: '#CCFBF1', text: '#115E59', border: '#14B8A6' }
   }
 
   const getAppsForDate = (date: Date) => {
     const str = format(date, 'dd/MM/yyyy')
-    return scheduled.filter((a) => a.data === str)
+    return scheduled.filter((a) => a.date === str)
   }
 
   const getPatientName = (patientId?: string) => {
@@ -191,9 +191,9 @@ export function AppointmentsPage() {
                       {apps.map((app) => {
                         const ec = getEventColor(app)
                         return (
-                          <div key={app.id} onClick={(e) => { e.stopPropagation(); setSelectedApp(app) }} className={cn('rounded-md px-2 py-1.5 text-[0.6rem] border-l-2 cursor-pointer hover:opacity-80 transition-opacity', app.status === 'ausente' && 'line-through opacity-70')} style={{ backgroundColor: ec.bg, color: ec.text, borderLeftColor: ec.border }}>
+                          <div key={app.id} onClick={(e) => { e.stopPropagation(); setSelectedApp(app) }} className={cn('rounded-md px-2 py-1.5 text-[0.6rem] border-l-2 cursor-pointer hover:opacity-80 transition-opacity', app.status === 'missed' && 'line-through opacity-70')} style={{ backgroundColor: ec.bg, color: ec.text, borderLeftColor: ec.border }}>
                             <div className="font-semibold truncate">{getPatientName(app.patientId)}</div>
-                            <div className="opacity-75">{app.horaInicio} · {app.dose.split(' - ')[1]}</div>
+                            <div className="opacity-75">{app.startTime} · {app.dose.split(' - ')[1]}</div>
                           </div>
                         )
                       })}
@@ -235,8 +235,8 @@ export function AppointmentsPage() {
                         {apps.slice(0, 2).map((app) => {
                           const ec = getEventColor(app)
                           return (
-                            <div key={app.id} onClick={(e) => { e.stopPropagation(); setSelectedApp(app) }} className={cn('rounded px-1 py-0.5 text-[0.55rem] font-medium truncate border-l-[1.5px] cursor-pointer hover:opacity-80 transition-opacity', app.status === 'ausente' && 'line-through opacity-70')} style={{ backgroundColor: ec.bg, color: ec.text, borderLeftColor: ec.border }}>
-                              {app.horaInicio} · {getPatientName(app.patientId)}
+                            <div key={app.id} onClick={(e) => { e.stopPropagation(); setSelectedApp(app) }} className={cn('rounded px-1 py-0.5 text-[0.55rem] font-medium truncate border-l-[1.5px] cursor-pointer hover:opacity-80 transition-opacity', app.status === 'missed' && 'line-through opacity-70')} style={{ backgroundColor: ec.bg, color: ec.text, borderLeftColor: ec.border }}>
+                              {app.startTime} · {getPatientName(app.patientId)}
                             </div>
                           )
                         })}
@@ -265,16 +265,16 @@ export function AppointmentsPage() {
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {selectedDayApps.map((app) => {
-                const color = getIntervalColor(app.ciclo.dias)
+                const color = getIntervalColor(app.cycle.days)
                 return (
                   <div key={app.id} onClick={() => setSelectedApp(app)} className="shrink-0 border border-(--border-custom) rounded-lg p-2.5 min-w-45 cursor-pointer hover:border-brand/50 hover:shadow-sm transition-all">
                     <div className="text-xs font-semibold text-(--text)">{getPatientName(app.patientId)}</div>
-                    <div className="text-[0.65rem] text-(--text-muted) mt-0.5">{app.horaInicio} – {app.horaFim}</div>
+                    <div className="text-[0.65rem] text-(--text-muted) mt-0.5">{app.startTime} – {app.endTime}</div>
                     <div className="flex items-center gap-2 mt-1.5">
                       <span className="text-[0.6rem] font-medium text-(--text-muted)">{app.dose}</span>
                       <span className="inline-flex items-center gap-1 px-2 py-px rounded-full text-[0.55rem] font-semibold border" style={{ backgroundColor: color.bg, color: color.text, borderColor: color.dot + '30' }}>
                         <span className="w-1 h-1 rounded-full" style={{ backgroundColor: color.dot }} />
-                        {app.ciclo.dias}d
+                        {app.cycle.days}d
                       </span>
                     </div>
                   </div>
@@ -292,7 +292,7 @@ export function AppointmentsPage() {
         size="md"
         footer={selectedApp ? <>
           <button
-            onClick={() => sendReminder(getPatientPhone(selectedApp.patientId), getPatientFullName(selectedApp.patientId).split(' ')[0], selectedApp.data, selectedApp.horaInicio)}
+            onClick={() => sendReminder(getPatientPhone(selectedApp.patientId), getPatientFullName(selectedApp.patientId).split(' ')[0], selectedApp.date, selectedApp.startTime)}
             className="text-[0.65rem] font-medium text-[#25D366] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none mr-auto"
           >
             <Phone size={11} />
@@ -330,14 +330,14 @@ export function AppointmentsPage() {
                     <Calendar size={9} />
                     Data
                   </div>
-                  <div className="text-xs font-medium text-(--text)">{selectedApp.data}</div>
+                  <div className="text-xs font-medium text-(--text)">{selectedApp.date}</div>
                 </div>
                 <div className="bg-white px-3.5 py-2.5">
                   <div className="flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
                     <Clock size={9} />
                     Horário
                   </div>
-                  <div className="text-xs font-medium text-(--text)">{selectedApp.horaInicio} – {selectedApp.horaFim}</div>
+                  <div className="text-xs font-medium text-(--text)">{selectedApp.startTime} – {selectedApp.endTime}</div>
                 </div>
                 <div className="bg-white px-3.5 py-2.5">
                   <div className="flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
@@ -349,17 +349,17 @@ export function AppointmentsPage() {
                 <div className="bg-white px-3.5 py-2.5">
                   <div className="text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">Intervalo</div>
                   <div className="text-xs font-medium text-(--text)">
-                    <span className="inline-flex items-center gap-1 px-2 py-px rounded-full text-[0.6rem] font-semibold border" style={{ backgroundColor: (getIntervalColor(selectedApp.ciclo.dias)).bg, color: (getIntervalColor(selectedApp.ciclo.dias)).text, borderColor: (getIntervalColor(selectedApp.ciclo.dias)).dot + '30' }}>
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: (getIntervalColor(selectedApp.ciclo.dias)).dot }} />
-                      {selectedApp.ciclo.dias} dias
+                    <span className="inline-flex items-center gap-1 px-2 py-px rounded-full text-[0.6rem] font-semibold border" style={{ backgroundColor: (getIntervalColor(selectedApp.cycle.days)).bg, color: (getIntervalColor(selectedApp.cycle.days)).text, borderColor: (getIntervalColor(selectedApp.cycle.days)).dot + '30' }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: (getIntervalColor(selectedApp.cycle.days)).dot }} />
+                      {selectedApp.cycle.days} dias
                     </span>
                   </div>
                 </div>
                 <div className="bg-white px-3.5 py-2.5">
                   <div className="text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">Status</div>
                   <div className="text-xs font-medium">
-                    <span className={cn("px-2 py-0.5 rounded-full text-[0.6rem] font-semibold", selectedApp.status === 'agendada' ? "bg-brand/10 text-brand" : "bg-red-100 text-red-600")}>
-                      {selectedApp.status === 'agendada' ? 'Agendada' : 'Ausente'}
+                    <span className={cn("px-2 py-0.5 rounded-full text-[0.6rem] font-semibold", selectedApp.status === 'scheduled' ? "bg-brand/10 text-brand" : "bg-red-100 text-red-600")}>
+                      {selectedApp.status === 'scheduled' ? 'Agendada' : 'Ausente'}
                     </span>
                   </div>
                 </div>
@@ -368,7 +368,7 @@ export function AppointmentsPage() {
                     <User size={9} />
                     Modalidade
                   </div>
-                  <div className="text-xs font-medium text-(--text)">{selectedApp.modalidade === 'sublingual' ? 'Sublingual' : 'Subcutânea'}</div>
+                  <div className="text-xs font-medium text-(--text)">{selectedApp.modality === 'sublingual' ? 'Sublingual' : 'Subcutânea'}</div>
                 </div>
               </div>
 

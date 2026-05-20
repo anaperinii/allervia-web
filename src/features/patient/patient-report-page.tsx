@@ -54,7 +54,7 @@ export function PatientReportPage() {
     if (!doctorFilter) return
     const targetId = selectedPatient?.id ?? patientId
     if (!targetId) return
-    const patientDoctor = selectedPatient?.medicoResponsavel
+    const patientDoctor = selectedPatient?.responsibleDoctor
       ?? immunotherapies.find((i) => i.id === targetId)?.responsibleDoctor
     if (patientDoctor && patientDoctor !== doctorFilter) navigate({ to: '/immunotherapies' })
   }, [doctorFilter, selectedPatient, patientId, immunotherapies, navigate])
@@ -64,21 +64,21 @@ export function PatientReportPage() {
     const imm = immunotherapies.find((i) => i.id === patientId)
     if (!imm) return null
     return {
-      id: imm.id, nome: imm.name, dataNascimento: '02/07/2000', idade: 25,
-      telefone: '(62) 99557-1423', peso: '89.7 kg', cpf: '711.905.744-89',
-      medicoResponsavel: imm.responsibleDoctor, status: imm.status === 'active' ? 'ativo' as const : 'inativo' as const,
-      tipoImunoterapia: imm.type, inicioInducao: '01/01/2020', inicioManutencao: null,
-      viaAdministracao: 'Subcutânea', extrato: 'Der p 60 + der f 10% + blt 30%',
-      concentracaoVolumeMeta: '1:10 - 0,5ml', metaAtingida: false,
-      intervaloAtual: imm.cycleInterval.days, dataProximaAplicacao: '21/05/2025',
-      concentracaoDoseAtuais: imm.doseConcentration,
+      id: imm.id, name: imm.name, birthDate: '02/07/2000', age: 25,
+      phone: '(62) 99557-1423', weight: '89.7 kg', cpf: '711.905.744-89',
+      responsibleDoctor: imm.responsibleDoctor, status: imm.status === 'active' ? 'active' as const : 'inactive' as const,
+      immunotherapyType: imm.type, inductionStart: '01/01/2020', maintenanceStart: null,
+      administrationRoute: 'Subcutânea', extract: 'Der p 60 + der f 10% + blt 30%',
+      targetConcentrationVolume: '1:10 - 0,5ml', targetReached: false,
+      currentInterval: imm.cycleInterval.days, nextApplicationDate: '21/05/2025',
+      currentDoseConcentration: imm.doseConcentration,
     }
   })()
 
   const patientApps = useMemo(() => {
     if (!patient) return []
     return applications.filter((a) => a.patientId === patient.id).sort((a, b) => {
-      const da = a.data.split('/'), db = b.data.split('/')
+      const da = a.date.split('/'), db = b.date.split('/')
       return new Date(+db[2], +db[1] - 1, +db[0]).getTime() - new Date(+da[2], +da[1] - 1, +da[0]).getTime()
     })
   }, [patient, applications])
@@ -91,8 +91,8 @@ export function PatientReportPage() {
     )
   }, [auditLogs, patient])
 
-  const realizedApps = patientApps.filter((a) => a.status === 'realizada')
-  const reactionsCount = realizedApps.filter((a) => a.efeitoColateral === 'Sim').length
+  const realizedApps = patientApps.filter((a) => a.status === 'completed')
+  const reactionsCount = realizedApps.filter((a) => a.sideEffect === 'yes').length
 
   const mask = (value: string) => {
     if (!anonimizar) return value
@@ -121,7 +121,7 @@ export function PatientReportPage() {
   const buildReportData = () => {
     if (!patient) return null
     return {
-      patient: anonimizar ? { ...patient, nome: mask(patient.nome), cpf: maskCpf(patient.cpf), telefone: maskPhone(patient.telefone) } : patient,
+      patient: anonimizar ? { ...patient, name: mask(patient.name), cpf: maskCpf(patient.cpf), phone: maskPhone(patient.phone) } : patient,
       sections: selectedSections,
       realizedApps,
       reactionsCount,
@@ -133,50 +133,50 @@ export function PatientReportPage() {
     const d = buildReportData()
     if (!d) return
     const lines: string[] = []
-    lines.push(`"Relatório Clínico — ${d.patient.nome}"`)
+    lines.push(`"Relatório Clínico — ${d.patient.name}"`)
     lines.push(`"Gerado em: ${d.generatedAt}"`)
     lines.push('')
     if (selectedSections.includes('personal')) {
       lines.push('"=== DADOS PESSOAIS ==="')
       lines.push('Campo,Valor')
-      ;[['Nome', d.patient.nome], ['CPF', d.patient.cpf], ['Data de Nascimento', d.patient.dataNascimento], ['Idade', `${d.patient.idade} anos`], ['Telefone', d.patient.telefone], ['Peso', d.patient.peso], ['Médico Responsável', d.patient.medicoResponsavel]]
+      ;[['Nome', d.patient.name], ['CPF', d.patient.cpf], ['Data de Nascimento', d.patient.birthDate], ['Idade', `${d.patient.age} anos`], ['Telefone', d.patient.phone], ['Peso', d.patient.weight], ['Médico Responsável', d.patient.responsibleDoctor]]
         .forEach(([k, v]) => lines.push(`"${k}","${String(v).replace(/"/g, '""')}"`))
       lines.push('')
     }
     if (selectedSections.includes('immunotherapy')) {
       lines.push('"=== DADOS DA IMUNOTERAPIA ==="')
       lines.push('Campo,Valor')
-      ;[['Tipo', d.patient.tipoImunoterapia], ['Via', d.patient.viaAdministracao], ['Extrato', d.patient.extrato], ['Início Indução', d.patient.inicioInducao], ['Meta', d.patient.concentracaoVolumeMeta], ['Dose Atual', d.patient.concentracaoDoseAtuais], ['Intervalo', `${d.patient.intervaloAtual} dias`]]
+      ;[['Tipo', d.patient.immunotherapyType], ['Via', d.patient.administrationRoute], ['Extrato', d.patient.extract], ['Início Indução', d.patient.inductionStart], ['Meta', d.patient.targetConcentrationVolume], ['Dose Atual', d.patient.currentDoseConcentration], ['Intervalo', `${d.patient.currentInterval} dias`]]
         .forEach(([k, v]) => lines.push(`"${k}","${String(v).replace(/"/g, '""')}"`))
       lines.push('')
     }
     if (selectedSections.includes('applications')) {
       lines.push('"=== HISTÓRICO DE APLICAÇÕES ==="')
       lines.push('Data,Dose,Intervalo,Reação,Responsável')
-      d.realizedApps.forEach((a) => lines.push(`"${a.data}","${a.dose}","${a.ciclo.dias}d","${a.efeitoColateral || 'Não'}","${a.responsavel || '-'}"`))
+      d.realizedApps.forEach((a) => lines.push(`"${a.date}","${a.dose}","${a.cycle.days}d","${a.sideEffect === 'yes' ? 'Sim' : 'Não'}","${a.administrator || '-'}"`))
       lines.push('')
     }
     if (selectedSections.includes('reactions')) {
       lines.push('"=== REAÇÕES ADVERSAS ==="')
       lines.push('Data,Dose,Medicação,Observação')
-      d.realizedApps.filter((a) => a.efeitoColateral === 'Sim').forEach((a) => lines.push(`"${a.data}","${a.dose}","${a.necessidadeMedicacao || '-'}","${(a.notaResponsavel || '').replace(/"/g, '""')}"`))
+      d.realizedApps.filter((a) => a.sideEffect === 'yes').forEach((a) => lines.push(`"${a.date}","${a.dose}","${a.medicationNeeded === 'yes' ? 'Sim' : a.medicationNeeded === 'no' ? 'Não' : '-'}","${(a.administratorNote || '').replace(/"/g, '""')}"`))
       lines.push('')
     }
     if (selectedSections.includes('progress')) {
       lines.push('"=== PROGRESSÃO DO PROTOCOLO ==="')
       lines.push('Métrica,Valor')
       lines.push(`"Aplicações realizadas","${d.realizedApps.length}"`)
-      lines.push(`"Concentração atual","${d.patient.concentracaoDoseAtuais.split(' - ')[0]}"`)
-      lines.push(`"Intervalo","${d.patient.intervaloAtual} dias"`)
+      lines.push(`"Concentração atual","${d.patient.currentDoseConcentration.split(' - ')[0]}"`)
+      lines.push(`"Intervalo","${d.patient.currentInterval} dias"`)
     }
-    downloadFile('\ufeff' + lines.join('\n'), `relatorio_${patient!.nome.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`, 'text/csv;charset=utf-8')
+    downloadFile('\ufeff' + lines.join('\n'), `relatorio_${patient!.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`, 'text/csv;charset=utf-8')
   }
 
   const exportExcel = () => {
     const d = buildReportData()
     if (!d) return
     const rows: string[] = []
-    rows.push(`<tr><th colspan="2" style="background:#18C1CB;color:#fff;padding:8px;font-size:14px;">Relatório Clínico — ${d.patient.nome}</th></tr>`)
+    rows.push(`<tr><th colspan="2" style="background:#18C1CB;color:#fff;padding:8px;font-size:14px;">Relatório Clínico — ${d.patient.name}</th></tr>`)
     rows.push(`<tr><td colspan="2" style="padding:6px;font-size:11px;color:#666;">Gerado em: ${d.generatedAt}${anonimizar ? ' · Dados anonimizados' : ''}</td></tr>`)
     rows.push(`<tr><td colspan="2" style="height:10px;"></td></tr>`)
     const addSection = (title: string, pairs: [string, string][]) => {
@@ -185,21 +185,21 @@ export function PatientReportPage() {
       rows.push(`<tr><td colspan="2" style="height:8px;"></td></tr>`)
     }
     if (selectedSections.includes('personal')) {
-      addSection('Dados Pessoais', [['Nome', d.patient.nome], ['CPF', d.patient.cpf], ['Data de Nascimento', d.patient.dataNascimento], ['Idade', `${d.patient.idade} anos`], ['Telefone', d.patient.telefone], ['Peso', d.patient.peso], ['Médico Responsável', d.patient.medicoResponsavel]])
+      addSection('Dados Pessoais', [['Nome', d.patient.name], ['CPF', d.patient.cpf], ['Data de Nascimento', d.patient.birthDate], ['Idade', `${d.patient.age} anos`], ['Telefone', d.patient.phone], ['Peso', d.patient.weight], ['Médico Responsável', d.patient.responsibleDoctor]])
     }
     if (selectedSections.includes('immunotherapy')) {
-      addSection('Dados da Imunoterapia', [['Tipo', d.patient.tipoImunoterapia], ['Via', d.patient.viaAdministracao], ['Extrato', d.patient.extrato], ['Início Indução', d.patient.inicioInducao], ['Meta', d.patient.concentracaoVolumeMeta], ['Dose Atual', d.patient.concentracaoDoseAtuais], ['Intervalo', `${d.patient.intervaloAtual} dias`]])
+      addSection('Dados da Imunoterapia', [['Tipo', d.patient.immunotherapyType], ['Via', d.patient.administrationRoute], ['Extrato', d.patient.extract], ['Início Indução', d.patient.inductionStart], ['Meta', d.patient.targetConcentrationVolume], ['Dose Atual', d.patient.currentDoseConcentration], ['Intervalo', `${d.patient.currentInterval} dias`]])
     }
     if (selectedSections.includes('applications')) {
       rows.push(`<tr><th colspan="2" style="background:#B6F2EC;padding:6px;text-align:left;font-size:12px;">Histórico de Aplicações (${d.realizedApps.length})</th></tr>`)
-      rows.push(`<tr><td colspan="2" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tr><th style="padding:4px 8px;font-size:10px;background:#eee;">Data</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Dose</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Intervalo</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Reação</th></tr>${d.realizedApps.map((a) => `<tr><td style="padding:3px 8px;font-size:10px;">${a.data}</td><td style="padding:3px 8px;font-size:10px;">${a.dose}</td><td style="padding:3px 8px;font-size:10px;">${a.ciclo.dias}d</td><td style="padding:3px 8px;font-size:10px;">${a.efeitoColateral || 'Não'}</td></tr>`).join('')}</table></td></tr>`)
+      rows.push(`<tr><td colspan="2" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tr><th style="padding:4px 8px;font-size:10px;background:#eee;">Data</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Dose</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Intervalo</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Reação</th></tr>${d.realizedApps.map((a) => `<tr><td style="padding:3px 8px;font-size:10px;">${a.date}</td><td style="padding:3px 8px;font-size:10px;">${a.dose}</td><td style="padding:3px 8px;font-size:10px;">${a.cycle.days}d</td><td style="padding:3px 8px;font-size:10px;">${a.sideEffect === 'yes' ? 'Sim' : 'Não'}</td></tr>`).join('')}</table></td></tr>`)
       rows.push(`<tr><td colspan="2" style="height:8px;"></td></tr>`)
     }
     if (selectedSections.includes('progress')) {
-      addSection('Progressão do Protocolo', [['Aplicações realizadas', String(d.realizedApps.length)], ['Concentração atual', d.patient.concentracaoDoseAtuais.split(' - ')[0]], ['Intervalo', `${d.patient.intervaloAtual} dias`]])
+      addSection('Progressão do Protocolo', [['Aplicações realizadas', String(d.realizedApps.length)], ['Concentração atual', d.patient.currentDoseConcentration.split(' - ')[0]], ['Intervalo', `${d.patient.currentInterval} dias`]])
     }
     const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"/></head><body><table>${rows.join('')}</table></body></html>`
-    downloadFile(html, `relatorio_${patient!.nome.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.xls`, 'application/vnd.ms-excel')
+    downloadFile(html, `relatorio_${patient!.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.xls`, 'application/vnd.ms-excel')
   }
 
   const exportPdf = () => {
@@ -226,7 +226,7 @@ export function PatientReportPage() {
     doc.text(`Relatório Clínico`, margin, (y += 6))
     doc.setFontSize(13)
     doc.setTextColor(15, 32, 39)
-    doc.text(d.patient.nome, margin, (y += 7))
+    doc.text(d.patient.name, margin, (y += 7))
     if (anonimizar) {
       doc.setFillColor(182, 242, 236)
       doc.setTextColor(14, 153, 163)
@@ -268,25 +268,25 @@ export function PatientReportPage() {
 
     if (selectedSections.includes('personal')) {
       addSectionTitle('Dados Pessoais')
-      addKV('Nome', d.patient.nome)
+      addKV('Nome', d.patient.name)
       addKV('CPF', d.patient.cpf)
-      addKV('Data de Nascimento', d.patient.dataNascimento)
-      addKV('Idade', `${d.patient.idade} anos`)
-      addKV('Telefone', d.patient.telefone)
-      addKV('Peso', d.patient.peso)
-      addKV('Médico Responsável', d.patient.medicoResponsavel)
+      addKV('Data de Nascimento', d.patient.birthDate)
+      addKV('Idade', `${d.patient.age} anos`)
+      addKV('Telefone', d.patient.phone)
+      addKV('Peso', d.patient.weight)
+      addKV('Médico Responsável', d.patient.responsibleDoctor)
       y += 3
     }
 
     if (selectedSections.includes('immunotherapy')) {
       addSectionTitle('Dados da Imunoterapia')
-      addKV('Tipo', d.patient.tipoImunoterapia)
-      addKV('Via de Administração', d.patient.viaAdministracao)
-      addKV('Extrato', d.patient.extrato)
-      addKV('Início Indução', d.patient.inicioInducao)
-      addKV('Meta', d.patient.concentracaoVolumeMeta)
-      addKV('Dose Atual', d.patient.concentracaoDoseAtuais)
-      addKV('Intervalo', `${d.patient.intervaloAtual} dias`)
+      addKV('Tipo', d.patient.immunotherapyType)
+      addKV('Via de Administração', d.patient.administrationRoute)
+      addKV('Extrato', d.patient.extract)
+      addKV('Início Indução', d.patient.inductionStart)
+      addKV('Meta', d.patient.targetConcentrationVolume)
+      addKV('Dose Atual', d.patient.currentDoseConcentration)
+      addKV('Intervalo', `${d.patient.currentInterval} dias`)
       y += 3
     }
 
@@ -308,10 +308,10 @@ export function PatientReportPage() {
       doc.setFontSize(9)
       d.realizedApps.forEach((a) => {
         ensureSpace(6)
-        doc.text(a.data, margin + 2, y + 4)
+        doc.text(a.date, margin + 2, y + 4)
         doc.text(a.dose, margin + 35, y + 4)
-        doc.text(`${a.ciclo.dias} dias`, margin + 100, y + 4)
-        doc.text(a.efeitoColateral || 'Não', margin + 140, y + 4)
+        doc.text(`${a.cycle.days} dias`, margin + 100, y + 4)
+        doc.text(a.sideEffect === 'yes' ? 'Sim' : 'Não', margin + 140, y + 4)
         doc.setDrawColor(240, 240, 240)
         doc.line(margin, y + 6, pageW - margin, y + 6)
         y += 6
@@ -329,7 +329,7 @@ export function PatientReportPage() {
         doc.text('Nenhuma reação adversa registrada.', margin, y)
         y += 6
       } else {
-        d.realizedApps.filter((a) => a.efeitoColateral === 'Sim').forEach((a) => {
+        d.realizedApps.filter((a) => a.sideEffect === 'yes').forEach((a) => {
           ensureSpace(12)
           doc.setFillColor(255, 248, 235)
           doc.rect(margin, y, pageW - margin * 2, 10, 'F')
@@ -340,10 +340,10 @@ export function PatientReportPage() {
           doc.setFontSize(9)
           doc.setFont('helvetica', 'bold')
           doc.setTextColor(180, 83, 9)
-          doc.text(`${a.data} — ${a.dose}`, margin + 3, y + 4)
+          doc.text(`${a.date} — ${a.dose}`, margin + 3, y + 4)
           doc.setFontSize(8)
           doc.setFont('helvetica', 'normal')
-          doc.text(a.necessidadeMedicacao === 'Sim' ? 'Com medicação' : 'Sem medicação', margin + 3, y + 8)
+          doc.text(a.medicationNeeded === 'yes' ? 'Com medicação' : 'Sem medicação', margin + 3, y + 8)
           y += 12
         })
       }
@@ -354,7 +354,7 @@ export function PatientReportPage() {
       addSectionTitle('Progressão do Protocolo')
       ensureSpace(22)
       const boxW = (pageW - margin * 2 - 8) / 3
-      const boxes: [string, string][] = [[String(d.realizedApps.length), 'Aplicações'], [d.patient.concentracaoDoseAtuais.split(' - ')[0], 'Concentração atual'], [`${d.patient.intervaloAtual}d`, 'Intervalo']]
+      const boxes: [string, string][] = [[String(d.realizedApps.length), 'Aplicações'], [d.patient.currentDoseConcentration.split(' - ')[0], 'Concentração atual'], [`${d.patient.currentInterval}d`, 'Intervalo']]
       boxes.forEach(([v, l], i) => {
         const x = margin + i * (boxW + 4)
         doc.setFillColor(245, 250, 250)
@@ -392,7 +392,7 @@ export function PatientReportPage() {
       doc.text(`Página ${i} de ${totalPages}`, pageW - margin, pageH - 5, { align: 'right' })
     }
 
-    doc.save(`relatorio_${patient!.nome.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`)
+    doc.save(`relatorio_${patient!.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`)
   }
 
   const handleExport = () => {
@@ -420,7 +420,7 @@ export function PatientReportPage() {
             </IconButton>
             <div>
               <h1 className="text-lg font-bold text-(--text)">Emitir Relatório</h1>
-              <p className="text-[0.65rem] text-(--text-muted)">{patient.nome}</p>
+              <p className="text-[0.65rem] text-(--text-muted)">{patient.name}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -521,16 +521,16 @@ export function PatientReportPage() {
                       justification: justificativa.trim(),
                       lgpdCompliance: { legalBasis: 'LGPD Art. 18, V — Direito à portabilidade / Art. 19 — Direito de acesso' },
                       patient: {
-                        id: patient.id, nome: patient.nome, cpf: patient.cpf, dataNascimento: patient.dataNascimento,
-                        idade: patient.idade, telefone: patient.telefone, peso: patient.peso,
-                        medicoResponsavel: patient.medicoResponsavel, status: patient.status,
+                        id: patient.id, nome: patient.name, cpf: patient.cpf, dataNascimento: patient.birthDate,
+                        idade: patient.age, telefone: patient.phone, peso: patient.weight,
+                        medicoResponsavel: patient.responsibleDoctor, status: patient.status,
                       },
                       imunoterapia: {
-                        tipo: patient.tipoImunoterapia, viaAdministracao: patient.viaAdministracao,
-                        extrato: patient.extrato, inicioInducao: patient.inicioInducao,
-                        inicioManutencao: patient.inicioManutencao, concentracaoVolumeMeta: patient.concentracaoVolumeMeta,
-                        concentracaoDoseAtuais: patient.concentracaoDoseAtuais, intervaloAtual: patient.intervaloAtual,
-                        metaAtingida: patient.metaAtingida, dataProximaAplicacao: patient.dataProximaAplicacao,
+                        tipo: patient.immunotherapyType, viaAdministracao: patient.administrationRoute,
+                        extrato: patient.extract, inicioInducao: patient.inductionStart,
+                        inicioManutencao: patient.maintenanceStart, concentracaoVolumeMeta: patient.targetConcentrationVolume,
+                        concentracaoDoseAtuais: patient.currentDoseConcentration, intervaloAtual: patient.currentInterval,
+                        metaAtingida: patient.targetReached, dataProximaAplicacao: patient.nextApplicationDate,
                       },
                       aplicacoes: patientApps,
                       historicoDeAcessos: patientAccessLog.map((l) => ({
@@ -542,7 +542,7 @@ export function PatientReportPage() {
                         descricao: l.description,
                       })),
                     }
-                    const filename = `imunecare_lgpd_${patient.nome.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.${lgpdFormat}`
+                    const filename = `imunecare_lgpd_${patient.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.${lgpdFormat}`
                     let content: string, mime: string
                     if (lgpdFormat === 'json') { content = JSON.stringify(data, null, 2); mime = 'application/json' }
                     else {
@@ -629,8 +629,8 @@ export function PatientReportPage() {
               <div className="text-[0.65rem] text-(--text-muted) space-y-1">
                 <div className="flex justify-between"><span>Aplicações realizadas</span><span className="font-semibold text-(--text)">{realizedApps.length}</span></div>
                 <div className="flex justify-between"><span>Reações adversas</span><span className="font-semibold text-(--text)">{reactionsCount}</span></div>
-                <div className="flex justify-between"><span>Intervalo atual</span><span className="font-semibold text-(--text)">{patient.intervaloAtual} dias</span></div>
-                <div className="flex justify-between"><span>Status</span><span className={cn("font-semibold", patient.status === 'ativo' ? "text-green-600" : "text-(--text-muted)")}>{patient.status === 'ativo' ? 'Ativo' : 'Inativo'}</span></div>
+                <div className="flex justify-between"><span>Intervalo atual</span><span className="font-semibold text-(--text)">{patient.currentInterval} dias</span></div>
+                <div className="flex justify-between"><span>Status</span><span className={cn("font-semibold", patient.status === 'active' ? "text-green-600" : "text-(--text-muted)")}>{patient.status === 'active' ? 'Ativo' : 'Inativo'}</span></div>
               </div>
             </div>
 
@@ -696,7 +696,7 @@ export function PatientReportPage() {
               <div className="bg-white rounded-xl border border-(--border-custom) shadow-sm max-w-2xl mx-auto p-6 space-y-4">
                 <div className="pb-3 border-b border-(--border-custom)">
                   <h2 className="text-sm font-bold text-(--text)">Pacote de Portabilidade LGPD</h2>
-                  <p className="text-[0.65rem] text-(--text-muted) mt-0.5">{anonimizar ? mask(patient.nome) : patient.nome} · {lgpdFormat.toUpperCase()}</p>
+                  <p className="text-[0.65rem] text-(--text-muted) mt-0.5">{anonimizar ? mask(patient.name) : patient.name} · {lgpdFormat.toUpperCase()}</p>
                 </div>
                 <div className="flex items-start gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2.5">
                   <Info size={13} className="text-brand shrink-0 mt-0.5" />
@@ -730,7 +730,7 @@ export function PatientReportPage() {
               <div className="px-6 py-5 border-b border-(--border-custom)">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-sm font-bold text-(--text)">Relatório Clínico — {anonimizar ? mask(patient.nome) : patient.nome}</h2>
+                    <h2 className="text-sm font-bold text-(--text)">Relatório Clínico — {anonimizar ? mask(patient.name) : patient.name}</h2>
                     <p className="text-[0.65rem] text-(--text-muted) mt-0.5">Gerado em {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
                   </div>
                   <div className="text-[0.6rem] text-(--text-muted) text-right">
@@ -757,13 +757,13 @@ export function PatientReportPage() {
                         <h3 className="text-xs font-bold text-(--text) mb-3 pb-1.5 border-b border-(--border-custom)">Dados Pessoais</h3>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                           {[
-                            ['Nome', anonimizar ? mask(patient.nome) : patient.nome],
+                            ['Nome', anonimizar ? mask(patient.name) : patient.name],
                             ['CPF', maskCpf(patient.cpf)],
-                            ['Data de Nascimento', patient.dataNascimento],
-                            ['Idade', `${patient.idade} anos`],
-                            ['Telefone', maskPhone(patient.telefone)],
-                            ['Peso', patient.peso],
-                            ['Médico Responsável', patient.medicoResponsavel],
+                            ['Data de Nascimento', patient.birthDate],
+                            ['Idade', `${patient.age} anos`],
+                            ['Telefone', maskPhone(patient.phone)],
+                            ['Peso', patient.weight],
+                            ['Médico Responsável', patient.responsibleDoctor],
                           ].map(([l, v]) => (
                             <div key={l} className="flex items-center gap-2 text-[0.7rem]">
                               <span className="text-(--text-muted)">{l}:</span>
@@ -780,10 +780,10 @@ export function PatientReportPage() {
                         <h3 className="text-xs font-bold text-(--text) mb-3 pb-1.5 border-b border-(--border-custom)">Dados da Imunoterapia</h3>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                           {[
-                            ['Tipo', patient.tipoImunoterapia], ['Via', patient.viaAdministracao],
-                            ['Extrato', patient.extrato], ['Início Indução', patient.inicioInducao],
-                            ['Meta', patient.concentracaoVolumeMeta], ['Dose Atual', patient.concentracaoDoseAtuais],
-                            ['Intervalo Atual', `${patient.intervaloAtual} dias`],
+                            ['Tipo', patient.immunotherapyType], ['Via', patient.administrationRoute],
+                            ['Extrato', patient.extract], ['Início Indução', patient.inductionStart],
+                            ['Meta', patient.targetConcentrationVolume], ['Dose Atual', patient.currentDoseConcentration],
+                            ['Intervalo Atual', `${patient.currentInterval} dias`],
                           ].map(([l, v]) => (
                             <div key={l} className="flex items-center gap-2 text-[0.7rem]">
                               <span className="text-(--text-muted)">{l}:</span>
@@ -810,12 +810,12 @@ export function PatientReportPage() {
                           <tbody>
                             {realizedApps.slice(0, 15).map((app) => (
                               <tr key={app.id} className="border-b border-(--border-custom) last:border-0">
-                                <td className="py-1.5 text-[0.65rem] text-(--text)">{app.data}</td>
+                                <td className="py-1.5 text-[0.65rem] text-(--text)">{app.date}</td>
                                 <td className="py-1.5 text-[0.65rem] text-(--text)">{app.dose}</td>
-                                <td className="py-1.5 text-[0.65rem] text-(--text)">{app.ciclo.dias}d</td>
+                                <td className="py-1.5 text-[0.65rem] text-(--text)">{app.cycle.days}d</td>
                                 <td className="py-1.5 text-[0.65rem]">
-                                  <span className={cn("font-medium", app.efeitoColateral === 'Sim' ? "text-amber-600" : "text-green-600")}>
-                                    {app.efeitoColateral || 'Não'}
+                                  <span className={cn("font-medium", app.sideEffect === 'yes' ? "text-amber-600" : "text-green-600")}>
+                                    {app.sideEffect === 'yes' ? 'Sim' : 'Não'}
                                   </span>
                                 </td>
                               </tr>
@@ -836,14 +836,14 @@ export function PatientReportPage() {
                           <p className="text-[0.7rem] text-(--text-muted)">Nenhuma reação adversa registrada.</p>
                         ) : (
                           <div className="space-y-2">
-                            {realizedApps.filter((a) => a.efeitoColateral === 'Sim').map((app) => (
+                            {realizedApps.filter((a) => a.sideEffect === 'yes').map((app) => (
                               <div key={app.id} className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[0.65rem] font-semibold text-amber-700">{app.data} — {app.dose}</span>
-                                  <span className="text-[0.55rem] text-amber-600">{app.necessidadeMedicacao === 'Sim' ? 'Com medicação' : 'Sem medicação'}</span>
+                                  <span className="text-[0.65rem] font-semibold text-amber-700">{app.date} — {app.dose}</span>
+                                  <span className="text-[0.55rem] text-amber-600">{app.medicationNeeded === 'yes' ? 'Com medicação' : 'Sem medicação'}</span>
                                 </div>
-                                {app.notaResponsavel && app.notaResponsavel !== '-' && (
-                                  <div className="text-[0.6rem] text-amber-600 mt-1">{app.notaResponsavel}</div>
+                                {app.administratorNote && app.administratorNote !== '-' && (
+                                  <div className="text-[0.6rem] text-amber-600 mt-1">{app.administratorNote}</div>
                                 )}
                               </div>
                             ))}
@@ -862,11 +862,11 @@ export function PatientReportPage() {
                             <div className="text-[0.6rem] text-(--text-muted)">Aplicações</div>
                           </div>
                           <div className="bg-gray-50 rounded-lg p-3 text-center">
-                            <div className="text-lg font-extrabold text-brand">{patient.concentracaoDoseAtuais.split(' - ')[0]}</div>
+                            <div className="text-lg font-extrabold text-brand">{patient.currentDoseConcentration.split(' - ')[0]}</div>
                             <div className="text-[0.6rem] text-(--text-muted)">Concentração atual</div>
                           </div>
                           <div className="bg-gray-50 rounded-lg p-3 text-center">
-                            <div className="text-lg font-extrabold text-brand">{patient.intervaloAtual}d</div>
+                            <div className="text-lg font-extrabold text-brand">{patient.currentInterval}d</div>
                             <div className="text-[0.6rem] text-(--text-muted)">Intervalo</div>
                           </div>
                         </div>
@@ -916,7 +916,7 @@ export function PatientReportPage() {
         <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5 space-y-1.5">
           <div className="flex justify-between">
             <span className="text-[0.6rem] text-(--text-muted)">Paciente</span>
-            <span className="text-[0.6rem] font-semibold text-(--text)">{anonimizar ? mask(patient.nome) : patient.nome}</span>
+            <span className="text-[0.6rem] font-semibold text-(--text)">{anonimizar ? mask(patient.name) : patient.name}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-[0.6rem] text-(--text-muted)">Formato</span>

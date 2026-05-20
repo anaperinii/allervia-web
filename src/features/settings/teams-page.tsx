@@ -10,7 +10,7 @@ interface TeamMember {
   name: string
   email: string
   role: 'admin' | 'medico' | 'enfermeiro' | 'tecnico'
-  status: 'ativo' | 'inativo'
+  status: 'active' | 'inactive'
   avatar: string
   since: string
 }
@@ -20,7 +20,7 @@ interface Invite {
   email: string
   role: 'admin' | 'medico' | 'enfermeiro' | 'tecnico'
   sentAt: string
-  status: 'pendente' | 'expirado'
+  status: 'pending' | 'expired'
 }
 
 const roleLabels: Record<string, { label: string; color: string; bg: string }> = {
@@ -31,18 +31,18 @@ const roleLabels: Record<string, { label: string; color: string; bg: string }> =
 }
 
 const mockMembers: TeamMember[] = [
-  { id: '1', name: 'Dra. Karina Martins', email: 'karina@clinica.com', role: 'medico', status: 'ativo', avatar: 'KM', since: 'Jan 2024' },
-  { id: '2', name: 'Jaqueline Rodrigues', email: 'jaque@clinica.com', role: 'admin', status: 'ativo', avatar: 'JR', since: 'Mar 2023' },
-  { id: '3', name: 'Carlos Eduardo Silva', email: 'carlos@clinica.com', role: 'enfermeiro', status: 'ativo', avatar: 'CS', since: 'Jun 2024' },
-  { id: '4', name: 'Mariana Costa', email: 'mariana@clinica.com', role: 'tecnico', status: 'ativo', avatar: 'MC', since: 'Set 2024' },
-  { id: '5', name: 'Dr. André Lima', email: 'andre@clinica.com', role: 'medico', status: 'ativo', avatar: 'AL', since: 'Fev 2024' },
-  { id: '6', name: 'Fernanda Oliveira', email: 'fernanda@clinica.com', role: 'enfermeiro', status: 'inativo', avatar: 'FO', since: 'Abr 2024' },
+  { id: '1', name: 'Dra. Karina Martins', email: 'karina@clinica.com', role: 'medico', status: 'active', avatar: 'KM', since: 'Jan 2024' },
+  { id: '2', name: 'Jaqueline Rodrigues', email: 'jaque@clinica.com', role: 'admin', status: 'active', avatar: 'JR', since: 'Mar 2023' },
+  { id: '3', name: 'Carlos Eduardo Silva', email: 'carlos@clinica.com', role: 'enfermeiro', status: 'active', avatar: 'CS', since: 'Jun 2024' },
+  { id: '4', name: 'Mariana Costa', email: 'mariana@clinica.com', role: 'tecnico', status: 'active', avatar: 'MC', since: 'Set 2024' },
+  { id: '5', name: 'Dr. André Lima', email: 'andre@clinica.com', role: 'medico', status: 'active', avatar: 'AL', since: 'Fev 2024' },
+  { id: '6', name: 'Fernanda Oliveira', email: 'fernanda@clinica.com', role: 'enfermeiro', status: 'inactive', avatar: 'FO', since: 'Abr 2024' },
 ]
 
 const mockInvites: Invite[] = [
-  { id: 'i1', email: 'novo.medico@clinica.com', role: 'medico', sentAt: '08/04/2026', status: 'pendente' },
-  { id: 'i2', email: 'estagiario@clinica.com', role: 'tecnico', sentAt: '05/04/2026', status: 'pendente' },
-  { id: 'i3', email: 'antigo@email.com', role: 'enfermeiro', sentAt: '15/03/2026', status: 'expirado' },
+  { id: 'i1', email: 'novo.medico@clinica.com', role: 'medico', sentAt: '08/04/2026', status: 'pending' },
+  { id: 'i2', email: 'estagiario@clinica.com', role: 'tecnico', sentAt: '05/04/2026', status: 'pending' },
+  { id: 'i3', email: 'antigo@email.com', role: 'enfermeiro', sentAt: '15/03/2026', status: 'expired' },
 ]
 
 export function TeamsPage() {
@@ -54,7 +54,7 @@ export function TeamsPage() {
   const [roleFilter, setRoleFilter] = useState('Todos')
   const [members, setMembers] = useState(mockMembers)
   const [invites, setInvites] = useState(mockInvites)
-  const [statusFilter, setStatusFilter] = useState('ativo')
+  const [statusFilter, setStatusFilter] = useState('active')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
@@ -63,7 +63,7 @@ export function TeamsPage() {
   const filteredMembers = useMemo(() => members
     .filter((m) => statusFilter === 'Todos' || m.status === statusFilter)
     .filter((m) => roleFilter === 'Todos' || m.role === roleFilter)
-    .sort((a, b) => a.status === 'ativo' && b.status !== 'ativo' ? -1 : a.status !== 'ativo' && b.status === 'ativo' ? 1 : 0)
+    .sort((a, b) => a.status === 'active' && b.status !== 'active' ? -1 : a.status !== 'active' && b.status === 'active' ? 1 : 0)
   , [members, statusFilter, roleFilter])
 
   const totalPages = Math.max(1, Math.ceil(filteredMembers.length / itemsPerPage))
@@ -74,7 +74,7 @@ export function TeamsPage() {
 
   useEffect(() => { setCurrentPage(1) }, [statusFilter, roleFilter, itemsPerPage])
 
-  const pendingCount = invites.filter((i) => i.status === 'pendente').length
+  const pendingCount = invites.filter((i) => i.status === 'pending').length
 
 
   if (!canManageTeam) {
@@ -184,9 +184,9 @@ export function TeamsPage() {
                           </span>
                         </td>
                         <td className="px-5 py-3">
-                          <span className={cn("text-[0.65rem] font-medium flex items-center gap-1", member.status === 'ativo' ? "text-green-600" : "text-(--text-muted)")}>
-                            <span className={cn("w-1.5 h-1.5 rounded-full", member.status === 'ativo' ? "bg-green-500" : "bg-gray-300")} />
-                            {member.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                          <span className={cn("text-[0.65rem] font-medium flex items-center gap-1", member.status === 'active' ? "text-green-600" : "text-(--text-muted)")}>
+                            <span className={cn("w-1.5 h-1.5 rounded-full", member.status === 'active' ? "bg-green-500" : "bg-gray-300")} />
+                            {member.status === 'active' ? 'Ativo' : 'Inativo'}
                           </span>
                         </td>
                         <td className="px-5 py-3 text-xs text-(--text-muted)">{member.since}</td>
@@ -205,7 +205,7 @@ export function TeamsPage() {
                                   <Shield size={12} className="text-(--text-muted)" />
                                   Alterar permissões
                                 </button>
-                                {member.status === 'ativo' ? (
+                                {member.status === 'active' ? (
                                   <button onClick={() => { setOpenMenu(null); setConfirmModal({ type: 'deactivate', id: member.id, name: member.name }) }} className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer">
                                     <UserX size={12} />
                                     Desativar membro
@@ -299,7 +299,7 @@ export function TeamsPage() {
                         </td>
                         <td className="px-5 py-3 text-xs text-(--text-muted)">{invite.sentAt}</td>
                         <td className="px-5 py-3">
-                          {invite.status === 'pendente' ? (
+                          {invite.status === 'pending' ? (
                             <span className="text-[0.65rem] font-medium text-amber-600 flex items-center gap-1">
                               <Clock size={11} />
                               Pendente
@@ -313,7 +313,7 @@ export function TeamsPage() {
                         </td>
                         <td className="px-5 py-3">
                           <div className="flex items-center justify-end gap-1">
-                            {invite.status === 'pendente' && (
+                            {invite.status === 'pending' && (
                               <button
                                 onClick={() => setConfirmModal({ type: 'resend-invite', id: invite.id, name: invite.email })}
                                 className="h-7 px-2.5 rounded-md border border-(--border-custom) text-[0.6rem] font-medium text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1"
@@ -397,8 +397,8 @@ export function TeamsPage() {
       {confirmModal && (() => {
         const cfg = {
           'remove-member': { icon: Trash2, tone: 'danger' as const, title: 'Remover membro', body: <>Tem certeza que deseja remover <span className="font-semibold text-(--text)">{confirmModal.name}</span> da equipe? Esta ação não pode ser desfeita.</>, btn: 'Remover', variant: 'danger' as const, onConfirm: () => { setMembers((m) => m.filter((x) => x.id !== confirmModal.id)); setConfirmModal(null) } },
-          'deactivate': { icon: UserX, tone: 'warning' as const, title: 'Desativar membro', body: <><span className="font-semibold text-(--text)">{confirmModal.name}</span> perderá o acesso ao sistema até ser reativado. Os dados não serão removidos.</>, btn: 'Desativar', variant: 'warning' as const, onConfirm: () => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'inativo' as const } : x)); setConfirmModal(null) } },
-          'activate': { icon: UserCheck, tone: 'success' as const, title: 'Reativar membro', body: <><span className="font-semibold text-(--text)">{confirmModal.name}</span> terá o acesso ao sistema restaurado com as mesmas permissões anteriores.</>, btn: 'Reativar', variant: 'success' as const, onConfirm: () => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'ativo' as const } : x)); setConfirmModal(null) } },
+          'deactivate': { icon: UserX, tone: 'warning' as const, title: 'Desativar membro', body: <><span className="font-semibold text-(--text)">{confirmModal.name}</span> perderá o acesso ao sistema até ser reativado. Os dados não serão removidos.</>, btn: 'Desativar', variant: 'warning' as const, onConfirm: () => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'inactive' as const } : x)); setConfirmModal(null) } },
+          'activate': { icon: UserCheck, tone: 'success' as const, title: 'Reativar membro', body: <><span className="font-semibold text-(--text)">{confirmModal.name}</span> terá o acesso ao sistema restaurado com as mesmas permissões anteriores.</>, btn: 'Reativar', variant: 'success' as const, onConfirm: () => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'active' as const } : x)); setConfirmModal(null) } },
           'resend-invite': { icon: Send, tone: 'brand' as const, title: 'Reenviar convite', body: <>Um novo e-mail de convite será enviado para <span className="font-semibold text-(--text)">{confirmModal.name}</span>. O convite anterior será invalidado.</>, btn: 'Reenviar', variant: 'primary' as const, onConfirm: () => setConfirmModal(null) },
           'delete-invite': { icon: Trash2, tone: 'danger' as const, title: 'Excluir convite', body: <>O convite para <span className="font-semibold text-(--text)">{confirmModal.name}</span> será excluído permanentemente e não poderá mais ser utilizado.</>, btn: 'Excluir', variant: 'danger' as const, onConfirm: () => { setInvites((inv) => inv.filter((x) => x.id !== confirmModal.id)); setConfirmModal(null) } },
         }[confirmModal.type]

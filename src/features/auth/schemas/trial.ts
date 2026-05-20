@@ -2,20 +2,20 @@ import { z } from 'zod'
 import { emailSchema } from '@/shared/lib/field-schemas'
 
 export const trialSchema = z.object({
-  nome: z.string().min(1, 'Nome é obrigatório').min(2, 'Nome muito curto'),
-  sobrenome: z.string().min(1, 'Sobrenome é obrigatório'),
+  name: z.string().min(1, 'Nome é obrigatório').min(2, 'Nome muito curto'),
+  lastName: z.string().min(1, 'Sobrenome é obrigatório'),
   email: emailSchema,
-  telefone: z
+  phone: z
     .string()
     .min(1, 'Telefone é obrigatório')
     .refine((v) => {
       const d = v.replace(/\D/g, '').length
       return d >= 10 && d <= 11
     }, 'Telefone inválido'),
-  atuacao: z.string().min(1, 'Selecione sua atuação'),
-  solucao: z.string().min(1, 'Selecione uma opção'),
-  especialidade: z.string().min(1, 'Especialidade é obrigatória'),
-  profissionais: z
+  role: z.string().min(1, 'Selecione sua atuação'),
+  solution: z.string().min(1, 'Selecione uma opção'),
+  specialty: z.string().min(1, 'Especialidade é obrigatória'),
+  professionals: z
     .string()
     .min(1, 'Informe o número')
     .refine((v) => {

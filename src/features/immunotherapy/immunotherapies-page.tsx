@@ -194,14 +194,14 @@ export function ImmunotherapiesPage() {
                       className="border-b border-(--border-custom) last:border-0 cursor-pointer hover:bg-teal-50/40 transition-colors duration-150"
                       onClick={() => {
                         setSelectedPatient({
-                          id: item.id, nome: item.name, dataNascimento: '02/07/2000', idade: 25,
-                          telefone: '(62) 99557-1423', peso: '89.7 kg', cpf: '711.905.744-89',
-                          medicoResponsavel: item.responsibleDoctor, status: item.status === 'active' ? 'ativo' as const : 'inativo' as const,
-                          tipoImunoterapia: item.type, inicioInducao: '01/01/2020', inicioManutencao: null,
-                          viaAdministracao: 'Subcutânea', extrato: 'Der p 60 + der f 10% + blt 30%',
-                          concentracaoVolumeMeta: '1:10 - 0,5ml', metaAtingida: false,
-                          intervaloAtual: item.cycleInterval.days, dataProximaAplicacao: '21/05/2025',
-                          concentracaoDoseAtuais: item.doseConcentration,
+                          id: item.id, name: item.name, birthDate: '02/07/2000', age: 25,
+                          phone: '(62) 99557-1423', weight: '89.7 kg', cpf: '711.905.744-89',
+                          responsibleDoctor: item.responsibleDoctor, status: item.status === 'active' ? 'active' as const : 'inactive' as const,
+                          immunotherapyType: item.type, inductionStart: '01/01/2020', maintenanceStart: null,
+                          administrationRoute: 'Subcutânea', extract: 'Der p 60 + der f 10% + blt 30%',
+                          targetConcentrationVolume: '1:10 - 0,5ml', targetReached: false,
+                          currentInterval: item.cycleInterval.days, nextApplicationDate: '21/05/2025',
+                          currentDoseConcentration: item.doseConcentration,
                           inactivations: item.status === 'inactive' ? seedInactivationsFor(item.id, item.doseConcentration, item.cycleInterval.days) : undefined,
                         })
                         navigate({ to: '/patient/$patientId', params: { patientId: item.id } })

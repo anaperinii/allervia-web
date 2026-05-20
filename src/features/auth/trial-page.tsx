@@ -21,8 +21,8 @@ export function TrialPage() {
     resolver: zodResolver(trialSchema),
     mode: 'onBlur',
     defaultValues: {
-      nome: '', sobrenome: '', email: '', telefone: '',
-      atuacao: '', solucao: '', especialidade: '', profissionais: '',
+      name: '', lastName: '', email: '', phone: '',
+      role: '', solution: '', specialty: '', professionals: '',
     },
   })
 
@@ -78,13 +78,13 @@ export function TrialPage() {
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
             <div>
               <label htmlFor="tr-nome" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Nome <span className="text-red-400">*</span></label>
-              <TextInput id="tr-nome" placeholder="Insira aqui" invalid={!!errors.nome} className="h-8" maxLength={60} {...register('nome')} />
-              {errors.nome && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.nome.message}</span>}
+              <TextInput id="tr-nome" placeholder="Insira aqui" invalid={!!errors.name} className="h-8" maxLength={60} {...register('name')} />
+              {errors.name && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.name.message}</span>}
             </div>
             <div>
               <label htmlFor="tr-sobrenome" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Sobrenome <span className="text-red-400">*</span></label>
-              <TextInput id="tr-sobrenome" placeholder="Insira aqui" invalid={!!errors.sobrenome} className="h-8" maxLength={80} {...register('sobrenome')} />
-              {errors.sobrenome && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.sobrenome.message}</span>}
+              <TextInput id="tr-sobrenome" placeholder="Insira aqui" invalid={!!errors.lastName} className="h-8" maxLength={80} {...register('lastName')} />
+              {errors.lastName && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.lastName.message}</span>}
             </div>
           </div>
 
@@ -98,13 +98,13 @@ export function TrialPage() {
             <label htmlFor="tr-telefone" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Telefone / WhatsApp <span className="text-red-400">*</span></label>
             <Controller
               control={control}
-              name="telefone"
+              name="phone"
               render={({ field }) => (
                 <TextInput
                   id="tr-telefone"
                   type="tel"
                   placeholder="(00) 00000-0000"
-                  invalid={!!errors.telefone}
+                  invalid={!!errors.phone}
                   className="h-8"
                   maxLength={16}
                   value={field.value}
@@ -113,13 +113,13 @@ export function TrialPage() {
                 />
               )}
             />
-            {errors.telefone && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.telefone.message}</span>}
+            {errors.phone && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.phone.message}</span>}
           </div>
 
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
             <div>
               <label htmlFor="tr-atuacao" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Qual é a sua atuação? <span className="text-red-400">*</span></label>
-              <Select id="tr-atuacao" invalid={!!errors.atuacao} className="h-8" {...register('atuacao')}>
+              <Select id="tr-atuacao" invalid={!!errors.role} className="h-8" {...register('role')}>
                 <option value="" disabled>Selecionar</option>
                 <option>Médico(a)</option>
                 <option>Gestor(a) de clínica</option>
@@ -127,25 +127,25 @@ export function TrialPage() {
                 <option>Enfermeiro(a)</option>
                 <option>Outro</option>
               </Select>
-              {errors.atuacao && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.atuacao.message}</span>}
+              {errors.role && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.role.message}</span>}
             </div>
             <div>
               <label htmlFor="tr-solucao" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Solução digital para quem? <span className="text-red-400">*</span></label>
-              <Select id="tr-solucao" invalid={!!errors.solucao} className="h-8" {...register('solucao')}>
+              <Select id="tr-solucao" invalid={!!errors.solution} className="h-8" {...register('solution')}>
                 <option value="" disabled>Selecionar</option>
                 <option>Para mim (uso próprio)</option>
                 <option>Para minha clínica</option>
                 <option>Para uma rede de clínicas</option>
               </Select>
-              {errors.solucao && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.solucao.message}</span>}
+              {errors.solution && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.solution.message}</span>}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5 mb-4">
             <div>
               <label htmlFor="tr-especialidade" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Especialidade da clínica <span className="text-red-400">*</span></label>
-              <TextInput id="tr-especialidade" placeholder="Ex.: Alergia e Imunologia" invalid={!!errors.especialidade} className="h-8" maxLength={80} {...register('especialidade')} />
-              {errors.especialidade && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.especialidade.message}</span>}
+              <TextInput id="tr-especialidade" placeholder="Ex.: Alergia e Imunologia" invalid={!!errors.specialty} className="h-8" maxLength={80} {...register('specialty')} />
+              {errors.specialty && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.specialty.message}</span>}
             </div>
             <div>
               <label htmlFor="tr-profissionais" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Nº de profissionais <span className="text-red-400">*</span></label>
@@ -155,11 +155,11 @@ export function TrialPage() {
                 min="1"
                 max="9999"
                 placeholder="Ex.: 5"
-                invalid={!!errors.profissionais}
+                invalid={!!errors.professionals}
                 className="h-8"
-                {...register('profissionais')}
+                {...register('professionals')}
               />
-              {errors.profissionais && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.profissionais.message}</span>}
+              {errors.professionals && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.professionals.message}</span>}
             </div>
           </div>
 

@@ -6,9 +6,9 @@ import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-type
 import { IconButton, Switch, Button, Select, TextInput, MediaRow } from "@/shared/components"
 
 const defaultEventColors = [
-  { id: 'subcutanea', label: 'Subcutânea', color: '#14B8A6' },
+  { id: 'subcutaneous', label: 'Subcutânea', color: '#14B8A6' },
   { id: 'sublingual', label: 'Sublingual', color: '#8B5CF6' },
-  { id: 'ausente', label: 'Ausente', color: '#EF4444' },
+  { id: 'missed', label: 'Ausente', color: '#EF4444' },
 ]
 
 export function AdvancedSettingsPage() {
@@ -218,7 +218,7 @@ export function AdvancedSettingsPage() {
                             onChange={(e) => setEventColors((prev) => prev.map((c) => c.id === ec.id ? { ...c, color: e.target.value } : c))}
                             className="w-7 h-7 rounded-lg border border-(--border-custom) cursor-pointer p-0.5"
                           />
-                          {['subcutanea', 'sublingual', 'ausente'].includes(ec.id) ? (
+                          {['subcutaneous', 'sublingual', 'missed'].includes(ec.id) ? (
                             <span className="text-xs font-medium text-(--text)">{ec.label}</span>
                           ) : (
                             <input
@@ -235,7 +235,7 @@ export function AdvancedSettingsPage() {
                               Prévia
                             </div>
                           </div>
-                          {!['subcutanea', 'sublingual', 'ausente'].includes(ec.id) && (
+                          {!['subcutaneous', 'sublingual', 'missed'].includes(ec.id) && (
                             <button onClick={() => setEventColors((prev) => prev.filter((c) => c.id !== ec.id))} className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-(--text-muted) hover:bg-red-50 hover:text-red-500 transition-all cursor-pointer">
                               <X size={11} />
                             </button>

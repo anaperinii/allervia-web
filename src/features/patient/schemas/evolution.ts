@@ -2,122 +2,122 @@ import { z } from 'zod'
 import type { FieldPath } from 'react-hook-form'
 import { volumeSchema, concentrationSchema } from '@/shared/lib/field-schemas'
 
-const yesNo = z.enum(['Sim', 'Não'])
-const ajusteReacaoValues = z.enum(['', 'reduzir_dose', 'aumentar_intervalo', 'suspender', 'manter'])
+const yesNo = z.enum(['yes', 'no'])
+const reactionAdjustmentValues = z.enum(['', 'reduce_dose', 'increase_interval', 'suspend', 'maintain'])
 
 /**
  * Schema da evolução clínica do paciente (registro de aplicação).
  *
  * Regras cross-field via superRefine:
- * - efeitoColateral/necessidadeMedicacao = "Sim" → campo de descrição correspondente obrigatório
- * - horaInicio >= horaFim → erro em horaFim
- * - intervaloProxima fora de [7,14,21,28] → justificativa obrigatória (min 10 chars)
- * - efeitoColateralPos + necessidadeMedicacaoPos = "Sim" → ajusteReacao obrigatório
- * - ajusteReacao = "manter" → justificativa obrigatória
+ * - sideEffect/medicationNeeded = "yes" → campo de descrição correspondente obrigatório
+ * - startTime >= endTime → erro em endTime
+ * - nextInterval fora de [7,14,21,28] → justificativa obrigatória (min 10 chars)
+ * - sideEffectPost + medicationNeededPost = "yes" → reactionAdjustment obrigatório
+ * - reactionAdjustment = "maintain" → justificativa obrigatória
  */
 export const evolutionSchema = z
   .object({
     // Step 1 — Pré-Aplicação
-    intervaloRelato: z.string().min(1, 'Relato do intervalo é obrigatório'),
-    efeitoColateral: yesNo,
-    efeitosRelatados: z.string(),
-    necessidadeMedicacao: yesNo,
-    medicacoes: z.string(),
-    notasPre: z.string(),
+    intervalReport: z.string().min(1, 'Relato do intervalo é obrigatório'),
+    sideEffect: yesNo,
+    reportedEffects: z.string(),
+    medicationNeeded: yesNo,
+    medications: z.string(),
+    notesPre: z.string(),
 
     // Step 2 — Pós-Aplicação
-    dataAplicacao: z.string().min(1, 'Data é obrigatória'),
-    horaInicio: z.string().min(1, 'Hora de início é obrigatória'),
-    horaFim: z.string().min(1, 'Hora de fim é obrigatória'),
-    volumeAplicado: volumeSchema,
-    concentracao: concentrationSchema,
-    intervaloProxima: z.string(),
-    intervaloJustificativa: z.string(),
-    responsavel: z.string().min(1, 'Responsável é obrigatório'),
-    efeitoColateralPos: yesNo,
-    efeitosRelatadosPos: z.string(),
-    necessidadeMedicacaoPos: yesNo,
-    medicacoesPos: z.string(),
-    notasPos: z.string(),
-    ajusteReacao: ajusteReacaoValues,
-    ajusteReacaoJustificativa: z.string(),
+    applicationDate: z.string().min(1, 'Data é obrigatória'),
+    startTime: z.string().min(1, 'Hora de início é obrigatória'),
+    endTime: z.string().min(1, 'Hora de fim é obrigatória'),
+    appliedVolume: volumeSchema,
+    concentration: concentrationSchema,
+    nextInterval: z.string(),
+    intervalJustification: z.string(),
+    administrator: z.string().min(1, 'Responsável é obrigatório'),
+    sideEffectPost: yesNo,
+    reportedEffectsPost: z.string(),
+    medicationNeededPost: yesNo,
+    medicationsPost: z.string(),
+    notesPost: z.string(),
+    reactionAdjustment: reactionAdjustmentValues,
+    reactionAdjustmentJustification: z.string(),
   })
   .superRefine((data, ctx) => {
-    if (data.efeitoColateral === 'Sim' && !data.efeitosRelatados.trim()) {
+    if (data.sideEffect === 'yes' && !data.reportedEffects.trim()) {
       ctx.addIssue({
-        path: ['efeitosRelatados'],
+        path: ['reportedEffects'],
         code: z.ZodIssueCode.custom,
         message: 'Descreva os efeitos colaterais',
       })
     }
-    if (data.necessidadeMedicacao === 'Sim' && !data.medicacoes.trim()) {
+    if (data.medicationNeeded === 'yes' && !data.medications.trim()) {
       ctx.addIssue({
-        path: ['medicacoes'],
+        path: ['medications'],
         code: z.ZodIssueCode.custom,
         message: 'Informe as medicações administradas',
       })
     }
 
-    if (data.horaInicio && data.horaFim && data.horaInicio >= data.horaFim) {
+    if (data.startTime && data.endTime && data.startTime >= data.endTime) {
       ctx.addIssue({
-        path: ['horaFim'],
+        path: ['endTime'],
         code: z.ZodIssueCode.custom,
         message: 'Hora fim deve ser após início',
       })
     }
 
-    const intervalo = data.intervaloProxima.trim()
-    if (!intervalo) {
+    const interval = data.nextInterval.trim()
+    if (!interval) {
       ctx.addIssue({
-        path: ['intervaloProxima'],
+        path: ['nextInterval'],
         code: z.ZodIssueCode.custom,
         message: 'Intervalo é obrigatório',
       })
-    } else if (!['7', '14', '21', '28'].includes(intervalo)) {
-      const just = data.intervaloJustificativa.trim()
+    } else if (!['7', '14', '21', '28'].includes(interval)) {
+      const just = data.intervalJustification.trim()
       if (!just) {
         ctx.addIssue({
-          path: ['intervaloJustificativa'],
+          path: ['intervalJustification'],
           code: z.ZodIssueCode.custom,
           message: 'Justifique o intervalo personalizado',
         })
       } else if (just.length < 10) {
         ctx.addIssue({
-          path: ['intervaloJustificativa'],
+          path: ['intervalJustification'],
           code: z.ZodIssueCode.custom,
           message: 'Justificativa deve ter ao menos 10 caracteres',
         })
       }
     }
 
-    if (data.efeitoColateralPos === 'Sim' && !data.efeitosRelatadosPos.trim()) {
+    if (data.sideEffectPost === 'yes' && !data.reportedEffectsPost.trim()) {
       ctx.addIssue({
-        path: ['efeitosRelatadosPos'],
+        path: ['reportedEffectsPost'],
         code: z.ZodIssueCode.custom,
         message: 'Descreva os efeitos colaterais',
       })
     }
-    if (data.necessidadeMedicacaoPos === 'Sim' && !data.medicacoesPos.trim()) {
+    if (data.medicationNeededPost === 'yes' && !data.medicationsPost.trim()) {
       ctx.addIssue({
-        path: ['medicacoesPos'],
+        path: ['medicationsPost'],
         code: z.ZodIssueCode.custom,
         message: 'Informe as medicações',
       })
     }
     if (
-      data.efeitoColateralPos === 'Sim' &&
-      data.necessidadeMedicacaoPos === 'Sim' &&
-      !data.ajusteReacao
+      data.sideEffectPost === 'yes' &&
+      data.medicationNeededPost === 'yes' &&
+      !data.reactionAdjustment
     ) {
       ctx.addIssue({
-        path: ['ajusteReacao'],
+        path: ['reactionAdjustment'],
         code: z.ZodIssueCode.custom,
         message: 'Selecione a conduta para o protocolo',
       })
     }
-    if (data.ajusteReacao === 'manter' && !data.ajusteReacaoJustificativa.trim()) {
+    if (data.reactionAdjustment === 'maintain' && !data.reactionAdjustmentJustification.trim()) {
       ctx.addIssue({
-        path: ['ajusteReacaoJustificativa'],
+        path: ['reactionAdjustmentJustification'],
         code: z.ZodIssueCode.custom,
         message: 'Justifique por que manter o protocolo',
       })
@@ -127,52 +127,52 @@ export const evolutionSchema = z
 export type EvolutionForm = z.infer<typeof evolutionSchema>
 
 export const STEP_1_FIELDS = [
-  'intervaloRelato',
-  'efeitoColateral',
-  'efeitosRelatados',
-  'necessidadeMedicacao',
-  'medicacoes',
-  'notasPre',
+  'intervalReport',
+  'sideEffect',
+  'reportedEffects',
+  'medicationNeeded',
+  'medications',
+  'notesPre',
 ] as const satisfies readonly FieldPath<EvolutionForm>[]
 
 export const STEP_2_FIELDS = [
-  'dataAplicacao',
-  'horaInicio',
-  'horaFim',
-  'volumeAplicado',
-  'concentracao',
-  'intervaloProxima',
-  'intervaloJustificativa',
-  'responsavel',
-  'efeitoColateralPos',
-  'efeitosRelatadosPos',
-  'necessidadeMedicacaoPos',
-  'medicacoesPos',
-  'notasPos',
-  'ajusteReacao',
-  'ajusteReacaoJustificativa',
+  'applicationDate',
+  'startTime',
+  'endTime',
+  'appliedVolume',
+  'concentration',
+  'nextInterval',
+  'intervalJustification',
+  'administrator',
+  'sideEffectPost',
+  'reportedEffectsPost',
+  'medicationNeededPost',
+  'medicationsPost',
+  'notesPost',
+  'reactionAdjustment',
+  'reactionAdjustmentJustification',
 ] as const satisfies readonly FieldPath<EvolutionForm>[]
 
 export const EVOLUTION_DEFAULTS: EvolutionForm = {
-  intervaloRelato: '',
-  efeitoColateral: 'Não',
-  efeitosRelatados: '',
-  necessidadeMedicacao: 'Não',
-  medicacoes: '',
-  notasPre: '',
-  dataAplicacao: '',
-  horaInicio: '',
-  horaFim: '',
-  volumeAplicado: '',
-  concentracao: '',
-  intervaloProxima: '',
-  intervaloJustificativa: '',
-  responsavel: '',
-  efeitoColateralPos: 'Não',
-  efeitosRelatadosPos: '',
-  necessidadeMedicacaoPos: 'Não',
-  medicacoesPos: '',
-  notasPos: '',
-  ajusteReacao: '',
-  ajusteReacaoJustificativa: '',
+  intervalReport: '',
+  sideEffect: 'no',
+  reportedEffects: '',
+  medicationNeeded: 'no',
+  medications: '',
+  notesPre: '',
+  applicationDate: '',
+  startTime: '',
+  endTime: '',
+  appliedVolume: '',
+  concentration: '',
+  nextInterval: '',
+  intervalJustification: '',
+  administrator: '',
+  sideEffectPost: 'no',
+  reportedEffectsPost: '',
+  medicationNeededPost: 'no',
+  medicationsPost: '',
+  notesPost: '',
+  reactionAdjustment: '',
+  reactionAdjustmentJustification: '',
 }
