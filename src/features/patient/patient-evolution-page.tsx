@@ -10,7 +10,7 @@ import { Search, ArrowLeft, ClipboardList, Syringe, CalendarDays, Info } from 'l
 import { addDays, format, differenceInDays, parse } from 'date-fns'
 import { cn } from '@/shared/lib/utils'
 import { formatVolume, formatConcentration } from '@/shared/lib/formatters'
-import { calculateNextDose, parseDose } from '@/features/immunotherapy/constants/scit-protocol'
+import { calculateNextDose, parseDose, PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
 import { Modal, Button, IconButton, TextInput, TextArea, Select } from '@/shared/components'
 import {
   evolutionSchema,
@@ -536,7 +536,7 @@ export function PatientEvolutionPage() {
                       control={control}
                       name="nextInterval"
                       render={({ field }) => {
-                        const isCustom = field.value && !['7', '14', '21', '28'].includes(field.value)
+                        const isCustom = field.value && !PROTOCOL_INTERVAL_PRESET_STRINGS.includes(field.value)
                         const selectValue = isCustom ? 'outro' : field.value
                         return (
                           <Select

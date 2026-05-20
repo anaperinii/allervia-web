@@ -3,6 +3,7 @@ import {} from '@tanstack/react-router'
 import { ArrowLeft, Database, Bell, Server, Calendar, ExternalLink, CheckCircle, Palette, Plus, X, Lock, Syringe, Pencil, Trash2, Check } from 'lucide-react'
 import { useHasPermission } from '@/shared/identity/user-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-types-store'
+import { useSettingsStore } from '@/features/settings/stores/settings-store'
 import { IconButton, Switch, Button, Select, TextInput, MediaRow } from "@/shared/components"
 
 const defaultEventColors = [
@@ -19,7 +20,8 @@ export function AdvancedSettingsPage() {
   const [timezone, setTimezone] = useState('America/Sao_Paulo')
   const [sessionTimeout, setSessionTimeout] = useState('30')
   const [language, setLanguage] = useState('pt-BR')
-  const [googleConnected, setGoogleConnected] = useState(false)
+  const googleConnected = useSettingsStore((state) => state.googleCalendarConnected)
+  const setGoogleConnected = useSettingsStore((state) => state.setGoogleCalendarConnected)
   const [autoSync, setAutoSync] = useState(true)
   const [reminderWhatsapp, setReminderWhatsapp] = useState(true)
   const [reminderHours, setReminderHours] = useState('24')

@@ -7,6 +7,7 @@ import { cn } from '@/shared/lib/utils'
 import { useHasPermission } from '@/shared/identity/user-store'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-types-store'
+import { INITIAL_DOSE } from '@/features/immunotherapy/constants/scit-protocol'
 import { Modal, Button, IconButton, TextInput, Select } from '@/shared/components'
 import { PROFILES } from '@/shared/identity/user-store'
 import { usePatientStore, type Application } from '@/features/patient/stores/patient-store'
@@ -65,7 +66,7 @@ export function AddImmunotherapyPage() {
       name: data.name.trim(),
       phone: data.phone.trim(),
       type: data.type.trim(),
-      doseConcentration: '1:10.000 - 0,1ml',
+      doseConcentration: INITIAL_DOSE,
       cycleInterval: { number: 1, days: 7 },
       modality: isSublingual ? 'sublingual' : 'subcutaneous',
       status: 'active',
@@ -85,7 +86,7 @@ export function AddImmunotherapyPage() {
       startTime: '09:00',
       endTime: '09:30',
       status: 'scheduled',
-      dose: '1:10.000 - 0,1ml',
+      dose: INITIAL_DOSE,
       cycle: { number: 1, days: 7 },
       month: meses[mesIdx],
       year: ano,

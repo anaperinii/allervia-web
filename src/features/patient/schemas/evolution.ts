@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { FieldPath } from 'react-hook-form'
 import { volumeSchema, concentrationSchema } from '@/shared/lib/field-schemas'
+import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
 
 const yesNo = z.enum(['yes', 'no'])
 const reactionAdjustmentValues = z.enum(['', 'reduce_dose', 'increase_interval', 'suspend', 'maintain'])
@@ -73,7 +74,7 @@ export const evolutionSchema = z
         code: z.ZodIssueCode.custom,
         message: 'Intervalo é obrigatório',
       })
-    } else if (!['7', '14', '21', '28'].includes(interval)) {
+    } else if (!PROTOCOL_INTERVAL_PRESET_STRINGS.includes(interval)) {
       const just = data.intervalJustification.trim()
       if (!just) {
         ctx.addIssue({
