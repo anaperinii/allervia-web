@@ -1,15 +1,9 @@
-import { Reveal } from '@/shared/components'
+import { useMemo } from 'react'
+import { Blob, Reveal } from '@/shared/components'
+import { SectionHeader } from '@/features/landing-page/components/section-header'
+import { TESTIMONIALS, type Testimonial } from '@/features/landing-page/data/testimonials'
 
-const testimonials = [
-  { quote: 'O ImuneCare transformou a gestão da nossa clínica. Antes dependíamos de planilhas — agora temos controle total dos protocolos.', name: 'Dra. Sofia Andrade', handle: '@sofia.alergista', initials: 'SA' },
-  { quote: 'O cálculo automático de doses eliminou os erros manuais. Minha equipe confia muito mais no processo agora.', name: 'Dr. Marcos Rezende', handle: '@mrezende_imuno', initials: 'MR' },
-  { quote: 'Consigo acompanhar cada paciente em diferentes fases do protocolo sem perder nenhum detalhe. Ferramenta essencial.', name: 'Dra. Camila Alves', handle: '@camilaalergol', initials: 'CA' },
-  { quote: 'A rastreabilidade das aplicações e reações adversas nos deu uma segurança clínica que não tínhamos antes.', name: 'Dr. Rodrigo Figueiredo', handle: '@rodrifig', initials: 'RF' },
-  { quote: 'Os dashboards analíticos me ajudam a tomar decisões clínicas mais informadas sobre a progressão dos pacientes.', name: 'Dra. Larissa Pinheiro', handle: '@larissapin', initials: 'LP' },
-  { quote: 'Implementação foi simples e a equipe toda adotou rápido. O suporte é excelente.', name: 'Dr. Bruno Nascimento', handle: '@brunon_med', initials: 'BN' },
-]
-
-function TestimonialCard({ quote, name, handle, initials }: typeof testimonials[number]) {
+function TestimonialCard({ quote, name, handle, initials }: Testimonial) {
   return (
     <div className="w-75 shrink-0 bg-(--card) border-[1.5px] border-(--border-custom) rounded-(--radius) p-6">
       <blockquote className="text-[0.875rem] text-(--text-muted) leading-[1.6] mb-4">
@@ -29,34 +23,30 @@ function TestimonialCard({ quote, name, handle, initials }: typeof testimonials[
 }
 
 export function TestimonialsSection() {
+  // Duplicated set creates the seamless infinite-scroll illusion.
+  const marqueeItems = useMemo(() => [...TESTIMONIALS, ...TESTIMONIALS], [])
+
   return (
     <section id="testimonials" className="overflow-hidden py-20 relative">
-      {/* Top seam (from PricingSection bottom) */}
-      <div className="pointer-events-none absolute -top-32 -left-16 w-95 h-95 rounded-full bg-cyan-100/25 blur-3xl" />
-      <div className="pointer-events-none absolute -top-28 -right-24 w-105 h-105 rounded-full bg-teal-200/20 blur-3xl" />
-      {/* Mid decorative */}
-      <div className="pointer-events-none absolute top-1/2 right-1/4 w-75 h-75 rounded-full bg-teal-200/20 blur-3xl" />
-      {/* Bottom seam (continues into TabsSection) */}
-      <div className="pointer-events-none absolute -bottom-28 -left-20 w-95 h-95 rounded-full bg-teal-200/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-20 w-100 h-100 rounded-full bg-cyan-100/25 blur-3xl" />
+      <Blob className="-top-32 -left-16 w-95 h-95 bg-cyan-100/25" />
+      <Blob className="-top-28 -right-24 w-105 h-105 bg-teal-200/20" />
+      <Blob className="top-1/2 right-1/4 w-75 h-75 bg-teal-200/20" />
+      <Blob className="-bottom-28 -left-20 w-95 h-95 bg-teal-200/20" />
+      <Blob className="-bottom-32 -right-20 w-100 h-100 bg-cyan-100/25" />
+
       <Reveal className="px-[5%] pb-12 relative">
-        <span className="inline-block text-[0.75rem] font-bold tracking-[2px] uppercase text-teal-600 bg-teal-50 border border-teal-200 px-4 py-1.5 rounded-full mb-4">
-          Depoimentos
-        </span>
-        <h2 className="text-[clamp(1.4rem,2.8vw,2.1rem)] font-extrabold tracking-[-0.5px] leading-[1.15] max-w-160">
-          Quem usa, recomenda
-        </h2>
+        <SectionHeader eyebrow="Depoimentos" title="Quem usa, recomenda" />
       </Reveal>
 
       <div
-        className="flex gap-6 hover:paused"
+        className="flex gap-6 hover:[animation-play-state:paused]"
         style={{
           animation: 'scroll-left 30s linear infinite',
           width: 'max-content',
         }}
       >
-        {[...testimonials, ...testimonials].map((t, i) => (
-          <TestimonialCard key={`${t.initials}-${i}`} {...t} />
+        {marqueeItems.map((testimonial, index) => (
+          <TestimonialCard key={`${testimonial.initials}-${index}`} {...testimonial} />
         ))}
       </div>
     </section>

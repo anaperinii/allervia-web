@@ -1,42 +1,10 @@
 import {} from '@tanstack/react-router'
-import { ArrowLeft, Check, Zap, Building, Crown, CreditCard, Calendar, Receipt } from 'lucide-react'
+import { ArrowLeft, Check, Building, CreditCard, Calendar, Receipt } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { IconButton, Button } from "@/shared/components"
+import { PLANS, MAX_PLAN_FEATURES, type PlanId } from '@/shared/data/plans'
 
-const plans = [
-  {
-    id: 'starter',
-    name: 'Starter',
-    price: 'Gratuito',
-    period: '',
-    desc: 'Para clínicas iniciando com imunoterapia',
-    icon: Zap,
-    features: ['Até 50 pacientes', 'Protocolo SCIT básico', '1 profissional', 'Dashboard básico', 'Suporte por e-mail'],
-    current: false,
-  },
-  {
-    id: 'professional',
-    name: 'Professional',
-    price: 'R$ 197',
-    period: '/mês',
-    desc: 'Para clínicas em crescimento',
-    icon: Building,
-    features: ['Até 500 pacientes', 'Protocolos SCIT e SLIT', 'Até 10 profissionais', 'Dashboard completo', 'Relatórios exportáveis', 'Agendamentos', 'Suporte prioritário'],
-    current: true,
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: 'Sob consulta',
-    period: '',
-    desc: 'Para redes de clínicas e hospitais',
-    icon: Crown,
-    features: ['Pacientes ilimitados', 'Todos os protocolos', 'Profissionais ilimitados', 'Multi-unidade', 'API de integração', 'Auditoria avançada', 'Gerente de conta dedicado', 'SLA 99.9%'],
-    current: false,
-  },
-]
-
-const maxFeatures = Math.max(...plans.map((p) => p.features.length))
+const CURRENT_PLAN_ID: PlanId = 'professional'
 
 export function PlansPage() {
 
@@ -110,17 +78,18 @@ export function PlansPage() {
               </div>
 
               <div className="grid grid-cols-3 gap-4">
-                {plans.map((plan) => {
+                {PLANS.map((plan) => {
                   const Icon = plan.icon
+                  const isCurrent = plan.id === CURRENT_PLAN_ID
                   return (
                     <div
                       key={plan.id}
                       className={cn(
                         "border rounded-xl overflow-hidden transition-all flex flex-col",
-                        plan.current ? "border-brand shadow-[0_0_0_1px_#18C1CB,0_8px_24px_rgba(24,193,203,0.1)]" : "border-(--border-custom) hover:border-gray-300"
+                        isCurrent ? "border-brand shadow-[0_0_0_1px_#18C1CB,0_8px_24px_rgba(24,193,203,0.1)]" : "border-(--border-custom) hover:border-gray-300"
                       )}
                     >
-                      {plan.current && (
+                      {isCurrent && (
                         <div className="bg-linear-to-r from-brand to-teal-400 text-center py-1.5 text-[0.6rem] font-bold text-white uppercase tracking-wider">
                           Plano atual
                         </div>
@@ -132,7 +101,7 @@ export function PlansPage() {
                           </div>
                           <div>
                             <div className="text-sm font-bold text-(--text)">{plan.name}</div>
-                            <div className="text-[0.6rem] text-(--text-muted)">{plan.desc}</div>
+                            <div className="text-[0.6rem] text-(--text-muted)">{plan.description}</div>
                           </div>
                         </div>
 
@@ -142,20 +111,19 @@ export function PlansPage() {
                         </div>
 
                         <div className="space-y-2 flex-1">
-                          {plan.features.map((f) => (
-                            <div key={f} className="flex items-center gap-2 text-xs text-(--text-muted)">
+                          {plan.features.map((feature) => (
+                            <div key={feature} className="flex items-center gap-2 text-xs text-(--text-muted)">
                               <Check size={12} className="text-brand shrink-0" />
-                              {f}
+                              {feature}
                             </div>
                           ))}
-                          {/* Spacers para igualar altura */}
-                          {Array.from({ length: maxFeatures - plan.features.length }).map((_, i) => (
-                            <div key={`spacer-${i}`} className="h-5" />
+                          {Array.from({ length: MAX_PLAN_FEATURES - plan.features.length }).map((_, index) => (
+                            <div key={`spacer-${index}`} className="h-5" />
                           ))}
                         </div>
 
                         <div className="mt-5">
-                          {plan.current ? (
+                          {isCurrent ? (
                             <button className="w-full h-9 rounded-lg border border-brand text-xs font-semibold text-brand cursor-default">
                               Plano atual
                             </button>
