@@ -3,11 +3,37 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Shield, Check, Clock, Mail } from 'lucide-react'
-import { Modal, TextInput, Select } from '@/shared/components'
+import { Modal, Button, FieldLabel, TextInput, Select } from '@/shared/components'
 import imunecareLogo from '@/assets/imunecare-logo.png'
 import imunecareWhiteLogo from '@/assets/imunecare-white-logo.png'
 import { trialSchema, type TrialForm } from '@/features/auth/forms/trial'
 import { formatPhone } from '@/shared/lib/formatters'
+
+const ROLE_OPTIONS = [
+  { value: 'doctor', label: 'Médico(a)' },
+  { value: 'clinic_manager', label: 'Gestor(a) de clínica' },
+  { value: 'pharmacist', label: 'Farmacêutico(a)' },
+  { value: 'nurse', label: 'Enfermeiro(a)' },
+  { value: 'other', label: 'Outro' },
+] as const
+
+const SOLUTION_OPTIONS = [
+  { value: 'self', label: 'Para mim (uso próprio)' },
+  { value: 'single_clinic', label: 'Para minha clínica' },
+  { value: 'clinic_network', label: 'Para uma rede de clínicas' },
+] as const
+
+const STATS = [
+  { value: '+94%', label: 'Adesão ao tratamento' },
+  { value: '3x', label: 'Mais eficiência clínica' },
+  { value: '100%', label: 'Rastreabilidade' },
+] as const
+
+const TRUST_BADGES = [
+  { icon: Shield, label: 'Dados seguros' },
+  { icon: Check, label: 'Sem compromisso' },
+  { icon: Clock, label: 'Ativação imediata' },
+] as const
 
 export function TrialPage() {
   const [showModal, setShowModal] = useState(false)
@@ -51,14 +77,10 @@ export function TrialPage() {
           Transforme complexidade em clareza e recupere o tempo que você merece dedicar aos seus pacientes.
         </p>
         <div className="flex gap-3 relative z-10">
-          {[
-            { value: '+94%', label: 'Adesão ao tratamento' },
-            { value: '3x', label: 'Mais eficiência clínica' },
-            { value: '100%', label: 'Rastreabilidade' },
-          ].map((s) => (
-            <div key={s.label} className="flex-1 bg-white/12 border border-white/18 backdrop-blur-md rounded-xl px-4 py-3">
-              <div className="text-lg font-extrabold text-white tracking-tight">{s.value}</div>
-              <div className="text-[0.65rem] text-white/65 font-medium mt-0.5">{s.label}</div>
+          {STATS.map((stat) => (
+            <div key={stat.label} className="flex-1 bg-white/12 border border-white/18 backdrop-blur-md rounded-xl px-4 py-3">
+              <div className="text-lg font-extrabold text-white tracking-tight">{stat.value}</div>
+              <div className="text-[0.65rem] text-white/65 font-medium mt-0.5">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -76,101 +98,85 @@ export function TrialPage() {
           <p className="text-[0.7rem] text-(--text-muted) mb-5 leading-relaxed">Preencha os dados abaixo e nossa equipe libera seu acesso em até 1 dia útil.</p>
 
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
-            <div>
-              <label htmlFor="tr-nome" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Nome <span className="text-red-400">*</span></label>
-              <TextInput id="tr-nome" placeholder="Insira aqui" invalid={!!errors.name} className="h-8" maxLength={60} {...register('name')} />
-              {errors.name && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.name.message}</span>}
-            </div>
-            <div>
-              <label htmlFor="tr-sobrenome" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Sobrenome <span className="text-red-400">*</span></label>
-              <TextInput id="tr-sobrenome" placeholder="Insira aqui" invalid={!!errors.lastName} className="h-8" maxLength={80} {...register('lastName')} />
-              {errors.lastName && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.lastName.message}</span>}
-            </div>
+            <FieldLabel label="Nome" required error={errors.name?.message}>
+              <TextInput placeholder="Insira aqui" invalid={!!errors.name} maxLength={60} {...register('name')} />
+            </FieldLabel>
+            <FieldLabel label="Sobrenome" required error={errors.lastName?.message}>
+              <TextInput placeholder="Insira aqui" invalid={!!errors.lastName} maxLength={80} {...register('lastName')} />
+            </FieldLabel>
           </div>
 
           <div className="mb-2.5">
-            <label htmlFor="tr-email" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">E-mail profissional <span className="text-red-400">*</span></label>
-            <TextInput id="tr-email" type="email" placeholder="voce@clinica.com.br" invalid={!!errors.email} className="h-8" maxLength={254} autoComplete="email" {...register('email')} />
-            {errors.email && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.email.message}</span>}
+            <FieldLabel label="E-mail profissional" required error={errors.email?.message}>
+              <TextInput
+                type="email"
+                placeholder="voce@clinica.com.br"
+                invalid={!!errors.email}
+                maxLength={254}
+                autoComplete="email"
+                {...register('email')}
+              />
+            </FieldLabel>
           </div>
 
           <div className="mb-2.5">
-            <label htmlFor="tr-telefone" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Telefone / WhatsApp <span className="text-red-400">*</span></label>
-            <Controller
-              control={control}
-              name="phone"
-              render={({ field }) => (
-                <TextInput
-                  id="tr-telefone"
-                  type="tel"
-                  placeholder="(00) 00000-0000"
-                  invalid={!!errors.phone}
-                  className="h-8"
-                  maxLength={16}
-                  value={field.value}
-                  onBlur={field.onBlur}
-                  onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                />
-              )}
-            />
-            {errors.phone && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.phone.message}</span>}
+            <FieldLabel label="Telefone / WhatsApp" required error={errors.phone?.message}>
+              <Controller
+                control={control}
+                name="phone"
+                render={({ field }) => (
+                  <TextInput
+                    type="tel"
+                    placeholder="(00) 00000-0000"
+                    invalid={!!errors.phone}
+                    maxLength={16}
+                    value={field.value}
+                    onBlur={field.onBlur}
+                    onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                  />
+                )}
+              />
+            </FieldLabel>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
-            <div>
-              <label htmlFor="tr-atuacao" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Qual é a sua atuação? <span className="text-red-400">*</span></label>
-              <Select id="tr-atuacao" invalid={!!errors.role} className="h-8" {...register('role')}>
+            <FieldLabel label="Qual é a sua atuação?" required error={errors.role?.message}>
+              <Select invalid={!!errors.role} {...register('role')} defaultValue="">
                 <option value="" disabled>Selecionar</option>
-                <option>Médico(a)</option>
-                <option>Gestor(a) de clínica</option>
-                <option>Farmacêutico(a)</option>
-                <option>Enfermeiro(a)</option>
-                <option>Outro</option>
+                {ROLE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
               </Select>
-              {errors.role && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.role.message}</span>}
-            </div>
-            <div>
-              <label htmlFor="tr-solucao" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Solução digital para quem? <span className="text-red-400">*</span></label>
-              <Select id="tr-solucao" invalid={!!errors.solution} className="h-8" {...register('solution')}>
+            </FieldLabel>
+            <FieldLabel label="Solução digital para quem?" required error={errors.solution?.message}>
+              <Select invalid={!!errors.solution} {...register('solution')} defaultValue="">
                 <option value="" disabled>Selecionar</option>
-                <option>Para mim (uso próprio)</option>
-                <option>Para minha clínica</option>
-                <option>Para uma rede de clínicas</option>
+                {SOLUTION_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
               </Select>
-              {errors.solution && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.solution.message}</span>}
-            </div>
+            </FieldLabel>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5 mb-4">
-            <div>
-              <label htmlFor="tr-especialidade" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Especialidade da clínica <span className="text-red-400">*</span></label>
-              <TextInput id="tr-especialidade" placeholder="Ex.: Alergia e Imunologia" invalid={!!errors.specialty} className="h-8" maxLength={80} {...register('specialty')} />
-              {errors.specialty && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.specialty.message}</span>}
-            </div>
-            <div>
-              <label htmlFor="tr-profissionais" className="text-[0.7rem] font-semibold text-(--text-muted) mb-1 block">Nº de profissionais <span className="text-red-400">*</span></label>
+            <FieldLabel label="Especialidade da clínica" required error={errors.specialty?.message}>
+              <TextInput placeholder="Ex.: Alergia e Imunologia" invalid={!!errors.specialty} maxLength={80} {...register('specialty')} />
+            </FieldLabel>
+            <FieldLabel label="Nº de profissionais" required error={errors.professionals?.message}>
               <TextInput
-                id="tr-profissionais"
                 type="number"
                 min="1"
                 max="9999"
                 placeholder="Ex.: 5"
                 invalid={!!errors.professionals}
-                className="h-8"
                 {...register('professionals')}
               />
-              {errors.professionals && <span className="text-[0.55rem] text-red-500 mt-0.5 block">{errors.professionals.message}</span>}
-            </div>
+            </FieldLabel>
           </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full h-9 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-bold flex items-center justify-center gap-2 hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(24,193,203,0.35)] transition-all cursor-pointer disabled:opacity-50"
-          >
+          <Button type="submit" tone="brand" variant="solid" prominent fullWidth size="lg" disabled={isSubmitting} rightIcon={<ArrowRight size={16} />}>
             Quero testar gratuitamente
-            <ArrowRight size={16} />
-          </button>
+          </Button>
 
           <p className="text-[0.6rem] text-(--text-muted) text-center mt-3 leading-relaxed">
             Ao enviar, você concorda com os{' '}
@@ -181,16 +187,12 @@ export function TrialPage() {
           <hr className="border-t border-(--border-custom) my-4" />
 
           <div className="flex items-center justify-center gap-5">
-            {[
-              { icon: Shield, label: 'Dados seguros' },
-              { icon: Check, label: 'Sem compromisso' },
-              { icon: Clock, label: 'Ativação imediata' },
-            ].map((t) => {
-              const Icon = t.icon
+            {TRUST_BADGES.map((badge) => {
+              const Icon = badge.icon
               return (
-                <span key={t.label} className="flex items-center gap-1.5 text-[0.65rem] text-(--text-muted) font-medium">
+                <span key={badge.label} className="flex items-center gap-1.5 text-[0.65rem] text-(--text-muted) font-medium">
                   <Icon size={13} className="text-brand" />
-                  {t.label}
+                  {badge.label}
                 </span>
               )
             })}
@@ -220,9 +222,9 @@ export function TrialPage() {
             <p className="text-sm font-semibold text-brand">contato@imunecare.com.br</p>
             <p className="text-[0.6rem] text-(--text-muted) mt-1">Prazo de retorno: até 1 dia útil</p>
           </div>
-          <Link to="/" className="inline-flex items-center justify-center w-full h-9 rounded-lg bg-linear-to-br from-brand to-teal-400 text-white text-xs font-bold hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(24,193,203,0.35)] transition-all no-underline">
+          <Button tone="brand" variant="solid" prominent fullWidth size="lg" to="/">
             Voltar para a página inicial
-          </Link>
+          </Button>
         </div>
       </Modal>
     </div>
