@@ -1,15 +1,12 @@
-import { useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { AuthCard } from '@/features/auth/auth-card'
-import { Eye, EyeOff } from 'lucide-react'
+import { AuthCard } from '@/features/auth/components/auth-card'
 import { loginSchema, type LoginForm } from '@/features/auth/forms/login'
-import { TextInput, Reveal } from '@/shared/components'
+import { Button, FieldLabel, TextInput, PasswordInput, Reveal } from '@/shared/components'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
@@ -38,10 +35,8 @@ export function LoginPage() {
           </div>
 
           <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="login-email" className="text-xs font-medium text-(--text)/80">Email</label>
+            <FieldLabel label="Email" error={errors.email?.message}>
               <TextInput
-                id="login-email"
                 type="email"
                 placeholder="seu@email.com.br"
                 invalid={!!errors.email}
@@ -49,43 +44,22 @@ export function LoginPage() {
                 maxLength={254}
                 {...register('email')}
               />
-              {errors.email && <span className="text-[0.6rem] text-red-500 mt-0.5 block">{errors.email.message}</span>}
-            </div>
+            </FieldLabel>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="login-password" className="text-xs font-medium text-(--text)/80">Senha</label>
-              <div className="relative">
-                <TextInput
-                  id="login-password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Insira aqui"
-                  invalid={!!errors.password}
-                  className="h-11 pr-10 text-sm"
-                  autoComplete="current-password"
-                  maxLength={128}
-                  {...register('password')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-(--text-muted)/60 hover:text-(--text-muted) transition-colors"
-                  tabIndex={-1}
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              {errors.password && <span className="text-[0.6rem] text-red-500 mt-0.5 block">{errors.password.message}</span>}
-            </div>
+            <FieldLabel label="Senha" error={errors.password?.message}>
+              <PasswordInput
+                placeholder="Insira aqui"
+                invalid={!!errors.password}
+                autoComplete="current-password"
+                maxLength={128}
+                {...register('password')}
+              />
+            </FieldLabel>
 
             <div className="flex flex-col gap-3">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full h-10 rounded-xl text-sm font-semibold text-white bg-linear-to-br from-brand to-teal-400 shadow-[0_2px_12px_rgba(20,184,166,0.3)] hover:-translate-y-px hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] transition-all cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <Button type="submit" tone="brand" variant="solid" prominent fullWidth size="lg" disabled={isSubmitting}>
                 Log in
-              </button>
+              </Button>
               <div className="flex justify-end">
                 <Link to="/forgot-password" className="text-xs font-medium text-brand hover:underline no-underline">Esqueceu a senha?</Link>
               </div>

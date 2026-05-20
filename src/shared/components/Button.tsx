@@ -4,7 +4,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
 export type ButtonTone = 'brand' | 'danger' | 'warning' | 'success' | 'neutral'
 export type ButtonVariant = 'solid' | 'outline' | 'ghost'
-export type ButtonSize = 'sm' | 'md'
+export type ButtonSize = 'sm' | 'md' | 'lg'
 export type ButtonLegacyVariant = 'primary' | 'outline' | 'ghost' | 'danger' | 'warning' | 'success'
 
 type SharedProps = {
@@ -36,6 +36,7 @@ type ButtonProps = ButtonAsAction | ButtonAsLink
 const SIZE_CLASS: Record<ButtonSize, string> = {
   sm: 'h-7 px-3 text-[0.65rem]',
   md: 'h-8 px-4 text-xs',
+  lg: 'h-10 px-5 text-sm',
 }
 
 const PROMINENT_SHADOW: Record<ButtonTone, string> = {

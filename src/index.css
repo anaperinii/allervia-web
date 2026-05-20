@@ -120,6 +120,11 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
+@keyframes slide-in-right {
+  from { transform: translateX(28px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
 @keyframes wave-flow {
   0%, 100% { transform: translateX(0); }
   50% { transform: translateX(-120px); }
