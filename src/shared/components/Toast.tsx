@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { ReactNode } from 'react'
@@ -18,10 +19,29 @@ interface ToastProps {
   icon: ReactNode
   title: string
   description?: ReactNode
+  autoDismissMs?: number
 }
 
-/** Toast fixo no canto superior direito com animação de slide. */
-export function Toast({ open, onClose, variant = 'success', icon, title, description }: ToastProps) {
+export function Toast({
+  open,
+  onClose,
+  variant = 'success',
+  icon,
+  title,
+  description,
+  autoDismissMs = 6000,
+}: ToastProps) {
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
+
+  useEffect(() => {
+    if (!open || autoDismissMs <= 0) return
+    const timer = setTimeout(() => onCloseRef.current(), autoDismissMs)
+    return () => clearTimeout(timer)
+  }, [open, autoDismissMs])
+
   if (!open) return null
   const v = VARIANT_CLASS[variant]
   return (

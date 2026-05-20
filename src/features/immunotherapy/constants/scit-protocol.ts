@@ -26,6 +26,10 @@ export const INDUCTION_INTERVAL = 7
 export const MAINTENANCE_INTERVALS = [14, 21, 28] as const
 export const META_STEP = INDUCTION_SEQUENCE[INDUCTION_SEQUENCE.length - 1]
 export const META_DOSE = `${META_STEP.conc} - ${META_STEP.vol}`
+export const PROTOCOL_DOSES: readonly string[] = INDUCTION_SEQUENCE.map((step) => `${step.conc} - ${step.vol}`)
+export const INITIAL_DOSE = PROTOCOL_DOSES[0]
+export const PROTOCOL_INTERVAL_PRESETS = [INDUCTION_INTERVAL, ...MAINTENANCE_INTERVALS] as const
+export const PROTOCOL_INTERVAL_PRESET_STRINGS: readonly string[] = PROTOCOL_INTERVAL_PRESETS.map(String)
 
 export function doseString(step: SCITStep): string {
   return `${step.conc} - ${step.vol}`

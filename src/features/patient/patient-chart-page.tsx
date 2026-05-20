@@ -4,7 +4,7 @@ import { usePatientStore, seedInactivationsFor, type Application, type ProtocolA
 import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
 import { useHasPermission, useDoctorFilter, useUserStore } from '@/shared/identity/user-store'
 import { useAuditStore } from '@/shared/audit/audit-store'
-import { META_DOSE, calculateNextDose } from '@/features/immunotherapy/constants/scit-protocol'
+import { META_DOSE, calculateNextDose, INITIAL_DOSE, PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
 import { addDays, format, differenceInDays, parse } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/utils'
@@ -15,17 +15,17 @@ import {
   adjustProtocolSchema,
   type AdjustProtocolForm,
   ADJUST_PROTOCOL_DEFAULTS,
-} from '@/features/patient/schemas/adjust-protocol'
+} from '@/features/patient/forms/adjust-protocol'
 import {
   inactivateSchema,
   type InactivateForm,
   INACTIVATE_DEFAULTS,
-} from '@/features/patient/schemas/inactivate'
+} from '@/features/patient/forms/inactivate'
 import {
   createReactivateSchema,
   type ReactivateForm,
   REACTIVATE_DEFAULTS,
-} from '@/features/patient/schemas/reactivate'
+} from '@/features/patient/forms/reactivate'
 import {
   Clock,
   CalendarDays,
@@ -318,7 +318,7 @@ export function PatientChartPage() {
     { conc: '1:10', vols: ['0,1ml', '0,2ml', '0,4ml', '0,5ml'] },
   ]
   const allSteps = inductionSteps.flatMap((s) => s.vols.map((v) => `${s.conc} - ${v}`))
-  const currentDoseStr = lastRealized?.dose || selectedPatient?.currentDoseConcentration || '1:10.000 - 0,1ml'
+  const currentDoseStr = lastRealized?.dose || selectedPatient?.currentDoseConcentration || INITIAL_DOSE
   const currentStepIndex = useMemo(() => {
     const parts = currentDoseStr.split(' - ')
     const conc = parts[0]?.trim() || ''
@@ -1073,7 +1073,6 @@ export function PatientChartPage() {
               })
               setShowAdjustModal(false)
               setShowAdjustToast(true)
-              setTimeout(() => setShowAdjustToast(false), 6000)
             })}
           >Confirmar ajuste</Button>
         </>}
@@ -1164,7 +1163,7 @@ export function PatientChartPage() {
               <span className="text-(--text-muted) text-xs">→</span>
               <div className="flex-1">
                 {(() => {
-                  const isCustom = adjustValues.newInterval && !['7', '14', '21', '28'].includes(adjustValues.newInterval)
+                  const isCustom = adjustValues.newInterval && !PROTOCOL_INTERVAL_PRESET_STRINGS.includes(adjustValues.newInterval)
                   const selectValue = isCustom ? 'outro' : adjustValues.newInterval
                   return (
                     <Select
@@ -1298,7 +1297,6 @@ export function PatientChartPage() {
               })
               setShowInactivateModal(false)
               setShowInactivateToast(true)
-              setTimeout(() => setShowInactivateToast(false), 6000)
             })}
           >Inativar imunoterapia</Button>
         </>}
@@ -1401,7 +1399,6 @@ export function PatientChartPage() {
               })
               setShowReactivateModal(false)
               setShowReactivateToast(true)
-              setTimeout(() => setShowReactivateToast(false), 6000)
             }}
           >Reativar paciente</Button>
         </> : null}
@@ -1496,7 +1493,7 @@ export function PatientChartPage() {
 
             <FieldLabel label="Intervalo entre doses" required error={reactivateErrors.interval?.message}>
               {(() => {
-                const isCustom = reactivateValues.interval && !['7', '14', '21', '28'].includes(reactivateValues.interval)
+                const isCustom = reactivateValues.interval && !PROTOCOL_INTERVAL_PRESET_STRINGS.includes(reactivateValues.interval)
                 const selectValue = isCustom ? 'outro' : reactivateValues.interval
                 return (
                   <Select

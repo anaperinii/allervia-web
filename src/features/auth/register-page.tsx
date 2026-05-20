@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from '@tanstack/react-router'
 import { AuthCard } from '@/features/auth/auth-card'
 import { Eye, EyeOff, Smile, CheckCircle, Mail, ShieldCheck, ArrowRight } from 'lucide-react'
-import { registerSchema, type RegisterForm } from '@/features/auth/schemas/register'
+import { registerSchema, type RegisterForm } from '@/features/auth/forms/register'
 import { TextInput, Select, Reveal } from '@/shared/components'
 
 const specialties = [

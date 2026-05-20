@@ -30,8 +30,6 @@ export function ImmunotherapiesPage() {
     if (success) {
       setShowToast(true)
       navigate({ to: '/immunotherapies', search: {}, replace: true })
-      const timer = setTimeout(() => setShowToast(false), 8000)
-      return () => clearTimeout(timer)
     }
   }, [success])
 
@@ -289,6 +287,7 @@ export function ImmunotherapiesPage() {
       <Toast
         open={showToast}
         onClose={() => setShowToast(false)}
+        autoDismissMs={8000}
         variant="success"
         icon={<CheckCircle size={16} />}
         title="Registro salvo com sucesso!"

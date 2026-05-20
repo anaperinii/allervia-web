@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AuthCard } from '@/features/auth/auth-card'
 import { Eye, EyeOff } from 'lucide-react'
-import { loginSchema, type LoginForm } from '@/features/auth/schemas/login'
+import { loginSchema, type LoginForm } from '@/features/auth/forms/login'
 import { TextInput, Reveal } from '@/shared/components'
 
 export function LoginPage() {
