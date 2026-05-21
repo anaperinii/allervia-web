@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearch } from '@tanstack/react-router'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, CheckCircle } from 'lucide-react'
 import { addDays, differenceInDays, format } from 'date-fns'
-import { Button, CancelWizardModal, IconButton, WizardStepsIndicator } from '@/shared/components'
+import { Button, CancelWizardModal, IconButton, toast, WizardStepsIndicator } from '@/shared/components'
 import { usePatientStore } from '@/features/patient/stores/patient-store'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
@@ -126,7 +126,7 @@ export function PatientEvolutionPage() {
     }
   }, [patientFromStore])
 
-  const handleContinue = async () => {
+  const advanceStep = async () => {
     if (step === 0 && (!selectedImmunotherapy || selectedImmunotherapy.status === 'inactive')) return
     if (step === 1) {
       const ok = await trigger([...STEP_1_FIELDS])
@@ -206,20 +206,40 @@ export function PatientEvolutionPage() {
       description: `Aplicou ${doseStr} em ${dataRealizada} (ciclo ${ciclo} · intervalo ${interval} dias) · responsável: ${data.administrator}`,
     })
 
-    navigate({ to: '/immunotherapies', search: { success: true, patientId: selectedImmunotherapy.id } })
+    toast.success({
+      icon: <CheckCircle size={16} />,
+      title: 'Evolução registrada com sucesso!',
+      description: (
+        <>
+          A aplicação de {selectedImmunotherapy.name} foi registrada e a próxima dose já está agendada.
+          <Link
+            to="/patient/$patientId"
+            params={{ patientId: selectedImmunotherapy.id }}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 mt-2 transition-colors"
+          >
+            Acessar prontuário do paciente &rarr;
+          </Link>
+        </>
+      ),
+      autoDismissMs: 8000,
+    })
+
+    navigate({ to: '/immunotherapies' })
   })
 
-  const handleEnterKey = (e: React.KeyboardEvent) => {
-    if (e.key !== 'Enter' || (e.target as HTMLElement).tagName === 'TEXTAREA') return
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (step < 3) handleContinue()
-    else onSaveEvolution()
+    if (step < 3) {
+      void advanceStep()
+    } else {
+      void onSaveEvolution()
+    }
   }
 
   const continueDisabled = step === 0 && (!selectedImmunotherapy || selectedImmunotherapy.status === 'inactive')
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 p-4 min-h-0 overflow-hidden" onKeyDown={handleEnterKey}>
+    <div className="flex flex-1 flex-col bg-gray-50/80 p-4 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
           <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
@@ -234,7 +254,7 @@ export function PatientEvolutionPage() {
           labels={['Paciente', 'Pré-Aplicação', 'Pós-Aplicação', 'Revisão dos Dados']}
         />
 
-        <form onSubmit={onSaveEvolution} noValidate className="flex flex-1 min-h-0 flex-col">
+        <form onSubmit={handleFormSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
           <div className="flex-1 overflow-y-auto px-5 py-4">
             {step === 0 && (
               <SelectPatientStep
@@ -267,21 +287,9 @@ export function PatientEvolutionPage() {
                 Voltar
               </Button>
             )}
-            {step < 3 ? (
-              <Button
-                type="button"
-                tone="brand"
-                variant="solid"
-                onClick={handleContinue}
-                disabled={continueDisabled}
-              >
-                Continuar
-              </Button>
-            ) : (
-              <Button type="submit" tone="brand" variant="solid">
-                Salvar Evolução
-              </Button>
-            )}
+            <Button type="submit" tone="brand" variant="solid" disabled={step < 3 && continueDisabled}>
+              {step < 3 ? 'Continuar' : 'Salvar Evolução'}
+            </Button>
           </div>
         </form>
       </div>

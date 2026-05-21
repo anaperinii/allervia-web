@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { CheckCircle } from 'lucide-react'
-import { TablePagination, Toast } from '@/shared/components'
-import { useImmunotherapiesStore, useImmunotherapyLookup, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useNavigate } from '@tanstack/react-router'
+import { TablePagination } from '@/shared/components'
+import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-types-store'
 import { usePatientStore } from '@/features/patient/stores/patient-store'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
@@ -12,18 +11,6 @@ import { ImmunotherapiesTable } from '@/features/immunotherapy/components/immuno
 
 export function ImmunotherapiesPage() {
   const navigate = useNavigate()
-  const { success, patientId } = useSearch({ from: '/immunotherapies' })
-  const { getFullName } = useImmunotherapyLookup()
-  const successPatientName = patientId ? getFullName(patientId) : ''
-  const [showToast, setShowToast] = useState(false)
-
-  useEffect(() => {
-    if (success) {
-      setShowToast(true)
-      navigate({ to: '/immunotherapies', search: {}, replace: true })
-    }
-  }, [success, navigate])
-
   const immunotherapies = useImmunotherapiesStore((s) => s.immunotherapies)
   const customTypes = useCustomTypesStore((s) => s.types)
   const setSelectedPatient = usePatientStore((s) => s.setSelectedPatient)
@@ -108,29 +95,6 @@ export function ImmunotherapiesPage() {
           onItemsPerPageChange={setItemsPerPage}
         />
       </div>
-
-      <Toast
-        open={showToast}
-        onClose={() => setShowToast(false)}
-        autoDismissMs={8000}
-        variant="success"
-        icon={<CheckCircle size={16} />}
-        title="Registro salvo com sucesso!"
-        description={
-          <>
-            Os dados de {successPatientName || 'paciente'} foram registrados e a próxima dose já está agendada.
-            {patientId && (
-              <Link
-                to="/patient/$patientId"
-                params={{ patientId }}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 mt-2 transition-colors"
-              >
-                Acessar prontuário do paciente &rarr;
-              </Link>
-            )}
-          </>
-        }
-      />
     </div>
   )
 }
