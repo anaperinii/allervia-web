@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate, useSearch, Link } from '@tanstack/react-router'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useImmunotherapiesStore, useImmunotherapyLookup } from '@/features/immunotherapy/stores/immunotherapies-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-types-store'
 import { usePatientStore, seedInactivationsFor } from '@/features/patient/stores/patient-store'
 import { useHasPermission, useDoctorFilter } from '@/shared/identity/user-store'
@@ -23,7 +23,9 @@ import { getIntervalColor } from '@/features/immunotherapy/constants/interval-co
 
 export function ImmunotherapiesPage() {
   const navigate = useNavigate()
-  const { success, patientName, patientId } = useSearch({ from: '/immunotherapies' })
+  const { success, patientId } = useSearch({ from: '/immunotherapies' })
+  const { getFullName } = useImmunotherapyLookup()
+  const successPatientName = patientId ? getFullName(patientId) : ''
   const [showToast, setShowToast] = useState(false)
 
   useEffect(() => {
@@ -292,7 +294,7 @@ export function ImmunotherapiesPage() {
         icon={<CheckCircle size={16} />}
         title="Registro salvo com sucesso!"
         description={<>
-          Os dados de {patientName || 'paciente'} foram registrados e a próxima dose já está agendada.
+          Os dados de {successPatientName || 'paciente'} foram registrados e a próxima dose já está agendada.
           {patientId && (
             <Link
               to="/patient/$patientId"

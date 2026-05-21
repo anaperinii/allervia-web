@@ -94,7 +94,7 @@ export function AddImmunotherapyPage() {
     }
     scheduleApplication(firstApp)
 
-    navigate({ to: '/immunotherapies', search: { success: true, patientName: data.name, patientId: newId } })
+    navigate({ to: '/immunotherapies', search: { success: true, patientId: newId } })
   })
 
   const errMsg = (field: keyof AddImmunotherapyForm) =>

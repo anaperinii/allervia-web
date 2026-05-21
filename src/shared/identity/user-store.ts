@@ -144,3 +144,7 @@ export function useDoctorFilter(): string | null {
   const current = useUserStore((s) => s.current)
   return current.role === 'doctor' ? current.name : null
 }
+
+export const APPLICATION_ADMINISTRATORS: UserProfile[] = PROFILES.filter(
+  (p) => p.role === 'nurse' || p.role === 'technician',
+)

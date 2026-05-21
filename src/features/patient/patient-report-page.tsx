@@ -1,43 +1,48 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { usePatientStore } from '@/features/patient/stores/patient-store'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
-import { useHasPermission, useDoctorFilter } from '@/shared/identity/user-store'
-import { useAuditStore, ACTION_LABELS } from '@/shared/audit/audit-store'
-import { ArrowLeft, FileText, FileSpreadsheet, FileDown, Check, Download, Printer, ShieldCheck, EyeOff, FileJson, Info, CheckSquare } from 'lucide-react'
-import { jsPDF } from 'jspdf'
-import { cn } from '@/shared/lib/utils'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Modal, Button, IconButton, SegmentedControl, TextArea } from "@/shared/components"
+import { ArrowLeft, Download, Printer, ShieldCheck } from 'lucide-react'
+import { Button, IconButton, Modal } from '@/shared/components'
+import { usePatientStore } from '@/features/patient/stores/patient-store'
+import { buildPatientFromImmunotherapy } from '@/features/patient/data/patient-profiles'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useHasPermission, useDoctorFilter, useUserStore } from '@/shared/identity/user-store'
+import { useAuditStore } from '@/shared/audit/audit-store'
+import { comparePtDateDesc } from '@/shared/lib/dates'
+import {
+  exportCsv,
+  exportExcel,
+  exportLgpd,
+  exportPdf,
+  type LgpdFileFormat,
+  type ReportData,
+  type ReportFileFormat,
+  type ReportSectionId,
+} from '@/features/patient/exporters'
+import { maskCpf, maskName, maskPhone } from '@/features/patient/exporters/utils'
+import { ReportClinicalPreview } from '@/features/patient/components/report/report-clinical-preview'
+import { ReportLgpdPreview } from '@/features/patient/components/report/report-lgpd-preview'
+import { ReportConfigPanel } from '@/features/patient/components/report/report-config-panel'
 
-const formats = [
-  { id: 'pdf', label: 'PDF', icon: FileText },
-  { id: 'excel', label: 'Excel', icon: FileSpreadsheet },
-  { id: 'csv', label: 'CSV', icon: FileDown },
-]
-
-const sections = [
-  { id: 'personal', label: 'Dados Pessoais' },
-  { id: 'immunotherapy', label: 'Dados da Imunoterapia' },
-  { id: 'applications', label: 'Histórico de Aplicações' },
-  { id: 'reactions', label: 'Reações Adversas' },
-  { id: 'progress', label: 'Progressão do Protocolo' },
-]
+const DEFAULT_SECTIONS: ReportSectionId[] = ['personal', 'immunotherapy', 'applications', 'progress']
 
 export function PatientReportPage() {
   const navigate = useNavigate()
   const { patientId } = useSearch({ from: '/patient-report' })
-  const { selectedPatient, applications } = usePatientStore()
-  const { immunotherapies } = useImmunotherapiesStore()
-  const [fileFormat, setFileFormat] = useState('pdf')
-  const [selectedSections, setSelectedSections] = useState<string[]>(['personal', 'immunotherapy', 'applications', 'progress'])
-  const [anonimizar, setAnonimizar] = useState(false)
+  const selectedPatient = usePatientStore((s) => s.selectedPatient)
+  const applications = usePatientStore((s) => s.applications)
+  const immunotherapies = useImmunotherapiesStore((s) => s.immunotherapies)
+  const currentUser = useUserStore((s) => s.current)
+
+  const [fileFormat, setFileFormat] = useState<ReportFileFormat>('pdf')
+  const [selectedSections, setSelectedSections] = useState<ReportSectionId[]>(DEFAULT_SECTIONS)
+  const [anonymized, setAnonymized] = useState(false)
   const [consentimento, setConsentimento] = useState(false)
   const [justificativa, setJustificativa] = useState('')
   const [showExportModal, setShowExportModal] = useState(false)
   const [reportMode, setReportMode] = useState<'clinico' | 'lgpd'>('clinico')
-  const [lgpdFormat, setLgpdFormat] = useState<'json' | 'csv'>('json')
+  const [lgpdFormat, setLgpdFormat] = useState<LgpdFileFormat>('json')
   const canLgpdPortability = useHasPermission('lgpd_portability')
   const canEmitReport = useHasPermission('emit_report')
   const doctorFilter = useDoctorFilter()
@@ -59,346 +64,33 @@ export function PatientReportPage() {
     if (patientDoctor && patientDoctor !== doctorFilter) navigate({ to: '/immunotherapies' })
   }, [doctorFilter, selectedPatient, patientId, immunotherapies, navigate])
 
-  const patient = selectedPatient || (() => {
+  const patient = useMemo(() => {
+    if (selectedPatient) return selectedPatient
     if (!patientId) return null
     const imm = immunotherapies.find((i) => i.id === patientId)
-    if (!imm) return null
-    return {
-      id: imm.id, name: imm.name, birthDate: '02/07/2000', age: 25,
-      phone: '(62) 99557-1423', weight: '89.7 kg', cpf: '711.905.744-89',
-      responsibleDoctor: imm.responsibleDoctor, status: imm.status === 'active' ? 'active' as const : 'inactive' as const,
-      immunotherapyType: imm.type, inductionStart: '01/01/2020', maintenanceStart: null,
-      administrationRoute: 'Subcutânea', extract: 'Der p 60 + der f 10% + blt 30%',
-      targetConcentrationVolume: '1:10 - 0,5ml', targetReached: false,
-      currentInterval: imm.cycleInterval.days, nextApplicationDate: '21/05/2025',
-      currentDoseConcentration: imm.doseConcentration,
-    }
-  })()
+    return imm ? buildPatientFromImmunotherapy(imm) : null
+  }, [selectedPatient, patientId, immunotherapies])
 
   const patientApps = useMemo(() => {
     if (!patient) return []
-    return applications.filter((a) => a.patientId === patient.id).sort((a, b) => {
-      const da = a.date.split('/'), db = b.date.split('/')
-      return new Date(+db[2], +db[1] - 1, +db[0]).getTime() - new Date(+da[2], +da[1] - 1, +da[0]).getTime()
-    })
+    return applications
+      .filter((a) => a.patientId === patient.id)
+      .sort((a, b) => comparePtDateDesc(a.date, b.date))
   }, [patient, applications])
+
+  const realizedApps = useMemo(() => patientApps.filter((a) => a.status === 'completed'), [patientApps])
+  const reactionsCount = realizedApps.filter((a) => a.sideEffect === 'yes').length
 
   const auditLogs = useAuditStore((s) => s.logs)
   const patientAccessLog = useMemo(() => {
     if (!patient) return []
-    return auditLogs.filter((l) => l.patientId === patient.id).sort((a, b) =>
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    )
+    return auditLogs
+      .filter((l) => l.patientId === patient.id)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   }, [auditLogs, patient])
 
-  const realizedApps = patientApps.filter((a) => a.status === 'completed')
-  const reactionsCount = realizedApps.filter((a) => a.sideEffect === 'yes').length
-
-  const mask = (value: string) => {
-    if (!anonimizar) return value
-    if (value.length <= 3) return '***'
-    return value.slice(0, 3) + '*'.repeat(Math.max(value.length - 3, 3))
-  }
-  const maskCpf = (cpf: string) => anonimizar ? '***.***.***-**' : cpf
-  const maskPhone = (phone: string) => anonimizar ? '(**) *****-****' : phone
-
-  const toggleSection = (id: string) => {
-    setSelectedSections((prev) => prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id])
-  }
-
-  const downloadFile = (content: string | Blob, filename: string, mime: string) => {
-    const blob = content instanceof Blob ? content : new Blob([content], { type: mime })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
-
-  const buildReportData = () => {
-    if (!patient) return null
-    return {
-      patient: anonimizar ? { ...patient, name: mask(patient.name), cpf: maskCpf(patient.cpf), phone: maskPhone(patient.phone) } : patient,
-      sections: selectedSections,
-      realizedApps,
-      reactionsCount,
-      generatedAt: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
-    }
-  }
-
-  const exportCsv = () => {
-    const d = buildReportData()
-    if (!d) return
-    const lines: string[] = []
-    lines.push(`"Relatório Clínico — ${d.patient.name}"`)
-    lines.push(`"Gerado em: ${d.generatedAt}"`)
-    lines.push('')
-    if (selectedSections.includes('personal')) {
-      lines.push('"=== DADOS PESSOAIS ==="')
-      lines.push('Campo,Valor')
-      ;[['Nome', d.patient.name], ['CPF', d.patient.cpf], ['Data de Nascimento', d.patient.birthDate], ['Idade', `${d.patient.age} anos`], ['Telefone', d.patient.phone], ['Peso', d.patient.weight], ['Médico Responsável', d.patient.responsibleDoctor]]
-        .forEach(([k, v]) => lines.push(`"${k}","${String(v).replace(/"/g, '""')}"`))
-      lines.push('')
-    }
-    if (selectedSections.includes('immunotherapy')) {
-      lines.push('"=== DADOS DA IMUNOTERAPIA ==="')
-      lines.push('Campo,Valor')
-      ;[['Tipo', d.patient.immunotherapyType], ['Via', d.patient.administrationRoute], ['Extrato', d.patient.extract], ['Início Indução', d.patient.inductionStart], ['Meta', d.patient.targetConcentrationVolume], ['Dose Atual', d.patient.currentDoseConcentration], ['Intervalo', `${d.patient.currentInterval} dias`]]
-        .forEach(([k, v]) => lines.push(`"${k}","${String(v).replace(/"/g, '""')}"`))
-      lines.push('')
-    }
-    if (selectedSections.includes('applications')) {
-      lines.push('"=== HISTÓRICO DE APLICAÇÕES ==="')
-      lines.push('Data,Dose,Intervalo,Reação,Responsável')
-      d.realizedApps.forEach((a) => lines.push(`"${a.date}","${a.dose}","${a.cycle.days}d","${a.sideEffect === 'yes' ? 'Sim' : 'Não'}","${a.administrator || '-'}"`))
-      lines.push('')
-    }
-    if (selectedSections.includes('reactions')) {
-      lines.push('"=== REAÇÕES ADVERSAS ==="')
-      lines.push('Data,Dose,Medicação,Observação')
-      d.realizedApps.filter((a) => a.sideEffect === 'yes').forEach((a) => lines.push(`"${a.date}","${a.dose}","${a.medicationNeeded === 'yes' ? 'Sim' : a.medicationNeeded === 'no' ? 'Não' : '-'}","${(a.administratorNote || '').replace(/"/g, '""')}"`))
-      lines.push('')
-    }
-    if (selectedSections.includes('progress')) {
-      lines.push('"=== PROGRESSÃO DO PROTOCOLO ==="')
-      lines.push('Métrica,Valor')
-      lines.push(`"Aplicações realizadas","${d.realizedApps.length}"`)
-      lines.push(`"Concentração atual","${d.patient.currentDoseConcentration.split(' - ')[0]}"`)
-      lines.push(`"Intervalo","${d.patient.currentInterval} dias"`)
-    }
-    downloadFile('\ufeff' + lines.join('\n'), `relatorio_${patient!.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`, 'text/csv;charset=utf-8')
-  }
-
-  const exportExcel = () => {
-    const d = buildReportData()
-    if (!d) return
-    const rows: string[] = []
-    rows.push(`<tr><th colspan="2" style="background:#18C1CB;color:#fff;padding:8px;font-size:14px;">Relatório Clínico — ${d.patient.name}</th></tr>`)
-    rows.push(`<tr><td colspan="2" style="padding:6px;font-size:11px;color:#666;">Gerado em: ${d.generatedAt}${anonimizar ? ' · Dados anonimizados' : ''}</td></tr>`)
-    rows.push(`<tr><td colspan="2" style="height:10px;"></td></tr>`)
-    const addSection = (title: string, pairs: [string, string][]) => {
-      rows.push(`<tr><th colspan="2" style="background:#B6F2EC;padding:6px;text-align:left;font-size:12px;">${title}</th></tr>`)
-      pairs.forEach(([k, v]) => rows.push(`<tr><td style="padding:4px 8px;font-size:11px;color:#666;">${k}</td><td style="padding:4px 8px;font-size:11px;font-weight:bold;">${v}</td></tr>`))
-      rows.push(`<tr><td colspan="2" style="height:8px;"></td></tr>`)
-    }
-    if (selectedSections.includes('personal')) {
-      addSection('Dados Pessoais', [['Nome', d.patient.name], ['CPF', d.patient.cpf], ['Data de Nascimento', d.patient.birthDate], ['Idade', `${d.patient.age} anos`], ['Telefone', d.patient.phone], ['Peso', d.patient.weight], ['Médico Responsável', d.patient.responsibleDoctor]])
-    }
-    if (selectedSections.includes('immunotherapy')) {
-      addSection('Dados da Imunoterapia', [['Tipo', d.patient.immunotherapyType], ['Via', d.patient.administrationRoute], ['Extrato', d.patient.extract], ['Início Indução', d.patient.inductionStart], ['Meta', d.patient.targetConcentrationVolume], ['Dose Atual', d.patient.currentDoseConcentration], ['Intervalo', `${d.patient.currentInterval} dias`]])
-    }
-    if (selectedSections.includes('applications')) {
-      rows.push(`<tr><th colspan="2" style="background:#B6F2EC;padding:6px;text-align:left;font-size:12px;">Histórico de Aplicações (${d.realizedApps.length})</th></tr>`)
-      rows.push(`<tr><td colspan="2" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tr><th style="padding:4px 8px;font-size:10px;background:#eee;">Data</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Dose</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Intervalo</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Reação</th></tr>${d.realizedApps.map((a) => `<tr><td style="padding:3px 8px;font-size:10px;">${a.date}</td><td style="padding:3px 8px;font-size:10px;">${a.dose}</td><td style="padding:3px 8px;font-size:10px;">${a.cycle.days}d</td><td style="padding:3px 8px;font-size:10px;">${a.sideEffect === 'yes' ? 'Sim' : 'Não'}</td></tr>`).join('')}</table></td></tr>`)
-      rows.push(`<tr><td colspan="2" style="height:8px;"></td></tr>`)
-    }
-    if (selectedSections.includes('progress')) {
-      addSection('Progressão do Protocolo', [['Aplicações realizadas', String(d.realizedApps.length)], ['Concentração atual', d.patient.currentDoseConcentration.split(' - ')[0]], ['Intervalo', `${d.patient.currentInterval} dias`]])
-    }
-    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"/></head><body><table>${rows.join('')}</table></body></html>`
-    downloadFile(html, `relatorio_${patient!.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.xls`, 'application/vnd.ms-excel')
-  }
-
-  const exportPdf = () => {
-    const d = buildReportData()
-    if (!d) return
-    const doc = new jsPDF({ unit: 'mm', format: 'a4' })
-    const pageW = doc.internal.pageSize.getWidth()
-    const pageH = doc.internal.pageSize.getHeight()
-    const margin = 15
-    let y = margin
-
-    const ensureSpace = (needed: number) => {
-      if (y + needed > pageH - 20) {
-        doc.addPage()
-        y = margin
-      }
-    }
-
-    doc.setFillColor(24, 193, 203)
-    doc.rect(0, 0, pageW, 2, 'F')
-    doc.setFontSize(16)
-    doc.setTextColor(14, 153, 163)
-    doc.setFont('helvetica', 'bold')
-    doc.text(`Relatório Clínico`, margin, (y += 6))
-    doc.setFontSize(13)
-    doc.setTextColor(15, 32, 39)
-    doc.text(d.patient.name, margin, (y += 7))
-    if (anonimizar) {
-      doc.setFillColor(182, 242, 236)
-      doc.setTextColor(14, 153, 163)
-      doc.setFontSize(8)
-      doc.roundedRect(margin, y + 1, 28, 5, 1.5, 1.5, 'F')
-      doc.text('ANONIMIZADO', margin + 2, y + 4.5)
-    }
-    doc.setFontSize(9)
-    doc.setTextColor(100, 116, 139)
-    doc.setFont('helvetica', 'normal')
-    doc.text(`Gerado em ${d.generatedAt} · ImuneCare`, margin, (y += 10))
-    doc.setDrawColor(226, 240, 239)
-    doc.line(margin, (y += 3), pageW - margin, y)
-    y += 6
-
-    const addSectionTitle = (title: string) => {
-      ensureSpace(10)
-      doc.setFontSize(12)
-      doc.setTextColor(14, 153, 163)
-      doc.setFont('helvetica', 'bold')
-      doc.text(title, margin, y)
-      y += 2
-      doc.setDrawColor(226, 240, 239)
-      doc.line(margin, y, pageW - margin, y)
-      y += 5
-    }
-
-    const addKV = (key: string, value: string) => {
-      ensureSpace(6)
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(100, 116, 139)
-      doc.text(`${key}:`, margin, y)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(15, 32, 39)
-      doc.text(String(value), margin + 45, y)
-      y += 5
-    }
-
-    if (selectedSections.includes('personal')) {
-      addSectionTitle('Dados Pessoais')
-      addKV('Nome', d.patient.name)
-      addKV('CPF', d.patient.cpf)
-      addKV('Data de Nascimento', d.patient.birthDate)
-      addKV('Idade', `${d.patient.age} anos`)
-      addKV('Telefone', d.patient.phone)
-      addKV('Peso', d.patient.weight)
-      addKV('Médico Responsável', d.patient.responsibleDoctor)
-      y += 3
-    }
-
-    if (selectedSections.includes('immunotherapy')) {
-      addSectionTitle('Dados da Imunoterapia')
-      addKV('Tipo', d.patient.immunotherapyType)
-      addKV('Via de Administração', d.patient.administrationRoute)
-      addKV('Extrato', d.patient.extract)
-      addKV('Início Indução', d.patient.inductionStart)
-      addKV('Meta', d.patient.targetConcentrationVolume)
-      addKV('Dose Atual', d.patient.currentDoseConcentration)
-      addKV('Intervalo', `${d.patient.currentInterval} dias`)
-      y += 3
-    }
-
-    if (selectedSections.includes('applications')) {
-      addSectionTitle(`Histórico de Aplicações (${d.realizedApps.length})`)
-      ensureSpace(8)
-      doc.setFillColor(245, 250, 250)
-      doc.rect(margin, y, pageW - margin * 2, 6, 'F')
-      doc.setFontSize(8)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(100, 116, 139)
-      doc.text('DATA', margin + 2, y + 4)
-      doc.text('DOSE', margin + 35, y + 4)
-      doc.text('INTERVALO', margin + 100, y + 4)
-      doc.text('REAÇÃO', margin + 140, y + 4)
-      y += 6
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(15, 32, 39)
-      doc.setFontSize(9)
-      d.realizedApps.forEach((a) => {
-        ensureSpace(6)
-        doc.text(a.date, margin + 2, y + 4)
-        doc.text(a.dose, margin + 35, y + 4)
-        doc.text(`${a.cycle.days} dias`, margin + 100, y + 4)
-        doc.text(a.sideEffect === 'yes' ? 'Sim' : 'Não', margin + 140, y + 4)
-        doc.setDrawColor(240, 240, 240)
-        doc.line(margin, y + 6, pageW - margin, y + 6)
-        y += 6
-      })
-      y += 3
-    }
-
-    if (selectedSections.includes('reactions')) {
-      addSectionTitle(`Reações Adversas (${d.reactionsCount})`)
-      if (d.reactionsCount === 0) {
-        ensureSpace(6)
-        doc.setFontSize(9)
-        doc.setFont('helvetica', 'italic')
-        doc.setTextColor(100, 116, 139)
-        doc.text('Nenhuma reação adversa registrada.', margin, y)
-        y += 6
-      } else {
-        d.realizedApps.filter((a) => a.sideEffect === 'yes').forEach((a) => {
-          ensureSpace(12)
-          doc.setFillColor(255, 248, 235)
-          doc.rect(margin, y, pageW - margin * 2, 10, 'F')
-          doc.setDrawColor(245, 158, 11)
-          doc.setLineWidth(0.8)
-          doc.line(margin, y, margin, y + 10)
-          doc.setLineWidth(0.2)
-          doc.setFontSize(9)
-          doc.setFont('helvetica', 'bold')
-          doc.setTextColor(180, 83, 9)
-          doc.text(`${a.date} — ${a.dose}`, margin + 3, y + 4)
-          doc.setFontSize(8)
-          doc.setFont('helvetica', 'normal')
-          doc.text(a.medicationNeeded === 'yes' ? 'Com medicação' : 'Sem medicação', margin + 3, y + 8)
-          y += 12
-        })
-      }
-      y += 3
-    }
-
-    if (selectedSections.includes('progress')) {
-      addSectionTitle('Progressão do Protocolo')
-      ensureSpace(22)
-      const boxW = (pageW - margin * 2 - 8) / 3
-      const boxes: [string, string][] = [[String(d.realizedApps.length), 'Aplicações'], [d.patient.currentDoseConcentration.split(' - ')[0], 'Concentração atual'], [`${d.patient.currentInterval}d`, 'Intervalo']]
-      boxes.forEach(([v, l], i) => {
-        const x = margin + i * (boxW + 4)
-        doc.setFillColor(245, 250, 250)
-        doc.roundedRect(x, y, boxW, 18, 2, 2, 'F')
-        doc.setFontSize(14)
-        doc.setFont('helvetica', 'bold')
-        doc.setTextColor(24, 193, 203)
-        doc.text(v, x + boxW / 2, y + 9, { align: 'center' })
-        doc.setFontSize(8)
-        doc.setFont('helvetica', 'normal')
-        doc.setTextColor(100, 116, 139)
-        doc.text(l, x + boxW / 2, y + 14, { align: 'center' })
-      })
-      y += 22
-    }
-
-    const totalPages = doc.getNumberOfPages()
-    for (let i = 1; i <= totalPages; i++) {
-      doc.setPage(i)
-      doc.setDrawColor(226, 240, 239)
-      doc.line(margin, pageH - 18, pageW - margin, pageH - 18)
-      doc.setFontSize(7)
-      doc.setTextColor(150, 150, 150)
-      doc.setFont('helvetica', 'normal')
-      const lgpdText = 'Documento protegido pela Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018). A reprodução, compartilhamento ou armazenamento não autorizado é proibido.'
-      const splitText = doc.splitTextToSize(lgpdText, pageW - margin * 2)
-      doc.text(splitText, margin, pageH - 14)
-      doc.setFontSize(8)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(200, 200, 200)
-      doc.text('CONFIDENCIAL', pageW / 2, pageH - 5, { align: 'center', charSpace: 2 })
-      doc.setTextColor(100, 116, 139)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7)
-      doc.text(`Página ${i} de ${totalPages}`, pageW - margin, pageH - 5, { align: 'right' })
-    }
-
-    doc.save(`relatorio_${patient!.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`)
-  }
-
-  const handleExport = () => {
-    if (fileFormat === 'csv') exportCsv()
-    else if (fileFormat === 'excel') exportExcel()
-    else exportPdf()
+  const toggleSection = (id: ReportSectionId) => {
+    setSelectedSections((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]))
   }
 
   if (!patient) {
@@ -409,10 +101,51 @@ export function PatientReportPage() {
     )
   }
 
+  const buildExportData = (): ReportData => {
+    const masked = anonymized
+      ? {
+          ...patient,
+          name: maskName(patient.name, true),
+          cpf: maskCpf(patient.cpf, true),
+          phone: maskPhone(patient.phone, true),
+        }
+      : patient
+    return {
+      patient: masked,
+      sections: selectedSections,
+      realizedApps,
+      reactionsCount,
+      generatedAt: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
+      anonymized,
+    }
+  }
+
+  const handleExport = () => {
+    const data = buildExportData()
+    if (fileFormat === 'csv') exportCsv(data)
+    else if (fileFormat === 'excel') exportExcel(data)
+    else exportPdf(data)
+  }
+
+  const handleExportLgpd = () => {
+    exportLgpd(
+      {
+        patient,
+        applications: patientApps,
+        accessLogs: patientAccessLog,
+        exportedAt: new Date().toISOString(),
+        exportedBy: `${currentUser.name} (${currentUser.registration})`,
+        justification: justificativa.trim(),
+      },
+      lgpdFormat,
+    )
+  }
+
+  const exportDisabled = !consentimento || !justificativa.trim()
+
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <IconButton aria-label="Voltar para o prontuário" to="/patient/$patientId" params={{ patientId: patient.id }}>
@@ -424,472 +157,78 @@ export function PatientReportPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              disabled={!consentimento || !justificativa.trim()}
-              onClick={exportPdf}
-              className={cn("h-8 px-3 flex items-center gap-1.5 rounded-lg border text-xs font-semibold transition-all", consentimento && justificativa.trim() ? "border-(--border-custom) text-(--text-muted) hover:border-brand hover:text-brand cursor-pointer" : "border-gray-200 text-gray-300 cursor-not-allowed")}
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<Printer size={13} />}
+              disabled={exportDisabled}
+              onClick={() => exportPdf(buildExportData())}
             >
-              <Printer size={13} />
               Imprimir
-            </button>
-            <button
-              disabled={!consentimento || !justificativa.trim()}
+            </Button>
+            <Button
+              tone="brand"
+              variant="solid"
+              size="sm"
+              leftIcon={<Download size={13} />}
+              disabled={exportDisabled}
               onClick={() => setShowExportModal(true)}
-              className={cn("h-8 px-3 flex items-center gap-1.5 rounded-lg text-xs font-semibold transition-all", consentimento && justificativa.trim() ? "bg-linear-to-br from-brand to-teal-400 text-white hover:-translate-y-px cursor-pointer" : "bg-gray-200 text-gray-400 cursor-not-allowed")}
             >
-              <Download size={13} />
               Exportar {fileFormat.toUpperCase()}
-            </button>
+            </Button>
           </div>
         </div>
 
         <div className="flex flex-1 min-h-0 overflow-hidden">
-          {/* Left — Config */}
-          <div className="w-72 shrink-0 border-r border-(--border-custom) p-5 overflow-y-auto space-y-5">
-            {canLgpdPortability && (
-              <SegmentedControl
-                value={reportMode}
-                onChange={setReportMode}
-                fullWidth
-                options={[
-                  { value: 'clinico', label: 'Clínico' },
-                  { value: 'lgpd', label: 'Portabilidade' },
-                ]}
-                aria-label="Modo do relatório"
-              />
-            )}
+          <ReportConfigPanel
+            reportMode={reportMode}
+            setReportMode={setReportMode}
+            canLgpdPortability={canLgpdPortability}
+            fileFormat={fileFormat}
+            setFileFormat={setFileFormat}
+            selectedSections={selectedSections}
+            toggleSection={toggleSection}
+            anonymized={anonymized}
+            setAnonymized={setAnonymized}
+            consentimento={consentimento}
+            setConsentimento={setConsentimento}
+            justificativa={justificativa}
+            setJustificativa={setJustificativa}
+            realizedAppsCount={realizedApps.length}
+            reactionsCount={reactionsCount}
+            intervalDays={patient.currentInterval}
+            patientStatus={patient.status}
+            lgpdFormat={lgpdFormat}
+            setLgpdFormat={setLgpdFormat}
+            lgpdDataItems={[
+              { label: 'Dados cadastrais', count: 1 },
+              { label: 'Dados da imunoterapia', count: 1 },
+              { label: 'Aplicações', count: patientApps.length },
+              { label: 'Acessos ao prontuário', count: patientAccessLog.length },
+              { label: 'Ajustes de protocolo', count: patient.protocolAdjustments?.length ?? 0 },
+              { label: 'Inativações', count: patient.inactivations?.length ?? 0 },
+            ]}
+            onExportLgpd={handleExportLgpd}
+          />
 
-            {reportMode === 'lgpd' && (
-              <>
-                <div className="flex items-start gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2.5">
-                  <Info size={14} className="text-brand shrink-0 mt-0.5" />
-                  <p className="text-[0.6rem] text-(--text) leading-relaxed">
-                    Exportação estruturada de todos os dados em atendimento ao <span className="font-bold">Art. 18, V da LGPD</span> (Direito à portabilidade).
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-2 block">Formato</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => setLgpdFormat('json')} className={cn("h-9 rounded-lg border-[1.5px] text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer", lgpdFormat === 'json' ? "border-brand bg-teal-50/60 text-brand" : "border-(--border-custom) text-(--text-muted) hover:border-brand/50")}>
-                      <FileJson size={13} />
-                      JSON
-                    </button>
-                    <button onClick={() => setLgpdFormat('csv')} className={cn("h-9 rounded-lg border-[1.5px] text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer", lgpdFormat === 'csv' ? "border-brand bg-teal-50/60 text-brand" : "border-(--border-custom) text-(--text-muted) hover:border-brand/50")}>
-                      <FileSpreadsheet size={13} />
-                      CSV
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-2 block">Dados incluídos</label>
-                  <div className="space-y-1.5">
-                    {['Dados cadastrais', 'Dados da imunoterapia', 'Histórico de aplicações', 'Reações adversas', 'Histórico de ajustes', `Histórico de acessos ao prontuário (${patientAccessLog.length})`].map((d) => (
-                      <div key={d} className="flex items-center gap-1.5 text-[0.6rem] text-(--text) bg-teal-50/50 border border-teal-100 rounded px-2 py-1">
-                        <CheckSquare size={10} className="text-brand shrink-0" />
-                        {d}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Motivo da solicitação <span className="text-red-400">*</span></label>
-                  <TextArea
-                    rows={2}
-                    placeholder="Ex: Solicitação formal do paciente"
-                    value={justificativa}
-                    onChange={(e) => setJustificativa(e.target.value)}
-                  />
-                </div>
-                <button
-                  onClick={() => setConsentimento(!consentimento)}
-                  className={cn("flex w-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer", consentimento ? "border-brand bg-brand/5" : "border-(--border-custom) hover:border-brand/40")}
-                >
-                  <div className={cn("flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0 mt-px", consentimento ? "bg-brand border-brand" : "border-gray-300")}>
-                    {consentimento && <Check size={10} className="text-white" />}
-                  </div>
-                  <div>
-                    <div className="text-[0.65rem] font-semibold text-(--text)">Declaro ciência dos termos LGPD</div>
-                    <div className="text-[0.55rem] text-(--text-muted) leading-relaxed mt-0.5">Confirmo que há solicitação formal do titular.</div>
-                  </div>
-                </button>
-                <button
-                  disabled={!consentimento || !justificativa.trim()}
-                  onClick={() => {
-                    const data = {
-                      exportedAt: new Date().toISOString(),
-                      exportedBy: 'Sistema ImuneCare',
-                      justification: justificativa.trim(),
-                      lgpdCompliance: { legalBasis: 'LGPD Art. 18, V — Direito à portabilidade / Art. 19 — Direito de acesso' },
-                      patient: {
-                        id: patient.id, nome: patient.name, cpf: patient.cpf, dataNascimento: patient.birthDate,
-                        idade: patient.age, telefone: patient.phone, peso: patient.weight,
-                        medicoResponsavel: patient.responsibleDoctor, status: patient.status,
-                      },
-                      imunoterapia: {
-                        tipo: patient.immunotherapyType, viaAdministracao: patient.administrationRoute,
-                        extrato: patient.extract, inicioInducao: patient.inductionStart,
-                        inicioManutencao: patient.maintenanceStart, concentracaoVolumeMeta: patient.targetConcentrationVolume,
-                        concentracaoDoseAtuais: patient.currentDoseConcentration, intervaloAtual: patient.currentInterval,
-                        metaAtingida: patient.targetReached, dataProximaAplicacao: patient.nextApplicationDate,
-                      },
-                      aplicacoes: patientApps,
-                      historicoDeAcessos: patientAccessLog.map((l) => ({
-                        data: l.timestamp,
-                        profissional: l.userName,
-                        perfil: l.userRole,
-                        registro: l.userRegistration,
-                        acao: ACTION_LABELS[l.action],
-                        descricao: l.description,
-                      })),
-                    }
-                    const filename = `imunecare_lgpd_${patient.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.${lgpdFormat}`
-                    let content: string, mime: string
-                    if (lgpdFormat === 'json') { content = JSON.stringify(data, null, 2); mime = 'application/json' }
-                    else {
-                      const lines = ['Categoria,Campo,Valor']
-                      Object.entries(data.patient).forEach(([k, v]) => lines.push(`"Paciente","${k}","${String(v).replace(/"/g, '""')}"`))
-                      Object.entries(data.imunoterapia).forEach(([k, v]) => lines.push(`"Imunoterapia","${k}","${String(v ?? '').replace(/"/g, '""')}"`))
-                      data.aplicacoes.forEach((a, i) => Object.entries(a).forEach(([k, v]) => lines.push(`"Aplicacao ${i + 1}","${k}","${typeof v === 'object' ? JSON.stringify(v).replace(/"/g, '""') : String(v ?? '').replace(/"/g, '""')}"`)))
-                      data.historicoDeAcessos.forEach((l, i) => Object.entries(l).forEach(([k, v]) => lines.push(`"Acesso ${i + 1}","${k}","${String(v ?? '').replace(/"/g, '""')}"`)))
-                      content = lines.join('\n'); mime = 'text/csv;charset=utf-8'
-                    }
-                    const blob = new Blob([content], { type: mime })
-                    const url = URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = url; a.download = filename
-                    document.body.appendChild(a); a.click(); document.body.removeChild(a)
-                    URL.revokeObjectURL(url)
-                  }}
-                  className={cn("w-full h-9 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5", consentimento && justificativa.trim() ? "bg-linear-to-br from-brand to-teal-400 text-white hover:-translate-y-px cursor-pointer" : "bg-gray-200 text-gray-400 cursor-not-allowed")}
-                >
-                  <Download size={13} />
-                  Exportar {lgpdFormat.toUpperCase()}
-                </button>
-              </>
-            )}
-
-            {reportMode === 'clinico' && <>
-            {/* Format */}
-            <div>
-              <label className="text-xs font-semibold text-(--text-muted) mb-2 block">Formato</label>
-              <div className="flex gap-2">
-                {formats.map((f) => {
-                  const Icon = f.icon
-                  return (
-                    <button
-                      key={f.id}
-                      onClick={() => setFileFormat(f.id)}
-                      className={cn(
-                        "flex-1 h-9 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer",
-                        fileFormat === f.id
-                          ? "border-brand bg-brand-50 text-brand-dark"
-                          : "border-(--border-custom) text-(--text-muted) hover:border-brand/50"
-                      )}
-                    >
-                      <Icon size={13} />
-                      {f.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Sections */}
-            <div>
-              <label className="text-xs font-semibold text-(--text-muted) mb-2 block">Seções incluídas</label>
-              <div className="space-y-1.5">
-                {sections.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => toggleSection(s.id)}
-                    className={cn(
-                      "flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer",
-                      selectedSections.includes(s.id)
-                        ? "border-brand bg-brand-50/50"
-                        : "border-(--border-custom) hover:border-brand/50"
-                    )}
-                  >
-                    <div className={cn(
-                      "flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0",
-                      selectedSections.includes(s.id)
-                        ? "bg-brand border-brand"
-                        : "border-gray-300"
-                    )}>
-                      {selectedSections.includes(s.id) && <Check size={10} className="text-white" />}
-                    </div>
-                    <span className="text-[0.7rem] font-medium text-(--text)">{s.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Summary */}
-            <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-              <div className="text-[0.6rem] font-bold text-(--text-muted) uppercase tracking-wider">Resumo</div>
-              <div className="text-[0.65rem] text-(--text-muted) space-y-1">
-                <div className="flex justify-between"><span>Aplicações realizadas</span><span className="font-semibold text-(--text)">{realizedApps.length}</span></div>
-                <div className="flex justify-between"><span>Reações adversas</span><span className="font-semibold text-(--text)">{reactionsCount}</span></div>
-                <div className="flex justify-between"><span>Intervalo atual</span><span className="font-semibold text-(--text)">{patient.currentInterval} dias</span></div>
-                <div className="flex justify-between"><span>Status</span><span className={cn("font-semibold", patient.status === 'active' ? "text-green-600" : "text-(--text-muted)")}>{patient.status === 'active' ? 'Ativo' : 'Inativo'}</span></div>
-              </div>
-            </div>
-
-            {/* LGPD & Privacy */}
-            <div>
-              <label className="text-xs font-semibold text-(--text-muted) mb-2 block">
-                Privacidade e LGPD
-              </label>
-              <div className="space-y-2">
-                <button
-                  onClick={() => setAnonimizar(!anonimizar)}
-                  className={cn(
-                    "flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer",
-                    anonimizar ? "border-brand bg-brand/5" : "border-(--border-custom) hover:border-brand/40"
-                  )}
-                >
-                  <div className={cn("flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0", anonimizar ? "bg-brand border-brand" : "border-gray-300")}>
-                    {anonimizar && <Check size={10} className="text-white" />}
-                  </div>
-                  <div>
-                    <span className="text-[0.7rem] font-medium text-(--text) block">Anonimizar dados pessoais</span>
-                    <span className="text-[0.55rem] text-(--text-muted)">Nome, CPF e telefone serão mascarados</span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setConsentimento(!consentimento)}
-                  className={cn(
-                    "flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer",
-                    consentimento ? "border-brand bg-brand/5" : "border-(--border-custom) hover:border-brand/40"
-                  )}
-                >
-                  <div className={cn("flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0", consentimento ? "bg-brand border-brand" : "border-gray-300")}>
-                    {consentimento && <Check size={10} className="text-white" />}
-                  </div>
-                  <div>
-                    <span className="text-[0.7rem] font-medium text-(--text) block">Declaro ciência da LGPD</span>
-                    <span className="text-[0.55rem] text-(--text-muted)">Responsabilizo-me pelo uso dos dados</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* Justification */}
-            <div>
-              <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Justificativa <span className="text-red-400">*</span></label>
-              <TextArea
-                rows={2}
-                placeholder="Ex: Acompanhamento clínico do paciente"
-                value={justificativa}
-                onChange={(e) => setJustificativa(e.target.value)}
-              />
-            </div>
-
-            {!consentimento && (
-              <p className="text-[0.55rem] text-amber-600 text-center">Aceite a declaração LGPD para habilitar a exportação</p>
-            )}
-            </>}
-          </div>
-
-          {/* Right — Preview */}
           <div className="flex-1 overflow-y-auto p-5 bg-gray-50/50">
             {reportMode === 'lgpd' ? (
-              <div className="bg-white rounded-xl border border-(--border-custom) shadow-sm max-w-2xl mx-auto p-6 space-y-4">
-                <div className="pb-3 border-b border-(--border-custom)">
-                  <h2 className="text-sm font-bold text-(--text)">Pacote de Portabilidade LGPD</h2>
-                  <p className="text-[0.65rem] text-(--text-muted) mt-0.5">{anonimizar ? mask(patient.name) : patient.name} · {lgpdFormat.toUpperCase()}</p>
-                </div>
-                <div className="flex items-start gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2.5">
-                  <Info size={13} className="text-brand shrink-0 mt-0.5" />
-                  <p className="text-[0.65rem] text-(--text) leading-relaxed">
-                    Pacote estruturado conforme <span className="font-bold">Art. 18, V</span> (portabilidade) e <span className="font-bold">Art. 19</span> (direito de acesso) da LGPD. Contém os dados do titular e o histórico de quem acessou o prontuário.
-                  </p>
-                </div>
-                <div>
-                  <div className="text-[0.6rem] font-bold text-(--text-muted) uppercase tracking-wider mb-2">Conteúdo do pacote</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { label: 'Dados cadastrais', value: '1 registro' },
-                      { label: 'Dados da imunoterapia', value: '1 registro' },
-                      { label: 'Histórico de aplicações', value: `${patientApps.length} ${patientApps.length === 1 ? 'registro' : 'registros'}` },
-                      { label: 'Histórico de acessos', value: `${patientAccessLog.length} ${patientAccessLog.length === 1 ? 'registro' : 'registros'}` },
-                    ].map((item) => (
-                      <div key={item.label} className="border border-(--border-custom) rounded-lg px-3 py-2">
-                        <div className="text-[0.55rem] text-(--text-muted) uppercase tracking-wider">{item.label}</div>
-                        <div className="text-xs font-bold text-(--text) mt-0.5">{item.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="text-[0.55rem] text-(--text-muted) leading-relaxed pt-2 border-t border-(--border-custom)">
-                  Ao confirmar a exportação, o pacote completo será gerado no formato selecionado. Assegure-se de que há justificativa formal do titular (Art. 18, § 3º da LGPD) antes de liberar o arquivo.
-                </div>
-              </div>
+              <ReportLgpdPreview
+                patient={patient}
+                applications={patientApps}
+                accessLogs={patientAccessLog}
+                lgpdFormat={lgpdFormat}
+                anonymized={anonymized}
+              />
             ) : (
-            <div className="bg-white rounded-xl border border-(--border-custom) shadow-sm max-w-2xl mx-auto">
-              {/* Report header */}
-              <div className="px-6 py-5 border-b border-(--border-custom)">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-sm font-bold text-(--text)">Relatório Clínico — {anonimizar ? mask(patient.name) : patient.name}</h2>
-                    <p className="text-[0.65rem] text-(--text-muted) mt-0.5">Gerado em {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
-                  </div>
-                  <div className="text-[0.6rem] text-(--text-muted) text-right">
-                    <div>ImuneCare</div>
-                    <div>Formato: {fileFormat.toUpperCase()}</div>
-                    {anonimizar && (
-                      <div className="flex items-center gap-1 text-brand font-semibold mt-0.5 justify-end">
-                        <EyeOff size={10} />
-                        Dados anonimizados
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-6 py-5 space-y-5">
-                {selectedSections.length === 0 ? (
-                  <div className="text-center py-12 text-xs text-(--text-muted)">Selecione pelo menos uma seção.</div>
-                ) : (
-                  <>
-                    {/* Dados Pessoais */}
-                    {selectedSections.includes('personal') && (
-                      <div>
-                        <h3 className="text-xs font-bold text-(--text) mb-3 pb-1.5 border-b border-(--border-custom)">Dados Pessoais</h3>
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                          {[
-                            ['Nome', anonimizar ? mask(patient.name) : patient.name],
-                            ['CPF', maskCpf(patient.cpf)],
-                            ['Data de Nascimento', patient.birthDate],
-                            ['Idade', `${patient.age} anos`],
-                            ['Telefone', maskPhone(patient.phone)],
-                            ['Peso', patient.weight],
-                            ['Médico Responsável', patient.responsibleDoctor],
-                          ].map(([l, v]) => (
-                            <div key={l} className="flex items-center gap-2 text-[0.7rem]">
-                              <span className="text-(--text-muted)">{l}:</span>
-                              <span className="font-medium text-(--text)">{v}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Dados da Imunoterapia */}
-                    {selectedSections.includes('immunotherapy') && (
-                      <div>
-                        <h3 className="text-xs font-bold text-(--text) mb-3 pb-1.5 border-b border-(--border-custom)">Dados da Imunoterapia</h3>
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                          {[
-                            ['Tipo', patient.immunotherapyType], ['Via', patient.administrationRoute],
-                            ['Extrato', patient.extract], ['Início Indução', patient.inductionStart],
-                            ['Meta', patient.targetConcentrationVolume], ['Dose Atual', patient.currentDoseConcentration],
-                            ['Intervalo Atual', `${patient.currentInterval} dias`],
-                          ].map(([l, v]) => (
-                            <div key={l} className="flex items-center gap-2 text-[0.7rem]">
-                              <span className="text-(--text-muted)">{l}:</span>
-                              <span className="font-medium text-(--text)">{v}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Histórico de Aplicações */}
-                    {selectedSections.includes('applications') && (
-                      <div>
-                        <h3 className="text-xs font-bold text-(--text) mb-3 pb-1.5 border-b border-(--border-custom)">Histórico de Aplicações ({realizedApps.length})</h3>
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b border-(--border-custom)">
-                              <th className="text-left text-[0.6rem] font-semibold text-(--text-muted) uppercase pb-2">Data</th>
-                              <th className="text-left text-[0.6rem] font-semibold text-(--text-muted) uppercase pb-2">Dose</th>
-                              <th className="text-left text-[0.6rem] font-semibold text-(--text-muted) uppercase pb-2">Intervalo</th>
-                              <th className="text-left text-[0.6rem] font-semibold text-(--text-muted) uppercase pb-2">Reação</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {realizedApps.slice(0, 15).map((app) => (
-                              <tr key={app.id} className="border-b border-(--border-custom) last:border-0">
-                                <td className="py-1.5 text-[0.65rem] text-(--text)">{app.date}</td>
-                                <td className="py-1.5 text-[0.65rem] text-(--text)">{app.dose}</td>
-                                <td className="py-1.5 text-[0.65rem] text-(--text)">{app.cycle.days}d</td>
-                                <td className="py-1.5 text-[0.65rem]">
-                                  <span className={cn("font-medium", app.sideEffect === 'yes' ? "text-amber-600" : "text-green-600")}>
-                                    {app.sideEffect === 'yes' ? 'Sim' : 'Não'}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        {realizedApps.length > 15 && (
-                          <div className="text-center text-[0.6rem] text-(--text-muted) mt-2">... e mais {realizedApps.length - 15} aplicações</div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Reações Adversas */}
-                    {selectedSections.includes('reactions') && (
-                      <div>
-                        <h3 className="text-xs font-bold text-(--text) mb-3 pb-1.5 border-b border-(--border-custom)">Reações Adversas ({reactionsCount})</h3>
-                        {reactionsCount === 0 ? (
-                          <p className="text-[0.7rem] text-(--text-muted)">Nenhuma reação adversa registrada.</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {realizedApps.filter((a) => a.sideEffect === 'yes').map((app) => (
-                              <div key={app.id} className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-[0.65rem] font-semibold text-amber-700">{app.date} — {app.dose}</span>
-                                  <span className="text-[0.55rem] text-amber-600">{app.medicationNeeded === 'yes' ? 'Com medicação' : 'Sem medicação'}</span>
-                                </div>
-                                {app.administratorNote && app.administratorNote !== '-' && (
-                                  <div className="text-[0.6rem] text-amber-600 mt-1">{app.administratorNote}</div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Progressão */}
-                    {selectedSections.includes('progress') && (
-                      <div>
-                        <h3 className="text-xs font-bold text-(--text) mb-3 pb-1.5 border-b border-(--border-custom)">Progressão do Protocolo</h3>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div className="bg-gray-50 rounded-lg p-3 text-center">
-                            <div className="text-lg font-extrabold text-brand">{realizedApps.length}</div>
-                            <div className="text-[0.6rem] text-(--text-muted)">Aplicações</div>
-                          </div>
-                          <div className="bg-gray-50 rounded-lg p-3 text-center">
-                            <div className="text-lg font-extrabold text-brand">{patient.currentDoseConcentration.split(' - ')[0]}</div>
-                            <div className="text-[0.6rem] text-(--text-muted)">Concentração atual</div>
-                          </div>
-                          <div className="bg-gray-50 rounded-lg p-3 text-center">
-                            <div className="text-lg font-extrabold text-brand">{patient.currentInterval}d</div>
-                            <div className="text-[0.6rem] text-(--text-muted)">Intervalo</div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="px-6 py-3 border-t border-(--border-custom)">
-                <div className="flex justify-between mb-2">
-                  <span className="text-[0.6rem] text-(--text-muted)">ImuneCare © 2026</span>
-                  <span className="text-[0.6rem] text-(--text-muted)">Página 1 de 1</span>
-                </div>
-                <p className="text-[0.5rem] text-(--text-muted)/60 leading-relaxed mb-2">
-                  Documento protegido pela Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018). A reprodução, compartilhamento ou armazenamento não autorizado é proibido. O responsável pela exportação assume total responsabilidade pelo uso das informações.
-                </p>
-                <div className="text-center py-1.5 bg-gray-50 rounded-md border border-(--border-custom)">
-                  <span className="text-[0.7rem] font-bold text-gray-300 uppercase tracking-[0.2em]">Confidencial</span>
-                </div>
-              </div>
-            </div>
+              <ReportClinicalPreview
+                patient={patient}
+                realizedApps={realizedApps}
+                reactionsCount={reactionsCount}
+                selectedSections={selectedSections}
+                fileFormat={fileFormat}
+                anonymized={anonymized}
+              />
             )}
           </div>
         </div>
@@ -900,10 +239,14 @@ export function PatientReportPage() {
         onClose={() => setShowExportModal(false)}
         title="Confirmar exportação"
         size="sm"
-        footer={<>
-          <Button variant="outline" onClick={() => setShowExportModal(false)}>Cancelar</Button>
-          <Button variant="primary" onClick={() => { setShowExportModal(false); handleExport() }}>Confirmar e exportar</Button>
-        </>}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setShowExportModal(false)}>Cancelar</Button>
+            <Button tone="brand" variant="solid" onClick={() => { setShowExportModal(false); handleExport() }}>
+              Confirmar e exportar
+            </Button>
+          </>
+        }
       >
         <div className="flex justify-center">
           <div className="h-11 w-11 rounded-full bg-brand/10 flex items-center justify-center">
@@ -914,24 +257,22 @@ export function PatientReportPage() {
           Esta ação será registrada no log de auditoria do sistema conforme exigências da LGPD.
         </p>
         <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5 space-y-1.5">
-          <div className="flex justify-between">
-            <span className="text-[0.6rem] text-(--text-muted)">Paciente</span>
-            <span className="text-[0.6rem] font-semibold text-(--text)">{anonimizar ? mask(patient.name) : patient.name}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[0.6rem] text-(--text-muted)">Formato</span>
-            <span className="text-[0.6rem] font-semibold text-(--text)">{fileFormat.toUpperCase()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[0.6rem] text-(--text-muted)">Dados anonimizados</span>
-            <span className={cn("text-[0.6rem] font-semibold", anonimizar ? "text-brand" : "text-amber-600")}>{anonimizar ? 'Sim' : 'Não'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[0.6rem] text-(--text-muted)">Justificativa</span>
-            <span className="text-[0.6rem] font-semibold text-(--text) text-right max-w-[60%] truncate">{justificativa}</span>
-          </div>
+          <ConfirmRow label="Paciente" value={anonymized ? maskName(patient.name, true) : patient.name} />
+          <ConfirmRow label="Formato" value={fileFormat.toUpperCase()} />
+          <ConfirmRow label="Dados anonimizados" value={anonymized ? 'Sim' : 'Não'} accent={anonymized ? 'brand' : 'warning'} />
+          <ConfirmRow label="Justificativa" value={justificativa} truncate />
         </div>
       </Modal>
+    </div>
+  )
+}
+
+function ConfirmRow({ label, value, accent, truncate }: { label: string; value: string; accent?: 'brand' | 'warning'; truncate?: boolean }) {
+  const accentClass = accent === 'brand' ? 'text-brand' : accent === 'warning' ? 'text-amber-600' : 'text-(--text)'
+  return (
+    <div className="flex justify-between">
+      <span className="text-[0.6rem] text-(--text-muted)">{label}</span>
+      <span className={`text-[0.6rem] font-semibold ${accentClass} ${truncate ? 'text-right max-w-[60%] truncate' : ''}`}>{value}</span>
     </div>
   )
 }

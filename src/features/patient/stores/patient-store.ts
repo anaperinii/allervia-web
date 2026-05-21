@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { INDUCTION_SEQUENCE, META_DOSE, META_STEP } from '@/features/immunotherapy/constants/scit-protocol'
+import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
+import { comparePtDateAsc } from '@/shared/lib/dates'
 
 export type ProtocolAdjustmentType =
   | 'dose_reduction'
@@ -132,12 +134,10 @@ export function seedInactivationsFor(patientId: string, snapshotConcentration: s
 // Geração programática das aplicações seguindo protocolo SCIT (RNE-010)
 // ════════════════════════════════════════════════════════════════════
 
-const PT_MONTHS = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO']
-
 function fmtDate(d: Date) {
   const day = String(d.getDate()).padStart(2, '0')
   const mo = String(d.getMonth() + 1).padStart(2, '0')
-  return { date: `${day}/${mo}/${d.getFullYear()}`, month: PT_MONTHS[d.getMonth()], year: d.getFullYear() }
+  return { date: `${day}/${mo}/${d.getFullYear()}`, month: MONTHS_PT_UPPER[d.getMonth()], year: d.getFullYear() }
 }
 
 function daysOffset(base: Date, n: number): Date {
@@ -296,11 +296,15 @@ export const usePatientStore = create<PatientState>((set) => ({
   setSelectedPatient: (patient) => set({ selectedPatient: patient }),
   scheduleApplication: (app) => set((s) => ({ applications: [...s.applications, app] })),
   recordEvolution: ({ completed, next }) => set((s) => {
-    // Remove aplicação agendada anterior do mesmo paciente (evita duplicar) e
-    // adiciona a realizada + a nova agendada.
-    const filtered = s.applications.filter((a) =>
-      !(a.patientId === completed.patientId && a.status === 'scheduled')
-    )
+    // Substitui apenas o próximo agendado (cronologicamente mais antigo) do paciente,
+    // preservando outros futuros agendamentos (cancelamento + remarcação manual, etc.).
+    const patientScheduled = s.applications
+      .filter((a) => a.patientId === completed.patientId && a.status === 'scheduled')
+      .sort((a, b) => comparePtDateAsc(a.date, b.date))
+    const nextToReplace = patientScheduled[0]?.id
+    const filtered = nextToReplace
+      ? s.applications.filter((a) => a.id !== nextToReplace)
+      : s.applications
     return {
       applications: [...filtered, completed, next],
       selectedPatient: s.selectedPatient && s.selectedPatient.id === completed.patientId ? {

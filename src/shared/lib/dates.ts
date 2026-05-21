@@ -11,3 +11,16 @@ export function tomorrowStr(): string {
   d.setDate(d.getDate() + 1)
   return toISODateString(d)
 }
+
+export function parsePtDate(value: string): Date {
+  const [day, month, year] = value.split('/')
+  return new Date(Number(year), Number(month) - 1, Number(day))
+}
+
+export function comparePtDateDesc(a: string, b: string): number {
+  return parsePtDate(b).getTime() - parsePtDate(a).getTime()
+}
+
+export function comparePtDateAsc(a: string, b: string): number {
+  return parsePtDate(a).getTime() - parsePtDate(b).getTime()
+}
