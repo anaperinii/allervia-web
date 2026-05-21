@@ -23,7 +23,7 @@ function TestimonialCard({ quote, name, handle, initials }: Testimonial) {
 }
 
 export function TestimonialsSection() {
-  // Duplicated set creates the seamless infinite-scroll illusion.
+  
   const marqueeItems = useMemo(() => [...TESTIMONIALS, ...TESTIMONIALS], [])
 
   return (
@@ -39,7 +39,7 @@ export function TestimonialsSection() {
       </Reveal>
 
       <div
-        className="flex gap-6 hover:[animation-play-state:paused]"
+        className="flex gap-6 hover:paused"
         style={{
           animation: 'scroll-left 30s linear infinite',
           width: 'max-content',
