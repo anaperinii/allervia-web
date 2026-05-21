@@ -8,7 +8,7 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useUserStore, ROLE_PERMISSIONS, type Permission } from '@/shared/identity/user-store'
+import { useUserStore, ROLE_LABELS, ROLE_PERMISSIONS, type Permission } from '@/shared/identity/user-store'
 import { Button, CardButton } from '@/shared/components'
 
 interface SettingsOption {
@@ -30,9 +30,15 @@ const settingsOptions: SettingsOption[] = [
 ]
 
 export function SettingsPage() {
-  const role = useUserStore((s) => s.current.role)
-  const permissions = ROLE_PERMISSIONS[role]
+  const current = useUserStore((s) => s.current)
+  const permissions = ROLE_PERMISSIONS[current.role]
   const visibleOptions = settingsOptions.filter((o) => !o.requires || permissions.includes(o.requires))
+  const initials = current.name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('')
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
@@ -44,13 +50,13 @@ export function SettingsPage() {
             <div className="border border-(--border-custom) rounded-xl p-4">
               <div className="flex justify-center mb-2.5">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-teal-500 to-cyan-400">
-                  <span className="text-lg font-bold text-white">DU</span>
+                  <span className="text-lg font-bold text-white">{initials}</span>
                 </div>
               </div>
 
               <div className="text-center mb-3">
-                <div className="text-xs font-semibold text-(--text)">Dr. Usuário</div>
-                <div className="text-[0.65rem] text-(--text-muted)">Administrador</div>
+                <div className="text-xs font-semibold text-(--text)">{current.name}</div>
+                <div className="text-[0.65rem] text-(--text-muted)">{ROLE_LABELS[current.role]}</div>
               </div>
 
               <Button tone="brand" variant="solid" size="sm" fullWidth to="/profile">

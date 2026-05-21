@@ -3,6 +3,7 @@ import { Header } from '@/layout/header'
 import { Sidebar } from '@/layout/sidebar'
 import { useState, useEffect } from 'react'
 import { useSidebarStore } from '@/layout/stores/sidebar-store'
+import { ToastViewport } from '@/shared/components'
 import { cn } from '@/shared/lib/utils'
 
 const publicRoutes = ['/', '/login', '/register', '/trial', '/forgot-password']
@@ -38,6 +39,7 @@ function RootComponent() {
         <PageTransition key={location.pathname}>
           <Outlet />
         </PageTransition>
+        <ToastViewport />
       </div>
     )
   }
@@ -53,6 +55,7 @@ function RootComponent() {
           <Outlet />
         </PageTransition>
       </main>
+      <ToastViewport />
     </div>
   )
 }

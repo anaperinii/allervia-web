@@ -2,7 +2,7 @@ import { Check } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Blob, MarketingCTA, Reveal } from '@/shared/components'
 import { SectionHeader } from '@/features/landing-page/components/section-header'
-import { PLANS, MAX_PLAN_FEATURES, type PlanId } from '@/shared/data/plans'
+import { PLANS, MAX_PLAN_FEATURES, type PlanId } from '@/shared/constants/plans'
 
 const HIGHLIGHTED_PLAN: PlanId = 'professional'
 const CTA_LABELS: Record<PlanId, string> = {

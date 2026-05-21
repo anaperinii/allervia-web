@@ -1,9 +1,10 @@
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { cn } from '@/shared/lib/utils'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { usePatientStore } from '@/features/patient/stores/patient-store'
 import { useUserStore, PROFILES, ROLE_LABELS } from '@/shared/identity/user-store'
-import { useNotificationsStore, type Notification } from '@/features/notification/stores/notifications-store'
+import { useNotificationsStore } from '@/features/notification/stores/notifications-store'
+import { NOTIFICATION_TYPE_DISPLAY } from '@/features/notification/constants/notification-display'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import imunecareLogo from '@/assets/imunecare-logo.png'
@@ -34,17 +35,9 @@ const menuItems = [
   { title: 'Configurações', icon: Settings, path: '/settings' },
 ]
 
-const typeConfig: Record<Notification['type'], { color: string; bg: string; label: string }> = {
-  upcoming_application: { color: 'text-brand', bg: 'bg-teal-50', label: 'Aplicação' },
-  missed_appointment: { color: 'text-red-600', bg: 'bg-red-50', label: 'Falta' },
-  adverse_reaction: { color: 'text-amber-600', bg: 'bg-amber-50', label: 'Reação' },
-  protocol_milestone: { color: 'text-violet-600', bg: 'bg-violet-50', label: 'Protocolo' },
-  patient_inactivity: { color: 'text-orange-600', bg: 'bg-orange-50', label: 'Inatividade' },
-  system_alert: { color: 'text-gray-500', bg: 'bg-gray-100', label: 'Sistema' },
-}
-
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
-  const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotificationsStore()
+  const { notifications, markAsRead, markAllAsRead } = useNotificationsStore()
+  const unreadCount = useMemo(() => notifications.filter((notification) => !notification.read).length, [notifications])
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
@@ -165,7 +158,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           >
             <div className="relative shrink-0">
               <Bell size={18} className="group-hover:text-brand transition-colors" />
-              {unreadCount() > 0 && <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-linear-to-br from-red-500 to-red-600 text-[8px] font-bold text-white">{unreadCount()}</span>}
+              {unreadCount > 0 && <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-linear-to-br from-red-500 to-red-600 text-[8px] font-bold text-white">{unreadCount}</span>}
             </div>
             {!isCollapsed && <span>Notificações</span>}
             {isCollapsed && (
@@ -181,10 +174,10 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-(--border-custom)">
                   <div className="flex items-center gap-2">
                     <h3 className="text-xs font-bold text-(--text)">Notificações</h3>
-                    {unreadCount() > 0 && <span className="text-[0.6rem] font-semibold text-white bg-red-500 rounded-full px-1.5 py-px">{unreadCount()}</span>}
+                    {unreadCount > 0 && <span className="text-[0.6rem] font-semibold text-white bg-red-500 rounded-full px-1.5 py-px">{unreadCount}</span>}
                   </div>
                   <div className="flex items-center gap-1.5">
-                    {unreadCount() > 0 && (
+                    {unreadCount > 0 && (
                       <button onClick={markAllAsRead} className="text-[0.6rem] font-medium text-brand hover:underline">
                         Marcar todas como lidas
                       </button>
@@ -199,7 +192,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     <div className="text-center text-xs text-(--text-muted) py-8">Nenhuma notificação</div>
                   ) : (
                     notifications.map((n) => {
-                      const tc = typeConfig[n.type]
+                      const display = NOTIFICATION_TYPE_DISPLAY[n.type]
                       return (
                         <div
                           key={n.id}
@@ -210,7 +203,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                             {!n.read && <div className="w-1.5 h-1.5 rounded-full bg-brand mt-1.5 shrink-0" />}
                             <div className={cn("flex-1 min-w-0", n.read && "ml-4")}>
                               <div className="flex items-center gap-2 mb-0.5">
-                                <span className={cn("text-[0.55rem] font-semibold px-1.5 py-px rounded-full", tc.bg, tc.color)}>{tc.label}</span>
+                                <span className={cn("text-[0.55rem] font-semibold px-1.5 py-px rounded-full", display.bg, display.color)}>{display.shortLabel}</span>
                                 <span className="text-[0.6rem] text-(--text-muted)">{formatDistanceToNow(n.timestamp, { locale: ptBR, addSuffix: true })}</span>
                               </div>
                               <div className="text-xs font-semibold text-(--text) truncate">{n.title}</div>

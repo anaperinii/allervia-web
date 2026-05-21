@@ -1,13 +1,17 @@
-import {} from '@tanstack/react-router'
-import { ArrowLeft, Check, Building, CreditCard, Calendar, Receipt } from 'lucide-react'
+import { ArrowLeft, Building, Calendar, Check, CreditCard, Receipt } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { IconButton, Button } from "@/shared/components"
-import { PLANS, MAX_PLAN_FEATURES, type PlanId } from '@/shared/data/plans'
+import { Button, IconButton } from '@/shared/components'
+import { PLANS, MAX_PLAN_FEATURES, type PlanId } from '@/shared/constants/plans'
 
 const CURRENT_PLAN_ID: PlanId = 'professional'
 
-export function PlansPage() {
+const billingSummary = [
+  { icon: CreditCard, label: 'Método de pagamento', value: 'Visa •••• 4242' },
+  { icon: Calendar, label: 'Próxima cobrança', value: '01/05/2026' },
+  { icon: Receipt, label: 'Último pagamento', value: '01/04/2026 — R$ 197,00' },
+]
 
+export function PlansPage() {
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
@@ -18,8 +22,7 @@ export function PlansPage() {
 
         <div className="flex-1 overflow-y-auto p-5">
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* Current plan info */}
-            <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Seu plano atual</h2>
               </div>
@@ -35,15 +38,13 @@ export function PlansPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-extrabold text-(--text)">R$ 197<span className="text-xs font-medium text-(--text-muted)">/mês</span></div>
+                    <div className="text-lg font-extrabold text-(--text)">
+                      R$ 197<span className="text-xs font-medium text-(--text-muted)">/mês</span>
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { icon: CreditCard, label: 'Método de pagamento', value: 'Visa •••• 4242' },
-                    { icon: Calendar, label: 'Próxima cobrança', value: '01/05/2026' },
-                    { icon: Receipt, label: 'Último pagamento', value: '01/04/2026 — R$ 197,00' },
-                  ].map((item) => {
+                  {billingSummary.map((item) => {
                     const Icon = item.icon
                     return (
                       <div key={item.label} className="bg-gray-50 rounded-lg p-3">
@@ -57,21 +58,14 @@ export function PlansPage() {
                   })}
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <button className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer">
-                    Alterar método de pagamento
-                  </button>
-                  <button className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer">
-                    Ver faturas
-                  </button>
-                  <button className="h-8 px-3 rounded-lg border border-red-200 text-xs font-semibold text-red-400 hover:bg-red-50 hover:text-red-500 transition-all cursor-pointer">
-                    Cancelar assinatura
-                  </button>
+                  <Button variant="outline" size="sm">Alterar método de pagamento</Button>
+                  <Button variant="outline" size="sm">Ver faturas</Button>
+                  <Button tone="danger" variant="outline" size="sm">Cancelar assinatura</Button>
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Plans comparison */}
-            <div>
+            <section>
               <div className="text-center mb-4">
                 <h2 className="text-sm font-bold text-(--text)">Comparar planos</h2>
                 <p className="text-[0.65rem] text-(--text-muted) mt-0.5">Escolha o plano ideal para sua clínica</p>
@@ -85,8 +79,8 @@ export function PlansPage() {
                     <div
                       key={plan.id}
                       className={cn(
-                        "border rounded-xl overflow-hidden transition-all flex flex-col",
-                        isCurrent ? "border-brand shadow-[0_0_0_1px_#18C1CB,0_8px_24px_rgba(24,193,203,0.1)]" : "border-(--border-custom) hover:border-gray-300"
+                        'border rounded-xl overflow-hidden transition-all flex flex-col',
+                        isCurrent ? 'border-brand shadow-[0_8px_24px_rgba(20,184,166,0.1)]' : 'border-(--border-custom) hover:border-gray-300',
                       )}
                     >
                       {isCurrent && (
@@ -124,9 +118,9 @@ export function PlansPage() {
 
                         <div className="mt-5">
                           {isCurrent ? (
-                            <button className="w-full h-9 rounded-lg border border-brand text-xs font-semibold text-brand cursor-default">
+                            <div className="w-full h-9 rounded-lg border border-brand text-xs font-semibold text-brand flex items-center justify-center">
                               Plano atual
-                            </button>
+                            </div>
                           ) : (
                             <Button tone="brand" variant="solid" fullWidth className="h-9">
                               {plan.price === 'Sob consulta' ? 'Falar com vendas' : 'Fazer upgrade'}
@@ -138,7 +132,7 @@ export function PlansPage() {
                   )
                 })}
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </div>

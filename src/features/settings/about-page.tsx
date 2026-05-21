@@ -1,4 +1,3 @@
-import {} from '@tanstack/react-router'
 import { ArrowLeft, Heart } from 'lucide-react'
 import imunecareLogo from '@/assets/imunecare-logo.png'
 import { IconButton } from '@/shared/components'

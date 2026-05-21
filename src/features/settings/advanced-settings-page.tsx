@@ -1,31 +1,65 @@
 import { useState } from 'react'
-import {} from '@tanstack/react-router'
-import { ArrowLeft, Database, Bell, Server, Calendar, ExternalLink, CheckCircle, Palette, Plus, X, Lock, Syringe, Pencil, Trash2, Check } from 'lucide-react'
+import {
+  ArrowLeft,
+  Bell,
+  Calendar,
+  Check,
+  CheckCircle,
+  Database,
+  ExternalLink,
+  Lock,
+  Palette,
+  Pencil,
+  Plus,
+  Server,
+  Syringe,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { useHasPermission } from '@/shared/identity/user-store'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-types-store'
-import { useSettingsStore } from '@/features/settings/stores/settings-store'
-import { IconButton, Switch, Button, Select, TextInput, MediaRow } from "@/shared/components"
+import {
+  useSettingsStore,
+  type EventColor,
+  type Language,
+  type Timezone,
+} from '@/features/settings/stores/settings-store'
+import {
+  Button,
+  FieldLabel,
+  IconButton,
+  MediaRow,
+  Select,
+  Switch,
+  TextInput,
+} from '@/shared/components'
 
-const defaultEventColors = [
-  { id: 'subcutaneous', label: 'Subcutânea', color: '#14B8A6' },
-  { id: 'sublingual', label: 'Sublingual', color: '#8B5CF6' },
-  { id: 'missed', label: 'Ausente', color: '#EF4444' },
-]
+const FIXED_EVENT_IDS = ['subcutaneous', 'sublingual', 'missed']
 
 export function AdvancedSettingsPage() {
   const canAdvanced = useHasPermission('advanced_settings')
-  const [autoBackup, setAutoBackup] = useState(true)
-  const [emailNotifications, setEmailNotifications] = useState(true)
-  const [pushNotifications, setPushNotifications] = useState(false)
-  const [timezone, setTimezone] = useState('America/Sao_Paulo')
-  const [sessionTimeout, setSessionTimeout] = useState('30')
-  const [language, setLanguage] = useState('pt-BR')
-  const googleConnected = useSettingsStore((state) => state.googleCalendarConnected)
-  const setGoogleConnected = useSettingsStore((state) => state.setGoogleCalendarConnected)
-  const [autoSync, setAutoSync] = useState(true)
-  const [reminderWhatsapp, setReminderWhatsapp] = useState(true)
-  const [reminderHours, setReminderHours] = useState('24')
-  const [eventColors, setEventColors] = useState(defaultEventColors)
+  const autoBackup = useSettingsStore((s) => s.autoBackup)
+  const setAutoBackup = useSettingsStore((s) => s.setAutoBackup)
+  const emailNotifications = useSettingsStore((s) => s.emailNotifications)
+  const setEmailNotifications = useSettingsStore((s) => s.setEmailNotifications)
+  const pushNotifications = useSettingsStore((s) => s.pushNotifications)
+  const setPushNotifications = useSettingsStore((s) => s.setPushNotifications)
+  const timezone = useSettingsStore((s) => s.timezone)
+  const setTimezone = useSettingsStore((s) => s.setTimezone)
+  const sessionTimeout = useSettingsStore((s) => s.sessionTimeout)
+  const setSessionTimeout = useSettingsStore((s) => s.setSessionTimeout)
+  const language = useSettingsStore((s) => s.language)
+  const setLanguage = useSettingsStore((s) => s.setLanguage)
+  const googleConnected = useSettingsStore((s) => s.googleCalendarConnected)
+  const setGoogleConnected = useSettingsStore((s) => s.setGoogleCalendarConnected)
+  const autoSync = useSettingsStore((s) => s.autoSync)
+  const setAutoSync = useSettingsStore((s) => s.setAutoSync)
+  const reminderWhatsapp = useSettingsStore((s) => s.reminderWhatsapp)
+  const setReminderWhatsapp = useSettingsStore((s) => s.setReminderWhatsapp)
+  const reminderHours = useSettingsStore((s) => s.reminderHours)
+  const setReminderHours = useSettingsStore((s) => s.setReminderHours)
+  const eventColors = useSettingsStore((s) => s.eventColors)
+  const setEventColors = useSettingsStore((s) => s.setEventColors)
 
   const customTypes = useCustomTypesStore((s) => s.types)
   const addType = useCustomTypesStore((s) => s.add)
@@ -34,9 +68,46 @@ export function AdvancedSettingsPage() {
   const [newTypeLabel, setNewTypeLabel] = useState('')
   const [editingTypeId, setEditingTypeId] = useState<string | null>(null)
   const [editingTypeLabel, setEditingTypeLabel] = useState('')
-  const handleAddType = () => { if (newTypeLabel.trim()) { addType(newTypeLabel); setNewTypeLabel('') } }
-  const startEditType = (id: string, label: string) => { setEditingTypeId(id); setEditingTypeLabel(label) }
-  const saveEditType = () => { if (editingTypeId) { updateType(editingTypeId, editingTypeLabel); setEditingTypeId(null); setEditingTypeLabel('') } }
+
+  const handleAddType = () => {
+    if (newTypeLabel.trim()) {
+      addType(newTypeLabel)
+      setNewTypeLabel('')
+    }
+  }
+
+  const startEditType = (id: string, label: string) => {
+    setEditingTypeId(id)
+    setEditingTypeLabel(label)
+  }
+
+  const saveEditType = () => {
+    if (editingTypeId) {
+      updateType(editingTypeId, editingTypeLabel)
+      setEditingTypeId(null)
+      setEditingTypeLabel('')
+    }
+  }
+
+  const updateEventColor = (id: string, patch: Partial<EventColor>) => {
+    setEventColors(eventColors.map((color) => (color.id === id ? { ...color, ...patch } : color)))
+  }
+
+  const removeEventColor = (id: string) => {
+    setEventColors(eventColors.filter((color) => color.id !== id))
+  }
+
+  const addEventColor = () => {
+    setEventColors([
+      ...eventColors,
+      { id: `custom-${Date.now()}`, label: 'Novo tipo', color: '#6B7280' },
+    ])
+  }
+
+  const notificationToggles = [
+    { label: 'Notificações por e-mail', desc: 'Receba alertas de aplicações, reações e agendamentos por e-mail', value: emailNotifications, set: setEmailNotifications },
+    { label: 'Notificações push', desc: 'Receba notificações em tempo real no navegador', value: pushNotifications, set: setPushNotifications },
+  ] as const
 
   if (!canAdvanced) {
     return (
@@ -46,10 +117,10 @@ export function AdvancedSettingsPage() {
             <Lock size={22} className="text-(--text-muted)" />
           </div>
           <h2 className="text-base font-bold text-(--text) mb-1.5">Acesso restrito</h2>
-          <p className="text-xs text-(--text-muted) max-w-sm leading-relaxed mb-5">As configurações avançadas são restritas a perfis <span className="font-semibold text-(--text)">Administrador</span> e <span className="font-semibold text-(--text)">Médico</span>.</p>
-          <Button variant="outline" to="/settings">
-            Voltar para configurações
-          </Button>
+          <p className="text-xs text-(--text-muted) max-w-sm leading-relaxed mb-5">
+            As configurações avançadas são restritas a perfis <span className="font-semibold text-(--text)">Administrador</span> e <span className="font-semibold text-(--text)">Médico</span>.
+          </p>
+          <Button variant="outline" to="/settings">Voltar para configurações</Button>
         </div>
       </div>
     )
@@ -65,22 +136,18 @@ export function AdvancedSettingsPage() {
 
         <div className="flex-1 overflow-y-auto p-5">
           <div className="max-w-2xl mx-auto space-y-5">
-            {/* Notificações */}
-            <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Notificações</h2>
               </div>
               <div className="p-4 space-y-3">
-                {[
-                  { label: 'Notificações por e-mail', desc: 'Receba alertas de aplicações, reações e agendamentos por e-mail', icon: Bell, value: emailNotifications, set: setEmailNotifications },
-                  { label: 'Notificações push', desc: 'Receba notificações em tempo real no navegador', icon: Bell, value: pushNotifications, set: setPushNotifications },
-                ].map((item, i) => (
+                {notificationToggles.map((item, i) => (
                   <div key={item.label}>
                     {i > 0 && <div className="border-t border-(--border-custom) mb-3" />}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                          <item.icon size={14} className="text-brand" />
+                          <Bell size={14} className="text-brand" />
                         </div>
                         <div>
                           <div className="text-xs font-semibold text-(--text)">{item.label}</div>
@@ -92,49 +159,46 @@ export function AdvancedSettingsPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
 
-            {/* Sistema */}
-            <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Sistema</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Fuso horário</label>
-                  <Select value={timezone} onChange={(e) => setTimezone(e.target.value)}>
+                <FieldLabel label="Fuso horário">
+                  <Select value={timezone} onChange={(e) => setTimezone(e.target.value as Timezone)}>
                     <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
                     <option value="America/Manaus">Manaus (GMT-4)</option>
                     <option value="America/Noronha">Fernando de Noronha (GMT-2)</option>
                   </Select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Tempo de sessão (minutos)</label>
-                  <Select value={sessionTimeout} onChange={(e) => setSessionTimeout(e.target.value)}>
+                </FieldLabel>
+                <FieldLabel label="Tempo de sessão (minutos)">
+                  <Select
+                    value={sessionTimeout}
+                    onChange={(e) => setSessionTimeout(e.target.value as typeof sessionTimeout)}
+                  >
                     <option value="15">15 minutos</option>
                     <option value="30">30 minutos</option>
                     <option value="60">1 hora</option>
                     <option value="120">2 horas</option>
                   </Select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Idioma</label>
-                  <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
+                </FieldLabel>
+                <FieldLabel label="Idioma">
+                  <Select value={language} onChange={(e) => setLanguage(e.target.value as Language)}>
                     <option value="pt-BR">Português (Brasil)</option>
                     <option value="en">English</option>
                     <option value="es">Español</option>
                   </Select>
-                </div>
+                </FieldLabel>
               </div>
-            </div>
+            </section>
 
-            {/* Agendamentos */}
-            <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Agendamentos</h2>
               </div>
               <div className="p-4 space-y-4">
-                {/* Google Agenda connection */}
                 <div>
                   <MediaRow
                     className="mb-3"
@@ -147,14 +211,14 @@ export function AdvancedSettingsPage() {
                           <CheckCircle size={10} />
                           Conectado
                         </span>
-                        <button onClick={() => setGoogleConnected(false)} className="text-[0.6rem] font-medium text-red-500 hover:underline cursor-pointer bg-transparent border-none">
+                        <Button tone="danger" variant="ghost" size="sm" onClick={() => setGoogleConnected(false)}>
                           Desconectar
-                        </button>
+                        </Button>
                       </div>
                     ) : (
-                      <button onClick={() => setGoogleConnected(true)} className="h-8 px-3 flex items-center gap-1.5 rounded-lg border-[1.5px] border-(--border-custom) text-xs font-semibold text-(--text-muted) hover:border-brand hover:text-brand hover:bg-teal-50 transition-all cursor-pointer">
+                      <Button variant="outline" onClick={() => setGoogleConnected(true)}>
                         Conectar conta Google
-                      </button>
+                      </Button>
                     )}
                   />
 
@@ -165,7 +229,7 @@ export function AdvancedSettingsPage() {
                           <div className="text-[0.7rem] font-medium text-(--text)">Sincronização automática</div>
                           <div className="text-[0.55rem] text-(--text-muted)">Novos agendamentos são enviados ao Google Agenda</div>
                         </div>
-                        <Switch checked={autoSync} onChange={setAutoSync} />
+                        <Switch checked={autoSync} onChange={setAutoSync} aria-label="Sincronização automática" />
                       </div>
                       <div className="flex items-center gap-1.5 text-[0.6rem] text-(--text-muted)">
                         <ExternalLink size={10} />
@@ -177,32 +241,32 @@ export function AdvancedSettingsPage() {
 
                 <div className="border-t border-(--border-custom)" />
 
-                {/* Lembretes */}
                 <MediaRow
                   icon={<Bell size={14} />}
                   title="Lembrete via WhatsApp"
                   description="Enviar lembrete automático ao paciente antes da consulta"
-                  trailing={<Switch checked={reminderWhatsapp} onChange={setReminderWhatsapp} />}
+                  trailing={<Switch checked={reminderWhatsapp} onChange={setReminderWhatsapp} aria-label="Lembrete via WhatsApp" />}
                 />
 
                 {reminderWhatsapp && (
-                  <div className="ml-11">
-                    <label className="text-[0.65rem] font-medium text-(--text-muted) mb-1 block">Antecedência do lembrete</label>
-                    <div className="w-40">
-                      <Select value={reminderHours} onChange={(e) => setReminderHours(e.target.value)}>
+                  <div className="ml-11 w-40">
+                    <FieldLabel label="Antecedência do lembrete">
+                      <Select
+                        value={reminderHours}
+                        onChange={(e) => setReminderHours(e.target.value as typeof reminderHours)}
+                      >
                         <option value="2">2 horas antes</option>
                         <option value="6">6 horas antes</option>
                         <option value="12">12 horas antes</option>
                         <option value="24">24 horas antes</option>
                         <option value="48">48 horas antes</option>
                       </Select>
-                    </div>
+                    </FieldLabel>
                   </div>
                 )}
 
                 <div className="border-t border-(--border-custom)" />
 
-                {/* Cores por tipo de evento */}
                 <div>
                   <MediaRow
                     className="mb-3"
@@ -211,62 +275,68 @@ export function AdvancedSettingsPage() {
                     description="Personalize as cores para cada tipo de agendamento"
                   />
                   <div className="space-y-2 ml-11">
-                    {eventColors.map((ec) => (
-                      <div key={ec.id} className="flex items-center justify-between group">
-                        <div className="flex items-center gap-2.5">
-                          <input
-                            type="color"
-                            value={ec.color}
-                            onChange={(e) => setEventColors((prev) => prev.map((c) => c.id === ec.id ? { ...c, color: e.target.value } : c))}
-                            className="w-7 h-7 rounded-lg border border-(--border-custom) cursor-pointer p-0.5"
-                          />
-                          {['subcutaneous', 'sublingual', 'missed'].includes(ec.id) ? (
-                            <span className="text-xs font-medium text-(--text)">{ec.label}</span>
-                          ) : (
+                    {eventColors.map((ec) => {
+                      const isFixed = FIXED_EVENT_IDS.includes(ec.id)
+                      return (
+                        <div key={ec.id} className="flex items-center justify-between group">
+                          <div className="flex items-center gap-2.5">
                             <input
-                              value={ec.label}
-                              onChange={(e) => setEventColors((prev) => prev.map((c) => c.id === ec.id ? { ...c, label: e.target.value } : c))}
-                              className="text-xs font-medium text-(--text) bg-transparent border-none border-b border-(--border-custom) focus:outline-none focus:border-brand w-28 px-0"
+                              type="color"
+                              value={ec.color}
+                              onChange={(e) => updateEventColor(ec.id, { color: e.target.value })}
+                              aria-label={`Cor do evento ${ec.label}`}
+                              className="w-7 h-7 rounded-lg border border-(--border-custom) cursor-pointer p-0.5"
                             />
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[0.6rem] font-mono text-(--text-muted)">{ec.color}</span>
-                          <div className="w-16 h-5 rounded" style={{ backgroundColor: ec.color + '20', border: `1.5px solid ${ec.color}` }}>
-                            <div className="w-full h-full rounded flex items-center justify-center text-[0.45rem] font-bold" style={{ color: ec.color }}>
+                            {isFixed ? (
+                              <span className="text-xs font-medium text-(--text)">{ec.label}</span>
+                            ) : (
+                              <input
+                                value={ec.label}
+                                onChange={(e) => updateEventColor(ec.id, { label: e.target.value })}
+                                aria-label="Nome do tipo de evento"
+                                className="text-xs font-medium text-(--text) bg-transparent border-b border-(--border-custom) focus:outline-none focus:border-brand w-28 px-0"
+                              />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[0.6rem] font-mono text-(--text-muted)">{ec.color}</span>
+                            <div
+                              className="w-16 h-5 rounded flex items-center justify-center text-[0.45rem] font-bold"
+                              style={{ backgroundColor: ec.color + '20', border: `1.5px solid ${ec.color}`, color: ec.color }}
+                            >
                               Prévia
                             </div>
+                            {!isFixed && (
+                              <IconButton
+                                aria-label={`Remover ${ec.label}`}
+                                size="sm"
+                                tone="danger"
+                                onClick={() => removeEventColor(ec.id)}
+                                className="opacity-0 group-hover:opacity-100 h-5 w-5"
+                              >
+                                <X size={11} />
+                              </IconButton>
+                            )}
                           </div>
-                          {!['subcutaneous', 'sublingual', 'missed'].includes(ec.id) && (
-                            <button onClick={() => setEventColors((prev) => prev.filter((c) => c.id !== ec.id))} className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-(--text-muted) hover:bg-red-50 hover:text-red-500 transition-all cursor-pointer">
-                              <X size={11} />
-                            </button>
-                          )}
                         </div>
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => {
-                        const id = `custom-${Date.now()}`
-                        setEventColors((prev) => [...prev, { id, label: 'Novo tipo', color: '#6B7280' }])
-                      }}
-                      className="flex items-center gap-1.5 text-[0.65rem] font-medium text-brand hover:underline cursor-pointer bg-transparent border-none mt-1"
-                    >
-                      <Plus size={12} />
+                      )
+                    })}
+                    <Button variant="ghost" size="sm" leftIcon={<Plus size={12} />} onClick={addEventColor}>
                       Adicionar tipo de evento
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Tipos de Imunoterapia */}
-            <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Tipos de Imunoterapia</h2>
               </div>
               <div className="p-4 space-y-3">
-                <p className="text-[0.65rem] text-(--text-muted) leading-relaxed">Gerencie os tipos disponíveis ao cadastrar uma imunoterapia. Alterações refletem em toda a clínica.</p>
+                <p className="text-[0.65rem] text-(--text-muted) leading-relaxed">
+                  Gerencie os tipos disponíveis ao cadastrar uma imunoterapia. Alterações refletem em toda a clínica.
+                </p>
                 <div className="flex gap-2">
                   <TextInput
                     value={newTypeLabel}
@@ -287,39 +357,38 @@ export function AdvancedSettingsPage() {
                       </div>
                       {editingTypeId === t.id ? (
                         <>
-                          <input
+                          <TextInput
                             value={editingTypeLabel}
                             onChange={(e) => setEditingTypeLabel(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); saveEditType() } }}
                             autoFocus
-                            className="flex-1 h-7 rounded border border-brand bg-white px-2 text-xs focus:outline-none"
+                            className="flex-1 h-7"
                           />
-                          <button onClick={saveEditType} className="flex h-7 w-7 items-center justify-center rounded hover:bg-green-50 text-green-600 cursor-pointer">
+                          <IconButton aria-label="Salvar" size="sm" tone="success" onClick={saveEditType}>
                             <Check size={14} />
-                          </button>
-                          <button onClick={() => setEditingTypeId(null)} className="flex h-7 w-7 items-center justify-center rounded hover:bg-gray-100 text-(--text-muted) cursor-pointer">
+                          </IconButton>
+                          <IconButton aria-label="Cancelar edição" size="sm" onClick={() => setEditingTypeId(null)}>
                             <X size={14} />
-                          </button>
+                          </IconButton>
                         </>
                       ) : (
                         <>
                           <span className="flex-1 text-xs font-medium text-(--text)">{t.label}</span>
-                          <button onClick={() => startEditType(t.id, t.label)} className="flex h-7 w-7 items-center justify-center rounded hover:bg-brand-50 text-(--text-muted) hover:text-brand cursor-pointer">
+                          <IconButton aria-label={`Editar ${t.label}`} size="sm" tone="brand" onClick={() => startEditType(t.id, t.label)}>
                             <Pencil size={12} />
-                          </button>
-                          <button onClick={() => removeType(t.id)} className="flex h-7 w-7 items-center justify-center rounded hover:bg-red-50 text-(--text-muted) hover:text-red-500 cursor-pointer">
+                          </IconButton>
+                          <IconButton aria-label={`Remover ${t.label}`} size="sm" tone="danger" onClick={() => removeType(t.id)}>
                             <Trash2 size={12} />
-                          </button>
+                          </IconButton>
                         </>
                       )}
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Dados e Backup */}
-            <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados e Backup</h2>
               </div>
@@ -328,7 +397,7 @@ export function AdvancedSettingsPage() {
                   icon={<Database size={14} />}
                   title="Backup automático"
                   description="Backup diário dos dados clínicos às 03:00"
-                  trailing={<Switch checked={autoBackup} onChange={setAutoBackup} />}
+                  trailing={<Switch checked={autoBackup} onChange={setAutoBackup} aria-label="Backup automático" />}
                 />
                 <div className="border-t border-(--border-custom)" />
                 <MediaRow
@@ -338,7 +407,7 @@ export function AdvancedSettingsPage() {
                   trailing={<span className="text-[0.65rem] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Sucesso</span>}
                 />
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </div>
