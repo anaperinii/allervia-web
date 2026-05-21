@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft } from 'lucide-react'
 import { addDays, differenceInDays, format } from 'date-fns'
-import { Button, IconButton, Modal } from '@/shared/components'
+import { Button, CancelWizardModal, IconButton, WizardStepsIndicator } from '@/shared/components'
 import { usePatientStore } from '@/features/patient/stores/patient-store'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
@@ -20,7 +20,6 @@ import {
   STEP_2_FIELDS,
   EVOLUTION_DEFAULTS,
 } from '@/features/patient/forms/evolution'
-import { StepsIndicator } from '@/features/patient/components/evolution-steps/steps-indicator'
 import { SelectPatientStep } from '@/features/patient/components/evolution-steps/select-patient-step'
 import { PreApplicationStep } from '@/features/patient/components/evolution-steps/pre-application-step'
 import { PostApplicationStep } from '@/features/patient/components/evolution-steps/post-application-step'
@@ -229,7 +228,11 @@ export function PatientEvolutionPage() {
           <h1 className="text-2xl font-bold text-(--text)">Evolução do Paciente</h1>
         </div>
 
-        <StepsIndicator current={step} />
+        <WizardStepsIndicator
+          current={step}
+          ariaLabel="Etapas da evolução"
+          labels={['Paciente', 'Pré-Aplicação', 'Pós-Aplicação', 'Revisão dos Dados']}
+        />
 
         <form onSubmit={onSaveEvolution} noValidate className="flex flex-1 min-h-0 flex-col">
           <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -283,20 +286,13 @@ export function PatientEvolutionPage() {
         </form>
       </div>
 
-      <Modal
+      <CancelWizardModal
         open={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
         title="Cancelar evolução?"
-        size="sm"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setShowCancelModal(false)}>Continuar editando</Button>
-            <Button tone="danger" variant="solid" onClick={() => navigate({ to: '/immunotherapies' })}>Cancelar</Button>
-          </>
-        }
-      >
-        <p className="text-xs text-(--text-muted)">Os dados preenchidos serão perdidos. Deseja realmente cancelar a evolução do paciente?</p>
-      </Modal>
+        description="Os dados preenchidos serão perdidos. Deseja realmente cancelar a evolução do paciente?"
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={() => navigate({ to: '/immunotherapies' })}
+      />
 
       {errors && Object.keys(errors).length > 0 && step === 3 && (
         <p className="sr-only" role="alert">Existem erros no formulário. Revise as etapas anteriores.</p>

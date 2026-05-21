@@ -1,15 +1,15 @@
 import { cn } from '@/shared/lib/utils'
 
-const STEP_LABELS = ['Paciente', 'Pré-Aplicação', 'Pós-Aplicação', 'Revisão dos Dados']
-
-interface StepsIndicatorProps {
+interface WizardStepsIndicatorProps {
+  labels: readonly string[]
   current: number
+  ariaLabel?: string
 }
 
-export function StepsIndicator({ current }: StepsIndicatorProps) {
+export function WizardStepsIndicator({ labels, current, ariaLabel = 'Etapas' }: WizardStepsIndicatorProps) {
   return (
-    <ol className="px-5 py-7 flex items-center justify-center gap-4 list-none m-0" aria-label="Etapas da evolução">
-      {STEP_LABELS.map((label, i) => {
+    <ol className="px-5 py-7 flex items-center justify-center gap-4 list-none m-0" aria-label={ariaLabel}>
+      {labels.map((label, i) => {
         const active = current === i
         const done = current > i
         return (
@@ -36,7 +36,7 @@ export function StepsIndicator({ current }: StepsIndicatorProps) {
                 {label}
               </span>
             </div>
-            {i < STEP_LABELS.length - 1 && (
+            {i < labels.length - 1 && (
               <div
                 className={cn(
                   'h-px w-14 border-t-[1.5px]',

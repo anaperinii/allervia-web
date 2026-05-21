@@ -1,48 +1,57 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, User, Syringe, Info } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { ArrowLeft } from 'lucide-react'
+import { Button, CancelWizardModal, IconButton, WizardStepsIndicator } from '@/shared/components'
 import { useHasPermission } from '@/shared/identity/user-store'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
-import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-types-store'
-import { INITIAL_DOSE } from '@/features/immunotherapy/constants/scit-protocol'
-import { Modal, Button, IconButton, TextInput, Select } from '@/shared/components'
-import { PROFILES } from '@/shared/identity/user-store'
+import { INDUCTION_INTERVAL, INITIAL_DOSE } from '@/features/immunotherapy/constants/scit-protocol'
+import { registerPatientProfile } from '@/features/patient/constants/patient-profiles'
 import { usePatientStore, type Application } from '@/features/patient/stores/patient-store'
+import { tomorrowStr } from '@/shared/lib/dates'
+import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
 import {
   addImmunotherapySchema,
   type AddImmunotherapyForm,
   STEP_1_FIELDS,
   STEP_2_FIELDS,
 } from '@/features/immunotherapy/forms/add-immunotherapy'
-import { formatCPF, formatPhone, formatWeight, formatConcentration, formatVolume } from '@/shared/lib/formatters'
-import { todayStr, tomorrowStr } from '@/shared/lib/dates'
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { PatientDataStep } from '@/features/immunotherapy/components/add-steps/patient-data-step'
+import { ImmunotherapyDataStep } from '@/features/immunotherapy/components/add-steps/immunotherapy-data-step'
+import { AddImmunotherapyReviewStep } from '@/features/immunotherapy/components/add-steps/add-immunotherapy-review-step'
 
-const stepLabels = ['Dados do Paciente', 'Dados da Imunoterapia', 'Revisão dos Dados']
+const STEP_LABELS = ['Dados do Paciente', 'Dados da Imunoterapia', 'Revisão dos Dados']
+
+function calculateAge(birthDateIso: string): number {
+  const birth = new Date(birthDateIso + 'T12:00')
+  if (isNaN(birth.getTime())) return 0
+  const now = new Date()
+  let age = now.getFullYear() - birth.getFullYear()
+  const m = now.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--
+  return age
+}
+
+function isoToPtDate(iso: string): string {
+  const [yyyy, mm, dd] = iso.split('-')
+  return `${dd}/${mm}/${yyyy}`
+}
 
 export function AddImmunotherapyPage() {
   const navigate = useNavigate()
   const canAdd = useHasPermission('add_immunotherapy')
   const addImmunotherapy = useImmunotherapiesStore((s) => s.addImmunotherapy)
-  const customTypes = useCustomTypesStore((s) => s.types)
   const scheduleApplication = usePatientStore((s) => s.scheduleApplication)
-  useEffect(() => { if (!canAdd) navigate({ to: '/immunotherapies' }) }, [canAdd, navigate])
+
+  useEffect(() => {
+    if (!canAdd) navigate({ to: '/immunotherapies' })
+  }, [canAdd, navigate])
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [showCancelModal, setShowCancelModal] = useState(false)
 
-  const {
-    control,
-    register,
-    handleSubmit,
-    trigger,
-    watch,
-    formState: { errors },
-  } = useForm<AddImmunotherapyForm>({
+  const form = useForm<AddImmunotherapyForm>({
     resolver: zodResolver(addImmunotherapySchema),
     mode: 'onBlur',
     defaultValues: {
@@ -50,7 +59,7 @@ export function AddImmunotherapyPage() {
       type: '', modality: '', startDate: tomorrowStr(), extract: '', targetConcentration: '', targetVolume: '',
     },
   })
-  const form = watch()
+  const { handleSubmit, trigger, watch } = form
 
   const handleContinue = async () => {
     const fields = step === 1 ? STEP_1_FIELDS : STEP_2_FIELDS
@@ -59,46 +68,54 @@ export function AddImmunotherapyPage() {
   }
 
   const onFinish = handleSubmit((data) => {
-    const isSublingual = data.modality === 'sublingual'
     const newId = `new-${Date.now()}`
+    const modality = data.modality as Immunotherapy['modality']
+
     const newImm: Immunotherapy = {
       id: newId,
       name: data.name.trim(),
       phone: data.phone.trim(),
       type: data.type.trim(),
       doseConcentration: INITIAL_DOSE,
-      cycleInterval: { number: 1, days: 7 },
-      modality: isSublingual ? 'sublingual' : 'subcutaneous',
+      cycleInterval: { number: 1, days: INDUCTION_INTERVAL },
+      modality,
       status: 'active',
       responsibleDoctor: data.responsibleDoctor.trim(),
     }
     addImmunotherapy(newImm)
 
-    const [yyyy, mm, dd] = data.startDate.split('-')
-    const dataPtBR = `${dd}/${mm}/${yyyy}`
-    const meses = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO']
-    const ano = Number(yyyy)
+    const startDatePt = isoToPtDate(data.startDate)
+    registerPatientProfile(newId, {
+      birthDate: isoToPtDate(data.birthDate),
+      age: calculateAge(data.birthDate),
+      cpf: data.cpf,
+      weight: `${data.weight} kg`,
+      extract: data.extract.trim(),
+      inductionStart: startDatePt,
+      maintenanceStart: null,
+      targetConcentrationVolume: `${data.targetConcentration} - ${data.targetVolume.replace('.', ',')}ml`,
+      targetReached: false,
+    })
+
+    const [, mm, ] = data.startDate.split('-')
     const mesIdx = Math.max(0, Math.min(11, Number(mm) - 1))
     const firstApp: Application = {
       id: `app-${newId}-1`,
       patientId: newId,
-      date: dataPtBR,
+      date: startDatePt,
       startTime: '09:00',
       endTime: '09:30',
       status: 'scheduled',
       dose: INITIAL_DOSE,
-      cycle: { number: 1, days: 7 },
-      month: meses[mesIdx],
-      year: ano,
-      modality: isSublingual ? 'sublingual' : 'subcutaneous',
+      cycle: { number: 1, days: INDUCTION_INTERVAL },
+      month: MONTHS_PT_UPPER[mesIdx],
+      year: Number(data.startDate.split('-')[0]),
+      modality,
     }
     scheduleApplication(firstApp)
 
     navigate({ to: '/immunotherapies', search: { success: true, patientId: newId } })
   })
-
-  const errMsg = (field: keyof AddImmunotherapyForm) =>
-    errors[field] ? <span className="text-[0.6rem] text-red-500 mt-0.5 block">{errors[field]?.message}</span> : null
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 p-4 min-h-0 overflow-hidden">
@@ -110,218 +127,17 @@ export function AddImmunotherapyPage() {
           <h1 className="text-2xl font-bold text-(--text)">Adicionar Imunoterapia</h1>
         </div>
 
-        <div className="px-5 py-7 flex items-center justify-center gap-4">
-          {stepLabels.map((label, i) => {
-            const s = i + 1
-            return (
-              <div key={s} className="flex items-center gap-4">
-                <div className="flex items-center gap-2.5">
-                  <div className={cn("flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-all", step === s ? "bg-linear-to-br from-brand to-teal-400 text-white" : step > s ? "bg-teal-100 text-teal-600 opacity-50" : "bg-gray-200 text-gray-500")}>
-                    {s}
-                  </div>
-                  <span className={cn("text-[0.8rem] font-medium", step === s ? "text-teal-600" : step > s ? "text-teal-600 opacity-50" : "text-gray-400")}>{label}</span>
-                </div>
-                {s < 3 && <div className={cn("h-px w-14 border-t-[1.5px]", step > s ? "border-teal-400 border-solid" : "border-gray-200 border-dashed")} />}
-              </div>
-            )
-          })}
-        </div>
+        <WizardStepsIndicator
+          current={step - 1}
+          ariaLabel="Etapas do cadastro"
+          labels={STEP_LABELS}
+        />
 
         <form onSubmit={onFinish} noValidate className="flex flex-1 min-h-0 flex-col">
           <div className="flex-1 overflow-y-auto px-5 py-4">
-            {step === 1 && (
-              <div className="space-y-5">
-                <h2 className="text-sm font-bold text-(--text)">Dados do Paciente</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Nome do Paciente</label>
-                    <TextInput placeholder="Nome completo" invalid={!!errors.name} {...register('name')} />
-                    {errMsg('name')}
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">CPF</label>
-                    <Controller
-                      control={control}
-                      name="cpf"
-                      render={({ field }) => (
-                        <TextInput placeholder="000.000.000-00" invalid={!!errors.cpf} value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatCPF(e.target.value))} />
-                      )}
-                    />
-                    {errMsg('cpf')}
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Telefone</label>
-                    <Controller
-                      control={control}
-                      name="phone"
-                      render={({ field }) => (
-                        <TextInput placeholder="(00) 00000-0000" invalid={!!errors.phone} value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatPhone(e.target.value))} />
-                      )}
-                    />
-                    {errMsg('phone')}
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Nascimento</label>
-                    <TextInput type="date" max={todayStr()} invalid={!!errors.birthDate} {...register('birthDate')} />
-                    {errMsg('birthDate')}
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Peso</label>
-                    <div className="relative">
-                      <Controller
-                        control={control}
-                        name="weight"
-                        render={({ field }) => (
-                          <TextInput placeholder="Ex: 72.5" invalid={!!errors.weight} className="pr-10" value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatWeight(e.target.value))} />
-                        )}
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">kg</span>
-                    </div>
-                    {errMsg('weight')}
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Médico Responsável</label>
-                    <Select invalid={!!errors.responsibleDoctor} {...register('responsibleDoctor')}>
-                      <option value="" disabled>Selecione o médico</option>
-                      {PROFILES.filter((p) => p.role === 'doctor').map((p) => (
-                        <option key={p.id} value={p.name}>{p.name} · {p.registration}</option>
-                      ))}
-                    </Select>
-                    {errMsg('responsibleDoctor')}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-5">
-                <h2 className="text-sm font-bold text-(--text)">Dados da Imunoterapia</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Tipo</label>
-                    <Select invalid={!!errors.type} {...register('type')}>
-                      <option value="" disabled>Selecione o tipo</option>
-                      {customTypes.map((t) => <option key={t.id} value={t.label}>{t.label}</option>)}
-                    </Select>
-                    {errMsg('type')}
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Via Cutânea</label>
-                    <Select invalid={!!errors.modality} {...register('modality')}>
-                      <option value="" disabled>Selecione</option>
-                      <option value="Subcutânea">Subcutânea</option>
-                      <option value="Sublingual">Sublingual</option>
-                    </Select>
-                    {errMsg('modality')}
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Data de Início</label>
-                    <TextInput type="date" min={todayStr()} invalid={!!errors.startDate} {...register('startDate')} />
-                    {errMsg('startDate')}
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Extrato</label>
-                    <TextInput placeholder="Ex: Der p 60 + Der f 10% + Blt 30%" invalid={!!errors.extract} {...register('extract')} />
-                    {errMsg('extract')}
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Meta de Concentração</label>
-                    <Controller
-                      control={control}
-                      name="targetConcentration"
-                      render={({ field }) => (
-                        <TextInput placeholder="1:10" invalid={!!errors.targetConcentration} value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatConcentration(e.target.value))} />
-                      )}
-                    />
-                    {errMsg('targetConcentration')}
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Meta de Volume</label>
-                    <div className="relative">
-                      <Controller
-                        control={control}
-                        name="targetVolume"
-                        render={({ field }) => (
-                          <TextInput placeholder="Ex: 0.5" invalid={!!errors.targetVolume} className="pr-10" value={field.value} onBlur={field.onBlur} onChange={(e) => field.onChange(formatVolume(e.target.value))} />
-                        )}
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">ml</span>
-                    </div>
-                    {errMsg('targetVolume')}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="space-y-3.5">
-                <div className="mb-4">
-                  <h2 className="text-sm font-bold text-(--text)">Revisão dos dados</h2>
-                  <p className="text-[0.7rem] text-(--text-muted) mt-1">Confirme os dados antes de salvar a prescrição.</p>
-                </div>
-
-                <div className="border border-(--border-custom) rounded-xl overflow-hidden">
-                  <div className="flex items-center gap-2.5 px-4 py-3 border-b border-(--border-custom) bg-white">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-100 shrink-0">
-                      <User size={13} className="text-teal-600" />
-                    </div>
-                    <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-(--text-muted)">Dados do Paciente</span>
-                  </div>
-                  <div className="bg-gray-50/60 p-4">
-                    <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
-                      {[
-                        { label: 'Nome', value: form.name || '—' },
-                        { label: 'CPF', value: form.cpf || '—' },
-                        { label: 'Telefone', value: form.phone || '—' },
-                        { label: 'Data de Nascimento', value: form.birthDate ? format(new Date(form.birthDate + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : '—' },
-                        { label: 'Peso', value: form.weight ? `${form.weight} kg` : '—' },
-                        { label: 'Médico Responsável', value: form.responsibleDoctor || '—' },
-                      ].map((item) => (
-                        <div key={item.label} className="bg-white px-3.5 py-2.5">
-                          <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{item.label}</div>
-                          <div className="text-xs font-medium text-(--text)">{item.value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border border-(--border-custom) rounded-xl overflow-hidden">
-                  <div className="flex items-center gap-2.5 px-4 py-3 border-b border-(--border-custom) bg-white">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-100 shrink-0">
-                      <Syringe size={13} className="text-teal-600" />
-                    </div>
-                    <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-(--text-muted)">Dados da Imunoterapia</span>
-                  </div>
-                  <div className="bg-gray-50/60 p-4">
-                    <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
-                      {[
-                        { label: 'Tipo', value: form.type || '—' },
-                        { label: 'Via Cutânea', value: form.modality || '—' },
-                        { label: 'Data de Início', value: form.startDate ? format(new Date(form.startDate + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : '—' },
-                        { label: 'Extrato', value: form.extract || '—' },
-                        { label: 'Meta de Concentração', value: form.targetConcentration || '—' },
-                        { label: 'Meta de Volume', value: form.targetVolume ? `${form.targetVolume} ml` : '—' },
-                      ].map((item) => (
-                        <div key={item.label} className="bg-white px-3.5 py-2.5">
-                          <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{item.label}</div>
-                          <div className="text-xs font-medium text-(--text)">{item.value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg p-3.5">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 shrink-0">
-                    <Info size={14} className="text-amber-600" />
-                  </div>
-                  <p className="text-xs text-amber-800 leading-relaxed">
-                    Após confirmar, o protocolo será iniciado e a primeira dose será agendada para <span className="font-bold">{form.startDate ? format(new Date(form.startDate + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR }) : 'a data de início definida'}</span>.
-                  </p>
-                </div>
-              </div>
-            )}
+            {step === 1 && <PatientDataStep form={form} />}
+            {step === 2 && <ImmunotherapyDataStep form={form} />}
+            {step === 3 && <AddImmunotherapyReviewStep form={watch()} />}
           </div>
 
           <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
@@ -343,18 +159,13 @@ export function AddImmunotherapyPage() {
         </form>
       </div>
 
-      <Modal
+      <CancelWizardModal
         open={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
         title="Cancelar cadastro?"
-        size="sm"
-        footer={<>
-          <Button variant="outline" onClick={() => setShowCancelModal(false)}>Continuar editando</Button>
-          <Button variant="danger" onClick={() => navigate({ to: '/immunotherapies' })}>Cancelar</Button>
-        </>}
-      >
-        <p className="text-xs text-(--text-muted)">Os dados preenchidos serão perdidos. Deseja realmente cancelar a prescrição da imunoterapia?</p>
-      </Modal>
+        description="Os dados preenchidos serão perdidos. Deseja realmente cancelar a prescrição da imunoterapia?"
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={() => navigate({ to: '/immunotherapies' })}
+      />
     </div>
   )
 }

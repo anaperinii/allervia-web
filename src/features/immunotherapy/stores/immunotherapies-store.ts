@@ -17,16 +17,6 @@ export interface Immunotherapy {
 
 interface ImmunotherapiesState {
   immunotherapies: Immunotherapy[]
-  searchTerm: string
-  typeFilter: string
-  intervalFilter: string
-  showInactive: boolean
-  currentPage: number
-  setSearchTerm: (term: string) => void
-  setTypeFilter: (type: string) => void
-  setIntervalFilter: (interval: string) => void
-  setShowInactive: (show: boolean) => void
-  setCurrentPage: (page: number) => void
   addImmunotherapy: (imm: Immunotherapy) => void
 }
 
@@ -46,16 +36,6 @@ export const useImmunotherapiesStore = create<ImmunotherapiesState>((set) => ({
     { id: '11', name: 'Juliana Mendes Costa', phone: '(62) 98708-3592', type: 'Gramíneas', doseConcentration: '1:10 - 0,5ml', cycleInterval: { number: 2, days: 14 }, modality: 'subcutaneous', status: 'inactive', responsibleDoctor: 'Dra. Karina Martins' },
     { id: '12', name: 'Roberto Alves Neto', phone: '(62) 99245-7081', type: 'Cândida', doseConcentration: '1:1.000 - 0,2ml', cycleInterval: { number: 1, days: 7 }, modality: 'sublingual', status: 'inactive', responsibleDoctor: 'Dr. André Lima' },
   ],
-  searchTerm: '',
-  typeFilter: 'Todos os tipos',
-  intervalFilter: 'Todos os intervalos',
-  showInactive: false,
-  currentPage: 1,
-  setSearchTerm: (term) => set({ searchTerm: term }),
-  setTypeFilter: (type) => set({ typeFilter: type }),
-  setIntervalFilter: (interval) => set({ intervalFilter: interval }),
-  setShowInactive: (show) => set({ showInactive: show }),
-  setCurrentPage: (page) => set({ currentPage: page }),
   addImmunotherapy: (imm) => set((state) => ({ immunotherapies: [imm, ...state.immunotherapies] })),
 }))
 

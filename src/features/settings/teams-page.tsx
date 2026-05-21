@@ -9,7 +9,7 @@ import { MembersTable } from '@/features/settings/components/members-table'
 import { InvitesTable } from '@/features/settings/components/invites-table'
 import { InviteMemberModal } from '@/features/settings/components/invite-member-modal'
 import { TeamConfirmModal, type TeamConfirmState } from '@/features/settings/components/team-confirm-modal'
-import { TablePagination } from '@/features/settings/components/table-pagination'
+import { TablePagination } from '@/shared/components'
 
 type StatusFilter = TeamMember['status'] | 'all'
 type RoleFilter = TeamRole | 'all'

@@ -1,4 +1,5 @@
 import type { Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { MODALITY_LABELS } from '@/features/immunotherapy/constants/modality'
 import type { Patient } from '@/features/patient/stores/patient-store'
 import { seedInactivationsFor } from '@/features/patient/stores/patient-store'
 
@@ -29,7 +30,7 @@ const TARGET_BY_MODALITY: Record<Immunotherapy['modality'], string> = {
   sublingual: '1:10 - 0,3ml',
 }
 
-const PATIENT_PROFILES: Record<string, PatientProfile> = {
+const patientProfiles: Record<string, PatientProfile> = {
   '1': { birthDate: '15/04/2007', age: 18, cpf: '124.583.706-42', weight: '52.3 kg', extract: '', inductionStart: '04/03/2026', maintenanceStart: null, targetConcentrationVolume: '', targetReached: false },
   '2': { birthDate: '22/11/1992', age: 33, cpf: '587.291.034-18', weight: '64.0 kg', extract: '', inductionStart: '23/12/2025', maintenanceStart: null, targetConcentrationVolume: '', targetReached: false },
   '3': { birthDate: '08/07/2015', age: 10, cpf: '091.847.563-25', weight: '32.5 kg', extract: '', inductionStart: '12/02/2026', maintenanceStart: null, targetConcentrationVolume: '', targetReached: false },
@@ -44,11 +45,6 @@ const PATIENT_PROFILES: Record<string, PatientProfile> = {
   '12': { birthDate: '05/08/1968', age: 57, cpf: '917.052.864-21', weight: '89.3 kg', extract: '', inductionStart: '14/11/2025', maintenanceStart: null, targetConcentrationVolume: '', targetReached: false },
 }
 
-const ADMINISTRATION_ROUTE_BY_MODALITY: Record<Immunotherapy['modality'], string> = {
-  subcutaneous: 'Subcutânea',
-  sublingual: 'Sublingual',
-}
-
 const FALLBACK_PROFILE: PatientProfile = {
   birthDate: '01/01/2000',
   age: 25,
@@ -61,8 +57,12 @@ const FALLBACK_PROFILE: PatientProfile = {
   targetReached: false,
 }
 
+export function registerPatientProfile(id: string, profile: PatientProfile): void {
+  patientProfiles[id] = profile
+}
+
 export function buildPatientFromImmunotherapy(imm: Immunotherapy): Patient {
-  const profile = PATIENT_PROFILES[imm.id] ?? FALLBACK_PROFILE
+  const profile = patientProfiles[imm.id] ?? FALLBACK_PROFILE
   const extract = profile.extract || EXTRACT_BY_TYPE[imm.type] || 'Extrato padrão'
   const target = profile.targetConcentrationVolume || TARGET_BY_MODALITY[imm.modality]
   const status = imm.status === 'active' ? ('active' as const) : ('inactive' as const)
@@ -80,7 +80,7 @@ export function buildPatientFromImmunotherapy(imm: Immunotherapy): Patient {
     immunotherapyType: imm.type,
     inductionStart: profile.inductionStart,
     maintenanceStart: profile.maintenanceStart,
-    administrationRoute: ADMINISTRATION_ROUTE_BY_MODALITY[imm.modality],
+    administrationRoute: MODALITY_LABELS[imm.modality],
     extract,
     targetConcentrationVolume: target,
     targetReached: profile.targetReached,
