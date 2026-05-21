@@ -5,7 +5,7 @@ import { CalendarDays, ChevronDown, List, Power, PowerOff, Save } from 'lucide-r
 import { cn } from '@/shared/lib/utils'
 import { SegmentedControl, Toast } from '@/shared/components'
 import { usePatientStore, type Application } from '@/features/patient/stores/patient-store'
-import { buildPatientFromImmunotherapy } from '@/features/patient/data/patient-profiles'
+import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
 import { useAuditStore } from '@/shared/audit/audit-store'
 import { useDoctorFilter, useHasPermission, useUserStore } from '@/shared/identity/user-store'

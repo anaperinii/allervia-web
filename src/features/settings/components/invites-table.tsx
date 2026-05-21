@@ -1,7 +1,7 @@
 import { Clock, Mail, Send, Trash2, X } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button, IconButton } from '@/shared/components'
-import { ROLE_BADGES } from '@/features/settings/data/team-roles'
+import { ROLE_BADGES } from '@/features/settings/constants/team-roles'
 import type { Invite } from '@/features/settings/stores/teams-store'
 
 interface InvitesTableProps {

@@ -1,6 +1,6 @@
 import { Blob, Reveal } from '@/shared/components'
 import { SectionHeader } from '@/features/landing-page/components/section-header'
-import { FEATURES } from '@/features/landing-page/data/features'
+import { FEATURES } from '@/features/landing-page/constants/features'
 
 export function FeaturesGrid() {
   return (

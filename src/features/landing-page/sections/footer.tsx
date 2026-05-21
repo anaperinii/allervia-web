@@ -1,5 +1,5 @@
 import { Heart } from 'lucide-react'
-import { FOOTER_COLUMNS } from '@/features/landing-page/data/footer-columns'
+import { FOOTER_COLUMNS } from '@/features/landing-page/constants/footer-columns'
 
 export function Footer() {
   return (

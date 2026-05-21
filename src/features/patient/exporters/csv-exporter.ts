@@ -2,7 +2,7 @@ import { format } from 'date-fns'
 import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
-} from '@/features/patient/data/clinical-labels'
+} from '@/features/patient/constants/clinical-labels'
 import type { ReportData } from './types'
 import { downloadFile } from './utils'
 

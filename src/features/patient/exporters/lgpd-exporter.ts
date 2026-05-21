@@ -3,7 +3,7 @@ import { ACTION_LABELS } from '@/shared/audit/audit-store'
 import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
-} from '@/features/patient/data/clinical-labels'
+} from '@/features/patient/constants/clinical-labels'
 import type { LgpdExportData, LgpdFileFormat } from './types'
 import { downloadFile } from './utils'
 

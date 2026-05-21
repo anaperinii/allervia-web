@@ -3,7 +3,7 @@ import { ArrowLeft, Book, ChevronDown, Mail, MessageCircle } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { CardButton, IconButton } from '@/shared/components'
 import { CONTACT_SUPPORT_EMAIL } from '@/shared/constants/contact'
-import { FAQS } from '@/features/settings/data/faqs'
+import { FAQS } from '@/features/settings/constants/faqs'
 
 const quickLinks = [
   { icon: Book, label: 'Documentação', desc: 'Guias e tutoriais', color: '#18C1CB' },

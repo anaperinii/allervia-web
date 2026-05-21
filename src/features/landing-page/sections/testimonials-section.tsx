@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Blob, Reveal } from '@/shared/components'
 import { SectionHeader } from '@/features/landing-page/components/section-header'
-import { TESTIMONIALS, type Testimonial } from '@/features/landing-page/data/testimonials'
+import { TESTIMONIALS, type Testimonial } from '@/features/landing-page/constants/testimonials'
 
 function TestimonialCard({ quote, name, handle, initials }: Testimonial) {
   return (

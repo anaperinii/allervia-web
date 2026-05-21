@@ -1,5 +1,5 @@
 import { Modal } from '@/shared/components'
-import { ADJUSTMENT_TYPE_LABELS } from '@/features/patient/data/clinical-labels'
+import { ADJUSTMENT_TYPE_LABELS } from '@/features/patient/constants/clinical-labels'
 import type { ProtocolAdjustment } from '@/features/patient/stores/patient-store'
 
 interface AdjustHistoryModalProps {

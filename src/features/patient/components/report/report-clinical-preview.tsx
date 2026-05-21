@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale'
 import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
-} from '@/features/patient/data/clinical-labels'
+} from '@/features/patient/constants/clinical-labels'
 import type { Application, Patient } from '@/features/patient/stores/patient-store'
 import type { ReportFileFormat, ReportSectionId } from '@/features/patient/exporters/types'
 import { maskCpf, maskName, maskPhone } from '@/features/patient/exporters/utils'

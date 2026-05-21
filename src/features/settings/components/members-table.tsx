@@ -1,6 +1,6 @@
 import { cn } from '@/shared/lib/utils'
 import { MediaRow } from '@/shared/components'
-import { ROLE_BADGES } from '@/features/settings/data/team-roles'
+import { ROLE_BADGES } from '@/features/settings/constants/team-roles'
 import type { TeamMember } from '@/features/settings/stores/teams-store'
 import { MemberActionMenu } from './member-action-menu'
 

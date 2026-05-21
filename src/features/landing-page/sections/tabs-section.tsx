@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { cn } from '@/shared/lib/utils'
 import { Blob, Reveal } from '@/shared/components'
 import { SectionHeader } from '@/features/landing-page/components/section-header'
-import { PRODUCT_TABS, type TabId } from '@/features/landing-page/data/tabs'
+import { PRODUCT_TABS, type TabId } from '@/features/landing-page/constants/tabs'
 
 export function TabsSection() {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard')

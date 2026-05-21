@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Shield } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Modal, Button, TextInput, FieldLabel } from '@/shared/components'
-import { ROLE_BADGES, ROLE_DESCRIPTIONS, type TeamRole } from '@/features/settings/data/team-roles'
+import { ROLE_BADGES, ROLE_DESCRIPTIONS, type TeamRole } from '@/features/settings/constants/team-roles'
 
 interface InviteMemberModalProps {
   open: boolean

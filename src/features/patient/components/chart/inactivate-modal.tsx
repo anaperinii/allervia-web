@@ -5,7 +5,7 @@ import { Info } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Button, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
-import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/data/clinical-labels'
+import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
 import {
   inactivateSchema,
   INACTIVATE_DEFAULTS,

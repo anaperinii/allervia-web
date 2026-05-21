@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/components'
-import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/data/clinical-labels'
+import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
 import type { Inactivation, Patient } from '@/features/patient/stores/patient-store'
 
 interface PatientInfoSidebarProps {

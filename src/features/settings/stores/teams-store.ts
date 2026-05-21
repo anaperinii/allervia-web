@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { TeamRole } from '@/features/settings/data/team-roles'
+import type { TeamRole } from '@/features/settings/constants/team-roles'
 
 export interface TeamMember {
   id: string

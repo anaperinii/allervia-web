@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Info, PowerOff } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
-import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/data/clinical-labels'
+import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
 import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
 import {
   createReactivateSchema,

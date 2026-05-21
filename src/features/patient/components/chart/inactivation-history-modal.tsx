@@ -1,6 +1,6 @@
 import { cn } from '@/shared/lib/utils'
 import { Modal } from '@/shared/components'
-import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/data/clinical-labels'
+import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
 import type { Inactivation } from '@/features/patient/stores/patient-store'
 
 interface InactivationHistoryModalProps {

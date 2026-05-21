@@ -1,6 +1,6 @@
 import { Blob, Reveal } from '@/shared/components'
 import { SectionHeader } from '@/features/landing-page/components/section-header'
-import { AUTOMATION_FEATURES } from '@/features/landing-page/data/automation-features'
+import { AUTOMATION_FEATURES } from '@/features/landing-page/constants/automation-features'
 
 export function AutomationSection() {
   return (
