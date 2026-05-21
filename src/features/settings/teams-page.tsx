@@ -1,68 +1,39 @@
-import { useState, useMemo, useEffect } from 'react'
-import {} from '@tanstack/react-router'
-import { ArrowLeft, Plus, X, Mail, Shield, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal, Clock, Trash2, Pencil, UserX, UserCheck, Send, Lock } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, Lock, Plus } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useHasPermission } from '@/shared/identity/user-store'
-import { Modal, Button, IconButton, TextInput, MediaRow } from "@/shared/components"
+import { Button, IconButton, Select } from '@/shared/components'
+import type { TeamRole } from '@/features/settings/data/team-roles'
+import { useTeamsStore, type Invite, type TeamMember } from '@/features/settings/stores/teams-store'
+import { MembersTable } from '@/features/settings/components/members-table'
+import { InvitesTable } from '@/features/settings/components/invites-table'
+import { InviteMemberModal } from '@/features/settings/components/invite-member-modal'
+import { TeamConfirmModal, type TeamConfirmState } from '@/features/settings/components/team-confirm-modal'
+import { TablePagination } from '@/features/settings/components/table-pagination'
 
-interface TeamMember {
-  id: string
-  name: string
-  email: string
-  role: 'admin' | 'medico' | 'enfermeiro' | 'tecnico'
-  status: 'active' | 'inactive'
-  avatar: string
-  since: string
-}
-
-interface Invite {
-  id: string
-  email: string
-  role: 'admin' | 'medico' | 'enfermeiro' | 'tecnico'
-  sentAt: string
-  status: 'pending' | 'expired'
-}
-
-const roleLabels: Record<string, { label: string; color: string; bg: string }> = {
-  admin: { label: 'Administrador', color: 'text-[#A78BFA]', bg: 'bg-[#F0ECFE]' },
-  medico: { label: 'Médico', color: 'text-[#18C1CB]', bg: 'bg-[#E0F9F7]' },
-  enfermeiro: { label: 'Enfermeiro', color: 'text-[#F4845F]', bg: 'bg-[#FEF0EB]' },
-  tecnico: { label: 'Técnico', color: 'text-[#3F98AF]', bg: 'bg-[#E8F4F8]' },
-}
-
-const mockMembers: TeamMember[] = [
-  { id: '1', name: 'Dra. Karina Martins', email: 'karina@clinica.com', role: 'medico', status: 'active', avatar: 'KM', since: 'Jan 2024' },
-  { id: '2', name: 'Jaqueline Rodrigues', email: 'jaque@clinica.com', role: 'admin', status: 'active', avatar: 'JR', since: 'Mar 2023' },
-  { id: '3', name: 'Carlos Eduardo Silva', email: 'carlos@clinica.com', role: 'enfermeiro', status: 'active', avatar: 'CS', since: 'Jun 2024' },
-  { id: '4', name: 'Mariana Costa', email: 'mariana@clinica.com', role: 'tecnico', status: 'active', avatar: 'MC', since: 'Set 2024' },
-  { id: '5', name: 'Dr. André Lima', email: 'andre@clinica.com', role: 'medico', status: 'active', avatar: 'AL', since: 'Fev 2024' },
-  { id: '6', name: 'Fernanda Oliveira', email: 'fernanda@clinica.com', role: 'enfermeiro', status: 'inactive', avatar: 'FO', since: 'Abr 2024' },
-]
-
-const mockInvites: Invite[] = [
-  { id: 'i1', email: 'novo.medico@clinica.com', role: 'medico', sentAt: '08/04/2026', status: 'pending' },
-  { id: 'i2', email: 'estagiario@clinica.com', role: 'tecnico', sentAt: '05/04/2026', status: 'pending' },
-  { id: 'i3', email: 'antigo@email.com', role: 'enfermeiro', sentAt: '15/03/2026', status: 'expired' },
-]
+type StatusFilter = TeamMember['status'] | 'all'
+type RoleFilter = TeamRole | 'all'
 
 export function TeamsPage() {
   const canManageTeam = useHasPermission('manage_team')
+  const members = useTeamsStore((s) => s.members)
+  const invites = useTeamsStore((s) => s.invites)
+  const removeMember = useTeamsStore((s) => s.removeMember)
+  const setMemberStatus = useTeamsStore((s) => s.setMemberStatus)
+  const deleteInvite = useTeamsStore((s) => s.deleteInvite)
+
   const [tab, setTab] = useState<'members' | 'invites'>('members')
   const [showInviteModal, setShowInviteModal] = useState(false)
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState('medico')
-  const [roleFilter, setRoleFilter] = useState('Todos')
-  const [members, setMembers] = useState(mockMembers)
-  const [invites, setInvites] = useState(mockInvites)
-  const [statusFilter, setStatusFilter] = useState('active')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
-  const [openMenu, setOpenMenu] = useState<string | null>(null)
-  const [confirmModal, setConfirmModal] = useState<{ type: 'remove-member' | 'delete-invite' | 'resend-invite' | 'deactivate' | 'activate'; id: string; name: string } | null>(null)
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [confirmState, setConfirmState] = useState<TeamConfirmState | null>(null)
 
   const filteredMembers = useMemo(() => members
-    .filter((m) => statusFilter === 'Todos' || m.status === statusFilter)
-    .filter((m) => roleFilter === 'Todos' || m.role === roleFilter)
+    .filter((m) => statusFilter === 'all' || m.status === statusFilter)
+    .filter((m) => roleFilter === 'all' || m.role === roleFilter)
     .sort((a, b) => a.status === 'active' && b.status !== 'active' ? -1 : a.status !== 'active' && b.status === 'active' ? 1 : 0)
   , [members, statusFilter, roleFilter])
 
@@ -76,6 +47,26 @@ export function TeamsPage() {
 
   const pendingCount = invites.filter((i) => i.status === 'pending').length
 
+  const handleConfirm = () => {
+    if (!confirmState) return
+    switch (confirmState.type) {
+      case 'remove-member':
+        removeMember(confirmState.id)
+        break
+      case 'deactivate':
+        setMemberStatus(confirmState.id, 'inactive')
+        break
+      case 'activate':
+        setMemberStatus(confirmState.id, 'active')
+        break
+      case 'delete-invite':
+        deleteInvite(confirmState.id)
+        break
+      case 'resend-invite':
+        break
+    }
+    setConfirmState(null)
+  }
 
   if (!canManageTeam) {
     return (
@@ -85,10 +76,10 @@ export function TeamsPage() {
             <Lock size={22} className="text-(--text-muted)" />
           </div>
           <h2 className="text-base font-bold text-(--text) mb-1.5">Acesso restrito</h2>
-          <p className="text-xs text-(--text-muted) max-w-sm leading-relaxed mb-5">A gestão de equipe está disponível apenas para o perfil <span className="font-semibold text-(--text)">Administrador</span>. Troque de perfil pelo menu de usuário para acessar esta área.</p>
-          <Button variant="outline" to="/settings">
-            Voltar para configurações
-          </Button>
+          <p className="text-xs text-(--text-muted) max-w-sm leading-relaxed mb-5">
+            A gestão de equipe está disponível apenas para o perfil <span className="font-semibold text-(--text)">Administrador</span>. Troque de perfil pelo menu de usuário para acessar esta área.
+          </p>
+          <Button variant="outline" to="/settings">Voltar para configurações</Button>
         </div>
       </div>
     )
@@ -97,7 +88,6 @@ export function TeamsPage() {
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        {/* Header */}
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
@@ -108,318 +98,104 @@ export function TeamsPage() {
           </Button>
         </div>
 
-        {/* Tabs */}
-        <div className="border-b border-(--border-custom) px-5 flex items-center gap-1">
+        <div role="tablist" aria-label="Equipe" className="border-b border-(--border-custom) px-5 flex items-center gap-1">
           <button
+            role="tab"
+            aria-selected={tab === 'members'}
             onClick={() => setTab('members')}
-            className={cn("px-4 py-2.5 text-xs font-semibold border-b-2 transition-all", tab === 'members' ? "border-brand text-brand" : "border-transparent text-(--text-muted) hover:text-(--text)")}
+            className={cn(
+              'px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer',
+              tab === 'members' ? 'border-brand text-brand' : 'border-transparent text-(--text-muted) hover:text-(--text)',
+            )}
           >
             Membros ({members.length})
           </button>
           <button
+            role="tab"
+            aria-selected={tab === 'invites'}
             onClick={() => setTab('invites')}
-            className={cn("px-4 py-2.5 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5", tab === 'invites' ? "border-brand text-brand" : "border-transparent text-(--text-muted) hover:text-(--text)")}
+            className={cn(
+              'px-4 py-2.5 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer',
+              tab === 'invites' ? 'border-brand text-brand' : 'border-transparent text-(--text-muted) hover:text-(--text)',
+            )}
           >
             Convites
-            {pendingCount > 0 && <span className="text-[0.55rem] font-bold text-white bg-brand rounded-full px-1.5 py-px">{pendingCount}</span>}
+            {pendingCount > 0 && (
+              <span className="text-[0.55rem] font-bold text-white bg-brand rounded-full px-1.5 py-px">{pendingCount}</span>
+            )}
           </button>
         </div>
 
         {tab === 'members' ? (
           <>
-            {/* Filters */}
             <div className="px-5 py-3 border-b border-(--border-custom) flex items-center gap-2">
-              <div className="relative">
-                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-8 pl-2.5 pr-7 rounded-lg border border-(--border-custom) bg-white text-xs appearance-none cursor-pointer focus:outline-none transition-all">
-                  <option value="ativo">Ativos</option>
-                  <option value="inativo">Inativos</option>
-                  <option value="Todos">Todos</option>
-                </select>
-                <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-              </div>
-              <div className="relative">
-                <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="h-8 pl-2.5 pr-7 rounded-lg border border-(--border-custom) bg-white text-xs appearance-none cursor-pointer focus:outline-none transition-all">
-                  <option value="Todos">Todos os perfis</option>
-                  <option value="admin">Administrador</option>
-                  <option value="medico">Médico</option>
-                  <option value="enfermeiro">Enfermeiro</option>
-                  <option value="tecnico">Técnico</option>
-                </select>
-                <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-              </div>
+              <Select
+                aria-label="Filtrar por status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                className="h-8 bg-white text-xs min-w-28"
+              >
+                <option value="active">Ativos</option>
+                <option value="inactive">Inativos</option>
+                <option value="all">Todos</option>
+              </Select>
+              <Select
+                aria-label="Filtrar por perfil"
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+                className="h-8 bg-white text-xs min-w-36"
+              >
+                <option value="all">Todos os perfis</option>
+                <option value="admin">Administrador</option>
+                <option value="doctor">Médico</option>
+                <option value="nurse">Enfermeiro</option>
+                <option value="technician">Técnico</option>
+              </Select>
               <span className="text-[0.65rem] text-(--text-muted)">{filteredMembers.length} membros</span>
             </div>
 
-            {/* Members list */}
             <div className="flex-1 overflow-y-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-(--border-custom) bg-gray-50/80">
-                    <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5">Membro</th>
-                    <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5">Perfil</th>
-                    <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5">Status</th>
-                    <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5">Desde</th>
-                    <th className="text-right text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5 w-12"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedMembers.map((member) => {
-                    const role = roleLabels[member.role]
-                    return (
-                      <tr key={member.id} className="border-b border-(--border-custom) last:border-0 hover:bg-gray-50/50 transition-colors cursor-pointer">
-                        <td className="px-5 py-3">
-                          <MediaRow
-                            leading={
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-white text-[0.6rem] font-bold shrink-0">
-                                {member.avatar}
-                              </div>
-                            }
-                            title={member.name}
-                            description={member.email}
-                          />
-                        </td>
-                        <td className="px-5 py-3">
-                          <span className={cn("text-[0.65rem] font-semibold px-2 py-0.5 rounded-full", role.bg, role.color)}>
-                            {role.label}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3">
-                          <span className={cn("text-[0.65rem] font-medium flex items-center gap-1", member.status === 'active' ? "text-green-600" : "text-(--text-muted)")}>
-                            <span className={cn("w-1.5 h-1.5 rounded-full", member.status === 'active' ? "bg-green-500" : "bg-gray-300")} />
-                            {member.status === 'active' ? 'Ativo' : 'Inativo'}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3 text-xs text-(--text-muted)">{member.since}</td>
-                        <td className="px-5 py-3 text-right">
-                          <div className="relative inline-block">
-                            <button onClick={() => setOpenMenu(openMenu === member.id ? null : member.id)} className="h-7 w-7 flex items-center justify-center rounded-lg text-(--text-muted) hover:bg-gray-100 transition-all cursor-pointer">
-                              <MoreHorizontal size={14} />
-                            </button>
-                            {openMenu === member.id && (
-                              <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-(--border-custom) rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.1)] overflow-hidden z-50 animate-in fade-in-0 slide-in-from-top-1 duration-150">
-                                <button onClick={() => { setOpenMenu(null) }} className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-(--text) hover:bg-gray-50 transition-colors cursor-pointer">
-                                  <Pencil size={12} className="text-(--text-muted)" />
-                                  Editar perfil
-                                </button>
-                                <button onClick={() => { setOpenMenu(null) }} className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-(--text) hover:bg-gray-50 transition-colors cursor-pointer">
-                                  <Shield size={12} className="text-(--text-muted)" />
-                                  Alterar permissões
-                                </button>
-                                {member.status === 'active' ? (
-                                  <button onClick={() => { setOpenMenu(null); setConfirmModal({ type: 'deactivate', id: member.id, name: member.name }) }} className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer">
-                                    <UserX size={12} />
-                                    Desativar membro
-                                  </button>
-                                ) : (
-                                  <button onClick={() => { setOpenMenu(null); setConfirmModal({ type: 'activate', id: member.id, name: member.name }) }} className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-green-600 hover:bg-green-50 transition-colors cursor-pointer">
-                                    <UserCheck size={12} />
-                                    Reativar membro
-                                  </button>
-                                )}
-                                <div className="border-t border-(--border-custom)" />
-                                <button onClick={() => { setOpenMenu(null); setConfirmModal({ type: 'remove-member', id: member.id, name: member.name }) }} className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors cursor-pointer">
-                                  <Trash2 size={12} />
-                                  Remover da equipe
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+              <MembersTable
+                members={paginatedMembers}
+                openMenuId={openMenuId}
+                onToggleMenu={(id) => setOpenMenuId(openMenuId === id ? null : id)}
+                onCloseMenu={() => setOpenMenuId(null)}
+                onDeactivate={(member) => { setOpenMenuId(null); setConfirmState({ type: 'deactivate', id: member.id, name: member.name }) }}
+                onActivate={(member) => { setOpenMenuId(null); setConfirmState({ type: 'activate', id: member.id, name: member.name }) }}
+                onRemove={(member) => { setOpenMenuId(null); setConfirmState({ type: 'remove-member', id: member.id, name: member.name }) }}
+              />
             </div>
 
-            {/* Pagination */}
-            <div className="border-t border-(--border-custom) px-4 py-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-(--text-muted)">Registros por página</span>
-                  <div className="relative">
-                    <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))} className="h-7 pl-2 pr-6 rounded-md border border-(--border-custom) bg-white text-xs appearance-none cursor-pointer focus:outline-none transition-all">
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                    </select>
-                    <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-(--text-muted) mr-1.5">Página {currentPage} de {totalPages}</span>
-                  {[
-                    { icon: ChevronsLeft, action: () => setCurrentPage(1), disabled: currentPage === 1 },
-                    { icon: ChevronLeft, action: () => setCurrentPage(currentPage - 1), disabled: currentPage === 1 },
-                    { icon: ChevronRight, action: () => setCurrentPage(currentPage + 1), disabled: currentPage === totalPages },
-                    { icon: ChevronsRight, action: () => setCurrentPage(totalPages), disabled: currentPage === totalPages },
-                  ].map((btn, i) => {
-                    const Icon = btn.icon
-                    return (
-                      <button key={i} onClick={btn.action} disabled={btn.disabled} className="h-7 w-7 flex items-center justify-center rounded-md border border-(--border-custom) text-(--text-muted) disabled:opacity-40 disabled:cursor-not-allowed hover:border-teal-300 hover:text-teal-600 transition-all cursor-pointer">
-                        <Icon size={12} />
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
+            <TablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+            />
           </>
         ) : (
-          <>
-            {/* Invites list */}
-            <div className="flex-1 overflow-y-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-(--border-custom) bg-gray-50/80">
-                    <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5">E-mail</th>
-                    <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5">Perfil</th>
-                    <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5">Enviado em</th>
-                    <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5">Status</th>
-                    <th className="text-right text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5 w-24">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invites.map((invite) => {
-                    const role = roleLabels[invite.role]
-                    return (
-                      <tr key={invite.id} className="border-b border-(--border-custom) last:border-0 hover:bg-gray-50/50 transition-colors cursor-pointer">
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-(--text-muted) shrink-0">
-                              <Mail size={14} />
-                            </div>
-                            <span className="text-xs font-medium text-(--text)">{invite.email}</span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-3">
-                          <span className={cn("text-[0.65rem] font-semibold px-2 py-0.5 rounded-full", role.bg, role.color)}>
-                            {role.label}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3 text-xs text-(--text-muted)">{invite.sentAt}</td>
-                        <td className="px-5 py-3">
-                          {invite.status === 'pending' ? (
-                            <span className="text-[0.65rem] font-medium text-amber-600 flex items-center gap-1">
-                              <Clock size={11} />
-                              Pendente
-                            </span>
-                          ) : (
-                            <span className="text-[0.65rem] font-medium text-(--text-muted) flex items-center gap-1">
-                              <X size={11} />
-                              Expirado
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-5 py-3">
-                          <div className="flex items-center justify-end gap-1">
-                            {invite.status === 'pending' && (
-                              <button
-                                onClick={() => setConfirmModal({ type: 'resend-invite', id: invite.id, name: invite.email })}
-                                className="h-7 px-2.5 rounded-md border border-(--border-custom) text-[0.6rem] font-medium text-(--text-muted) hover:border-brand hover:text-brand transition-all cursor-pointer flex items-center gap-1"
-                              >
-                                <Send size={10} />
-                                Reenviar
-                              </button>
-                            )}
-                            <button
-                              onClick={() => setConfirmModal({ type: 'delete-invite', id: invite.id, name: invite.email })}
-                              className="h-7 w-7 flex items-center justify-center rounded-md text-(--text-muted) hover:bg-red-50 hover:text-red-500 transition-all cursor-pointer"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-
-              {invites.length === 0 && (
-                <div className="text-center py-12 text-xs text-(--text-muted)">Nenhum convite enviado.</div>
-              )}
-            </div>
-          </>
+          <div className="flex-1 overflow-y-auto">
+            <InvitesTable
+              invites={invites}
+              onResend={(invite: Invite) => setConfirmState({ type: 'resend-invite', id: invite.id, name: invite.email })}
+              onDelete={(invite: Invite) => setConfirmState({ type: 'delete-invite', id: invite.id, name: invite.email })}
+            />
+          </div>
         )}
       </div>
 
-      <Modal
+      <InviteMemberModal
         open={showInviteModal}
         onClose={() => setShowInviteModal(false)}
-        title="Convidar novo membro"
-        size="md"
-        footer={<>
-          <Button variant="outline" onClick={() => setShowInviteModal(false)}>Cancelar</Button>
-          <Button variant="primary" disabled={!inviteEmail} onClick={() => setShowInviteModal(false)}>Enviar convite</Button>
-        </>}
-      >
-        <div>
-          <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">E-mail do convidado</label>
-          <TextInput
-            type="email"
-            placeholder="nome@clinica.com"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Perfil de acesso</label>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(roleLabels).map(([key, val]) => (
-              <button
-                key={key}
-                onClick={() => setInviteRole(key)}
-                className={cn(
-                  "h-9 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5",
-                  inviteRole === key
-                    ? "border-brand bg-brand-50 text-brand-dark"
-                    : "border-(--border-custom) text-(--text-muted) hover:border-brand/50"
-                )}
-              >
-                <Shield size={12} />
-                {val.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="bg-brand-50 border border-brand/20 rounded-lg p-3">
-          <div className="text-[0.65rem] font-semibold text-brand-dark mb-1">Sobre este perfil</div>
-          <div className="text-[0.6rem] text-brand-dark/80 leading-relaxed">
-            {inviteRole === 'admin' && 'Acesso total ao sistema: gerenciar equipes, configurações, relatórios e todos os dados clínicos.'}
-            {inviteRole === 'medico' && 'Prescrever imunoterapias, acompanhar pacientes, ajustar protocolos e gerar relatórios clínicos.'}
-            {inviteRole === 'enfermeiro' && 'Registrar aplicações, evoluir pacientes, monitorar reações adversas e gerenciar agendamentos.'}
-            {inviteRole === 'tecnico' && 'Registrar aplicações sob supervisão, consultar prontuários e auxiliar no controle de estoque.'}
-          </div>
-        </div>
-      </Modal>
+        onSubmit={() => setShowInviteModal(false)}
+      />
 
-      {confirmModal && (() => {
-        const cfg = {
-          'remove-member': { icon: Trash2, tone: 'danger' as const, title: 'Remover membro', body: <>Tem certeza que deseja remover <span className="font-semibold text-(--text)">{confirmModal.name}</span> da equipe? Esta ação não pode ser desfeita.</>, btn: 'Remover', variant: 'danger' as const, onConfirm: () => { setMembers((m) => m.filter((x) => x.id !== confirmModal.id)); setConfirmModal(null) } },
-          'deactivate': { icon: UserX, tone: 'warning' as const, title: 'Desativar membro', body: <><span className="font-semibold text-(--text)">{confirmModal.name}</span> perderá o acesso ao sistema até ser reativado. Os dados não serão removidos.</>, btn: 'Desativar', variant: 'warning' as const, onConfirm: () => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'inactive' as const } : x)); setConfirmModal(null) } },
-          'activate': { icon: UserCheck, tone: 'success' as const, title: 'Reativar membro', body: <><span className="font-semibold text-(--text)">{confirmModal.name}</span> terá o acesso ao sistema restaurado com as mesmas permissões anteriores.</>, btn: 'Reativar', variant: 'success' as const, onConfirm: () => { setMembers((m) => m.map((x) => x.id === confirmModal.id ? { ...x, status: 'active' as const } : x)); setConfirmModal(null) } },
-          'resend-invite': { icon: Send, tone: 'brand' as const, title: 'Reenviar convite', body: <>Um novo e-mail de convite será enviado para <span className="font-semibold text-(--text)">{confirmModal.name}</span>. O convite anterior será invalidado.</>, btn: 'Reenviar', variant: 'primary' as const, onConfirm: () => setConfirmModal(null) },
-          'delete-invite': { icon: Trash2, tone: 'danger' as const, title: 'Excluir convite', body: <>O convite para <span className="font-semibold text-(--text)">{confirmModal.name}</span> será excluído permanentemente e não poderá mais ser utilizado.</>, btn: 'Excluir', variant: 'danger' as const, onConfirm: () => { setInvites((inv) => inv.filter((x) => x.id !== confirmModal.id)); setConfirmModal(null) } },
-        }[confirmModal.type]
-        const Icon = cfg.icon
-        return (
-          <Modal
-            open={true}
-            onClose={() => setConfirmModal(null)}
-            size="sm"
-            title={cfg.title}
-            icon={<Icon size={16} />}
-            tone={cfg.tone}
-            footer={<>
-              <Button variant="outline" onClick={() => setConfirmModal(null)}>Cancelar</Button>
-              <Button variant={cfg.variant} onClick={cfg.onConfirm}>{cfg.btn}</Button>
-            </>}
-          >
-            <p className="text-xs text-(--text-muted)">{cfg.body}</p>
-          </Modal>
-        )
-      })()}
+      <TeamConfirmModal
+        state={confirmState}
+        onClose={() => setConfirmState(null)}
+        onConfirm={handleConfirm}
+      />
     </div>
   )
 }

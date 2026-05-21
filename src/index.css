@@ -1,12 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource-variable/inter";
-@import "@fontsource/plus-jakarta-sans/latin-300.css";
-@import "@fontsource/plus-jakarta-sans/latin-400.css";
-@import "@fontsource/plus-jakarta-sans/latin-500.css";
-@import "@fontsource/plus-jakarta-sans/latin-600.css";
-@import "@fontsource/plus-jakarta-sans/latin-700.css";
-@import "@fontsource/plus-jakarta-sans/latin-800.css";
+@import "@fontsource/manrope/latin-200.css";
+@import "@fontsource/manrope/latin-300.css";
+@import "@fontsource/manrope/latin-400.css";
+@import "@fontsource/manrope/latin-500.css";
+@import "@fontsource/manrope/latin-600.css";
+@import "@fontsource/manrope/latin-700.css";
+@import "@fontsource/manrope/latin-800.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -28,8 +28,8 @@
   --color-brand-dark: #0FA8B2;
   --color-brand-light: #4DD4DB;
   --color-brand-50: #E6F9FA;
-  --font-family-sans: "Plus Jakarta Sans", "Inter Variable", system-ui, sans-serif;
-  --font-family-heading: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-family-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-family-heading: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 @layer base {

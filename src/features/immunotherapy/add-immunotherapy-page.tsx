@@ -183,7 +183,7 @@ export function AddImmunotherapyPage() {
                     <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Médico Responsável</label>
                     <Select invalid={!!errors.responsibleDoctor} {...register('responsibleDoctor')}>
                       <option value="" disabled>Selecione o médico</option>
-                      {PROFILES.filter((p) => p.role === 'medico').map((p) => (
+                      {PROFILES.filter((p) => p.role === 'doctor').map((p) => (
                         <option key={p.id} value={p.name}>{p.name} · {p.registration}</option>
                       ))}
                     </Select>

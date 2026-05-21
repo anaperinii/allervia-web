@@ -1,15 +1,14 @@
 import { useState } from 'react'
-import {} from '@tanstack/react-router'
-import { ArrowLeft, Book, MessageCircle, Mail, ChevronDown } from 'lucide-react'
+import { ArrowLeft, Book, ChevronDown, Mail, MessageCircle } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { IconButton, CardButton } from "@/shared/components"
+import { CardButton, IconButton } from '@/shared/components'
+import { CONTACT_SUPPORT_EMAIL } from '@/shared/constants/contact'
+import { FAQS } from '@/features/settings/data/faqs'
 
-const faqs = [
-  { q: 'Como cadastrar um novo paciente?', a: 'Acesse Imunoterapias > Adicionar Imunoterapia. O cadastro do paciente é feito na primeira etapa do fluxo, seguido da prescrição do protocolo.' },
-  { q: 'Como funciona o cálculo automático de doses?', a: 'O sistema segue o protocolo SCIT padrão: progressão de volume (0,1 → 0,2 → 0,4 → 0,8ml) dentro de cada concentração (1:10.000 → 1:1.000 → 1:100 → 1:10), com intervalo de 7 dias na indução.' },
-  { q: 'Posso ajustar o protocolo manualmente?', a: 'Sim. O médico responsável pode alterar concentração, volume e intervalo a qualquer momento, mediante justificativa clínica obrigatória.' },
-  { q: 'Como exportar relatórios?', a: 'Acesse Dashboard > Exportar Relatório. Você pode escolher o formato (PDF, Excel, CSV), período e quais gráficos incluir.' },
-  { q: 'O que acontece quando o paciente não comparece?', a: 'A aplicação é marcada como "Ausente" no agendamento. O sistema alerta para avaliação sobre necessidade de retroceder doses antes de prosseguir.' },
+const quickLinks = [
+  { icon: Book, label: 'Documentação', desc: 'Guias e tutoriais', color: '#18C1CB' },
+  { icon: MessageCircle, label: 'Chat de suporte', desc: 'Fale com a equipe', color: '#6366F1' },
+  { icon: Mail, label: 'E-mail', desc: CONTACT_SUPPORT_EMAIL, color: '#F4845F' },
 ]
 
 export function HelpPage() {
@@ -25,13 +24,8 @@ export function HelpPage() {
 
         <div className="flex-1 overflow-y-auto p-5">
           <div className="max-w-2xl mx-auto space-y-5">
-            {/* Quick links */}
             <div className="grid grid-cols-3 gap-3">
-              {[
-                { icon: Book, label: 'Documentação', desc: 'Guias e tutoriais', color: '#18C1CB' },
-                { icon: MessageCircle, label: 'Chat de suporte', desc: 'Fale com a equipe', color: '#6366F1' },
-                { icon: Mail, label: 'E-mail', desc: 'suporte@imunecare.com', color: '#F4845F' },
-              ].map((item) => {
+              {quickLinks.map((item) => {
                 const Icon = item.icon
                 return (
                   <CardButton
@@ -46,30 +40,39 @@ export function HelpPage() {
               })}
             </div>
 
-            {/* FAQ */}
-            <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Perguntas frequentes</h2>
               </div>
               <div className="divide-y divide-(--border-custom)">
-                {faqs.map((faq, i) => (
-                  <div key={i}>
-                    <button
-                      onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                      className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50/50 transition-colors cursor-pointer"
-                    >
-                      <span className="text-xs font-medium text-(--text) pr-4">{faq.q}</span>
-                      <ChevronDown size={14} className={cn("text-(--text-muted) shrink-0 transition-transform", openFaq === i && "rotate-180")} />
-                    </button>
-                    <div className={cn("overflow-hidden transition-all duration-300", openFaq === i ? "max-h-40 opacity-100" : "max-h-0 opacity-0")}>
-                      <div className="px-4 pb-3 text-xs text-(--text-muted) leading-relaxed">{faq.a}</div>
+                {FAQS.map((faq, index) => {
+                  const expanded = openFaq === index
+                  const panelId = `faq-panel-${index}`
+                  return (
+                    <div key={faq.question}>
+                      <button
+                        type="button"
+                        aria-expanded={expanded}
+                        aria-controls={panelId}
+                        onClick={() => setOpenFaq(expanded ? null : index)}
+                        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50/50 transition-colors cursor-pointer"
+                      >
+                        <span className="text-xs font-medium text-(--text) pr-4">{faq.question}</span>
+                        <ChevronDown size={14} className={cn('text-(--text-muted) shrink-0 transition-transform', expanded && 'rotate-180')} />
+                      </button>
+                      <div
+                        id={panelId}
+                        role="region"
+                        className={cn('overflow-hidden transition-all duration-300', expanded ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0')}
+                      >
+                        <div className="px-4 pb-3 text-xs text-(--text-muted) leading-relaxed">{faq.answer}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
-            </div>
+            </section>
 
-            {/* Version */}
             <div className="text-center text-[0.65rem] text-(--text-muted) py-2">
               ImuneCare v2.0.0-beta · Precisa de ajuda? Entre em contato pelo chat.
             </div>

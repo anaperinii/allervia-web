@@ -1,16 +1,45 @@
-import { useState } from 'react'
-import {} from '@tanstack/react-router'
-import { ArrowLeft, Type, Layout, Contrast, MousePointer, Eye } from 'lucide-react'
+import { ArrowLeft, Contrast, Eye, Layout, MousePointer, Type } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { IconButton, Switch } from "@/shared/components"
+import { IconButton, Switch } from '@/shared/components'
+import { useSettingsStore, type Density, type Theme } from '@/features/settings/stores/settings-store'
+
+const THEME_OPTIONS: { id: Theme; label: string; preview: string }[] = [
+  { id: 'light', label: 'Claro', preview: 'bg-white border-2' },
+  { id: 'dark', label: 'Escuro', preview: 'bg-gray-900 border-2' },
+  { id: 'auto', label: 'Automático', preview: 'bg-linear-to-r from-white to-gray-900 border-2' },
+]
+
+const DENSITY_OPTIONS: { id: Density; label: string; desc: string }[] = [
+  { id: 'compact', label: 'Compacta', desc: 'Mais informação por tela' },
+  { id: 'comfortable', label: 'Confortável', desc: 'Equilíbrio padrão' },
+  { id: 'spacious', label: 'Espaçosa', desc: 'Mais espaço de respiro' },
+]
 
 export function PersonalizationPage() {
-  const [theme, setTheme] = useState('light')
-  const [density, setDensity] = useState('comfortable')
-  const [highContrast, setHighContrast] = useState(false)
-  const [reducedMotion, setReducedMotion] = useState(false)
-  const [largeText, setLargeText] = useState(false)
-  const [focusIndicators, setFocusIndicators] = useState(true)
+  const theme = useSettingsStore((s) => s.theme)
+  const setTheme = useSettingsStore((s) => s.setTheme)
+  const density = useSettingsStore((s) => s.density)
+  const setDensity = useSettingsStore((s) => s.setDensity)
+  const fontSize = useSettingsStore((s) => s.fontSize)
+  const setFontSize = useSettingsStore((s) => s.setFontSize)
+  const highContrast = useSettingsStore((s) => s.highContrast)
+  const setHighContrast = useSettingsStore((s) => s.setHighContrast)
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion)
+  const setReducedMotion = useSettingsStore((s) => s.setReducedMotion)
+  const largeText = useSettingsStore((s) => s.largeText)
+  const setLargeText = useSettingsStore((s) => s.setLargeText)
+  const focusIndicators = useSettingsStore((s) => s.focusIndicators)
+  const setFocusIndicators = useSettingsStore((s) => s.setFocusIndicators)
+
+  const visualToggles = [
+    { label: 'Alto contraste', desc: 'Aumenta o contraste entre texto e fundo', icon: Contrast, value: highContrast, set: setHighContrast },
+    { label: 'Texto ampliado', desc: 'Aumenta o tamanho base da fonte em 20%', icon: Eye, value: largeText, set: setLargeText },
+  ] as const
+
+  const motionToggles = [
+    { label: 'Reduzir animações', desc: 'Minimiza transições e efeitos de movimento', icon: MousePointer, value: reducedMotion, set: setReducedMotion },
+    { label: 'Indicadores de foco visíveis', desc: 'Destaca o elemento selecionado ao navegar por teclado', icon: Eye, value: focusIndicators, set: setFocusIndicators },
+  ] as const
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
@@ -22,59 +51,66 @@ export function PersonalizationPage() {
 
         <div className="flex-1 overflow-y-auto p-5">
           <div className="max-w-2xl mx-auto space-y-5">
-            {/* Tema */}
-            <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Tema</h2>
               </div>
               <div className="p-4">
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { id: 'light', label: 'Claro', preview: 'bg-white border-2' },
-                    { id: 'dark', label: 'Escuro', preview: 'bg-gray-900 border-2' },
-                    { id: 'auto', label: 'Automático', preview: 'bg-gradient-to-r from-white to-gray-900 border-2' },
-                  ].map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => setTheme(t.id)}
-                      className={cn("rounded-lg border p-3 text-center transition-all cursor-pointer", theme === t.id ? "border-brand shadow-[0_0_0_1px_#18C1CB]" : "border-(--border-custom) hover:border-gray-300")}
-                    >
-                      <div className={cn("h-12 rounded-md mb-2 mx-auto w-full", t.preview, theme === t.id ? "border-brand" : "border-(--border-custom)")} />
-                      <span className="text-xs font-medium text-(--text)">{t.label}</span>
-                    </button>
-                  ))}
+                <div className="grid grid-cols-3 gap-3" role="radiogroup" aria-label="Tema">
+                  {THEME_OPTIONS.map((option) => {
+                    const selected = theme === option.id
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setTheme(option.id)}
+                        className={cn(
+                          'rounded-lg border p-3 text-center transition-all cursor-pointer',
+                          selected ? 'border-brand shadow-[0_0_0_1px_var(--brand)]' : 'border-(--border-custom) hover:border-gray-300',
+                        )}
+                      >
+                        <div className={cn('h-12 rounded-md mb-2 mx-auto w-full', option.preview, selected ? 'border-brand' : 'border-(--border-custom)')} />
+                        <span className="text-xs font-medium text-(--text)">{option.label}</span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Densidade */}
-            <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
                 <Layout size={14} className="text-(--text-muted)" />
                 <h2 className="text-xs font-bold text-(--text)">Densidade da interface</h2>
               </div>
               <div className="p-4">
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { id: 'compact', label: 'Compacta', desc: 'Mais informação por tela' },
-                    { id: 'comfortable', label: 'Confortável', desc: 'Equilíbrio padrão' },
-                    { id: 'spacious', label: 'Espaçosa', desc: 'Mais espaço de respiro' },
-                  ].map((d) => (
-                    <button
-                      key={d.id}
-                      onClick={() => setDensity(d.id)}
-                      className={cn("rounded-lg border p-3 text-left transition-all cursor-pointer", density === d.id ? "border-brand bg-brand-50/30" : "border-(--border-custom) hover:border-gray-300")}
-                    >
-                      <div className="text-xs font-semibold text-(--text)">{d.label}</div>
-                      <div className="text-[0.6rem] text-(--text-muted) mt-0.5">{d.desc}</div>
-                    </button>
-                  ))}
+                <div className="grid grid-cols-3 gap-3" role="radiogroup" aria-label="Densidade da interface">
+                  {DENSITY_OPTIONS.map((option) => {
+                    const selected = density === option.id
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setDensity(option.id)}
+                        className={cn(
+                          'rounded-lg border p-3 text-left transition-all cursor-pointer',
+                          selected ? 'border-brand bg-brand-50/30' : 'border-(--border-custom) hover:border-gray-300',
+                        )}
+                      >
+                        <div className="text-xs font-semibold text-(--text)">{option.label}</div>
+                        <div className="text-[0.6rem] text-(--text-muted) mt-0.5">{option.desc}</div>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Fonte */}
-            <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
                 <Type size={14} className="text-(--text-muted)" />
                 <h2 className="text-xs font-bold text-(--text)">Tamanho da fonte</h2>
@@ -82,22 +118,30 @@ export function PersonalizationPage() {
               <div className="p-4">
                 <div className="flex items-center gap-4">
                   <span className="text-[0.7rem] text-(--text-muted)">A</span>
-                  <input type="range" min="12" max="18" defaultValue="14" className="flex-1 accent-brand cursor-pointer" />
+                  <input
+                    type="range"
+                    min={12}
+                    max={18}
+                    value={fontSize}
+                    onChange={(e) => setFontSize(Number(e.target.value))}
+                    aria-label="Tamanho da fonte"
+                    aria-valuemin={12}
+                    aria-valuemax={18}
+                    aria-valuenow={fontSize}
+                    className="flex-1 accent-brand cursor-pointer"
+                  />
                   <span className="text-base text-(--text-muted)">A</span>
+                  <span className="text-xs font-medium text-(--text) w-8 text-right tabular-nums">{fontSize}px</span>
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Acessibilidade visual */}
-            <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Acessibilidade visual</h2>
               </div>
               <div className="p-4 space-y-3">
-                {[
-                  { label: 'Alto contraste', desc: 'Aumenta o contraste entre texto e fundo', icon: Contrast, value: highContrast, set: setHighContrast },
-                  { label: 'Texto ampliado', desc: 'Aumenta o tamanho base da fonte em 20%', icon: Eye, value: largeText, set: setLargeText },
-                ].map((item, i) => (
+                {visualToggles.map((item, i) => (
                   <div key={item.label}>
                     {i > 0 && <div className="border-t border-(--border-custom) mb-3" />}
                     <div className="flex items-center justify-between">
@@ -115,18 +159,14 @@ export function PersonalizationPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
 
-            {/* Movimento e navegação */}
-            <div className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Movimento e navegação</h2>
               </div>
               <div className="p-4 space-y-3">
-                {[
-                  { label: 'Reduzir animações', desc: 'Minimiza transições e efeitos de movimento', icon: MousePointer, value: reducedMotion, set: setReducedMotion },
-                  { label: 'Indicadores de foco visíveis', desc: 'Destaca o elemento selecionado ao navegar por teclado', icon: Eye, value: focusIndicators, set: setFocusIndicators },
-                ].map((item, i) => (
+                {motionToggles.map((item, i) => (
                   <div key={item.label}>
                     {i > 0 && <div className="border-t border-(--border-custom) mb-3" />}
                     <div className="flex items-center justify-between">
@@ -144,7 +184,7 @@ export function PersonalizationPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </div>

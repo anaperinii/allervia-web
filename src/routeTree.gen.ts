@@ -29,7 +29,6 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AppointmentsRouteImport } from './routes/appointments'
 import { Route as AdvancedSettingsRouteImport } from './routes/advanced-settings'
 import { Route as AddImmunotherapyRouteImport } from './routes/add-immunotherapy'
-import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PatientPatientIdRouteImport } from './routes/patient.$patientId'
@@ -134,11 +133,6 @@ const AddImmunotherapyRoute = AddImmunotherapyRouteImport.update({
   path: '/add-immunotherapy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AccessibilityRoute = AccessibilityRouteImport.update({
-  id: '/accessibility',
-  path: '/accessibility',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -158,7 +152,6 @@ const PatientPatientIdRoute = PatientPatientIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/accessibility': typeof AccessibilityRoute
   '/add-immunotherapy': typeof AddImmunotherapyRoute
   '/advanced-settings': typeof AdvancedSettingsRoute
   '/appointments': typeof AppointmentsRoute
@@ -184,7 +177,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/accessibility': typeof AccessibilityRoute
   '/add-immunotherapy': typeof AddImmunotherapyRoute
   '/advanced-settings': typeof AdvancedSettingsRoute
   '/appointments': typeof AppointmentsRoute
@@ -211,7 +203,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/accessibility': typeof AccessibilityRoute
   '/add-immunotherapy': typeof AddImmunotherapyRoute
   '/advanced-settings': typeof AdvancedSettingsRoute
   '/appointments': typeof AppointmentsRoute
@@ -239,7 +230,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
-    | '/accessibility'
     | '/add-immunotherapy'
     | '/advanced-settings'
     | '/appointments'
@@ -265,7 +255,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
-    | '/accessibility'
     | '/add-immunotherapy'
     | '/advanced-settings'
     | '/appointments'
@@ -291,7 +280,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
-    | '/accessibility'
     | '/add-immunotherapy'
     | '/advanced-settings'
     | '/appointments'
@@ -318,7 +306,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  AccessibilityRoute: typeof AccessibilityRoute
   AddImmunotherapyRoute: typeof AddImmunotherapyRoute
   AdvancedSettingsRoute: typeof AdvancedSettingsRoute
   AppointmentsRoute: typeof AppointmentsRoute
@@ -484,13 +471,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AddImmunotherapyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/accessibility': {
-      id: '/accessibility'
-      path: '/accessibility'
-      fullPath: '/accessibility'
-      preLoaderRoute: typeof AccessibilityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -518,7 +498,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  AccessibilityRoute: AccessibilityRoute,
   AddImmunotherapyRoute: AddImmunotherapyRoute,
   AdvancedSettingsRoute: AdvancedSettingsRoute,
   AppointmentsRoute: AppointmentsRoute,
