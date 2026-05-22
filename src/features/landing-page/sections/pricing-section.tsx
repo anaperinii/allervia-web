@@ -6,7 +6,7 @@ import { PLANS, MAX_PLAN_FEATURES, type PlanId } from '@/shared/constants/plans'
 
 const HIGHLIGHTED_PLAN: PlanId = 'professional'
 const CTA_LABELS: Record<PlanId, string> = {
-  starter: 'Começar grátis',
+  starter: 'Começar agora',
   professional: 'Começar agora',
   enterprise: 'Falar com vendas',
 }
