@@ -26,7 +26,9 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
         </div>
         <h1 className="font-extrabold text-2xl text-(--text)">Verificação de identidade</h1>
         <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
-          Enviamos um código de 6 dígitos para <span className="font-semibold text-(--text)">{email}</span>. Insira-o abaixo para continuar.
+          Enviamos um código para <span className="font-semibold text-(--text)">{email}</span>.
+          <br />
+          Insira-o abaixo para continuar.
         </p>
       </div>
 

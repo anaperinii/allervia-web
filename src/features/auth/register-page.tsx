@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check } from 'lucide-react'
 import { AuthLayout } from '@/features/auth/components/auth-layout'
+import { AuthStepTransition } from '@/features/auth/components/auth-step-transition'
 import { registerSchema, type RegisterForm } from '@/features/auth/forms/register'
 import { WelcomeStep } from '@/features/auth/components/register-steps/welcome-step'
 import { FormStep } from '@/features/auth/components/register-steps/form-step'
@@ -72,31 +73,33 @@ export function RegisterPage() {
 
   return (
     <AuthLayout>
-      {step === 'welcome' && (
-        <WelcomeStep
-          maskedEmail={maskedEmail}
-          inviterName={STUB_INVITE.inviterName}
-          organizationName={STUB_INVITE.organizationName}
-          onContinue={() => setStep('form')}
-        />
-      )}
-      {step === 'form' && (
-        <FormStep form={form} maskedEmail={maskedEmail} onSubmit={submitForm} />
-      )}
-      {step === 'verify' && (
-        <VerifyStep
-          code={code}
-          onCodeChange={handleCodeChange}
-          codeError={codeError}
-          maskedEmail={maskedEmail}
-          resendKey={resendKey}
-          onSubmit={submitCode}
-          onResend={handleResendCode}
-        />
-      )}
-      {step === 'done' && submittedData && (
-        <DoneStep data={submittedData} maskedEmail={maskedEmail} />
-      )}
+      <AuthStepTransition stepKey={step}>
+        {step === 'welcome' && (
+          <WelcomeStep
+            maskedEmail={maskedEmail}
+            inviterName={STUB_INVITE.inviterName}
+            organizationName={STUB_INVITE.organizationName}
+            onContinue={() => setStep('form')}
+          />
+        )}
+        {step === 'form' && (
+          <FormStep form={form} maskedEmail={maskedEmail} onSubmit={submitForm} />
+        )}
+        {step === 'verify' && (
+          <VerifyStep
+            code={code}
+            onCodeChange={handleCodeChange}
+            codeError={codeError}
+            maskedEmail={maskedEmail}
+            resendKey={resendKey}
+            onSubmit={submitCode}
+            onResend={handleResendCode}
+          />
+        )}
+        {step === 'done' && submittedData && (
+          <DoneStep data={submittedData} maskedEmail={maskedEmail} />
+        )}
+      </AuthStepTransition>
     </AuthLayout>
   )
 }

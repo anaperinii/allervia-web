@@ -25,7 +25,9 @@ export function VerifyStep({ code, onCodeChange, codeError, maskedEmail, resendK
         </div>
         <h1 className="font-extrabold text-2xl text-(--text)">Verifique sua conta</h1>
         <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
-          Enviamos um código de 6 dígitos para <span className="font-semibold text-(--text)">{maskedEmail}</span>. Insira-o abaixo para ativar sua conta.
+          Enviamos um código para <span className="font-semibold text-(--text)">{maskedEmail}</span>.
+          <br />
+          Insira-o abaixo para ativar sua conta.
         </p>
       </div>
 

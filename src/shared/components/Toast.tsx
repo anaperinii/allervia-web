@@ -47,7 +47,7 @@ const VARIANT_CLASS: Record<ToastVariant, VariantStyle> = {
 
 const POSITION_CLASS: Record<ToastPosition, string> = {
   'top-right': 'top-6 right-6',
-  'top-center': 'top-44 left-1/2 -translate-x-1/2',
+  'top-center': 'top-6 left-1/2 -translate-x-1/2',
 }
 
 const COMPACT_SHADOW =
