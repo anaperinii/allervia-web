@@ -17,11 +17,11 @@ export const PLANS: Plan[] = [
   {
     id: 'starter',
     name: 'Starter',
-    price: 'Gratuito',
-    period: '',
+    price: 'R$ 89',
+    period: '/mês',
     description: 'Para clínicas iniciando com imunoterapia alérgica',
     icon: Zap,
-    features: ['Até 50 pacientes', 'Protocolo SCIT básico', '1 profissional', 'Dashboard básico', 'Suporte por e-mail'],
+    features: ['Até 50 pacientes', 'Protocolos SCIT e SLIT', 'Até 4 profissionais', 'Dashboard padrão', 'Agendamentos'],
   },
   {
     id: 'professional',
@@ -30,7 +30,7 @@ export const PLANS: Plan[] = [
     period: '/mês',
     description: 'Para clínicas em crescimento',
     icon: Building,
-    features: ['Até 500 pacientes', 'Protocolos SCIT e SLIT', 'Até 10 profissionais', 'Dashboard completo', 'Relatórios exportáveis', 'Agendamentos', 'Suporte prioritário'],
+    features: ['Até 500 pacientes', 'Protocolos SCIT e SLIT', 'Até 10 profissionais', 'Dashboard personalizável', 'Relatórios exportáveis', 'Integração com Google Agenda'],
   },
   {
     id: 'enterprise',
@@ -39,7 +39,7 @@ export const PLANS: Plan[] = [
     period: '',
     description: 'Para redes de clínicas e hospitais',
     icon: Crown,
-    features: ['Pacientes ilimitados', 'Todos os protocolos', 'Profissionais ilimitados', 'Multi-unidade', 'API de integração', 'Auditoria avançada', 'Gerente de conta dedicado', 'SLA 99.9%'],
+    features: ['Pacientes ilimitados', 'Protocolos além da imunoterapia alérgica', 'Profissionais ilimitados', 'Multi-unidade', 'API de integração', 'Auditoria avançada', 'Suporte dedicado'],
   },
 ]
 

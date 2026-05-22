@@ -20,7 +20,7 @@ export function NewPasswordStep({ form, onSubmit }: NewPasswordStepProps) {
         </div>
         <h1 className="font-extrabold text-2xl text-(--text)">Criar nova senha</h1>
         <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
-          Defina uma nova senha segura para sua conta. Ela deve atender aos requisitos mínimos de segurança.
+          Defina uma nova senha segura para sua conta.
         </p>
       </div>
 

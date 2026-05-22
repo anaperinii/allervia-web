@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check } from 'lucide-react'
 import { AuthLayout } from '@/features/auth/components/auth-layout'
+import { AuthStepTransition } from '@/features/auth/components/auth-step-transition'
 import {
   forgotPasswordEmailSchema,
   forgotPasswordResetSchema,
@@ -72,21 +73,23 @@ export function ForgotPasswordPage() {
 
   return (
     <AuthLayout>
-      {step === 'request' && <RequestEmailStep form={emailForm} onSubmit={submitEmail} />}
-      {step === 'code' && (
-        <VerifyCodeStep
-          code={code}
-          onCodeChange={handleCodeChange}
-          codeError={codeError}
-          email={submittedEmail}
-          resendKey={resendKey}
-          onSubmit={submitCode}
-          onBack={() => setStep('request')}
-          onResend={handleResendCode}
-        />
-      )}
-      {step === 'reset' && <NewPasswordStep form={resetForm} onSubmit={submitReset} />}
-      {step === 'done' && <DoneStep />}
+      <AuthStepTransition stepKey={step}>
+        {step === 'request' && <RequestEmailStep form={emailForm} onSubmit={submitEmail} />}
+        {step === 'code' && (
+          <VerifyCodeStep
+            code={code}
+            onCodeChange={handleCodeChange}
+            codeError={codeError}
+            email={submittedEmail}
+            resendKey={resendKey}
+            onSubmit={submitCode}
+            onBack={() => setStep('request')}
+            onResend={handleResendCode}
+          />
+        )}
+        {step === 'reset' && <NewPasswordStep form={resetForm} onSubmit={submitReset} />}
+        {step === 'done' && <DoneStep />}
+      </AuthStepTransition>
     </AuthLayout>
   )
 }
