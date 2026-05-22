@@ -31,14 +31,19 @@ function RootComponent() {
   const isPublicRoute = publicRoutes.includes(location.pathname)
   const isAuthRoute = authRoutes.includes(location.pathname)
   const hideHeader = noHeaderRoutes.includes(location.pathname)
+  const hasHero = location.pathname === '/'
 
   if (isPublicRoute) {
     return (
       <div className="min-h-screen">
-        {!hideHeader && <Header isAuthPage={isAuthRoute} />}
-        <PageTransition key={location.pathname}>
+        {!hideHeader && <Header isAuthPage={isAuthRoute} hasHero={hasHero} />}
+        {isAuthRoute ? (
           <Outlet />
-        </PageTransition>
+        ) : (
+          <PageTransition key={location.pathname}>
+            <Outlet />
+          </PageTransition>
+        )}
         <ToastViewport />
       </div>
     )

@@ -1,16 +1,22 @@
-import { Mail, ShieldCheck } from 'lucide-react'
+import { Clock, Mail } from 'lucide-react'
 import { Button, VerificationCodeInput } from '@/shared/components'
+import { useCountdown } from '@/shared/hooks/use-countdown'
+
+const CODE_TTL_SECONDS = 10 * 60
 
 interface VerifyStepProps {
   code: string
   onCodeChange: (value: string) => void
   codeError: string | null
   maskedEmail: string
+  resendKey: number
   onSubmit: () => void
-  onResend?: () => void
+  onResend: () => void
 }
 
-export function VerifyStep({ code, onCodeChange, codeError, maskedEmail, onSubmit, onResend }: VerifyStepProps) {
+export function VerifyStep({ code, onCodeChange, codeError, maskedEmail, resendKey, onSubmit, onResend }: VerifyStepProps) {
+  const { formatted, isExpired } = useCountdown(CODE_TTL_SECONDS, resendKey)
+
   return (
     <>
       <div className="flex flex-col items-center text-center gap-1.5">
@@ -29,7 +35,7 @@ export function VerifyStep({ code, onCodeChange, codeError, maskedEmail, onSubmi
         {codeError && <span className="text-[0.6rem] text-red-500">{codeError}</span>}
       </div>
 
-      <Button tone="brand" variant="solid" prominent fullWidth size="lg" onClick={onSubmit}>
+      <Button tone="brand" variant="solid" prominent fullWidth size="lg" onClick={onSubmit} disabled={isExpired}>
         Verificar e ativar conta
       </Button>
 
@@ -39,10 +45,16 @@ export function VerifyStep({ code, onCodeChange, codeError, maskedEmail, onSubmi
         </button>
       </div>
 
-      <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-2.5">
-        <ShieldCheck size={14} className="text-amber-600 shrink-0" />
-        <p className="text-[0.6rem] text-amber-700 leading-relaxed">
-          O código expira em 10 minutos. Caso não encontre o e-mail, verifique sua pasta de spam ou promoções.
+      <div className="flex items-center gap-2 rounded-lg px-3.5 py-2.5 backdrop-blur-md bg-amber-200/25 border border-amber-300/40">
+        <Clock size={14} className="text-amber-600 shrink-0" />
+        <p className="text-[0.65rem] text-amber-800 leading-relaxed">
+          {isExpired ? (
+            <>O código expirou. Solicite um novo para continuar.</>
+          ) : (
+            <>
+              O código expira em <span className="font-semibold tabular-nums">{formatted}</span>. Caso não encontre o e-mail, verifique sua pasta de spam ou promoções.
+            </>
+          )}
         </p>
       </div>
     </>

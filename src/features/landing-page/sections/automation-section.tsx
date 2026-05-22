@@ -5,21 +5,16 @@ import { AUTOMATION_FEATURES } from '@/features/landing-page/constants/automatio
 export function AutomationSection() {
   return (
     <section id="automation" className="py-24 px-[5%] relative overflow-hidden">
-      <Blob className="-top-28 -left-16 w-95 h-95 bg-linear-to-br from-cyan-200/20 to-teal-300/15" />
-      <Blob className="-top-32 -right-24 w-100 h-100 bg-teal-200/20" />
-      <Blob className="-bottom-32 -left-20 w-100 h-100 bg-linear-to-br from-teal-200/20 to-cyan-200/20" />
-      <Blob className="-bottom-28 -right-20 w-95 h-95 bg-cyan-200/20" />
+      <Blob className="top-1/2 -left-40 -translate-y-1/2 w-100 h-100 bg-linear-to-br from-cyan-200/20 to-teal-300/15" />
+      <Blob className="top-1/2 -right-40 -translate-y-1/2 w-100 h-100 bg-linear-to-br from-teal-200/20 to-cyan-200/20" />
 
-      <Reveal className="bg-linear-to-br from-teal-800 via-teal-700 to-cyan-600 rounded-4xl p-8 sm:p-12 lg:p-16 mx-0 overflow-hidden relative">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_80%_50%,rgba(255,255,255,0.05)_0%,transparent_60%)]" />
-
+      <Reveal className="border-2 border-[#7FFFD4]/70 rounded-4xl p-8 sm:p-12 lg:p-16 mx-0 relative shadow-[0_8px_32px_rgba(20,184,166,0.08)]">
         <div className="relative z-10">
           <div className="mb-10">
             <SectionHeader
               eyebrow="Automação Clínica"
               title="Cálculo automático e fluxos sem retrabalho"
               description="Do cadastro ao relatório em segundos. Defina o protocolo e o ImuneCare gerencia a progressão de doses, alertas e agendamentos com base em regras clínicas validadas."
-              tone="dark"
             />
           </div>
 
@@ -29,13 +24,13 @@ export function AutomationSection() {
               return (
                 <div
                   key={feature.title}
-                  className="bg-white/10 border border-white/15 rounded-2xl p-6 backdrop-blur-lg text-white transition-all duration-200 hover:bg-white/15 hover:-translate-y-0.75"
+                  className="bg-(--card) border-[1.5px] border-(--border-custom) rounded-(--radius) p-7 transition-all duration-250 cursor-default hover:border-teal-300 hover:shadow-[0_8px_32px_rgba(20,184,166,0.1)] hover:-translate-y-0.75"
                 >
-                  <div className="mb-3">
-                    <Icon size={28} className="text-white/90" />
+                  <div className="w-12 h-12 rounded-xl bg-[linear-gradient(135deg,var(--color-teal-50),var(--color-teal-100))] border border-teal-200 flex items-center justify-center mb-4">
+                    <Icon size={22} className="text-teal-600" />
                   </div>
-                  <h4 className="text-[0.9rem] font-bold mb-1.5">{feature.title}</h4>
-                  <p className="text-[0.8rem] opacity-75 leading-normal">{feature.description}</p>
+                  <h4 className="text-base font-bold mb-2">{feature.title}</h4>
+                  <p className="text-[0.875rem] text-(--text-muted) leading-[1.6]">{feature.description}</p>
                 </div>
               )
             })}
