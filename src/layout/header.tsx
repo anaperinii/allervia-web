@@ -13,17 +13,29 @@ const navLinks = [
 
 interface HeaderProps {
   isAuthPage?: boolean
+  hasHero?: boolean
 }
 
-export function Header({ isAuthPage = false }: HeaderProps) {
+export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false)
+  const [pastHero, setPastHero] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.scrollY > window.innerHeight - 80
+  })
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+      setPastHero(window.scrollY > window.innerHeight - 80)
+    }
+    handleScroll()
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  const isTransparent = (hasHero && !pastHero) || isAuthPage
+  const showShadow = !isTransparent && scrolled
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -38,17 +50,35 @@ export function Header({ isAuthPage = false }: HeaderProps) {
     <>
       <nav
         className={cn(
-          "fixed top-0 left-0 right-0 z-100 flex items-center justify-between px-[5%] h-17 transition-all duration-300",
-          "glass border-b",
-          scrolled || isAuthPage
+          "fixed top-0 left-0 right-0 z-100 flex items-center justify-between px-[5%] h-17 transition-all duration-500 ease-out border-b",
+          isTransparent ? "" : "glass",
+          showShadow
             ? "border-(--border-custom) shadow-[0_2px_20px_rgba(13,148,136,0.06)]"
             : "border-transparent"
         )}
+        style={{ animation: 'header-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both' }}
       >
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 no-underline" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <img src={imunecareLogo} alt="ImuneCare" className="w-7 h-7 rounded-md" />
-          <span className="text-xl font-extrabold tracking-[-0.5px] gradient-text">
+        <Link to="/" className="relative flex items-center gap-2 no-underline" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <span
+            aria-hidden="true"
+            className={cn(
+              "absolute -inset-3 -z-1 rounded-full transition-opacity duration-500 ease-out",
+              isTransparent ? "opacity-100" : "opacity-0"
+            )}
+            style={{
+              background:
+                'radial-gradient(ellipse at center, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 100%)',
+              backdropFilter: 'blur(22px) saturate(120%)',
+              WebkitBackdropFilter: 'blur(22px) saturate(120%)',
+              maskImage:
+                'radial-gradient(ellipse at center, black 0%, black 55%, transparent 100%)',
+              WebkitMaskImage:
+                'radial-gradient(ellipse at center, black 0%, black 55%, transparent 100%)',
+            }}
+          />
+          <img src={imunecareLogo} alt="ImuneCare" className="relative w-7 h-7 rounded-md" />
+          <span className="relative text-xl font-extrabold tracking-[-0.5px] gradient-text">
             ImuneCare
           </span>
         </Link>

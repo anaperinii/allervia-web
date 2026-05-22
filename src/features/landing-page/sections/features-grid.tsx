@@ -4,11 +4,9 @@ import { FEATURES } from '@/features/landing-page/constants/features'
 
 export function FeaturesGrid() {
   return (
-    <section id="features" className="py-24 px-[5%] relative overflow-hidden">
-      <Blob className="-top-40 -left-40 w-112.5 h-112.5 bg-linear-to-br from-cyan-200/20 to-teal-300/20" />
-      <Blob className="-top-32 -right-20 w-95 h-95 bg-linear-to-br from-teal-200/25 to-cyan-100/15" />
-      <Blob className="-bottom-32 -left-24 w-105 h-105 bg-linear-to-br from-teal-200/20 to-cyan-200/15" />
-      <Blob className="-bottom-28 -right-20 w-90 h-90 bg-cyan-200/20" />
+    <section id="features" className="py-24 px-[5%] relative overflow-x-clip">
+      <Blob className="top-1/2 -left-40 -translate-y-1/2 w-105 h-105 bg-linear-to-br from-cyan-200/20 to-teal-300/20" />
+      <Blob className="top-1/2 -right-40 -translate-y-1/2 w-100 h-100 bg-linear-to-br from-teal-200/25 to-cyan-100/15" />
 
       <Reveal className="relative mb-12">
         <SectionHeader

@@ -17,6 +17,8 @@ export function ToastViewport() {
       title={top.title}
       description={top.description}
       autoDismissMs={top.autoDismissMs}
+      position={top.position}
+      compact={top.compact}
     />
   )
 }

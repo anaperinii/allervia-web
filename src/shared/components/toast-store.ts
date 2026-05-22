@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { ReactNode } from 'react'
-import type { ToastVariant } from './Toast'
+import type { ToastPosition, ToastVariant } from './Toast'
 
 export interface ToastItem {
   id: string
@@ -9,6 +9,8 @@ export interface ToastItem {
   title: string
   description?: ReactNode
   autoDismissMs?: number
+  position?: ToastPosition
+  compact?: boolean
 }
 
 export type ToastInput = Omit<ToastItem, 'id'>

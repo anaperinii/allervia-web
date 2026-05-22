@@ -14,11 +14,8 @@ const CTA_LABELS: Record<PlanId, string> = {
 export function PricingSection() {
   return (
     <section id="pricing" className="py-24 px-[5%] relative overflow-hidden">
-      <Blob className="-top-32 -left-20 w-100 h-100 bg-linear-to-br from-teal-200/20 to-cyan-200/20" />
-      <Blob className="-top-28 -right-20 w-95 h-95 bg-cyan-200/20" />
-      <Blob className="top-1/3 left-1/2 -translate-x-1/2 w-125 h-87.5 bg-teal-100/25" />
-      <Blob className="-bottom-32 -left-16 w-95 h-95 bg-cyan-100/25" />
-      <Blob className="-bottom-28 -right-24 w-105 h-105 bg-teal-200/20" />
+      <Blob className="top-1/2 -left-40 -translate-y-1/2 w-100 h-100 bg-linear-to-br from-teal-200/20 to-cyan-200/20" />
+      <Blob className="top-1/2 -right-40 -translate-y-1/2 w-105 h-105 bg-teal-200/20" />
 
       <Reveal className="mb-14 relative">
         <SectionHeader

@@ -1,13 +1,14 @@
 import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { AuthCard } from '@/features/auth/components/auth-card'
+import { Check } from 'lucide-react'
+import { AuthLayout } from '@/features/auth/components/auth-layout'
 import { registerSchema, type RegisterForm } from '@/features/auth/forms/register'
-import { Reveal } from '@/shared/components'
 import { WelcomeStep } from '@/features/auth/components/register-steps/welcome-step'
 import { FormStep } from '@/features/auth/components/register-steps/form-step'
 import { VerifyStep } from '@/features/auth/components/register-steps/verify-step'
 import { DoneStep } from '@/features/auth/components/register-steps/done-step'
+import { toast } from '@/shared/components'
 
 type Step = 'welcome' | 'form' | 'verify' | 'done'
 
@@ -27,6 +28,7 @@ export function RegisterPage() {
   const [code, setCode] = useState('')
   const [codeError, setCodeError] = useState<string | null>(null)
   const [submittedData, setSubmittedData] = useState<RegisterForm | null>(null)
+  const [resendKey, setResendKey] = useState(0)
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -55,39 +57,46 @@ export function RegisterPage() {
     if (codeError) setCodeError(null)
   }
 
-  return (
-    <div className="flex flex-col min-h-screen bg-white pt-17">
-      <div className="flex flex-1 items-center justify-center px-6 sm:px-8 gap-16 max-w-6xl mx-auto w-full py-10">
-        <Reveal delay={100}>
-          <AuthCard initialSlide={1} />
-        </Reveal>
+  const handleResendCode = () => {
+    setCode('')
+    setCodeError(null)
+    setResendKey((k) => k + 1)
+    toast.success({
+      icon: <Check size={14} />,
+      title: 'Novo código enviado para o seu email',
+      position: 'top-center',
+      compact: true,
+      autoDismissMs: 3000,
+    })
+  }
 
-        <Reveal delay={200} className="flex flex-col w-full max-w-sm gap-6">
-          {step === 'welcome' && (
-            <WelcomeStep
-              maskedEmail={maskedEmail}
-              inviterName={STUB_INVITE.inviterName}
-              organizationName={STUB_INVITE.organizationName}
-              onContinue={() => setStep('form')}
-            />
-          )}
-          {step === 'form' && (
-            <FormStep form={form} maskedEmail={maskedEmail} onSubmit={submitForm} />
-          )}
-          {step === 'verify' && (
-            <VerifyStep
-              code={code}
-              onCodeChange={handleCodeChange}
-              codeError={codeError}
-              maskedEmail={maskedEmail}
-              onSubmit={submitCode}
-            />
-          )}
-          {step === 'done' && submittedData && (
-            <DoneStep data={submittedData} maskedEmail={maskedEmail} />
-          )}
-        </Reveal>
-      </div>
-    </div>
+  return (
+    <AuthLayout>
+      {step === 'welcome' && (
+        <WelcomeStep
+          maskedEmail={maskedEmail}
+          inviterName={STUB_INVITE.inviterName}
+          organizationName={STUB_INVITE.organizationName}
+          onContinue={() => setStep('form')}
+        />
+      )}
+      {step === 'form' && (
+        <FormStep form={form} maskedEmail={maskedEmail} onSubmit={submitForm} />
+      )}
+      {step === 'verify' && (
+        <VerifyStep
+          code={code}
+          onCodeChange={handleCodeChange}
+          codeError={codeError}
+          maskedEmail={maskedEmail}
+          resendKey={resendKey}
+          onSubmit={submitCode}
+          onResend={handleResendCode}
+        />
+      )}
+      {step === 'done' && submittedData && (
+        <DoneStep data={submittedData} maskedEmail={maskedEmail} />
+      )}
+    </AuthLayout>
   )
 }

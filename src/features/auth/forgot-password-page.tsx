@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { AuthCard } from '@/features/auth/components/auth-card'
+import { Check } from 'lucide-react'
+import { AuthLayout } from '@/features/auth/components/auth-layout'
 import {
   forgotPasswordEmailSchema,
   forgotPasswordResetSchema,
   type ForgotPasswordEmailForm,
   type ForgotPasswordResetForm,
 } from '@/features/auth/forms/forgot-password'
-import { Reveal } from '@/shared/components'
 import { RequestEmailStep } from '@/features/auth/components/forgot-password-steps/request-email-step'
 import { VerifyCodeStep } from '@/features/auth/components/forgot-password-steps/verify-code-step'
 import { NewPasswordStep } from '@/features/auth/components/forgot-password-steps/new-password-step'
 import { DoneStep } from '@/features/auth/components/forgot-password-steps/done-step'
+import { toast } from '@/shared/components'
 
 type Step = 'request' | 'code' | 'reset' | 'done'
 
@@ -21,6 +22,7 @@ export function ForgotPasswordPage() {
   const [submittedEmail, setSubmittedEmail] = useState('')
   const [code, setCode] = useState('')
   const [codeError, setCodeError] = useState<string | null>(null)
+  const [resendKey, setResendKey] = useState(0)
 
   const emailForm = useForm<ForgotPasswordEmailForm>({
     resolver: zodResolver(forgotPasswordEmailSchema),
@@ -53,35 +55,38 @@ export function ForgotPasswordPage() {
     if (codeError) setCodeError(null)
   }
 
+  const handleResendCode = () => {
+    setCode('')
+    setCodeError(null)
+    setResendKey((k) => k + 1)
+    toast.success({
+      icon: <Check size={14} />,
+      title: 'Novo código enviado para o seu email',
+      position: 'top-center',
+      compact: true,
+      autoDismissMs: 3000,
+    })
+  }
+
   const submitReset = resetForm.handleSubmit(() => setStep('done'))
 
   return (
-    <div className="flex flex-col min-h-screen bg-white pt-17">
-      <div className="flex flex-1 items-center justify-center px-6 sm:px-8 gap-16 max-w-6xl mx-auto w-full py-10">
-        <Reveal delay={100} className="flex flex-col w-full max-w-sm gap-6">
-          {step === 'request' && (
-            <RequestEmailStep form={emailForm} onSubmit={submitEmail} />
-          )}
-          {step === 'code' && (
-            <VerifyCodeStep
-              code={code}
-              onCodeChange={handleCodeChange}
-              codeError={codeError}
-              email={submittedEmail}
-              onSubmit={submitCode}
-              onBack={() => setStep('request')}
-            />
-          )}
-          {step === 'reset' && (
-            <NewPasswordStep form={resetForm} onSubmit={submitReset} />
-          )}
-          {step === 'done' && <DoneStep />}
-        </Reveal>
-
-        <Reveal delay={200}>
-          <AuthCard initialSlide={0} />
-        </Reveal>
-      </div>
-    </div>
+    <AuthLayout>
+      {step === 'request' && <RequestEmailStep form={emailForm} onSubmit={submitEmail} />}
+      {step === 'code' && (
+        <VerifyCodeStep
+          code={code}
+          onCodeChange={handleCodeChange}
+          codeError={codeError}
+          email={submittedEmail}
+          resendKey={resendKey}
+          onSubmit={submitCode}
+          onBack={() => setStep('request')}
+          onResend={handleResendCode}
+        />
+      )}
+      {step === 'reset' && <NewPasswordStep form={resetForm} onSubmit={submitReset} />}
+      {step === 'done' && <DoneStep />}
+    </AuthLayout>
   )
 }

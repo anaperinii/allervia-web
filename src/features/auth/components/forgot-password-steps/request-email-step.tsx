@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowLeft, KeyRound, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, KeyRound } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Button, FieldLabel, TextInput } from '@/shared/components'
 import type { ForgotPasswordEmailForm } from '@/features/auth/forms/forgot-password'
@@ -37,16 +37,9 @@ export function RequestEmailStep({ form, onSubmit }: RequestEmailStepProps) {
         Enviar código de verificação
       </Button>
 
-      <div className="flex items-center gap-2 bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5">
-        <ShieldCheck size={14} className="text-brand shrink-0" />
-        <p className="text-[0.6rem] text-(--text-muted) leading-relaxed">
-          Este processo é protegido por criptografia de ponta a ponta. Nenhum dado sensível é armazenado durante a verificação.
-        </p>
-      </div>
-
-      <Link to="/login" className="flex items-center justify-end gap-1.5 text-xs font-medium text-(--text-muted) hover:text-brand no-underline transition-colors">
+      <Link to="/login" className="flex items-center justify-start gap-1.5 text-xs font-medium text-(--text-muted) hover:text-brand no-underline transition-colors">
         <ArrowLeft size={13} />
-        Voltar ao login
+        Voltar
       </Link>
     </form>
   )

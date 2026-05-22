@@ -7,10 +7,8 @@ const PROTOCOL_STAGES = ['1:10.000', '1:1.000', '1:100', '1:10']
 export function SplitSection() {
   return (
     <section className="py-16 relative overflow-hidden">
-      <Blob className="-top-32 -left-24 w-105 h-105 bg-linear-to-br from-teal-200/20 to-cyan-200/15" />
-      <Blob className="-top-28 -right-20 w-90 h-90 bg-cyan-200/20" />
-      <Blob className="-bottom-28 -left-16 w-95 h-95 bg-linear-to-br from-cyan-200/20 to-teal-300/15" />
-      <Blob className="-bottom-32 -right-24 w-100 h-100 bg-teal-200/20" />
+      <Blob className="top-1/2 -left-40 -translate-y-1/2 w-105 h-105 bg-linear-to-br from-cyan-200/20 to-teal-300/15" />
+      <Blob className="top-1/2 -right-40 -translate-y-1/2 w-100 h-100 bg-teal-200/20" />
 
       <Reveal id="about" className="grid grid-cols-1 lg:grid-cols-2 gap-[5%] items-center bg-(--bg2) rounded-4xl p-6 sm:p-8 lg:p-16 mx-[5%] relative">
         <div className="bg-linear-to-br from-teal-500 to-cyan-400 rounded-3xl p-8 sm:p-10 min-h-70 sm:min-h-80 flex flex-col justify-between relative overflow-hidden">
