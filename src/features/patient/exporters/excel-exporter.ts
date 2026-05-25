@@ -3,11 +3,13 @@ import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
+import { derivePatientDates } from '@/features/patient/lib/patient-dates'
 import type { ReportData } from './types'
 import { downloadFile } from './utils'
 
 export function exportExcel(data: ReportData) {
-  const { patient, realizedApps, sections } = data
+  const { patient, realizedApplications, sections } = data
+  const { inductionStart } = derivePatientDates(realizedApplications, patient.id)
   const rows: string[] = []
   rows.push(`<tr><th colspan="2" style="background:#18C1CB;color:#fff;padding:8px;font-size:14px;">Relatório Clínico — ${patient.name}</th></tr>`)
   rows.push(`<tr><td colspan="2" style="padding:6px;font-size:11px;color:#666;">Gerado em: ${data.generatedAt}${data.anonymized ? ' · Dados anonimizados' : ''}</td></tr>`)
@@ -38,7 +40,7 @@ export function exportExcel(data: ReportData) {
       ['Tipo', patient.immunotherapyType],
       ['Via', patient.administrationRoute],
       ['Extrato', patient.extract],
-      ['Início Indução', patient.inductionStart],
+      ['Início Indução', inductionStart ?? '-'],
       ['Meta', patient.targetConcentrationVolume],
       ['Dose Atual', patient.currentDoseConcentration],
       ['Intervalo', `${patient.currentInterval} dias`],
@@ -46,11 +48,11 @@ export function exportExcel(data: ReportData) {
   }
 
   if (sections.includes('applications')) {
-    rows.push(`<tr><th colspan="2" style="background:#B6F2EC;padding:6px;text-align:left;font-size:12px;">Histórico de Aplicações (${realizedApps.length})</th></tr>`)
-    const appRows = realizedApps
-      .map((a) => `<tr><td style="padding:3px 8px;font-size:10px;">${a.date}</td><td style="padding:3px 8px;font-size:10px;">${a.dose}</td><td style="padding:3px 8px;font-size:10px;">${a.cycle.days}d</td><td style="padding:3px 8px;font-size:10px;">${a.sideEffect === 'yes' ? 'Sim' : 'Não'}</td></tr>`)
+    rows.push(`<tr><th colspan="2" style="background:#B6F2EC;padding:6px;text-align:left;font-size:12px;">Histórico de Aplicações (${realizedApplications.length})</th></tr>`)
+    const applicationRows = realizedApplications
+      .map((application) => `<tr><td style="padding:3px 8px;font-size:10px;">${application.date}</td><td style="padding:3px 8px;font-size:10px;">${application.dose}</td><td style="padding:3px 8px;font-size:10px;">${application.cycle.days}d</td><td style="padding:3px 8px;font-size:10px;">${application.sideEffect === 'yes' ? 'Sim' : 'Não'}</td></tr>`)
       .join('')
-    rows.push(`<tr><td colspan="2" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tr><th style="padding:4px 8px;font-size:10px;background:#eee;">Data</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Dose</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Intervalo</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Reação</th></tr>${appRows}</table></td></tr>`)
+    rows.push(`<tr><td colspan="2" style="padding:0;"><table style="width:100%;border-collapse:collapse;"><tr><th style="padding:4px 8px;font-size:10px;background:#eee;">Data</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Dose</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Intervalo</th><th style="padding:4px 8px;font-size:10px;background:#eee;">Reação</th></tr>${applicationRows}</table></td></tr>`)
     rows.push(`<tr><td colspan="2" style="height:8px;"></td></tr>`)
   }
 
@@ -89,7 +91,7 @@ export function exportExcel(data: ReportData) {
 
   if (sections.includes('progress')) {
     addSection('Progressão do Protocolo', [
-      ['Aplicações realizadas', String(realizedApps.length)],
+      ['Aplicações realizadas', String(realizedApplications.length)],
       ['Concentração atual', patient.currentDoseConcentration.split(' - ')[0]],
       ['Intervalo', `${patient.currentInterval} dias`],
     ])

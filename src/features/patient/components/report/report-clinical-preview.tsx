@@ -6,13 +6,14 @@ import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
+import { derivePatientDates } from '@/features/patient/lib/patient-dates'
 import type { Application, Patient } from '@/features/patient/stores/patient-store'
 import type { ReportFileFormat, ReportSectionId } from '@/features/patient/exporters/types'
 import { maskCpf, maskName, maskPhone } from '@/features/patient/exporters/utils'
 
 interface ReportClinicalPreviewProps {
   patient: Patient
-  realizedApps: Application[]
+  realizedApplications: Application[]
   reactionsCount: number
   selectedSections: ReportSectionId[]
   fileFormat: ReportFileFormat
@@ -21,19 +22,20 @@ interface ReportClinicalPreviewProps {
 
 export function ReportClinicalPreview({
   patient,
-  realizedApps,
+  realizedApplications,
   reactionsCount,
   selectedSections,
   fileFormat,
   anonymized,
 }: ReportClinicalPreviewProps) {
+  const { inductionStart } = derivePatientDates(realizedApplications, patient.id)
   return (
     <div className="bg-white rounded-xl border border-(--border-custom) shadow-sm max-w-2xl mx-auto">
       <div className="px-6 py-5 border-b border-(--border-custom)">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-(--text)">
-              Relatório Clínico — {anonymized ? maskName(patient.name, true) : patient.name}
+              Relatório Clínico: {anonymized ? maskName(patient.name, true) : patient.name}
             </h2>
             <p className="text-[0.65rem] text-(--text-muted) mt-0.5">
               Gerado em {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
@@ -77,7 +79,7 @@ export function ReportClinicalPreview({
                   ['Tipo', patient.immunotherapyType],
                   ['Via', patient.administrationRoute],
                   ['Extrato', patient.extract],
-                  ['Início Indução', patient.inductionStart],
+                  ['Início Indução', inductionStart ?? '-'],
                   ['Meta', patient.targetConcentrationVolume],
                   ['Dose Atual', patient.currentDoseConcentration],
                   ['Intervalo Atual', `${patient.currentInterval} dias`],
@@ -86,7 +88,7 @@ export function ReportClinicalPreview({
             )}
 
             {selectedSections.includes('applications') && (
-              <Section title={`Histórico de Aplicações (${realizedApps.length})`}>
+              <Section title={`Histórico de Aplicações (${realizedApplications.length})`}>
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-(--border-custom)">
@@ -97,7 +99,7 @@ export function ReportClinicalPreview({
                     </tr>
                   </thead>
                   <tbody>
-                    {realizedApps.slice(0, 15).map((app) => (
+                    {realizedApplications.slice(0, 15).map((app) => (
                       <tr key={app.id} className="border-b border-(--border-custom) last:border-0">
                         <td className="py-1.5 text-[0.65rem] text-(--text)">{app.date}</td>
                         <td className="py-1.5 text-[0.65rem] text-(--text)">{app.dose}</td>
@@ -111,8 +113,8 @@ export function ReportClinicalPreview({
                     ))}
                   </tbody>
                 </table>
-                {realizedApps.length > 15 && (
-                  <div className="text-center text-[0.6rem] text-(--text-muted) mt-2">… e mais {realizedApps.length - 15} aplicações</div>
+                {realizedApplications.length > 15 && (
+                  <div className="text-center text-[0.6rem] text-(--text-muted) mt-2">… e mais {realizedApplications.length - 15} aplicações</div>
                 )}
               </Section>
             )}
@@ -123,7 +125,7 @@ export function ReportClinicalPreview({
                   <p className="text-[0.7rem] text-(--text-muted)">Nenhuma reação adversa registrada.</p>
                 ) : (
                   <div className="space-y-2">
-                    {realizedApps.filter((a) => a.sideEffect === 'yes').map((app) => (
+                    {realizedApplications.filter((a) => a.sideEffect === 'yes').map((app) => (
                       <div key={app.id} className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                         <div className="flex items-center justify-between">
                           <span className="text-[0.65rem] font-semibold text-amber-700">{app.date} — {app.dose}</span>
@@ -191,7 +193,7 @@ export function ReportClinicalPreview({
             {selectedSections.includes('progress') && (
               <Section title="Progressão do Protocolo">
                 <div className="grid grid-cols-3 gap-3">
-                  <StatBox value={String(realizedApps.length)} label="Aplicações" />
+                  <StatBox value={String(realizedApplications.length)} label="Aplicações" />
                   <StatBox value={patient.currentDoseConcentration.split(' - ')[0]} label="Concentração atual" />
                   <StatBox value={`${patient.currentInterval}d`} label="Intervalo" />
                 </div>

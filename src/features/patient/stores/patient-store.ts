@@ -64,8 +64,6 @@ export interface Patient {
   responsibleDoctor: string
   status: 'active' | 'inactive'
   immunotherapyType: string
-  inductionStart: string
-  maintenanceStart: string | null
   administrationRoute: string
   extract: string
   targetConcentrationVolume: string
@@ -112,9 +110,7 @@ interface PatientState {
     reactivateInterval: number
     justification: string
   }) => void
-  /** Agenda uma aplicação inicial (RNE-026 — geração automática no cadastro de imunoterapia). */
   scheduleApplication: (app: Application) => void
-  /** Registra uma aplicação realizada e agenda a próxima automaticamente. */
   recordEvolution: (payload: { completed: Application; next: Application }) => void
 }
 
@@ -129,10 +125,6 @@ export function seedInactivationsFor(patientId: string, snapshotConcentration: s
   if (!seed) return undefined
   return [{ id: `inact-seed-${patientId}`, ...seed, snapshotConcentration, snapshotInterval }]
 }
-
-// ════════════════════════════════════════════════════════════════════
-// Geração programática das aplicações seguindo protocolo SCIT (RNE-010)
-// ════════════════════════════════════════════════════════════════════
 
 function fmtDate(d: Date) {
   const day = String(d.getDate()).padStart(2, '0')
@@ -252,6 +244,16 @@ const REACTION_SEEDS: Record<string, { reportedEffects: string; medications: str
     reportedEffects: 'Urticária generalizada + prurido difuso 20min pós-aplicação',
     medications: 'Anti-histamínico VO + corticoide (Prednisona 20mg)',
     note: 'Reação moderada. Tratamento suspenso a pedido médico.',
+  },
+  'm5': {
+    reportedEffects: 'Eritema local leve (~3cm) com prurido transitório',
+    medications: 'Compressas frias locais',
+    note: 'Reação local leve durante a indução. Conduta: mantém protocolo.',
+  },
+  'm17': {
+    reportedEffects: 'Pápula urticariforme com prurido moderado peri-aplicação',
+    medications: 'Loratadina 10mg VO',
+    note: 'Início da manutenção. Reação resolvida em 24h sem ajuste de protocolo.',
   },
 }
 

@@ -1,16 +1,17 @@
 import { useEffect } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { AlertTriangle, Save } from 'lucide-react'
+import { Info } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Button, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
+import { Button, ConfirmDiscardModal, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
 import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
 import {
   adjustProtocolSchema,
   ADJUST_PROTOCOL_DEFAULTS,
   type AdjustProtocolForm,
 } from '@/features/patient/forms/adjust-protocol'
+import { useUnsavedChangesGuard } from '@/shared/hooks/use-unsaved-changes-guard'
 import type { Patient, ProtocolAdjustment, ProtocolAdjustmentType } from '@/features/patient/stores/patient-store'
 
 interface AdjustProtocolModalProps {
@@ -26,11 +27,28 @@ export function AdjustProtocolModal({ open, patient, onClose, onConfirm }: Adjus
     mode: 'onBlur',
     defaultValues: ADJUST_PROTOCOL_DEFAULTS,
   })
-  const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } = form
-  const type = watch('type')
-  const newInterval = watch('newInterval')
+  const { control, register, handleSubmit, reset, setValue, formState: { errors } } = form
+  const [type, newInterval, newConcentration, newType, newRoute, newExtract, justification, otherReason] = useWatch({
+    control,
+    name: ['type', 'newInterval', 'newConcentration', 'newType', 'newRoute', 'newExtract', 'justification', 'otherReason'],
+  })
   const isCustomInterval = newInterval && !PROTOCOL_INTERVAL_PRESET_STRINGS.includes(newInterval)
   const selectInterval = isCustomInterval ? 'outro' : newInterval
+
+  const hasChanges =
+    newConcentration !== patient.currentDoseConcentration ||
+    newInterval.trim() !== String(patient.currentInterval) ||
+    newType !== patient.immunotherapyType ||
+    newRoute !== patient.administrationRoute ||
+    newExtract !== patient.extract
+
+  const isDirty = hasChanges || !!type || !!justification?.trim() || !!otherReason?.trim()
+
+  const { requestClose, guardOpen, cancelDiscard, confirmDiscard } = useUnsavedChangesGuard({
+    open,
+    isDirty,
+    onClose,
+  })
 
   useEffect(() => {
     if (open) {
@@ -68,20 +86,21 @@ export function AdjustProtocolModal({ open, patient, onClose, onConfirm }: Adjus
   })
 
   return (
+    <>
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={requestClose}
       title="Ajustar protocolo"
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button tone="brand" variant="solid" leftIcon={<Save size={13} />} onClick={submit}>Confirmar ajuste</Button>
+          <Button variant="outline" onClick={requestClose}>Cancelar</Button>
+          <Button tone="brand" variant="solid" onClick={submit} disabled={!hasChanges}>Confirmar ajuste</Button>
         </>
       }
     >
-      <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
-        <AlertTriangle size={14} className="text-amber-600 shrink-0 mt-0.5" />
-        <p className="text-[0.65rem] text-amber-800 leading-relaxed">
+      <div className="flex items-start gap-2 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2.5">
+        <Info size={14} className="text-brand shrink-0 mt-0.5" />
+        <p className="text-[0.65rem] text-teal-800 leading-relaxed">
           Alterações no protocolo são <span className="font-bold">irreversíveis</span>. A progressão continuará a partir dos novos valores e o desvio será destacado no prontuário e nos relatórios clínicos.
         </p>
       </div>
@@ -108,8 +127,11 @@ export function AdjustProtocolModal({ open, patient, onClose, onConfirm }: Adjus
         </FieldLabel>
       )}
 
-      <div className="bg-gray-50 border border-(--border-custom) rounded-lg p-3 space-y-2.5">
-        <div className="text-[0.6rem] font-bold text-(--text-muted) uppercase tracking-wider">Dados da imunoterapia</div>
+      <div className="space-y-2.5">
+        <div className="text-xs font-bold text-(--text) flex items-center gap-2">
+          <div className="w-1 h-4 rounded-full bg-brand" />
+          Dados da imunoterapia
+        </div>
         <div className="grid grid-cols-2 gap-2">
           <FieldLabel label="Tipo">
             <Select {...register('newType')}>
@@ -134,48 +156,40 @@ export function AdjustProtocolModal({ open, patient, onClose, onConfirm }: Adjus
         </FieldLabel>
       </div>
 
-      <div className="bg-gray-50 border border-(--border-custom) rounded-lg p-3 space-y-2.5">
-        <div className="text-[0.6rem] font-bold text-(--text-muted) uppercase tracking-wider">Parâmetros do protocolo</div>
+      <div className="space-y-2.5">
+        <div className="text-xs font-bold text-(--text) flex items-center gap-2">
+          <div className="w-1 h-4 rounded-full bg-brand" />
+          Parâmetros do protocolo
+        </div>
 
         <FieldLabel label="Concentração e volume" error={errors.newConcentration?.message}>
-          <div className="flex items-center gap-2">
-            <span className="text-[0.65rem] text-(--text-muted) line-through shrink-0">{patient.currentDoseConcentration}</span>
-            <span className="text-(--text-muted) text-xs">→</span>
-            <TextInput
-              placeholder="Ex: 1:1.000 — 0,2ml"
-              invalid={!!errors.newConcentration}
-              className="flex-1"
-              {...register('newConcentration')}
-            />
-          </div>
+          <TextInput
+            placeholder="Ex: 1:1.000 — 0,2ml"
+            invalid={!!errors.newConcentration}
+            {...register('newConcentration')}
+          />
         </FieldLabel>
 
         <FieldLabel label="Intervalo entre doses" error={errors.newInterval?.message}>
-          <div className="flex items-center gap-2">
-            <span className="text-[0.65rem] text-(--text-muted) line-through shrink-0">{patient.currentInterval} dias</span>
-            <span className="text-(--text-muted) text-xs">→</span>
-            <div className="flex-1">
-              <Controller
-                control={control}
-                name="newInterval"
-                render={({ field }) => (
-                  <Select
-                    value={selectInterval}
-                    onChange={(e) => field.onChange(e.target.value === 'outro' ? ' ' : e.target.value)}
-                    onBlur={field.onBlur}
-                    invalid={!!errors.newInterval}
-                  >
-                    <option value="" disabled>Selecione</option>
-                    <option value="7">7 dias</option>
-                    <option value="14">14 dias</option>
-                    <option value="21">21 dias</option>
-                    <option value="28">28 dias</option>
-                    <option value="outro">Outro</option>
-                  </Select>
-                )}
-              />
-            </div>
-          </div>
+          <Controller
+            control={control}
+            name="newInterval"
+            render={({ field }) => (
+              <Select
+                value={selectInterval}
+                onChange={(e) => field.onChange(e.target.value === 'outro' ? ' ' : e.target.value)}
+                onBlur={field.onBlur}
+                invalid={!!errors.newInterval}
+              >
+                <option value="" disabled>Selecione</option>
+                <option value="7">7 dias</option>
+                <option value="14">14 dias</option>
+                <option value="21">21 dias</option>
+                <option value="28">28 dias</option>
+                <option value="outro">Outro</option>
+              </Select>
+            )}
+          />
           {isCustomInterval && (
             <div className="flex items-center gap-2 mt-2">
               <span className="text-[0.6rem] text-(--text-muted) shrink-0">Especifique:</span>
@@ -202,5 +216,12 @@ export function AdjustProtocolModal({ open, patient, onClose, onConfirm }: Adjus
         />
       </FieldLabel>
     </Modal>
+
+    <ConfirmDiscardModal
+      open={guardOpen}
+      onCancel={cancelDiscard}
+      onConfirm={confirmDiscard}
+    />
+    </>
   )
 }

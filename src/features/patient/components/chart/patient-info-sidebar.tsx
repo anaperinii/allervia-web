@@ -6,19 +6,19 @@ import {
   History,
   Info,
   Pencil,
-  PowerOff,
   SlidersHorizontal,
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/components'
 import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
+import { PatientActionsMenu } from '@/features/patient/components/chart/patient-actions-menu'
 import type { Inactivation, Patient } from '@/features/patient/stores/patient-store'
 
 interface PatientInfoSidebarProps {
   patient: Patient
   treatmentTime: string | null
-  inicioInducao: string
-  inicioManutencao: string | null
+  inductionStart: string | null
+  maintenanceStart: string | null
   activeInactivation: Inactivation | null
   inactivationCount: number
   canReactivate: boolean
@@ -27,12 +27,17 @@ interface PatientInfoSidebarProps {
   canEditPatient: boolean
   canAdjustProtocol: boolean
   canInactivate: boolean
+  canComplete: boolean
+  completeDisabled: boolean
+  canLgpdPortability: boolean
   onReactivate: () => void
   onEditPatient: () => void
   onAdjustProtocol: () => void
   onShowAdjustHistory: () => void
   onInactivate: () => void
   onShowInactivationHistory: () => void
+  onPortability: () => void
+  onComplete: () => void
 }
 
 function getInitials(name: string) {
@@ -42,8 +47,8 @@ function getInitials(name: string) {
 export function PatientInfoSidebar({
   patient,
   treatmentTime,
-  inicioInducao,
-  inicioManutencao,
+  inductionStart,
+  maintenanceStart,
   activeInactivation,
   inactivationCount,
   canReactivate,
@@ -52,12 +57,17 @@ export function PatientInfoSidebar({
   canEditPatient,
   canAdjustProtocol,
   canInactivate,
+  canComplete,
+  completeDisabled,
+  canLgpdPortability,
   onReactivate,
   onEditPatient,
   onAdjustProtocol,
   onShowAdjustHistory,
   onInactivate,
   onShowInactivationHistory,
+  onPortability,
+  onComplete,
 }: PatientInfoSidebarProps) {
   const [showPersonal, setShowPersonal] = useState(true)
   const [showImmuno, setShowImmuno] = useState(true)
@@ -76,14 +86,13 @@ export function PatientInfoSidebar({
   const immunoRows: [string, string][] = [
     ['Tipo', patient.immunotherapyType],
     ['Via de Administração', patient.administrationRoute],
-    ['Início Indução', inicioInducao || patient.inductionStart],
-    ['Início Manutenção', inicioManutencao || patient.maintenanceStart || '-'],
+    ['Início Indução', inductionStart || '-'],
+    ['Início Manutenção', maintenanceStart || '-'],
     ['Meta Concentração e Volume', patient.targetConcentrationVolume],
   ]
 
   const showImmunoActions =
     canAdjustProtocol ||
-    canInactivate ||
     (patient.protocolAdjustments?.length ?? 0) > 0 ||
     inactivationCount > 0
 
@@ -110,23 +119,23 @@ export function PatientInfoSidebar({
         </div>
 
         {patient.status === 'inactive' && activeInactivation && (
-          <div className="mt-2.5 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+          <div className="mt-2.5 bg-gray-50 border border-(--border-custom) rounded-lg px-3 py-2">
             <div className="flex items-center justify-between mb-0.5">
-              <div className="text-[0.6rem] font-semibold text-yellow-700 flex items-center gap-1">
+              <div className="text-[0.6rem] font-semibold text-(--text-muted) flex items-center gap-1">
                 <Info size={9} />
                 Motivo da inativação
               </div>
-              <span className="text-[0.55rem] text-yellow-700/80">{activeInactivation.startDate}</span>
+              <span className="text-[0.55rem] text-(--text-muted)">{activeInactivation.startDate}</span>
             </div>
-            <div className="text-[0.6rem] font-bold text-yellow-800 mb-0.5">{INACTIVATION_CATEGORY_LABELS[activeInactivation.category]}</div>
-            <div className="text-[0.6rem] text-yellow-700 leading-relaxed">{activeInactivation.detail}</div>
+            <div className="text-[0.6rem] font-bold text-(--text) mb-0.5">{INACTIVATION_CATEGORY_LABELS[activeInactivation.category]}</div>
+            <div className="text-[0.6rem] text-(--text-muted) leading-relaxed">{activeInactivation.detail}</div>
             {activeInactivation.expectedReturnDate && (
-              <div className="text-[0.55rem] text-yellow-700/80 mt-1">
-                Retorno previsto: <span className="font-semibold">{activeInactivation.expectedReturnDate}</span>
+              <div className="text-[0.55rem] text-(--text-muted) mt-1">
+                Retorno previsto: <span className="font-semibold text-(--text)">{activeInactivation.expectedReturnDate}</span>
               </div>
             )}
-            <div className="text-[0.55rem] text-yellow-700/80 mt-0.5">
-              Responsável: <span className="font-semibold">{activeInactivation.responsibleDoctor}</span>
+            <div className="text-[0.55rem] text-(--text-muted) mt-0.5">
+              Responsável: <span className="font-semibold text-(--text)">{activeInactivation.responsibleDoctor}</span>
             </div>
           </div>
         )}
@@ -134,7 +143,7 @@ export function PatientInfoSidebar({
         <div className="mt-3 flex gap-1.5">
           {patient.status === 'inactive' ? (
             canReactivate && (
-              <Button tone="success" variant="solid" prominent fullWidth size="sm" onClick={onReactivate}>
+              <Button tone="brand" variant="solid" fullWidth onClick={onReactivate}>
                 Reativar paciente
               </Button>
             )
@@ -156,6 +165,16 @@ export function PatientInfoSidebar({
               Emitir Relatório
             </Button>
           )}
+          <PatientActionsMenu
+            canInactivate={canInactivate}
+            canLgpdPortability={canLgpdPortability}
+            canComplete={canComplete}
+            completeDisabled={completeDisabled}
+            patientStatus={patient.status}
+            onInactivate={onInactivate}
+            onPortability={onPortability}
+            onComplete={onComplete}
+          />
         </div>
       </div>
 
@@ -246,11 +265,6 @@ export function PatientInfoSidebar({
                         </Button>
                       )}
                     </div>
-                  )}
-                  {canInactivate && patient.status === 'active' && (
-                    <Button tone="warning" variant="outline" size="sm" fullWidth leftIcon={<PowerOff size={11} />} onClick={onInactivate}>
-                      Inativar imunoterapia
-                    </Button>
                   )}
                   {inactivationCount > 0 && (
                     <Button variant="outline" size="sm" fullWidth leftIcon={<History size={10} />} onClick={onShowInactivationHistory}>

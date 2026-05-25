@@ -16,7 +16,7 @@ interface SelectPatientStepProps {
   selected: Immunotherapy | null
   patient: Patient | null
   applicationsForPatient: Application[]
-  lastApp: Application | null
+  lastApplication: Application | null
   doseNumber: number
   nextDose: NextDoseSummary | null
   treatmentTime: string | null
@@ -28,7 +28,7 @@ interface SelectPatientStepProps {
 export function SelectPatientStep({
   selected,
   patient,
-  lastApp,
+  lastApplication,
   doseNumber,
   nextDose,
   treatmentTime,
@@ -161,9 +161,9 @@ export function SelectPatientStep({
               <div className="text-[0.65rem] font-bold text-stone-500 uppercase tracking-wider mb-3">Última aplicação</div>
               <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">
                 <Cell label="Dose" value={`Dose ${doseNumber || '-'}`} />
-                <Cell label="Volume" value={lastApp?.appliedVolume || lastApp?.dose.split(' - ')[1] || '-'} />
-                <Cell label="Concentração" value={lastApp?.extractConcentration || lastApp?.dose.split(' - ')[0] || '-'} />
-                <Cell label="Data" value={lastApp?.date || '-'} />
+                <Cell label="Volume" value={lastApplication?.appliedVolume || lastApplication?.dose.split(' - ')[1] || '-'} />
+                <Cell label="Concentração" value={lastApplication?.extractConcentration || lastApplication?.dose.split(' - ')[0] || '-'} />
+                <Cell label="Data" value={lastApplication?.date || '-'} />
               </div>
             </div>
 

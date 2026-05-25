@@ -13,9 +13,9 @@ import {
   calculateNextDose,
   INDUCTION_INTERVAL,
   INITIAL_DOSE,
-  META_DOSE,
 } from '@/features/immunotherapy/constants/scit-protocol'
-import { comparePtDateAsc, comparePtDateDesc, parsePtDate } from '@/shared/lib/dates'
+import { derivePatientDates } from '@/features/patient/lib/patient-dates'
+import { comparePtDateDesc, parsePtDate } from '@/shared/lib/dates'
 import { monthIndexFromPtUpper } from '@/shared/constants/months-pt'
 import { PatientInfoSidebar } from '@/features/patient/components/chart/patient-info-sidebar'
 import { SummaryCards } from '@/features/patient/components/chart/summary-cards'
@@ -30,8 +30,9 @@ import { AdjustHistoryModal } from '@/features/patient/components/chart/adjust-h
 import { InactivateModal } from '@/features/patient/components/chart/inactivate-modal'
 import { InactivationHistoryModal } from '@/features/patient/components/chart/inactivation-history-modal'
 import { ReactivateModal } from '@/features/patient/components/chart/reactivate-modal'
+import { PortabilityModal } from '@/features/patient/components/chart/portability-modal'
 
-const ALL_INDUCTION_STEPS = PROGRESS_INDUCTION_STEPS.flatMap((s) => s.vols.map((v) => `${s.conc} - ${v}`))
+const ALL_INDUCTION_STEPS = PROGRESS_INDUCTION_STEPS.flatMap((step) => step.vols.map((volume) => `${step.conc} - ${volume}`))
 
 export function PatientChartPage() {
   const navigate = useNavigate()
@@ -49,6 +50,7 @@ export function PatientChartPage() {
   const canEditPatient = useHasPermission('edit_patient_data')
   const canEvolve = useHasPermission('evolve_patient')
   const canEmitReport = useHasPermission('emit_report')
+  const canLgpdPortability = useHasPermission('lgpd_portability')
   const doctorFilter = useDoctorFilter()
 
   useEffect(() => {
@@ -58,12 +60,12 @@ export function PatientChartPage() {
   }, [doctorFilter, selectedPatient, navigate])
 
   useEffect(() => {
-    if (!selectedPatient && patientId) {
-      const { immunotherapies } = useImmunotherapiesStore.getState()
-      const imm = immunotherapies.find((i) => i.id === patientId)
-      if (imm) setSelectedPatient(buildPatientFromImmunotherapy(imm))
-      else navigate({ to: '/immunotherapies' })
-    }
+    if (!patientId) return
+    if (selectedPatient?.id === patientId) return
+    const { immunotherapies } = useImmunotherapiesStore.getState()
+    const immunotherapy = immunotherapies.find((item) => item.id === patientId)
+    if (immunotherapy) setSelectedPatient(buildPatientFromImmunotherapy(immunotherapy))
+    else navigate({ to: '/immunotherapies' })
   }, [patientId, selectedPatient, navigate, setSelectedPatient])
 
   const currentUser = useUserStore((s) => s.current)
@@ -86,7 +88,7 @@ export function PatientChartPage() {
     })
   }, [selectedPatient, currentUser, logAccess])
 
-  const [selectedApp, setSelectedApp] = useState<Application | null>(null)
+  const [selectedApplication, setSelectedApp] = useState<Application | null>(null)
   const [monthFilter, setMonthFilter] = useState('all')
   const [showProgress, setShowProgress] = useState(false)
   const [viewMode, setViewMode] = useState<'timeline' | 'calendar'>('timeline')
@@ -96,34 +98,34 @@ export function PatientChartPage() {
   const [showAdjustModal, setShowAdjustModal] = useState(false)
   const [showAdjustHistory, setShowAdjustHistory] = useState(false)
   const [showInactivateModal, setShowInactivateModal] = useState(false)
+  const [showPortabilityModal, setShowPortabilityModal] = useState(false)
   const [showInactivateToast, setShowInactivateToast] = useState(false)
   const [showReactivateModal, setShowReactivateModal] = useState(false)
   const [showReactivateToast, setShowReactivateToast] = useState(false)
   const [showAdjustToast, setShowAdjustToast] = useState(false)
   const [showInactivationHistory, setShowInactivationHistory] = useState(false)
 
-  const patientApps = useMemo(() => {
+  const patientApplications = useMemo(() => {
     if (!selectedPatient) return []
-    return applications.filter((a) => a.patientId === selectedPatient.id)
+    return applications.filter((application) => application.patientId === selectedPatient.id)
   }, [applications, selectedPatient])
 
-  const realizedApps = useMemo(() => patientApps.filter((a) => a.status === 'completed'), [patientApps])
+  const realizedApplications = useMemo(
+    () => patientApplications.filter((application) => application.status === 'completed'),
+    [patientApplications],
+  )
 
   const lastRealized = useMemo(() => {
-    if (!realizedApps.length) return null
-    return [...realizedApps].sort((a, b) => comparePtDateDesc(a.date, b.date))[0]
-  }, [realizedApps])
+    if (!realizedApplications.length) return null
+    return [...realizedApplications].sort((a, b) => comparePtDateDesc(a.date, b.date))[0]
+  }, [realizedApplications])
 
-  const inicioInducao = useMemo(() => {
-    if (!realizedApps.length) return null
-    return [...realizedApps].sort((a, b) => comparePtDateAsc(a.date, b.date))[0].date
-  }, [realizedApps])
-
-  const inicioManutencao = useMemo(() => {
-    const meta = realizedApps.filter((a) => a.dose === META_DOSE)
-    if (!meta.length) return null
-    return [...meta].sort((a, b) => comparePtDateAsc(a.date, b.date))[0].date
-  }, [realizedApps])
+  const { inductionStart, maintenanceStart } = useMemo(
+    () => (selectedPatient
+      ? derivePatientDates(applications, selectedPatient.id)
+      : { inductionStart: null, maintenanceStart: null }),
+    [applications, selectedPatient],
+  )
 
   const currentInterval = lastRealized?.cycle.days ?? selectedPatient?.currentInterval ?? INDUCTION_INTERVAL
   const currentDose = lastRealized
@@ -143,10 +145,9 @@ export function PatientChartPage() {
   }, [lastRealized, nextCalc.interval, selectedPatient])
 
   const treatmentTime = useMemo(() => {
-    const inicio = inicioInducao || selectedPatient?.inductionStart
-    if (!inicio) return null
+    if (!inductionStart) return null
     try {
-      const start = parsePtDate(inicio)
+      const start = parsePtDate(inductionStart)
       const days = differenceInDays(new Date(), start)
       const months = Math.floor(days / 30)
       const years = Math.floor(months / 12)
@@ -156,52 +157,52 @@ export function PatientChartPage() {
     } catch {
       return null
     }
-  }, [inicioInducao, selectedPatient])
+  }, [inductionStart])
 
-  const sortedApps = useMemo(
-    () => [...patientApps].sort((a, b) => comparePtDateDesc(a.date, b.date)),
-    [patientApps],
+  const sortedApplications = useMemo(
+    () => [...patientApplications].sort((a, b) => comparePtDateDesc(a.date, b.date)),
+    [patientApplications],
   )
 
   const availableMonths = useMemo(() => {
-    const set = new Map<string, string>()
-    sortedApps.forEach((a) => {
-      const key = `${a.year}-${a.month}`
-      if (!set.has(key)) set.set(key, `${a.month} ${a.year}`)
+    const months = new Map<string, string>()
+    sortedApplications.forEach((application) => {
+      const key = `${application.year}-${application.month}`
+      if (!months.has(key)) months.set(key, `${application.month} ${application.year}`)
     })
-    return Array.from(set.entries()).map(([key, label]) => ({ key, label }))
-  }, [sortedApps])
+    return Array.from(months.entries()).map(([key, label]) => ({ key, label }))
+  }, [sortedApplications])
 
-  const filteredApps = useMemo(() => {
-    if (monthFilter === 'all') return sortedApps
-    return sortedApps.filter((a) => `${a.year}-${a.month}` === monthFilter)
-  }, [sortedApps, monthFilter])
+  const filteredApplications = useMemo(() => {
+    if (monthFilter === 'all') return sortedApplications
+    return sortedApplications.filter((application) => `${application.year}-${application.month}` === monthFilter)
+  }, [sortedApplications, monthFilter])
 
-  const grouped = useMemo(() => {
-    const g: Record<string, Application[]> = {}
-    filteredApps.forEach((a) => {
-      const key = `${a.month} ${a.year}`
-      if (!g[key]) g[key] = []
-      g[key].push(a)
+  const groupedByMonth = useMemo(() => {
+    const byMonth: Record<string, Application[]> = {}
+    filteredApplications.forEach((application) => {
+      const key = `${application.month} ${application.year}`
+      if (!byMonth[key]) byMonth[key] = []
+      byMonth[key].push(application)
     })
-    return g
-  }, [filteredApps])
+    return byMonth
+  }, [filteredApplications])
 
-  const appsByDate = useMemo(() => {
-    const m: Record<string, Application[]> = {}
-    patientApps.forEach((a) => {
-      if (!m[a.date]) m[a.date] = []
-      m[a.date].push(a)
+  const applicationsByDate = useMemo(() => {
+    const byDate: Record<string, Application[]> = {}
+    patientApplications.forEach((application) => {
+      if (!byDate[application.date]) byDate[application.date] = []
+      byDate[application.date].push(application)
     })
-    return m
-  }, [patientApps])
+    return byDate
+  }, [patientApplications])
 
   const currentDoseStr = lastRealized?.dose || selectedPatient?.currentDoseConcentration || INITIAL_DOSE
   const currentStepIndex = useMemo(() => {
-    const [conc, vol] = currentDoseStr.split(' - ').map((s) => s?.trim() ?? '')
-    return ALL_INDUCTION_STEPS.findIndex((s) => {
-      const [sc, sv] = s.split(' - ').map((p) => p.trim())
-      return conc === sc && vol === sv
+    const [concentration, volume] = currentDoseStr.split(' - ').map((part) => part?.trim() ?? '')
+    return ALL_INDUCTION_STEPS.findIndex((step) => {
+      const [stepConcentration, stepVolume] = step.split(' - ').map((part) => part.trim())
+      return concentration === stepConcentration && volume === stepVolume
     })
   }, [currentDoseStr])
   const isMaintenance = currentInterval > INDUCTION_INTERVAL
@@ -249,8 +250,8 @@ export function PatientChartPage() {
         <PatientInfoSidebar
           patient={selectedPatient}
           treatmentTime={treatmentTime}
-          inicioInducao={inicioInducao || ''}
-          inicioManutencao={inicioManutencao}
+          inductionStart={inductionStart}
+          maintenanceStart={maintenanceStart}
           activeInactivation={activeInactivation}
           inactivationCount={inactivationCount}
           canReactivate={canReactivate}
@@ -259,12 +260,17 @@ export function PatientChartPage() {
           canEditPatient={canEditPatient}
           canAdjustProtocol={canAdjustProtocol}
           canInactivate={canInactivate}
+          canComplete={canInactivate}
+          completeDisabled={selectedPatient.currentInterval !== 28}
+          canLgpdPortability={canLgpdPortability}
           onReactivate={() => setShowReactivateModal(true)}
           onEditPatient={() => setShowEditModal(true)}
           onAdjustProtocol={() => setShowAdjustModal(true)}
           onShowAdjustHistory={() => setShowAdjustHistory(true)}
           onInactivate={() => setShowInactivateModal(true)}
           onShowInactivationHistory={() => setShowInactivationHistory(true)}
+          onPortability={() => setShowPortabilityModal(true)}
+          onComplete={() => navigate({ to: '/patient-completion', search: { patientId: selectedPatient.id } })}
         />
 
         <div className="flex flex-1 flex-col gap-3 min-w-0">
@@ -287,7 +293,7 @@ export function PatientChartPage() {
 
               <ProgressIndicator
                 open={showProgress}
-                patientApps={patientApps}
+                patientApplications={patientApplications}
                 isMaintenance={isMaintenance}
                 currentInterval={currentInterval}
                 currentStepIndex={currentStepIndex}
@@ -300,7 +306,11 @@ export function PatientChartPage() {
                   activeKey={monthFilter}
                   onChange={(key) => {
                     setMonthFilter(key)
-                    if (key !== 'all') {
+                    if (key === 'all') {
+                      const now = new Date()
+                      setCalMonth(now.getMonth())
+                      setCalYear(now.getFullYear())
+                    } else {
                       const [yr, monthName] = key.split('-')
                       const mi = monthIndexFromPtUpper(monthName)
                       if (mi >= 0) { setCalMonth(mi); setCalYear(Number(yr)) }
@@ -322,13 +332,13 @@ export function PatientChartPage() {
 
             {viewMode === 'timeline' ? (
               <div className="flex-1 overflow-y-auto px-5 py-4">
-                <ApplicationsTimeline grouped={grouped} onSelect={setSelectedApp} />
+                <ApplicationsTimeline applicationsByMonth={groupedByMonth} onSelect={setSelectedApp} />
               </div>
             ) : (
               <ApplicationsCalendar
                 month={calMonth}
                 year={calYear}
-                appsByDate={appsByDate}
+                applicationsByDate={applicationsByDate}
                 onMonthChange={(m, y) => { setCalMonth(m); setCalYear(y) }}
                 onSelect={setSelectedApp}
               />
@@ -376,6 +386,12 @@ export function PatientChartPage() {
         }}
       />
 
+      <PortabilityModal
+        open={showPortabilityModal}
+        patient={selectedPatient}
+        onClose={() => setShowPortabilityModal(false)}
+      />
+
       <InactivationHistoryModal
         open={showInactivationHistory}
         inactivations={selectedPatient.inactivations ?? []}
@@ -398,7 +414,7 @@ export function PatientChartPage() {
         }}
       />
 
-      <ApplicationDetailModal application={selectedApp} onClose={() => setSelectedApp(null)} />
+      <ApplicationDetailModal application={selectedApplication} onClose={() => setSelectedApp(null)} />
 
       <Toast
         open={showAdjustToast}

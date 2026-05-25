@@ -10,10 +10,18 @@ interface ApplicationDetailModalProps {
 
 export function ApplicationDetailModal({ application, onClose }: ApplicationDetailModalProps) {
   const [tab, setTab] = useState<'pre' | 'post'>('pre')
+  const [hasSwitched, setHasSwitched] = useState(false)
 
   const handleClose = () => {
     onClose()
     setTab('pre')
+    setHasSwitched(false)
+  }
+
+  const switchTab = (next: 'pre' | 'post') => {
+    if (next === tab) return
+    setHasSwitched(true)
+    setTab(next)
   }
 
   return (
@@ -21,11 +29,13 @@ export function ApplicationDetailModal({ application, onClose }: ApplicationDeta
       {application && (
         <>
           <div role="tablist" aria-label="Etapas da aplicação" className="flex items-center justify-center gap-2">
-            <TabButton active={tab === 'pre'} onClick={() => setTab('pre')}>Pré-Aplicação</TabButton>
-            <TabButton active={tab === 'post'} onClick={() => setTab('post')}>Pós-Aplicação</TabButton>
+            <TabButton active={tab === 'pre'} onClick={() => switchTab('pre')}>Pré-Aplicação</TabButton>
+            <TabButton active={tab === 'post'} onClick={() => switchTab('post')}>Pós-Aplicação</TabButton>
           </div>
 
-          {tab === 'pre' ? <PreTab application={application} /> : <PostTab application={application} />}
+          <div key={hasSwitched ? tab : 'initial'} className={hasSwitched ? 'animate-in fade-in-0 slide-in-from-right-2 duration-200' : undefined}>
+            {tab === 'pre' ? <PreTab application={application} /> : <PostTab application={application} />}
+          </div>
         </>
       )}
     </Modal>

@@ -50,7 +50,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const { selectedPatient, setSelectedPatient } = usePatientStore()
 
   useEffect(() => {
-    if (selectedPatient && !location.pathname.startsWith('/patient/')) {
+    if (selectedPatient && !location.pathname.startsWith('/patient')) {
       setSelectedPatient(null)
     }
   }, [location.pathname, selectedPatient, setSelectedPatient])

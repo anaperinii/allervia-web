@@ -37,7 +37,12 @@ interface ModalProps {
 export function Modal({ open, onClose, title, size = 'md', children, footer, icon, tone = 'brand', headerSlot, ariaLabel }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const previouslyFocused = useRef<HTMLElement | null>(null)
+  const onCloseRef = useRef(onClose)
   const titleId = useId()
+
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   useEffect(() => {
     if (!open) return
@@ -52,7 +57,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation()
-        onClose()
+        onCloseRef.current()
         return
       }
       if (e.key !== 'Tab') return
@@ -77,7 +82,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
       document.removeEventListener('keydown', handleKey)
       previouslyFocused.current?.focus?.()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
   const hasHeader = title || headerSlot || icon
@@ -87,7 +92,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
     : { 'aria-label': ariaLabel ?? 'Diálogo' }
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in-0 duration-200"
       onClick={onClose}
     >
       <div
@@ -96,7 +101,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
         aria-modal="true"
         {...labelProps}
         className={cn(
-          'bg-white rounded-xl shadow-2xl w-full max-h-[90vh] flex flex-col overflow-hidden',
+          'bg-white rounded-xl shadow-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200',
           SIZE_CLASS[size]
         )}
         onClick={(e) => e.stopPropagation()}

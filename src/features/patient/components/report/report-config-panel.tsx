@@ -1,18 +1,13 @@
 import {
   Check,
-  CheckSquare,
-  Download,
   FileDown,
-  FileJson,
   FileSpreadsheet,
   FileText,
-  Info,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { cn } from '@/shared/lib/utils'
-import { Button, SegmentedControl, TextArea } from '@/shared/components'
+import { TextArea } from '@/shared/components'
 import type {
-  LgpdFileFormat,
   ReportFileFormat,
   ReportSectionId,
 } from '@/features/patient/exporters/types'
@@ -34,232 +29,138 @@ const REPORT_SECTIONS: { id: ReportSectionId; label: string }[] = [
 ]
 
 interface ReportConfigPanelProps {
-  reportMode: 'clinico' | 'lgpd'
-  setReportMode: (m: 'clinico' | 'lgpd') => void
-  canLgpdPortability: boolean
   fileFormat: ReportFileFormat
-  setFileFormat: (f: ReportFileFormat) => void
+  setFileFormat: (format: ReportFileFormat) => void
   selectedSections: ReportSectionId[]
   toggleSection: (id: ReportSectionId) => void
   anonymized: boolean
-  setAnonymized: (v: boolean) => void
-  consentimento: boolean
-  setConsentimento: (v: boolean) => void
-  justificativa: string
-  setJustificativa: (v: string) => void
-  realizedAppsCount: number
+  setAnonymized: (value: boolean) => void
+  consented: boolean
+  setConsented: (value: boolean) => void
+  justification: string
+  setJustification: (value: string) => void
+  realizedApplicationsCount: number
   reactionsCount: number
   intervalDays: number
   patientStatus: 'active' | 'inactive'
-  lgpdFormat: LgpdFileFormat
-  setLgpdFormat: (f: LgpdFileFormat) => void
-  lgpdDataItems: { label: string; count: number }[]
-  onExportLgpd: () => void
 }
 
 export function ReportConfigPanel({
-  reportMode,
-  setReportMode,
-  canLgpdPortability,
   fileFormat,
   setFileFormat,
   selectedSections,
   toggleSection,
   anonymized,
   setAnonymized,
-  consentimento,
-  setConsentimento,
-  justificativa,
-  setJustificativa,
-  realizedAppsCount,
+  consented,
+  setConsented,
+  justification,
+  setJustification,
+  realizedApplicationsCount,
   reactionsCount,
   intervalDays,
   patientStatus,
-  lgpdFormat,
-  setLgpdFormat,
-  lgpdDataItems,
-  onExportLgpd,
 }: ReportConfigPanelProps) {
   return (
     <div className="w-72 shrink-0 border-r border-(--border-custom) p-5 overflow-y-auto space-y-5">
-      {canLgpdPortability && (
-        <SegmentedControl
-          value={reportMode}
-          onChange={setReportMode}
-          fullWidth
-          options={[
-            { value: 'clinico', label: 'Clínico' },
-            { value: 'lgpd', label: 'Portabilidade' },
-          ]}
-          aria-label="Modo do relatório"
-        />
-      )}
-
-      {reportMode === 'lgpd' ? (
-        <>
-          <div className="flex items-start gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2.5">
-            <Info size={14} className="text-brand shrink-0 mt-0.5" />
-            <p className="text-[0.6rem] text-(--text) leading-relaxed">
-              Exportação estruturada de todos os dados em atendimento ao <span className="font-bold">Art. 18, V da LGPD</span> (Direito à portabilidade).
-            </p>
-          </div>
-          <div>
-            <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Formato</span>
-            <SegmentedControl
-              value={lgpdFormat}
-              onChange={setLgpdFormat}
-              fullWidth
-              options={[
-                { value: 'json', label: 'JSON', icon: <FileJson size={13} /> },
-                { value: 'csv', label: 'CSV', icon: <FileSpreadsheet size={13} /> },
-              ]}
-              aria-label="Formato do pacote LGPD"
-            />
-          </div>
-          <div>
-            <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Dados incluídos</span>
-            <div className="space-y-1.5">
-              {lgpdDataItems.map((item) => (
-                <div key={item.label} className="flex items-center justify-between gap-1.5 text-[0.6rem] text-(--text) bg-teal-50/50 border border-teal-100 rounded px-2 py-1">
-                  <span className="flex items-center gap-1.5">
-                    <CheckSquare size={10} className="text-brand shrink-0" />
-                    {item.label}
-                  </span>
-                  <span className="text-(--text-muted) font-semibold">{item.count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">
-              Motivo da solicitação <span className="text-red-400">*</span>
-            </label>
-            <TextArea
-              rows={2}
-              placeholder="Ex: Solicitação formal do paciente"
-              value={justificativa}
-              onChange={(e) => setJustificativa(e.target.value)}
-            />
-          </div>
-          <ConsentCheckbox
-            checked={consentimento}
-            onChange={() => setConsentimento(!consentimento)}
-            title="Declaro ciência dos termos LGPD"
-            description="Confirmo que há solicitação formal do titular."
+      <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+        <div className="text-[0.6rem] font-bold text-(--text-muted) uppercase tracking-wider">Resumo</div>
+        <div className="text-[0.65rem] text-(--text-muted) space-y-1">
+          <Row label="Aplicações realizadas" value={String(realizedApplicationsCount)} />
+          <Row label="Reações adversas" value={String(reactionsCount)} />
+          <Row label="Intervalo atual" value={`${intervalDays} dias`} />
+          <Row
+            label="Status"
+            value={patientStatus === 'active' ? 'Ativo' : 'Inativo'}
+            valueClass={patientStatus === 'active' ? 'text-green-600' : 'text-(--text-muted)'}
           />
-          <Button
-            tone="brand"
-            variant="solid"
-            fullWidth
-            leftIcon={<Download size={13} />}
-            disabled={!consentimento || !justificativa.trim()}
-            onClick={onExportLgpd}
-          >
-            Exportar {lgpdFormat.toUpperCase()}
-          </Button>
-        </>
-      ) : (
-        <>
-          <div>
-            <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Formato</span>
-            <div className="flex gap-2" role="radiogroup" aria-label="Formato do relatório">
-              {REPORT_FORMATS.map((f) => {
-                const Icon = f.icon
-                const selected = fileFormat === f.id
-                return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => setFileFormat(f.id)}
-                    className={cn(
-                      'flex-1 h-9 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
-                      selected ? 'border-brand bg-brand-50 text-brand-dark' : 'border-(--border-custom) text-(--text-muted) hover:border-brand/50',
-                    )}
-                  >
-                    <Icon size={13} />
-                    {f.label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+        </div>
+      </div>
 
-          <div>
-            <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Seções incluídas</span>
-            <div className="space-y-1.5">
-              {REPORT_SECTIONS.map((s) => {
-                const selected = selectedSections.includes(s.id)
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => toggleSection(s.id)}
-                    className={cn(
-                      'flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer',
-                      selected ? 'border-brand bg-brand-50/50' : 'border-(--border-custom) hover:border-brand/50',
-                    )}
-                  >
-                    <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0', selected ? 'bg-brand border-brand' : 'border-gray-300')}>
-                      {selected && <Check size={10} className="text-white" />}
-                    </div>
-                    <span className="text-[0.7rem] font-medium text-(--text)">{s.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+      <div>
+        <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Formato</span>
+        <div className="flex gap-2" role="radiogroup" aria-label="Formato do relatório">
+          {REPORT_FORMATS.map((format) => {
+            const Icon = format.icon
+            const selected = fileFormat === format.id
+            return (
+              <button
+                key={format.id}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => setFileFormat(format.id)}
+                className={cn(
+                  'flex-1 h-9 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
+                  selected ? 'border-brand bg-brand-50 text-brand-dark' : 'border-(--border-custom) text-(--text-muted) hover:border-brand/50',
+                )}
+              >
+                <Icon size={13} />
+                {format.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
-          <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-            <div className="text-[0.6rem] font-bold text-(--text-muted) uppercase tracking-wider">Resumo</div>
-            <div className="text-[0.65rem] text-(--text-muted) space-y-1">
-              <Row label="Aplicações realizadas" value={String(realizedAppsCount)} />
-              <Row label="Reações adversas" value={String(reactionsCount)} />
-              <Row label="Intervalo atual" value={`${intervalDays} dias`} />
-              <Row
-                label="Status"
-                value={patientStatus === 'active' ? 'Ativo' : 'Inativo'}
-                valueClass={patientStatus === 'active' ? 'text-green-600' : 'text-(--text-muted)'}
-              />
-            </div>
-          </div>
+      <div>
+        <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Seções incluídas</span>
+        <div className="space-y-1.5">
+          {REPORT_SECTIONS.map((section) => {
+            const selected = selectedSections.includes(section.id)
+            return (
+              <button
+                key={section.id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => toggleSection(section.id)}
+                className={cn(
+                  'flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer',
+                  selected ? 'border-brand bg-brand-50/50' : 'border-(--border-custom) hover:border-brand/50',
+                )}
+              >
+                <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0', selected ? 'bg-brand border-brand' : 'border-gray-300')}>
+                  {selected && <Check size={10} className="text-white" />}
+                </div>
+                <span className="text-[0.7rem] font-medium text-(--text)">{section.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
-          <div>
-            <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Privacidade e LGPD</span>
-            <div className="space-y-2">
-              <ConsentCheckbox
-                checked={anonymized}
-                onChange={() => setAnonymized(!anonymized)}
-                title="Anonimizar dados pessoais"
-                description="Nome, CPF e telefone serão mascarados"
-              />
-              <ConsentCheckbox
-                checked={consentimento}
-                onChange={() => setConsentimento(!consentimento)}
-                title="Declaro ciência da LGPD"
-                description="Responsabilizo-me pelo uso dos dados"
-              />
-            </div>
-          </div>
+      <div>
+        <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Privacidade e LGPD</span>
+        <div className="space-y-2">
+          <ConsentCheckbox
+            checked={anonymized}
+            onChange={() => setAnonymized(!anonymized)}
+            title="Anonimizar dados pessoais"
+            description="Nome, CPF e telefone serão mascarados"
+          />
+          <ConsentCheckbox
+            checked={consented}
+            onChange={() => setConsented(!consented)}
+            title="Declaro ciência da LGPD"
+            description="Responsabilizo-me pelo uso dos dados"
+          />
+        </div>
+      </div>
 
-          <div>
-            <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">
-              Justificativa <span className="text-red-400">*</span>
-            </label>
-            <TextArea
-              rows={2}
-              placeholder="Ex: Acompanhamento clínico do paciente"
-              value={justificativa}
-              onChange={(e) => setJustificativa(e.target.value)}
-            />
-          </div>
+      <div>
+        <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">
+          Justificativa <span className="text-red-400">*</span>
+        </label>
+        <TextArea
+          rows={2}
+          placeholder="Ex: Acompanhamento clínico do paciente"
+          value={justification}
+          onChange={(event) => setJustification(event.target.value)}
+        />
+      </div>
 
-          {!consentimento && (
-            <p className="text-[0.55rem] text-amber-600 text-center">Aceite a declaração LGPD para habilitar a exportação</p>
-          )}
-        </>
+      {!consented && (
+        <p className="text-[0.55rem] text-amber-600 text-center">Aceite a declaração LGPD para habilitar a exportação</p>
       )}
     </div>
   )

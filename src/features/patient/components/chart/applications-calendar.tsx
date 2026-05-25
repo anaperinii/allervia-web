@@ -10,14 +10,14 @@ import type { Application } from '@/features/patient/stores/patient-store'
 interface ApplicationsCalendarProps {
   month: number
   year: number
-  appsByDate: Record<string, Application[]>
+  applicationsByDate: Record<string, Application[]>
   onMonthChange: (month: number, year: number) => void
-  onSelect: (app: Application) => void
+  onSelect: (application: Application) => void
 }
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
-export function ApplicationsCalendar({ month, year, appsByDate, onMonthChange, onSelect }: ApplicationsCalendarProps) {
+export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthChange, onSelect }: ApplicationsCalendarProps) {
   const days = useMemo(() => {
     const firstDay = new Date(year, month, 1).getDay()
     const daysInMonth = new Date(year, month + 1, 0).getDate()
@@ -63,45 +63,64 @@ export function ApplicationsCalendar({ month, year, appsByDate, onMonthChange, o
         {days.map((day, i) => {
           if (day === null) return <div key={`empty-${i}`} className="bg-gray-50/50 h-18" />
           const dateStr = `${String(day).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}/${year}`
-          const dayApps = appsByDate[dateStr] || []
+          const dayApplications = applicationsByDate[dateStr] || []
           const today = new Date()
           const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear()
           return (
-            <div key={day} className={cn('bg-white h-18 p-1.5 relative', isToday && 'bg-teal-50/40')}>
-              <div className={cn('text-[0.6rem] font-semibold mb-1', isToday ? 'text-brand' : 'text-(--text-muted)')}>
-                {day}
+            <div
+              key={day}
+              className={cn(
+                'bg-white h-18 p-1.5 relative',
+                isToday && 'bg-teal-50/70 ring-1 ring-inset ring-brand z-10',
+              )}
+            >
+              <div className="mb-1 flex items-center">
+                <span
+                  className={cn(
+                    'text-[0.6rem] font-semibold flex items-center justify-center',
+                    isToday
+                      ? 'h-4 min-w-4 px-1 rounded-full bg-brand text-white'
+                      : 'text-(--text-muted)',
+                  )}
+                >
+                  {day}
+                </span>
               </div>
-              {dayApps.length > 0 && (
+              {dayApplications.length > 0 && (
                 <div className="space-y-0.5">
-                  {dayApps.slice(0, 2).map((app) => {
-                    const isRealized = app.status === 'completed'
-                    const isNext = app.status === 'scheduled'
-                    const hasReaction = app.sideEffect === 'yes'
-                    const intColor = getIntervalColor(app.cycle.days)
-                    const style = hasReaction
-                      ? { backgroundColor: '#FFEDD5', color: '#9A3412', borderColor: '#EA580C' }
-                      : { backgroundColor: intColor.bg, color: intColor.text, borderColor: intColor.dot }
+                  {dayApplications.slice(0, 2).map((application) => {
+                    const isRealized = application.status === 'completed'
+                    const isNext = application.status === 'scheduled'
+                    const hasReaction = application.sideEffect === 'yes'
+                    const intervalColor = getIntervalColor(application.cycle.days)
+                    const accent = hasReaction ? '#EA580C' : intervalColor.dot
+                    const style = {
+                      backgroundColor: hasReaction ? '#FFEDD5' : intervalColor.bg,
+                      color: hasReaction ? '#9A3412' : intervalColor.text,
+                      borderColor: accent,
+                      ['--app-glow' as string]: accent,
+                    } as React.CSSProperties
                     return (
                       <button
                         type="button"
-                        key={app.id}
+                        key={application.id}
                         disabled={!isRealized}
-                        onClick={() => isRealized && onSelect(app)}
+                        onClick={() => isRealized && onSelect(application)}
                         className={cn(
-                          'w-full rounded px-1 py-0.5 text-[0.45rem] font-semibold truncate flex items-center gap-0.5',
+                          'w-full rounded px-1 py-0.5 text-[0.45rem] font-semibold truncate flex items-center gap-0.5 transition-all',
                           isNext ? 'cursor-default border-dashed border' :
-                          isRealized ? 'cursor-pointer border' :
+                          isRealized ? 'cursor-pointer border hover:-translate-y-px hover:shadow-[0_2px_6px_-3px_var(--app-glow)]' :
                           'bg-gray-100 text-(--text-muted) border border-gray-200',
                         )}
                         style={style}
                         title={hasReaction ? 'Reação adversa registrada' : undefined}
                       >
-                        <span className="truncate">{app.dose}</span>
+                        <span className="truncate">{application.dose}</span>
                       </button>
                     )
                   })}
-                  {dayApps.length > 2 && (
-                    <div className="text-[0.45rem] text-(--text-muted) font-medium text-center">+{dayApps.length - 2}</div>
+                  {dayApplications.length > 2 && (
+                    <div className="text-[0.45rem] text-(--text-muted) font-medium text-center">+{dayApplications.length - 2}</div>
                   )}
                 </div>
               )}
