@@ -16,7 +16,7 @@ export type ReportSectionId =
 export interface ReportData {
   patient: Patient
   sections: ReportSectionId[]
-  realizedApps: Application[]
+  realizedApplications: Application[]
   reactionsCount: number
   generatedAt: string
   anonymized: boolean

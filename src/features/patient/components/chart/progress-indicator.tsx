@@ -16,7 +16,7 @@ const MAINTENANCE_INTERVALS = [
 
 interface ProgressIndicatorProps {
   open: boolean
-  patientApps: Application[]
+  patientApplications: Application[]
   isMaintenance: boolean
   currentInterval: number
   currentStepIndex: number
@@ -25,7 +25,7 @@ interface ProgressIndicatorProps {
 
 export function ProgressIndicator({
   open,
-  patientApps,
+  patientApplications,
   isMaintenance,
   currentInterval,
   currentStepIndex,
@@ -34,7 +34,7 @@ export function ProgressIndicator({
   return (
     <div className={cn('overflow-hidden transition-all duration-300', open ? 'max-h-80 opacity-100 mb-3' : 'max-h-0 opacity-0')}>
       <InductionProgress currentStepIndex={currentStepIndex} progressPct={progressPct} />
-      <MaintenanceTimeline patientApps={patientApps} isMaintenance={isMaintenance} currentInterval={currentInterval} />
+      <MaintenanceTimeline patientApplications={patientApplications} isMaintenance={isMaintenance} currentInterval={currentInterval} />
     </div>
   )
 }
@@ -51,8 +51,8 @@ function InductionProgress({ currentStepIndex, progressPct }: { currentStepIndex
         <div className="h-full bg-linear-to-r from-brand to-teal-400 rounded-full transition-all duration-1000 ease-out" style={{ width: `${progressPct}%` }} />
       </div>
       <div className="flex gap-0">
-        {INDUCTION_STEPS.map((group, gi) => {
-          const startIdx = INDUCTION_STEPS.slice(0, gi).reduce((acc, s) => acc + s.vols.length, 0)
+        {INDUCTION_STEPS.map((group, groupIndex) => {
+          const startIdx = INDUCTION_STEPS.slice(0, groupIndex).reduce((accumulator, step) => accumulator + step.vols.length, 0)
           const blockActive = safeIdx >= startIdx && safeIdx < startIdx + group.vols.length
           const blockFuture = safeIdx < startIdx
           return (
@@ -60,14 +60,14 @@ function InductionProgress({ currentStepIndex, progressPct }: { currentStepIndex
               <div className={cn('flex-1 rounded-md px-2 py-1.5 transition-all', blockFuture && 'opacity-30')}>
                 <div className={cn('text-[0.5rem] font-bold mb-1 truncate', blockActive ? 'text-brand' : 'text-(--text-muted)')}>{group.conc}</div>
                 <div className="flex gap-0.5 flex-wrap">
-                  {group.vols.map((vol, vi) => {
-                    const stepIdx = startIdx + vi
+                  {group.vols.map((volume, volumeIndex) => {
+                    const stepIdx = startIdx + volumeIndex
                     const isCurrent = stepIdx === safeIdx
                     const isDone = stepIdx < safeIdx
-                    const isLast = gi === INDUCTION_STEPS.length - 1 && vi === group.vols.length - 1
+                    const isLast = groupIndex === INDUCTION_STEPS.length - 1 && volumeIndex === group.vols.length - 1
                     return (
                       <span
-                        key={vi}
+                        key={volumeIndex}
                         className={cn(
                           'text-[0.45rem] px-1 py-px rounded font-semibold',
                           isCurrent ? 'bg-brand text-white outline outline-offset-1 outline-brand' :
@@ -75,13 +75,13 @@ function InductionProgress({ currentStepIndex, progressPct }: { currentStepIndex
                           'bg-slate-100 text-slate-400 opacity-40',
                         )}
                       >
-                        {vol}{isLast ? ' ★' : ''}
+                        {volume}{isLast ? ' ★' : ''}
                       </span>
                     )
                   })}
                 </div>
               </div>
-              {gi < INDUCTION_STEPS.length - 1 && <div className="w-px h-8 bg-gray-300 mx-1 shrink-0" />}
+              {groupIndex < INDUCTION_STEPS.length - 1 && <div className="w-px h-8 bg-gray-300 mx-1 shrink-0" />}
             </div>
           )
         })}
@@ -90,8 +90,8 @@ function InductionProgress({ currentStepIndex, progressPct }: { currentStepIndex
   )
 }
 
-function MaintenanceTimeline({ patientApps, isMaintenance, currentInterval }: { patientApps: Application[]; isMaintenance: boolean; currentInterval: number }) {
-  const maintenanceApps = patientApps.filter((a) => a.status === 'completed' && a.cycle.days >= 14)
+function MaintenanceTimeline({ patientApplications, isMaintenance, currentInterval }: { patientApplications: Application[]; isMaintenance: boolean; currentInterval: number }) {
+  const maintenanceApplications = patientApplications.filter((application) => application.status === 'completed' && application.cycle.days >= 14)
   const fillWidth = !isMaintenance
     ? '0%'
     : currentInterval >= 28
@@ -111,7 +111,7 @@ function MaintenanceTimeline({ patientApps, isMaintenance, currentInterval }: { 
         <div className="absolute top-2.25 left-6 h-px bg-violet-400 transition-all duration-700" style={{ width: fillWidth }} />
         {MAINTENANCE_INTERVALS.map((step) => {
           const isActive = isMaintenance && currentInterval >= step.days
-          const firstApp = maintenanceApps.find((a) => a.cycle.days === step.days)
+          const firstApplication = maintenanceApplications.find((application) => application.cycle.days === step.days)
           return (
             <div key={step.days} className="flex flex-col items-center z-10">
               <div className={cn(
@@ -126,7 +126,7 @@ function MaintenanceTimeline({ patientApps, isMaintenance, currentInterval }: { 
                   {step.label}
                 </div>
                 <div className="text-[0.45rem] text-(--text-muted)">
-                  {firstApp ? firstApp.date : '—'}
+                  {firstApplication ? firstApplication.date : '—'}
                 </div>
               </div>
             </div>

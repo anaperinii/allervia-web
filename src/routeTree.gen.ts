@@ -19,6 +19,7 @@ import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PersonalizationRouteImport } from './routes/personalization'
 import { Route as PatientReportRouteImport } from './routes/patient-report'
 import { Route as PatientEvolutionRouteImport } from './routes/patient-evolution'
+import { Route as PatientCompletionRouteImport } from './routes/patient-completion'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImmunotherapiesRouteImport } from './routes/immunotherapies'
@@ -81,6 +82,11 @@ const PatientReportRoute = PatientReportRouteImport.update({
 const PatientEvolutionRoute = PatientEvolutionRouteImport.update({
   id: '/patient-evolution',
   path: '/patient-evolution',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PatientCompletionRoute = PatientCompletionRouteImport.update({
+  id: '/patient-completion',
+  path: '/patient-completion',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/immunotherapies': typeof ImmunotherapiesRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
+  '/patient-completion': typeof PatientCompletionRoute
   '/patient-evolution': typeof PatientEvolutionRoute
   '/patient-report': typeof PatientReportRoute
   '/personalization': typeof PersonalizationRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/immunotherapies': typeof ImmunotherapiesRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
+  '/patient-completion': typeof PatientCompletionRoute
   '/patient-evolution': typeof PatientEvolutionRoute
   '/patient-report': typeof PatientReportRoute
   '/personalization': typeof PersonalizationRoute
@@ -213,6 +221,7 @@ export interface FileRoutesById {
   '/immunotherapies': typeof ImmunotherapiesRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
+  '/patient-completion': typeof PatientCompletionRoute
   '/patient-evolution': typeof PatientEvolutionRoute
   '/patient-report': typeof PatientReportRoute
   '/personalization': typeof PersonalizationRoute
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/immunotherapies'
     | '/login'
     | '/notifications'
+    | '/patient-completion'
     | '/patient-evolution'
     | '/patient-report'
     | '/personalization'
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/immunotherapies'
     | '/login'
     | '/notifications'
+    | '/patient-completion'
     | '/patient-evolution'
     | '/patient-report'
     | '/personalization'
@@ -290,6 +301,7 @@ export interface FileRouteTypes {
     | '/immunotherapies'
     | '/login'
     | '/notifications'
+    | '/patient-completion'
     | '/patient-evolution'
     | '/patient-report'
     | '/personalization'
@@ -316,6 +328,7 @@ export interface RootRouteChildren {
   ImmunotherapiesRoute: typeof ImmunotherapiesRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
+  PatientCompletionRoute: typeof PatientCompletionRoute
   PatientEvolutionRoute: typeof PatientEvolutionRoute
   PatientReportRoute: typeof PatientReportRoute
   PersonalizationRoute: typeof PersonalizationRoute
@@ -399,6 +412,13 @@ declare module '@tanstack/react-router' {
       path: '/patient-evolution'
       fullPath: '/patient-evolution'
       preLoaderRoute: typeof PatientEvolutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patient-completion': {
+      id: '/patient-completion'
+      path: '/patient-completion'
+      fullPath: '/patient-completion'
+      preLoaderRoute: typeof PatientCompletionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -508,6 +528,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImmunotherapiesRoute: ImmunotherapiesRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
+  PatientCompletionRoute: PatientCompletionRoute,
   PatientEvolutionRoute: PatientEvolutionRoute,
   PatientReportRoute: PatientReportRoute,
   PersonalizationRoute: PersonalizationRoute,

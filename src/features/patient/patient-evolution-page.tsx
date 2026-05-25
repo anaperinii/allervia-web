@@ -7,6 +7,7 @@ import { addDays, differenceInDays, format } from 'date-fns'
 import { Button, CancelWizardModal, IconButton, toast, WizardStepsIndicator } from '@/shared/components'
 import { usePatientStore } from '@/features/patient/stores/patient-store'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
+import { derivePatientDates } from '@/features/patient/lib/patient-dates'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
 import { useHasPermission, useUserStore } from '@/shared/identity/user-store'
 import { useAuditStore } from '@/shared/audit/audit-store'
@@ -59,32 +60,32 @@ export function PatientEvolutionPage() {
 
   useEffect(() => {
     if (preselectedId && !selectedImmunotherapy) {
-      const found = immunotherapies.find((i) => i.id === preselectedId)
+      const found = immunotherapies.find((immunotherapy) => immunotherapy.id === preselectedId)
       if (found) handleSelect(found)
     }
   }, [preselectedId, immunotherapies])
 
   const applicationsForPatient = useMemo(() => {
     if (!selectedImmunotherapy) return []
-    return applications.filter((a) => a.patientId === selectedImmunotherapy.id)
+    return applications.filter((application) => application.patientId === selectedImmunotherapy.id)
   }, [applications, selectedImmunotherapy])
 
-  const lastApp = useMemo(() => {
-    const realized = applicationsForPatient.filter((a) => a.status === 'completed')
+  const lastApplication = useMemo(() => {
+    const realized = applicationsForPatient.filter((application) => application.status === 'completed')
     if (!realized.length) return null
     return [...realized].sort((a, b) => comparePtDateDesc(a.date, b.date))[0]
   }, [applicationsForPatient])
 
   const doseNumber = useMemo(
-    () => applicationsForPatient.filter((a) => a.status === 'completed').length,
+    () => applicationsForPatient.filter((application) => application.status === 'completed').length,
     [applicationsForPatient],
   )
 
   const nextDose = useMemo(() => {
-    if (!lastApp || !selectedImmunotherapy) return null
-    const [d, m, y] = lastApp.date.split('/')
-    const currentDose = `${lastApp.extractConcentration || lastApp.dose.split(' - ')[0]} - ${lastApp.appliedVolume || lastApp.dose.split(' - ')[1]}`
-    const currentInterval = lastApp.cycle.days
+    if (!lastApplication || !selectedImmunotherapy) return null
+    const [d, m, y] = lastApplication.date.split('/')
+    const currentDose = `${lastApplication.extractConcentration || lastApplication.dose.split(' - ')[0]} - ${lastApplication.appliedVolume || lastApplication.dose.split(' - ')[1]}`
+    const currentInterval = lastApplication.cycle.days
     const calc = calculateNextDose(currentDose, currentInterval)
     const nextDate = addDays(new Date(+y, +m - 1, +d), calc.interval)
     const next = parseDose(calc.dose)
@@ -95,7 +96,7 @@ export function PatientEvolutionPage() {
       dose: doseNumber + 1,
       interval: calc.interval,
     }
-  }, [lastApp, selectedImmunotherapy, doseNumber])
+  }, [lastApplication, selectedImmunotherapy, doseNumber])
 
   const formValues = watch()
 
@@ -112,9 +113,11 @@ export function PatientEvolutionPage() {
   }, [formValues.applicationDate, formValues.nextInterval])
 
   const treatmentTime = useMemo(() => {
-    if (!patientFromStore?.inductionStart) return null
+    if (!patientFromStore) return null
+    const { inductionStart } = derivePatientDates(applications, patientFromStore.id)
+    if (!inductionStart) return null
     try {
-      const start = parsePtDate(patientFromStore.inductionStart)
+      const start = parsePtDate(inductionStart)
       const days = differenceInDays(new Date(), start)
       const years = Math.floor(days / 365)
       if (years > 0) return `${years} ${years === 1 ? 'ano' : 'anos'}`
@@ -124,7 +127,7 @@ export function PatientEvolutionPage() {
     } catch {
       return null
     }
-  }, [patientFromStore])
+  }, [patientFromStore, applications])
 
   const advanceStep = async () => {
     if (step === 0 && (!selectedImmunotherapy || selectedImmunotherapy.status === 'inactive')) return
@@ -261,7 +264,7 @@ export function PatientEvolutionPage() {
                 selected={selectedImmunotherapy}
                 patient={patientFromStore}
                 applicationsForPatient={applicationsForPatient}
-                lastApp={lastApp}
+                lastApplication={lastApplication}
                 doseNumber={doseNumber}
                 nextDose={nextDose}
                 treatmentTime={treatmentTime}

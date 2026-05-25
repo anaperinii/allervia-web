@@ -91,8 +91,6 @@ export function AddImmunotherapyPage() {
       cpf: data.cpf,
       weight: `${data.weight} kg`,
       extract: data.extract.trim(),
-      inductionStart: startDatePt,
-      maintenanceStart: null,
       targetConcentrationVolume: `${data.targetConcentration} - ${data.targetVolume.replace('.', ',')}ml`,
       targetReached: false,
     })

@@ -24,3 +24,16 @@ export function comparePtDateDesc(a: string, b: string): number {
 export function comparePtDateAsc(a: string, b: string): number {
   return parsePtDate(a).getTime() - parsePtDate(b).getTime()
 }
+
+export function formatDurationFromDays(days: number): string {
+  if (days < 0) return '—'
+  if (days === 0) return 'iniciado hoje'
+  if (days < 30) return `${days} ${days === 1 ? 'dia' : 'dias'}`
+  if (days < 365) {
+    const months = Math.round(days / 30)
+    return `${months} ${months === 1 ? 'mês' : 'meses'}`
+  }
+  const years = days / 365.25
+  const label = years.toFixed(1)
+  return `${label} ${label === '1.0' ? 'ano' : 'anos'}`
+}

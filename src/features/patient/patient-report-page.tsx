@@ -7,22 +7,18 @@ import { Button, IconButton, Modal } from '@/shared/components'
 import { usePatientStore } from '@/features/patient/stores/patient-store'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
-import { useHasPermission, useDoctorFilter, useUserStore } from '@/shared/identity/user-store'
-import { useAuditStore } from '@/shared/audit/audit-store'
+import { useHasPermission, useDoctorFilter } from '@/shared/identity/user-store'
 import { comparePtDateDesc } from '@/shared/lib/dates'
 import {
   exportCsv,
   exportExcel,
-  exportLgpd,
   exportPdf,
-  type LgpdFileFormat,
   type ReportData,
   type ReportFileFormat,
   type ReportSectionId,
 } from '@/features/patient/exporters'
 import { maskCpf, maskName, maskPhone } from '@/features/patient/exporters/utils'
 import { ReportClinicalPreview } from '@/features/patient/components/report/report-clinical-preview'
-import { ReportLgpdPreview } from '@/features/patient/components/report/report-lgpd-preview'
 import { ReportConfigPanel } from '@/features/patient/components/report/report-config-panel'
 
 const DEFAULT_SECTIONS: ReportSectionId[] = ['personal', 'immunotherapy', 'applications', 'progress']
@@ -33,17 +29,13 @@ export function PatientReportPage() {
   const selectedPatient = usePatientStore((s) => s.selectedPatient)
   const applications = usePatientStore((s) => s.applications)
   const immunotherapies = useImmunotherapiesStore((s) => s.immunotherapies)
-  const currentUser = useUserStore((s) => s.current)
 
   const [fileFormat, setFileFormat] = useState<ReportFileFormat>('pdf')
   const [selectedSections, setSelectedSections] = useState<ReportSectionId[]>(DEFAULT_SECTIONS)
   const [anonymized, setAnonymized] = useState(false)
-  const [consentimento, setConsentimento] = useState(false)
-  const [justificativa, setJustificativa] = useState('')
+  const [consented, setConsented] = useState(false)
+  const [justification, setJustification] = useState('')
   const [showExportModal, setShowExportModal] = useState(false)
-  const [reportMode, setReportMode] = useState<'clinico' | 'lgpd'>('clinico')
-  const [lgpdFormat, setLgpdFormat] = useState<LgpdFileFormat>('json')
-  const canLgpdPortability = useHasPermission('lgpd_portability')
   const canEmitReport = useHasPermission('emit_report')
   const doctorFilter = useDoctorFilter()
 
@@ -52,45 +44,36 @@ export function PatientReportPage() {
   }, [canEmitReport, navigate])
 
   useEffect(() => {
-    if (!canLgpdPortability && reportMode === 'lgpd') setReportMode('clinico')
-  }, [canLgpdPortability, reportMode])
-
-  useEffect(() => {
     if (!doctorFilter) return
     const targetId = selectedPatient?.id ?? patientId
     if (!targetId) return
     const patientDoctor = selectedPatient?.responsibleDoctor
-      ?? immunotherapies.find((i) => i.id === targetId)?.responsibleDoctor
+      ?? immunotherapies.find((immunotherapy) => immunotherapy.id === targetId)?.responsibleDoctor
     if (patientDoctor && patientDoctor !== doctorFilter) navigate({ to: '/immunotherapies' })
   }, [doctorFilter, selectedPatient, patientId, immunotherapies, navigate])
 
   const patient = useMemo(() => {
-    if (selectedPatient) return selectedPatient
+    if (selectedPatient && (!patientId || selectedPatient.id === patientId)) return selectedPatient
     if (!patientId) return null
-    const imm = immunotherapies.find((i) => i.id === patientId)
-    return imm ? buildPatientFromImmunotherapy(imm) : null
+    const immunotherapy = immunotherapies.find((item) => item.id === patientId)
+    return immunotherapy ? buildPatientFromImmunotherapy(immunotherapy) : null
   }, [selectedPatient, patientId, immunotherapies])
 
-  const patientApps = useMemo(() => {
+  const patientApplications = useMemo(() => {
     if (!patient) return []
     return applications
-      .filter((a) => a.patientId === patient.id)
+      .filter((application) => application.patientId === patient.id)
       .sort((a, b) => comparePtDateDesc(a.date, b.date))
   }, [patient, applications])
 
-  const realizedApps = useMemo(() => patientApps.filter((a) => a.status === 'completed'), [patientApps])
-  const reactionsCount = realizedApps.filter((a) => a.sideEffect === 'yes').length
-
-  const auditLogs = useAuditStore((s) => s.logs)
-  const patientAccessLog = useMemo(() => {
-    if (!patient) return []
-    return auditLogs
-      .filter((l) => l.patientId === patient.id)
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-  }, [auditLogs, patient])
+  const realizedApplications = useMemo(
+    () => patientApplications.filter((application) => application.status === 'completed'),
+    [patientApplications],
+  )
+  const reactionsCount = realizedApplications.filter((application) => application.sideEffect === 'yes').length
 
   const toggleSection = (id: ReportSectionId) => {
-    setSelectedSections((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]))
+    setSelectedSections((previous) => (previous.includes(id) ? previous.filter((sectionId) => sectionId !== id) : [...previous, id]))
   }
 
   if (!patient) {
@@ -113,7 +96,7 @@ export function PatientReportPage() {
     return {
       patient: masked,
       sections: selectedSections,
-      realizedApps,
+      realizedApplications,
       reactionsCount,
       generatedAt: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
       anonymized,
@@ -127,21 +110,7 @@ export function PatientReportPage() {
     else exportPdf(data)
   }
 
-  const handleExportLgpd = () => {
-    exportLgpd(
-      {
-        patient,
-        applications: patientApps,
-        accessLogs: patientAccessLog,
-        exportedAt: new Date().toISOString(),
-        exportedBy: `${currentUser.name} (${currentUser.registration})`,
-        justification: justificativa.trim(),
-      },
-      lgpdFormat,
-    )
-  }
-
-  const exportDisabled = !consentimento || !justificativa.trim()
+  const exportDisabled = !consented || !justification.trim()
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
@@ -181,55 +150,31 @@ export function PatientReportPage() {
 
         <div className="flex flex-1 min-h-0 overflow-hidden">
           <ReportConfigPanel
-            reportMode={reportMode}
-            setReportMode={setReportMode}
-            canLgpdPortability={canLgpdPortability}
             fileFormat={fileFormat}
             setFileFormat={setFileFormat}
             selectedSections={selectedSections}
             toggleSection={toggleSection}
             anonymized={anonymized}
             setAnonymized={setAnonymized}
-            consentimento={consentimento}
-            setConsentimento={setConsentimento}
-            justificativa={justificativa}
-            setJustificativa={setJustificativa}
-            realizedAppsCount={realizedApps.length}
+            consented={consented}
+            setConsented={setConsented}
+            justification={justification}
+            setJustification={setJustification}
+            realizedApplicationsCount={realizedApplications.length}
             reactionsCount={reactionsCount}
             intervalDays={patient.currentInterval}
             patientStatus={patient.status}
-            lgpdFormat={lgpdFormat}
-            setLgpdFormat={setLgpdFormat}
-            lgpdDataItems={[
-              { label: 'Dados cadastrais', count: 1 },
-              { label: 'Dados da imunoterapia', count: 1 },
-              { label: 'Aplicações', count: patientApps.length },
-              { label: 'Acessos ao prontuário', count: patientAccessLog.length },
-              { label: 'Ajustes de protocolo', count: patient.protocolAdjustments?.length ?? 0 },
-              { label: 'Inativações', count: patient.inactivations?.length ?? 0 },
-            ]}
-            onExportLgpd={handleExportLgpd}
           />
 
           <div className="flex-1 overflow-y-auto p-5 bg-gray-50/50">
-            {reportMode === 'lgpd' ? (
-              <ReportLgpdPreview
-                patient={patient}
-                applications={patientApps}
-                accessLogs={patientAccessLog}
-                lgpdFormat={lgpdFormat}
-                anonymized={anonymized}
-              />
-            ) : (
-              <ReportClinicalPreview
-                patient={patient}
-                realizedApps={realizedApps}
-                reactionsCount={reactionsCount}
-                selectedSections={selectedSections}
-                fileFormat={fileFormat}
-                anonymized={anonymized}
-              />
-            )}
+            <ReportClinicalPreview
+              patient={patient}
+              realizedApplications={realizedApplications}
+              reactionsCount={reactionsCount}
+              selectedSections={selectedSections}
+              fileFormat={fileFormat}
+              anonymized={anonymized}
+            />
           </div>
         </div>
       </div>
@@ -260,7 +205,7 @@ export function PatientReportPage() {
           <ConfirmRow label="Paciente" value={anonymized ? maskName(patient.name, true) : patient.name} />
           <ConfirmRow label="Formato" value={fileFormat.toUpperCase()} />
           <ConfirmRow label="Dados anonimizados" value={anonymized ? 'Sim' : 'Não'} accent={anonymized ? 'brand' : 'warning'} />
-          <ConfirmRow label="Justificativa" value={justificativa} truncate />
+          <ConfirmRow label="Justificativa" value={justification} truncate />
         </div>
       </Modal>
     </div>

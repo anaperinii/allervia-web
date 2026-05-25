@@ -4,11 +4,13 @@ import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
+import { derivePatientDates } from '@/features/patient/lib/patient-dates'
 import type { LgpdExportData, LgpdFileFormat } from './types'
 import { downloadFile } from './utils'
 
 function buildPayload(data: LgpdExportData) {
   const { patient, applications, accessLogs, exportedAt, justification, exportedBy } = data
+  const { inductionStart, maintenanceStart } = derivePatientDates(applications, patient.id)
   return {
     exportedAt,
     exportedBy,
@@ -31,8 +33,8 @@ function buildPayload(data: LgpdExportData) {
       tipo: patient.immunotherapyType,
       viaAdministracao: patient.administrationRoute,
       extrato: patient.extract,
-      inicioInducao: patient.inductionStart,
-      inicioManutencao: patient.maintenanceStart,
+      inicioInducao: inductionStart,
+      inicioManutencao: maintenanceStart,
       concentracaoVolumeMeta: patient.targetConcentrationVolume,
       concentracaoDoseAtuais: patient.currentDoseConcentration,
       intervaloAtual: patient.currentInterval,

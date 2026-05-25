@@ -1,3 +1,4 @@
+import type { ButtonTone } from './Button'
 import { Modal } from './Modal'
 import { Button } from './Button'
 
@@ -9,6 +10,7 @@ interface CancelWizardModalProps {
   onConfirm: () => void
   keepEditingLabel?: string
   cancelLabel?: string
+  cancelTone?: ButtonTone
 }
 
 export function CancelWizardModal({
@@ -19,6 +21,7 @@ export function CancelWizardModal({
   onConfirm,
   keepEditingLabel = 'Continuar editando',
   cancelLabel = 'Cancelar',
+  cancelTone = 'danger',
 }: CancelWizardModalProps) {
   return (
     <Modal
@@ -29,7 +32,7 @@ export function CancelWizardModal({
       footer={
         <>
           <Button variant="outline" onClick={onClose}>{keepEditingLabel}</Button>
-          <Button tone="danger" variant="solid" onClick={onConfirm}>{cancelLabel}</Button>
+          <Button tone={cancelTone} variant="solid" onClick={onConfirm}>{cancelLabel}</Button>
         </>
       }
     >

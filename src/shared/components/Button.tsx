@@ -115,7 +115,7 @@ export function Button(props: ButtonProps) {
   } = props
   const resolved = resolveLegacy(variant, tone)
   const cls = cn(
-    'rounded-lg flex items-center justify-center gap-1.5 font-semibold transition-all cursor-pointer',
+    'rounded-lg flex items-center justify-center gap-1.5 font-semibold transition-all cursor-pointer whitespace-nowrap',
     SIZE_CLASS[size],
     STYLES[resolved.tone][resolved.variant],
     prominent && resolved.variant === 'solid' && PROMINENT_SHADOW[resolved.tone],

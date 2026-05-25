@@ -1,16 +1,17 @@
 import { useEffect } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Info } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Button, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
+import { Button, ConfirmDiscardModal, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
 import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
 import {
   inactivateSchema,
   INACTIVATE_DEFAULTS,
   type InactivateForm,
 } from '@/features/patient/forms/inactivate'
+import { useUnsavedChangesGuard } from '@/shared/hooks/use-unsaved-changes-guard'
 import type { Inactivation, InactivationCategory, Patient } from '@/features/patient/stores/patient-store'
 
 interface InactivateModalProps {
@@ -26,15 +27,24 @@ export function InactivateModal({ open, patient, onClose, onConfirm }: Inactivat
     register,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
   } = useForm<InactivateForm>({
     resolver: zodResolver(inactivateSchema),
     mode: 'onBlur',
     defaultValues: INACTIVATE_DEFAULTS,
   })
-  const category = watch('category')
-  const detail = watch('detail')
+  const [category, detail, otherReason, expectedReturnDate] = useWatch({
+    control,
+    name: ['category', 'detail', 'otherReason', 'expectedReturnDate'],
+  })
+
+  const isDirty = !!category || !!detail?.trim() || !!otherReason?.trim() || !!expectedReturnDate
+
+  const { requestClose, guardOpen, cancelDiscard, confirmDiscard } = useUnsavedChangesGuard({
+    open,
+    isDirty,
+    onClose,
+  })
 
   useEffect(() => {
     if (open) reset(INACTIVATE_DEFAULTS)
@@ -62,16 +72,12 @@ export function InactivateModal({ open, patient, onClose, onConfirm }: Inactivat
   })
 
   return (
+    <>
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={requestClose}
       title="Inativar imunoterapia"
-      footer={
-        <>
-          <Button variant="outline" onClick={onClose}>Voltar</Button>
-          <Button tone="warning" variant="solid" onClick={submit}>Inativar imunoterapia</Button>
-        </>
-      }
+      footer={<Button tone="brand" variant="solid" onClick={submit}>Inativar imunoterapia</Button>}
     >
       <div className="flex items-start gap-2 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2.5">
         <Info size={14} className="text-brand shrink-0 mt-0.5" />
@@ -87,9 +93,11 @@ export function InactivateModal({ open, patient, onClose, onConfirm }: Inactivat
           render={({ field }) => (
             <Select value={field.value} onChange={field.onChange} onBlur={field.onBlur} invalid={!!errors.category}>
               <option value="" disabled>Selecione a categoria</option>
-              {(Object.keys(INACTIVATION_CATEGORY_LABELS) as InactivationCategory[]).map((k) => (
-                <option key={k} value={k}>{INACTIVATION_CATEGORY_LABELS[k]}</option>
-              ))}
+              {(Object.keys(INACTIVATION_CATEGORY_LABELS) as InactivationCategory[])
+                .filter((k) => k !== 'treatment_completion')
+                .map((k) => (
+                  <option key={k} value={k}>{INACTIVATION_CATEGORY_LABELS[k]}</option>
+                ))}
             </Select>
           )}
         />
@@ -127,5 +135,12 @@ export function InactivateModal({ open, patient, onClose, onConfirm }: Inactivat
         <span className="text-[0.7rem] font-semibold text-(--text)">{patient.responsibleDoctor}</span>
       </div>
     </Modal>
+
+    <ConfirmDiscardModal
+      open={guardOpen}
+      onCancel={cancelDiscard}
+      onConfirm={confirmDiscard}
+    />
+    </>
   )
 }

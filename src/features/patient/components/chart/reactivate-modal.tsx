@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Info, PowerOff } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { Button, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
+import { Button, ConfirmDiscardModal, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
+import { useUnsavedChangesGuard } from '@/shared/hooks/use-unsaved-changes-guard'
 import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
 import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
 import {
@@ -54,9 +55,11 @@ export function ReactivateModal({
     mode: 'onBlur',
     defaultValues: REACTIVATE_DEFAULTS,
   })
-  const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } = form
-  const concentration = watch('concentration')
-  const interval = watch('interval')
+  const { control, register, handleSubmit, reset, setValue, formState: { errors } } = form
+  const [concentration, interval, justification, note] = useWatch({
+    control,
+    name: ['concentration', 'interval', 'justification', 'note'],
+  })
   const isCustomInterval = interval && !PROTOCOL_INTERVAL_PRESET_STRINGS.includes(interval)
   const selectInterval = isCustomInterval ? 'outro' : interval
 
@@ -71,11 +74,20 @@ export function ReactivateModal({
     }
   }, [open, activeInactivation, suggestedNextDose, reset])
 
-  if (!activeInactivation) return null
+  const diverges = activeInactivation
+    ? concentration.trim() !== suggestedNextDose.trim() ||
+      interval.trim() !== String(activeInactivation.snapshotInterval)
+    : false
 
-  const diverges =
-    concentration.trim() !== suggestedNextDose.trim() ||
-    interval.trim() !== String(activeInactivation.snapshotInterval)
+  const isDirty = diverges || !!justification?.trim() || !!note?.trim()
+
+  const { requestClose, guardOpen, cancelDiscard, confirmDiscard } = useUnsavedChangesGuard({
+    open,
+    isDirty,
+    onClose,
+  })
+
+  if (!activeInactivation) return null
 
   const submit = handleSubmit((v) => {
     onConfirm({
@@ -89,14 +101,15 @@ export function ReactivateModal({
   })
 
   return (
+    <>
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={requestClose}
       title="Reativar paciente"
       size="lg"
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>Voltar</Button>
+          <Button variant="outline" onClick={requestClose}>Voltar</Button>
           <Button tone="success" variant="solid" onClick={submit}>Reativar paciente</Button>
         </>
       }
@@ -220,6 +233,13 @@ export function ReactivateModal({
         <span className="text-[0.7rem] font-semibold text-(--text)">{patient.responsibleDoctor}</span>
       </div>
     </Modal>
+
+    <ConfirmDiscardModal
+      open={guardOpen}
+      onCancel={cancelDiscard}
+      onConfirm={confirmDiscard}
+    />
+    </>
   )
 }
 
