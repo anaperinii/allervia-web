@@ -22,7 +22,7 @@ import {
   completionSchema,
   COMPLETION_DEFAULTS,
   type CompletionForm,
-} from '@/features/patient/forms/completion'
+} from '@/features/patient/schemas/completion'
 import { CompletionOverviewStep } from '@/features/patient/components/completion/completion-overview-step'
 import { CompletionFollowupStep } from '@/features/patient/components/completion/completion-followup-step'
 import { CompletionReviewStep } from '@/features/patient/components/completion/completion-review-step'

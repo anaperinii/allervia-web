@@ -1,7 +1,7 @@
 import type { UseFormReturn } from 'react-hook-form'
 import { cn } from '@/shared/lib/utils'
 import { FieldLabel, Select, TextArea, TextInput } from '@/shared/components'
-import type { EvolutionForm } from '@/features/patient/forms/evolution'
+import type { EvolutionForm } from '@/features/patient/schemas/evolution'
 
 interface PreApplicationStepProps {
   form: UseFormReturn<EvolutionForm>

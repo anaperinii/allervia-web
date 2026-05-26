@@ -3,7 +3,7 @@ import { Check, Eye, Pencil, Pill, Plus, Sprout, X } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { cn } from '@/shared/lib/utils'
 import { Button, FieldLabel, TextArea, TextInput } from '@/shared/components'
-import type { CompletionForm } from '@/features/patient/forms/completion'
+import type { CompletionForm } from '@/features/patient/schemas/completion'
 
 interface RecommendationItem {
   key: keyof Pick<CompletionForm, 'recommendRetesting' | 'maintainRescueMed' | 'environmentalControl'>

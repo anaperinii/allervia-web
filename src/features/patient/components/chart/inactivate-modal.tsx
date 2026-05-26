@@ -10,7 +10,7 @@ import {
   inactivateSchema,
   INACTIVATE_DEFAULTS,
   type InactivateForm,
-} from '@/features/patient/forms/inactivate'
+} from '@/features/patient/schemas/inactivate'
 import { useUnsavedChangesGuard } from '@/shared/hooks/use-unsaved-changes-guard'
 import type { Inactivation, InactivationCategory, Patient } from '@/features/patient/stores/patient-store'
 

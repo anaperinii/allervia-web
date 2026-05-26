@@ -1,10 +1,17 @@
+import { useState } from 'react'
 import { Blob, Reveal } from '@/shared/components'
 import { cn } from '@/shared/lib/utils'
+import { useAnimatedNumber } from '@/shared/hooks/use-animated-number'
 import { SPLIT_FEATURES } from '@/features/landing-page/constants/split-features'
 
 const PROTOCOL_STAGES = ['1:10.000', '1:1.000', '1:100', '1:10']
+const DEFAULT_STAGE_INDEX = 1
 
 export function SplitSection() {
+  const [activeStageIndex, setActiveStageIndex] = useState(DEFAULT_STAGE_INDEX)
+  const targetPct = Math.round(((activeStageIndex + 1) / PROTOCOL_STAGES.length) * 100)
+  const displayPct = useAnimatedNumber(targetPct)
+
   return (
     <section className="py-16 relative overflow-hidden">
       <Blob className="top-1/2 -left-40 -translate-y-1/2 w-105 h-105 bg-linear-to-br from-cyan-200/20 to-teal-300/15" />
@@ -26,21 +33,33 @@ export function SplitSection() {
 
           <div className="relative z-1 mt-8">
             <div className="text-[0.65rem] text-white/70 font-semibold uppercase tracking-wider mb-2.5">Progressão do protocolo</div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {PROTOCOL_STAGES.map((conc, index) => (
-                <div key={conc} className="flex items-center gap-1.5">
-                  <div className={cn('px-2.5 py-1 rounded-full text-[0.65rem] font-bold backdrop-blur-md border', index <= 1 ? 'bg-white text-teal-700 border-white' : 'bg-white/15 text-white border-white/25')}>
-                    {conc}
+            <div className="flex items-center gap-1.5 flex-wrap" role="group" aria-label="Estágios do protocolo">
+              {PROTOCOL_STAGES.map((conc, index) => {
+                const isActive = index <= activeStageIndex
+                return (
+                  <div key={conc} className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setActiveStageIndex(index)}
+                      aria-pressed={isActive}
+                      aria-label={`Avançar até ${conc}`}
+                      className={cn(
+                        'px-2.5 py-1 rounded-full text-[0.65rem] font-bold backdrop-blur-md border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-teal-500 hover:-translate-y-px',
+                        isActive ? 'bg-white text-teal-700 border-white shadow-[0_2px_8px_rgba(255,255,255,0.25)]' : 'bg-white/15 text-white border-white/25 hover:bg-white/25',
+                      )}
+                    >
+                      {conc}
+                    </button>
+                    {index < PROTOCOL_STAGES.length - 1 && <span className="text-white/50 text-xs">→</span>}
                   </div>
-                  {index < PROTOCOL_STAGES.length - 1 && <span className="text-white/50 text-xs">→</span>}
-                </div>
-              ))}
+                )
+              })}
             </div>
             <div className="mt-4 flex items-center gap-2">
               <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                <div className="h-full bg-white rounded-full" style={{ width: '60%' }} />
+                <div className="h-full bg-white rounded-full transition-[width] duration-500 ease-out" style={{ width: `${displayPct}%` }} />
               </div>
-              <span className="text-[0.7rem] font-bold text-white">60%</span>
+              <span className="text-[0.7rem] font-bold text-white tabular-nums">{displayPct}%</span>
             </div>
           </div>
         </div>

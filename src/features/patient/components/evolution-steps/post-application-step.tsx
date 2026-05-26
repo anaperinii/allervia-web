@@ -5,7 +5,7 @@ import { FieldLabel, Select, TextArea, TextInput } from '@/shared/components'
 import { formatConcentration, formatVolume } from '@/shared/lib/formatters'
 import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
 import { APPLICATION_ADMINISTRATORS } from '@/shared/identity/user-store'
-import type { EvolutionForm } from '@/features/patient/forms/evolution'
+import type { EvolutionForm } from '@/features/patient/schemas/evolution'
 
 function addMinutesToTime(time: string, minutes: number): string {
   const parts = time.split(':')

@@ -3,7 +3,7 @@ import { FieldLabel, Select, TextInput } from '@/shared/components'
 import { formatCPF, formatPhone, formatWeight } from '@/shared/lib/formatters'
 import { todayStr } from '@/shared/lib/dates'
 import { PROFILES } from '@/shared/identity/user-store'
-import type { AddImmunotherapyForm } from '@/features/immunotherapy/forms/add-immunotherapy'
+import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
 
 interface PatientDataStepProps {
   form: UseFormReturn<AddImmunotherapyForm>

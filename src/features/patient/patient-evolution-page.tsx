@@ -20,7 +20,7 @@ import {
   STEP_1_FIELDS,
   STEP_2_FIELDS,
   EVOLUTION_DEFAULTS,
-} from '@/features/patient/forms/evolution'
+} from '@/features/patient/schemas/evolution'
 import { SelectPatientStep } from '@/features/patient/components/evolution-steps/select-patient-step'
 import { PreApplicationStep } from '@/features/patient/components/evolution-steps/pre-application-step'
 import { PostApplicationStep } from '@/features/patient/components/evolution-steps/post-application-step'

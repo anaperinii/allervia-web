@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowLeft, KeyRound } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Button, FieldLabel, TextInput } from '@/shared/components'
-import type { ForgotPasswordEmailForm } from '@/features/auth/forms/forgot-password'
+import type { ForgotPasswordEmailForm } from '@/features/auth/schemas/forgot-password'
 
 interface RequestEmailStepProps {
   form: UseFormReturn<ForgotPasswordEmailForm>

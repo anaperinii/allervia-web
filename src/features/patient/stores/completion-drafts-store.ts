@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { CompletionForm } from '@/features/patient/forms/completion'
+import type { CompletionForm } from '@/features/patient/schemas/completion'
 
 export interface CompletionDraft {
   patientId: string

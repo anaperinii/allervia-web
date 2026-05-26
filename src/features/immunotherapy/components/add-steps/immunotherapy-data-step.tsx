@@ -4,7 +4,7 @@ import { formatConcentration, formatVolume } from '@/shared/lib/formatters'
 import { todayStr } from '@/shared/lib/dates'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-types-store'
 import { MODALITY_OPTIONS } from '@/features/immunotherapy/constants/modality'
-import type { AddImmunotherapyForm } from '@/features/immunotherapy/forms/add-immunotherapy'
+import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
 
 interface ImmunotherapyDataStepProps {
   form: UseFormReturn<AddImmunotherapyForm>

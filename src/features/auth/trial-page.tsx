@@ -6,7 +6,7 @@ import { ArrowRight, Shield, Check, Clock, Mail } from 'lucide-react'
 import { Modal, Button, FieldLabel, TextInput, Select } from '@/shared/components'
 import imunecareLogo from '@/assets/imunecare-logo.png'
 import imunecareWhiteLogo from '@/assets/imunecare-white-logo.png'
-import { trialSchema, type TrialForm } from '@/features/auth/forms/trial'
+import { trialSchema, type TrialForm } from '@/features/auth/schemas/trial'
 import { formatPhone } from '@/shared/lib/formatters'
 
 const ROLE_OPTIONS = [
@@ -21,12 +21,6 @@ const SOLUTION_OPTIONS = [
   { value: 'self', label: 'Para mim (uso próprio)' },
   { value: 'single_clinic', label: 'Para minha clínica' },
   { value: 'clinic_network', label: 'Para uma rede de clínicas' },
-] as const
-
-const STATS = [
-  { value: '+94%', label: 'Adesão ao tratamento' },
-  { value: '3x', label: 'Mais eficiência clínica' },
-  { value: '100%', label: 'Rastreabilidade' },
 ] as const
 
 const TRUST_BADGES = [
@@ -76,14 +70,6 @@ export function TrialPage() {
           Cálculos automáticos. Histórico unificado. Rastreabilidade total.
           Transforme complexidade em clareza e recupere o tempo que você merece dedicar aos seus pacientes.
         </p>
-        <div className="flex gap-3 relative z-10">
-          {STATS.map((stat) => (
-            <div key={stat.label} className="flex-1 bg-white/12 border border-white/18 backdrop-blur-md rounded-xl px-4 py-3">
-              <div className="text-lg font-extrabold text-white tracking-tight">{stat.value}</div>
-              <div className="text-[0.65rem] text-white/65 font-medium mt-0.5">{stat.label}</div>
-            </div>
-          ))}
-        </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center bg-gray-50/80 px-6 py-8 overflow-y-auto">
@@ -93,9 +79,8 @@ export function TrialPage() {
             <span className="text-base font-bold gradient-text">ImuneCare</span>
           </div>
 
-          <p className="text-[0.65rem] font-bold uppercase tracking-[1.2px] text-brand mb-1.5">Sem cartão de crédito · 14 dias grátis</p>
           <h2 className="text-lg font-extrabold text-(--text) tracking-tight mb-1">Solicite seu acesso gratuito</h2>
-          <p className="text-[0.7rem] text-(--text-muted) mb-5 leading-relaxed">Preencha os dados abaixo e nossa equipe libera seu acesso em até 1 dia útil.</p>
+          <p className="text-[0.7rem] text-(--text-muted) mb-5 leading-relaxed">Preencha os dados abaixo e nossa equipe libera seu acesso em até 1 dia útil. <span className="font-semibold text-(--text)">14 dias grátis</span>, sem cartão de crédito.</p>
 
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
             <FieldLabel label="Nome" required error={errors.name?.message}>

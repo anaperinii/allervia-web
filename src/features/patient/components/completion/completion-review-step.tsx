@@ -2,7 +2,7 @@ import { AlertOctagon, Check, Lock } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { cn } from '@/shared/lib/utils'
 import { FieldLabel, TextArea } from '@/shared/components'
-import type { CompletionForm } from '@/features/patient/forms/completion'
+import type { CompletionForm } from '@/features/patient/schemas/completion'
 import type { Patient } from '@/features/patient/stores/patient-store'
 
 interface CompletionReviewStepProps {

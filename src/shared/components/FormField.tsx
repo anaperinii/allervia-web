@@ -34,6 +34,7 @@ const FIELD_VALID = 'border-(--border-custom)'
 interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
   invalid?: boolean
 }
+
 export function TextInput({ invalid, className, ...rest }: TextInputProps) {
   return <input {...rest} aria-invalid={invalid || undefined} className={cn(FIELD_BASE, 'h-9', invalid ? FIELD_INVALID : FIELD_VALID, className)} />
 }

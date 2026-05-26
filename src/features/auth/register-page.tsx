@@ -4,24 +4,25 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Check } from 'lucide-react'
 import { AuthLayout } from '@/features/auth/components/auth-layout'
 import { AuthStepTransition } from '@/features/auth/components/auth-step-transition'
-import { registerSchema, type RegisterForm } from '@/features/auth/forms/register'
+import { registerSchema, type RegisterForm } from '@/features/auth/schemas/register'
 import { WelcomeStep } from '@/features/auth/components/register-steps/welcome-step'
 import { FormStep } from '@/features/auth/components/register-steps/form-step'
 import { VerifyStep } from '@/features/auth/components/register-steps/verify-step'
 import { DoneStep } from '@/features/auth/components/register-steps/done-step'
 import { toast } from '@/shared/components'
+import { maskWithPrefix } from '@/shared/lib/mask'
 
 type Step = 'welcome' | 'form' | 'verify' | 'done'
 
 const STUB_INVITE = {
   email: 'jaque.rod55@gmail.com',
   inviterName: 'Tatiana Gonçalves de Abreu',
-  organizationName: 'Clínica ImuneCare',
+  organizationName: 'Instituto Vitality',
 }
 
 function maskEmail(email: string) {
   const [local, domain] = email.split('@')
-  return `${local.slice(0, 3)}${'*'.repeat(Math.max(local.length - 3, 3))}@${domain}`
+  return `${maskWithPrefix(local)}@${domain}`
 }
 
 export function RegisterPage() {
