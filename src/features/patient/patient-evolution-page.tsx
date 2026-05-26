@@ -5,12 +5,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, CheckCircle } from 'lucide-react'
 import { addDays, differenceInDays, format } from 'date-fns'
 import { Button, CancelWizardModal, IconButton, toast, WizardStepsIndicator } from '@/shared/components'
-import { usePatientStore } from '@/features/patient/stores/patient-store'
+import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import { derivePatientDates } from '@/features/patient/lib/patient-dates'
-import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
-import { useHasPermission, useUserStore } from '@/shared/identity/user-store'
-import { useAuditStore } from '@/shared/audit/audit-store'
+import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { useHasPermission, useUserStore } from '@/shared/stores/useUserStore'
+import { useAuditStore } from '@/shared/stores/useAuditStore'
 import { calculateNextDose, parseDose } from '@/features/immunotherapy/constants/scit-protocol'
 import { comparePtDateDesc, parsePtDate } from '@/shared/lib/dates'
 import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
@@ -21,10 +21,10 @@ import {
   STEP_2_FIELDS,
   EVOLUTION_DEFAULTS,
 } from '@/features/patient/schemas/evolution'
-import { SelectPatientStep } from '@/features/patient/components/evolution-steps/select-patient-step'
-import { PreApplicationStep } from '@/features/patient/components/evolution-steps/pre-application-step'
-import { PostApplicationStep } from '@/features/patient/components/evolution-steps/post-application-step'
-import { EvolutionReviewStep } from '@/features/patient/components/evolution-steps/evolution-review-step'
+import { SelectPatientStep } from '@/features/patient/components/treatment-evolution/SelectPatientStep'
+import { PreApplicationStep } from '@/features/patient/components/treatment-evolution/PreApplicationStep'
+import { PostApplicationStep } from '@/features/patient/components/treatment-evolution/PostApplicationStep'
+import { EvolutionReviewStep } from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
 
 export function PatientEvolutionPage() {
   const navigate = useNavigate()

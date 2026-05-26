@@ -1,5 +1,5 @@
 import { format } from 'date-fns'
-import { ACTION_LABELS } from '@/shared/audit/audit-store'
+import { ACTION_LABELS } from '@/shared/stores/useAuditStore'
 import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,

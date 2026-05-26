@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
-import { useDoctorFilter } from '@/shared/identity/user-store'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { useDoctorFilter } from '@/shared/stores/useUserStore'
 import { getPhase } from '@/features/immunotherapy/constants/scit-protocol'
 import { DEFAULT_IMMUNOTHERAPY_TYPES, VOLUME_KEYS } from '@/features/dashboard/constants/chart-colors'
 

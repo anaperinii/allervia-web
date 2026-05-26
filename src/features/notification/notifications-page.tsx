@@ -1,18 +1,13 @@
 import { useMemo, useState } from 'react'
-import { isAfter, isBefore, parse, startOfDay, endOfDay } from 'date-fns'
-import { useNotificationsStore, TYPE_TO_CATEGORY } from '@/features/notification/stores/notifications-store'
+import { isAfter, isBefore, startOfDay, endOfDay } from 'date-fns'
+import { useNotificationsStore, TYPE_TO_CATEGORY } from '@/features/notification/stores/useNotificationsStore'
 import type { NotificationTabKey } from '@/features/notification/constants/notification-display'
-import type { ReadFilter } from '@/features/notification/components/notification-filter-bar'
-import { NotificationsHeader } from '@/features/notification/components/notifications-header'
-import { NotificationFilterBar } from '@/features/notification/components/notification-filter-bar'
-import { NotificationListItem } from '@/features/notification/components/notification-list-item'
-import { NotificationsEmpty } from '@/features/notification/components/notifications-empty'
-
-function parseDateInput(value: string): Date | null {
-  if (!value) return null
-  const parsed = parse(value, 'yyyy-MM-dd', new Date())
-  return isNaN(parsed.getTime()) ? null : parsed
-}
+import type { ReadFilter } from '@/features/notification/components/NotificationFilterBar'
+import { NotificationsHeader } from '@/features/notification/components/NotificationsHeader'
+import { NotificationFilterBar } from '@/features/notification/components/NotificationFilterBar'
+import { NotificationListItem } from '@/features/notification/components/NotificationListItem'
+import { NotificationsEmpty } from '@/features/notification/components/NotificationsEmpty'
+import { parseIsoDate } from '@/shared/lib/dates'
 
 export function NotificationsPage() {
   const { notifications, markAsRead, markAsUnread, markAllAsRead, markSelectedAsRead, markSelectedAsUnread } =
@@ -26,8 +21,8 @@ export function NotificationsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const { effectiveDateFrom, effectiveDateTo, dateRangeError } = useMemo(() => {
-    const from = parseDateInput(dateFrom)
-    const to = parseDateInput(dateTo)
+    const from = parseIsoDate(dateFrom)
+    const to = parseIsoDate(dateTo)
     if (from && to && from > to) {
       return { effectiveDateFrom: null, effectiveDateTo: null, dateRangeError: true }
     }

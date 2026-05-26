@@ -1,7 +1,7 @@
 import { ArrowLeft, Contrast, Eye, Layout, MousePointer, Type } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { IconButton, Switch } from '@/shared/components'
-import { useSettingsStore, type Density, type Theme } from '@/features/settings/stores/settings-store'
+import { useSettingsStore, type Density, type Theme } from '@/features/settings/stores/useSettingsStore'
 
 const THEME_OPTIONS: { id: Theme; label: string; preview: string }[] = [
   { id: 'light', label: 'Claro', preview: 'bg-white border-2' },

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { ProtocolAdjustmentType } from '@/features/patient/stores/patient-store'
+import type { ProtocolAdjustmentType } from '@/features/patient/stores/usePatientStore'
 
 const adjustmentTypes = ['', 'dose_reduction', 'interval_increase', 'concentration_change', 'suspension', 'other'] as const
 

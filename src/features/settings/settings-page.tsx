@@ -8,8 +8,9 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useUserStore, ROLE_LABELS, ROLE_PERMISSIONS, type Permission } from '@/shared/identity/user-store'
-import { Button, CardButton } from '@/shared/components'
+import { useUserStore, ROLE_LABELS, ROLE_PERMISSIONS, type Permission } from '@/shared/stores/useUserStore'
+import { Button } from '@/shared/components'
+import { CardButton } from '@/features/settings/components/CardButton'
 
 interface SettingsOption {
   icon: LucideIcon

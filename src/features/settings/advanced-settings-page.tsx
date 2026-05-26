@@ -16,23 +16,23 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
-import { useHasPermission } from '@/shared/identity/user-store'
-import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-types-store'
+import { useHasPermission } from '@/shared/stores/useUserStore'
+import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
 import {
   useSettingsStore,
   type EventColor,
   type Language,
   type Timezone,
-} from '@/features/settings/stores/settings-store'
+} from '@/features/settings/stores/useSettingsStore'
 import {
   Button,
   FieldLabel,
   IconButton,
-  MediaRow,
   Select,
   Switch,
   TextInput,
 } from '@/shared/components'
+import { MediaRow } from '@/features/settings/components/MediaRow'
 
 const FIXED_EVENT_IDS = ['subcutaneous', 'sublingual', 'missed']
 

@@ -17,6 +17,65 @@ export function parsePtDate(value: string): Date {
   return new Date(Number(year), Number(month) - 1, Number(day))
 }
 
+export function isoToPtDate(iso: string): string {
+  const [year, month, day] = iso.split('-')
+  return `${day}/${month}/${year}`
+}
+
+export function calculateAge(birthDateIso: string): number {
+  const birth = new Date(birthDateIso + 'T12:00')
+  if (isNaN(birth.getTime())) return 0
+  const now = new Date()
+  let age = now.getFullYear() - birth.getFullYear()
+  const monthDiff = now.getMonth() - birth.getMonth()
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--
+  return age
+}
+
+export function formatIsoToPtOrDash(value: string): string {
+  if (!value) return '—'
+  try {
+    const date = new Date(value + 'T12:00')
+    if (isNaN(date.getTime())) return '—'
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}/${month}/${year}`
+  } catch {
+    return '—'
+  }
+}
+
+export function parseIsoDate(value: string): Date | null {
+  if (!value) return null
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return null
+  const parsed = new Date(year, month - 1, day)
+  return isNaN(parsed.getTime()) ? null : parsed
+}
+
+export function addMinutesToTime(time: string, minutes: number): string {
+  const parts = time.split(':')
+  if (parts.length !== 2) return ''
+  const hours = parseInt(parts[0], 10)
+  const mins = parseInt(parts[1], 10)
+  if (isNaN(hours) || isNaN(mins)) return ''
+  const total = hours * 60 + mins + minutes
+  const newHours = Math.floor(total / 60) % 24
+  const newMinutes = total % 60
+  return `${String(newHours).padStart(2, '0')}:${String(newMinutes).padStart(2, '0')}`
+}
+
+export function formatDurationFromIsoStart(start: string | null, end: Date = new Date()): string {
+  if (!start || start === '—') return '—'
+  try {
+    const days = Math.round((end.getTime() - parsePtDate(start).getTime()) / (1000 * 60 * 60 * 24))
+    return formatDurationFromDays(days)
+  } catch {
+    return '—'
+  }
+}
+
 export function comparePtDateDesc(a: string, b: string): number {
   return parsePtDate(b).getTime() - parsePtDate(a).getTime()
 }
