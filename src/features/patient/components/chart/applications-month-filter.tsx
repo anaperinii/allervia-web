@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { IconButton } from '@/shared/components'
-import { useScrollIndicators } from '@/shared/hooks/use-scroll-indicators'
+import { useScrollIndicators } from '@/shared/hooks/useScrollIndicators'
 
 interface MonthOption {
   key: string

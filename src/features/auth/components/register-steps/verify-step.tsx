@@ -1,6 +1,6 @@
 import { Clock, Mail } from 'lucide-react'
 import { Button, VerificationCodeInput } from '@/shared/components'
-import { useCountdown } from '@/shared/hooks/use-countdown'
+import { useCountdown } from '@/shared/hooks/useCountdown'
 
 const CODE_TTL_SECONDS = 10 * 60
 

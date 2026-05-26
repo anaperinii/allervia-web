@@ -1,6 +1,6 @@
-import type { ButtonTone } from './Button'
+import type { ButtonTone } from '../forms/Button'
 import { Modal } from './Modal'
-import { Button } from './Button'
+import { Button } from '../forms/Button'
 
 interface CancelWizardModalProps {
   open: boolean

@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Button, ConfirmDiscardModal, FieldLabel, Modal, ReadOnlyField, Select, TextInput } from '@/shared/components'
 import { PROFILES } from '@/shared/identity/user-store'
 import { editPatientSchema, type EditPatientForm } from '@/features/patient/schemas/edit-patient'
-import { useUnsavedChangesGuard } from '@/shared/hooks/use-unsaved-changes-guard'
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import type { Patient } from '@/features/patient/stores/patient-store'
 
 const DOCTORS = PROFILES.filter((p) => p.role === 'doctor')

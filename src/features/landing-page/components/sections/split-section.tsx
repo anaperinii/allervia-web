@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Blob, Reveal } from '@/shared/components'
 import { cn } from '@/shared/lib/utils'
-import { useAnimatedNumber } from '@/shared/hooks/use-animated-number'
+import { useAnimatedNumber } from '@/shared/hooks/useAnimatedNumber'
 import { SPLIT_FEATURES } from '@/features/landing-page/constants/split-features'
 
 const PROTOCOL_STAGES = ['1:10.000', '1:1.000', '1:100', '1:10']

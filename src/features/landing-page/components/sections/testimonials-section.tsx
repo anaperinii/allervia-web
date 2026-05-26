@@ -23,7 +23,7 @@ function TestimonialCard({ quote, name, handle, initials }: Testimonial) {
 }
 
 export function TestimonialsSection() {
-  
+
   const marqueeItems = useMemo(() => [...TESTIMONIALS, ...TESTIMONIALS], [])
 
   return (

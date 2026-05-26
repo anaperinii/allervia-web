@@ -35,19 +35,16 @@ export const cpfSchema = z
   .min(1, 'CPF é obrigatório')
   .refine(isValidCPF, 'CPF inválido')
 
-
 export const phoneSchema = z
   .string()
   .min(1, 'Telefone é obrigatório')
   .refine((v) => v.replace(/\D/g, '').length === 11, 'Telefone inválido (11 dígitos)')
-
 
 export const nameSchema = z
   .string()
   .min(1, 'Nome é obrigatório')
   .min(3, 'Nome deve ter ao menos 3 caracteres')
   .regex(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/, 'Nome deve conter apenas letras')
-
 
 export const weightSchema = z
   .string()
@@ -56,7 +53,6 @@ export const weightSchema = z
     const n = parseFloat(v.replace(',', '.'))
     return !isNaN(n) && n > 0 && n <= 500
   }, 'Peso inválido (0–500 kg)')
-
 
 export const birthdateSchema = z
   .string()
@@ -70,7 +66,6 @@ export const birthdateSchema = z
     return date <= today && date >= minDate
   }, 'Data de nascimento inválida')
 
-
 export const futureDateSchema = z
   .string()
   .min(1, 'Data é obrigatória')
@@ -79,7 +74,6 @@ export const futureDateSchema = z
     today.setHours(0, 0, 0, 0)
     return new Date(v + 'T12:00') >= today
   }, 'Selecione uma data presente ou futura')
-
 
 const EXTRATO_COMPONENT_RE = /^[A-Za-zÀ-ÖØ-öø-ÿ]+(?:\s[A-Za-zÀ-ÖØ-öø-ÿ]+)*\s+\d+(?:\.\d+)?%$/
 
@@ -113,12 +107,10 @@ export const extratoSchema = z
     }
   })
 
-  
 export const concentrationSchema = z
   .string()
   .min(1, 'Concentração é obrigatória')
   .regex(/^1:\d{1,3}(\.\d{3})*$/, 'Formato inválido. Use 1:N (ex: 1:10, 1:1.000, 1:10.000)')
-
 
 export const volumeSchema = z
   .string()

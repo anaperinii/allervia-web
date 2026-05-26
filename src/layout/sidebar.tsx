@@ -85,7 +85,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         isCollapsed ? "w-16" : "w-56"
       )}
     >
-      {/* Logo */}
+      {}
       <div
         className={cn(
           "flex items-center h-14 border-b border-(--border-custom) px-3 gap-2.5 transition-all duration-300",
@@ -115,7 +115,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         )}
       </button>
 
-      {/* Navigation */}
+      {}
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto overflow-x-hidden">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path
@@ -146,7 +146,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           )
         })}
 
-        {/* Notifications */}
+        {}
         <div className="relative">
           <button
             ref={notificationButtonRef}
@@ -277,7 +277,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         </div>
       )}
 
-      {/* User profile */}
+      {}
       <div className="relative border-t border-(--border-custom) p-2">
         <button
           ref={userButtonRef}
@@ -349,7 +349,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         )}
       </div>
 
-      {/* Modal de confirmação de logout */}
+      {}
       <Modal
         open={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}

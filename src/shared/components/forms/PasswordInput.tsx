@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
-import { TextInput } from '@/shared/components/FormField'
+import { TextInput } from './FormField'
 import { cn } from '@/shared/lib/utils'
 import type { InputHTMLAttributes } from 'react'
 

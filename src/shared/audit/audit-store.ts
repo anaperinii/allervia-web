@@ -1,13 +1,6 @@
 import { create } from 'zustand'
 import type { UserRole } from '@/shared/identity/user-store'
 
-/**
- * RNE-021 — Auditoria na visualização do prontuário.
- * Log append-only: cada abertura do prontuário gera um registro imutável
- * com quem, quando e qual paciente. Usado para cumprir LGPD Art. 18, V
- * (portabilidade) e Art. 19 (direito de acesso) — o titular tem direito
- * de saber quem acessou seus dados.
- */
 export type AuditAction = 'view_chart' | 'view_report' | 'export_lgpd' | 'edit_patient' | 'adjust_protocol' | 'inactivate' | 'reactivate' | 'apply_dose'
 
 export interface AccessLog {
@@ -19,9 +12,9 @@ export interface AccessLog {
   patientId: string
   patientName: string
   action: AuditAction
-  /** Descrição concreta do que foi feito (ex: "Aplicou 1:100 - 0,4ml", "Editou telefone"). */
+
   description: string
-  timestamp: string  // ISO string
+  timestamp: string  
 }
 
 interface AuditState {
@@ -38,7 +31,7 @@ function buildSeedLogs(): AccessLog[] {
   const carla = { userId: 'admin', userName: 'Carla Souza', userRole: 'admin' as const, userRegistration: 'Gestão clínica' }
 
   const seeds: Array<Omit<AccessLog, 'id'>> = [
-    // Visualizações 
+
     { ...karina, patientId: '1', patientName: 'Bárbara Sofia Diniz', action: 'view_chart', description: 'Consultou o prontuário', timestamp: '2026-04-15T09:12:04.000Z' },
     { ...karina, patientId: '2', patientName: 'Camilla Martins', action: 'view_chart', description: 'Consultou o prontuário', timestamp: '2026-04-14T10:03:17.000Z' },
     { ...karina, patientId: '5', patientName: 'Heitor Guimarães de Assis', action: 'view_chart', description: 'Consultou o prontuário', timestamp: '2026-04-10T14:22:48.000Z' },
@@ -48,7 +41,6 @@ function buildSeedLogs(): AccessLog[] {
     { ...jaque, patientId: '2', patientName: 'Camilla Martins', action: 'view_chart', description: 'Consultou o prontuário antes da aplicação', timestamp: '2026-04-17T09:52:11.000Z' },
     { ...carla, patientId: '12', patientName: 'Roberto Alves Neto', action: 'view_chart', description: 'Auditoria administrativa periódica', timestamp: '2026-04-05T16:20:08.000Z' },
 
-    // Aplicações (enfermagem/técnico)
     { ...jaque, patientId: '1', patientName: 'Bárbara Sofia Diniz', action: 'apply_dose', description: 'Aplicou 1:10.000 - 0,1ml (indução, ciclo 1 · intervalo 7 dias)', timestamp: '2026-04-11T09:18:00.000Z' },
     { ...jaque, patientId: '2', patientName: 'Camilla Martins', action: 'apply_dose', description: 'Aplicou 1:1.000 - 0,2ml (indução, ciclo 1 · intervalo 7 dias)', timestamp: '2026-04-11T10:12:00.000Z' },
     { ...rafael, patientId: '3', patientName: 'Ana Clara de Souza Martins', action: 'apply_dose', description: 'Aplicou 1:100 - 0,1ml (indução, ciclo 1 · intervalo 7 dias) — reação adversa leve registrada', timestamp: '2026-03-23T10:42:00.000Z' },
@@ -60,7 +52,6 @@ function buildSeedLogs(): AccessLog[] {
     { ...jaque, patientId: '8', patientName: 'Patrício Gomes Cardoso', action: 'apply_dose', description: 'Aplicou 1:1.000 - 0,1ml (indução, ciclo 1 · intervalo 7 dias)', timestamp: '2026-04-11T09:10:00.000Z' },
     { ...rafael, patientId: '9', patientName: 'Pedro Luccas Pereira', action: 'apply_dose', description: 'Aplicou 1:100 - 0,2ml (indução, ciclo 1 · intervalo 7 dias)', timestamp: '2026-04-11T10:32:00.000Z' },
 
-    // Operações clínicas (médico)
     { ...andre, patientId: '3', patientName: 'Ana Clara de Souza Martins', action: 'adjust_protocol', description: 'Ajustou protocolo após reação adversa: redução de dose para 1:100 - 0,1ml', timestamp: '2026-03-23T14:35:12.000Z' },
     { ...karina, patientId: '8', patientName: 'Patrício Gomes Cardoso', action: 'edit_patient', description: 'Editou dados de contato (telefone atualizado)', timestamp: '2026-04-02T10:20:00.000Z' },
     { ...karina, patientId: '10', patientName: 'Lucas Ferreira Lima', action: 'inactivate', description: 'Inativou tratamento — motivo: solicitação do paciente (interrupção por motivos pessoais)', timestamp: '2026-02-15T09:22:14.000Z' },

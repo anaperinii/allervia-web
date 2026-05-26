@@ -5,7 +5,7 @@ import { Button, ConfirmDiscardModal, Modal, SegmentedControl, TextArea } from '
 import { usePatientStore } from '@/features/patient/stores/patient-store'
 import { useAuditStore } from '@/shared/audit/audit-store'
 import { useUserStore } from '@/shared/identity/user-store'
-import { useUnsavedChangesGuard } from '@/shared/hooks/use-unsaved-changes-guard'
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import { exportLgpd, type LgpdFileFormat } from '@/features/patient/exporters'
 import type { Patient } from '@/features/patient/stores/patient-store'
 

@@ -6,10 +6,6 @@ import type { ButtonTone } from './Button'
 export type IconButtonTone = ButtonTone
 export type IconButtonSize = 'sm' | 'md' | 'lg'
 
-/**
- * Legacy single-string variant — kept for backward compatibility.
- * Old API: `variant="default" | "brand" | "danger"`.
- */
 export type IconButtonLegacyVariant = 'default' | 'brand' | 'danger'
 
 type SharedProps = {
@@ -70,7 +66,7 @@ export function IconButton(props: IconButtonProps) {
 
   if ('to' in props && props.to !== undefined) {
     return (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       <Link to={props.to as any} params={props.params as any} search={props.search as any} className={cls} aria-label={ariaLabel}>
         {children}
       </Link>

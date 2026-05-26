@@ -11,7 +11,7 @@ import {
   INACTIVATE_DEFAULTS,
   type InactivateForm,
 } from '@/features/patient/schemas/inactivate'
-import { useUnsavedChangesGuard } from '@/shared/hooks/use-unsaved-changes-guard'
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import type { Inactivation, InactivationCategory, Patient } from '@/features/patient/stores/patient-store'
 
 interface InactivateModalProps {

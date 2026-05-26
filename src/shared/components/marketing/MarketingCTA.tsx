@@ -43,7 +43,7 @@ export function MarketingCTA(props: MarketingCTAProps) {
   const cls = cn(BASE, SHAPE[props.shape ?? 'pill'], VARIANT[props.variant], props.className)
   if ('to' in props && props.to !== undefined) {
     return (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       <Link to={props.to as any} params={props.params as any} search={props.search as any} className={cls}>
         {props.children}
       </Link>

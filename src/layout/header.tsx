@@ -58,7 +58,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
         )}
         style={{ animation: 'header-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both' }}
       >
-        {/* Logo */}
+        {}
         <Link to="/" className="relative flex items-center gap-2 no-underline" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <span
             aria-hidden="true"
@@ -83,7 +83,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
           </span>
         </Link>
 
-        {/* Nav links - desktop (hidden on auth pages) */}
+        {}
         {!isAuthPage && (
           <ul className="hidden md:flex gap-8 list-none">
             {navLinks.map((link) => (
@@ -99,7 +99,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
           </ul>
         )}
 
-        {/* Actions - desktop */}
+        {}
         <div className="hidden md:flex gap-2.5 items-center">
           <Link
             to="/login"
@@ -115,7 +115,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
           </Link>
         </div>
 
-        {/* Hamburger - mobile */}
+        {}
         <button
           className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl border border-(--border-custom) bg-white/80 text-(--text) transition-all duration-200 hover:bg-teal-50 hover:border-teal-300"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -125,7 +125,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
         </button>
       </nav>
 
-      {/* Mobile menu overlay */}
+      {}
       <div
         className={cn(
           "fixed inset-0 z-99 bg-black/20 backdrop-blur-sm transition-opacity duration-300 md:hidden",
@@ -134,7 +134,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
         onClick={() => setMobileMenuOpen(false)}
       />
 
-      {/* Mobile menu panel */}
+      {}
       <div
         className={cn(
           "fixed top-17 left-0 right-0 z-99 bg-white/95 backdrop-blur-xl border-b border-(--border-custom) shadow-[0_16px_48px_rgba(13,148,136,0.1)] transition-all duration-300 md:hidden",

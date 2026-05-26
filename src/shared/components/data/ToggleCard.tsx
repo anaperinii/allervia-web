@@ -8,11 +8,6 @@ interface ToggleCardProps {
   onToggle: () => void
 }
 
-/**
- * Toggle button with checkbox affordance, label, and optional sub-text.
- * Used for chart selection lists, opt-in declarations, and similar
- * "check this row" affordances. Semantically a switch (aria-checked).
- */
 export function ToggleCard({ label, description, selected, onToggle }: ToggleCardProps) {
   return (
     <button

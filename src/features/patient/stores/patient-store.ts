@@ -298,8 +298,7 @@ export const usePatientStore = create<PatientState>((set) => ({
   setSelectedPatient: (patient) => set({ selectedPatient: patient }),
   scheduleApplication: (app) => set((s) => ({ applications: [...s.applications, app] })),
   recordEvolution: ({ completed, next }) => set((s) => {
-    // Substitui apenas o próximo agendado (cronologicamente mais antigo) do paciente,
-    // preservando outros futuros agendamentos (cancelamento + remarcação manual, etc.).
+
     const patientScheduled = s.applications
       .filter((a) => a.patientId === completed.patientId && a.status === 'scheduled')
       .sort((a, b) => comparePtDateAsc(a.date, b.date))

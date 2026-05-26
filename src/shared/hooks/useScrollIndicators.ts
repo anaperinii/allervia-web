@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 
-
 export function useScrollIndicators<T extends HTMLElement = HTMLDivElement>() {
   const ref = useRef<T | null>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)

@@ -5,7 +5,7 @@ import { PhasesBarChart } from '@/features/dashboard/components/charts/phases-ba
 import { StatusLineChart } from '@/features/dashboard/components/charts/status-line-chart'
 import { TypesProgressBars } from '@/features/dashboard/components/charts/types-progress-bars'
 import { VolumeStackedBarChart } from '@/features/dashboard/components/charts/volume-stacked-bar-chart'
-import type { useDashboardAnalytics } from '@/features/dashboard/hooks/use-dashboard-analytics'
+import type { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
 
 type Analytics = ReturnType<typeof useDashboardAnalytics>
 

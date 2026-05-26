@@ -5,7 +5,7 @@ import {
 } from '@/features/patient/constants/clinical-labels'
 import { derivePatientDates } from '@/features/patient/lib/patient-dates'
 import type { ReportData } from './types'
-import { downloadFile } from './utils'
+import { downloadFile } from '@/shared/lib/file-download'
 
 export function exportExcel(data: ReportData) {
   const { patient, realizedApplications, sections } = data

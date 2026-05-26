@@ -11,7 +11,7 @@ import {
   ADJUST_PROTOCOL_DEFAULTS,
   type AdjustProtocolForm,
 } from '@/features/patient/schemas/adjust-protocol'
-import { useUnsavedChangesGuard } from '@/shared/hooks/use-unsaved-changes-guard'
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import type { Patient, ProtocolAdjustment, ProtocolAdjustmentType } from '@/features/patient/stores/patient-store'
 
 interface AdjustProtocolModalProps {

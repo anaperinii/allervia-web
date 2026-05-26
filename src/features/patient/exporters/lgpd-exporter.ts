@@ -6,7 +6,7 @@ import {
 } from '@/features/patient/constants/clinical-labels'
 import { derivePatientDates } from '@/features/patient/lib/patient-dates'
 import type { LgpdExportData, LgpdFileFormat } from './types'
-import { downloadFile } from './utils'
+import { downloadFile } from '@/shared/lib/file-download'
 
 function buildPayload(data: LgpdExportData) {
   const { patient, applications, accessLogs, exportedAt, justification, exportedBy } = data

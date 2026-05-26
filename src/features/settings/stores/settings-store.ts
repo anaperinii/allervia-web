@@ -18,42 +18,34 @@ const DEFAULT_EVENT_COLORS: EventColor[] = [
 ]
 
 interface SettingsState {
-  // Integrations
+
   googleCalendarConnected: boolean
   autoSync: boolean
 
-  // Security
   twoFaEnabled: boolean
 
-  // Notifications
   emailNotifications: boolean
   pushNotifications: boolean
 
-  // System
   timezone: Timezone
   sessionTimeout: '15' | '30' | '60' | '120'
   language: Language
 
-  // Scheduling
   reminderWhatsapp: boolean
   reminderHours: '2' | '6' | '12' | '24' | '48'
   eventColors: EventColor[]
 
-  // Backup
   autoBackup: boolean
 
-  // Personalization
   theme: Theme
   density: Density
   fontSize: number
 
-  // Accessibility
   highContrast: boolean
   reducedMotion: boolean
   largeText: boolean
   focusIndicators: boolean
 
-  // Setters
   setGoogleCalendarConnected: (value: boolean) => void
   setAutoSync: (value: boolean) => void
   setTwoFaEnabled: (value: boolean) => void

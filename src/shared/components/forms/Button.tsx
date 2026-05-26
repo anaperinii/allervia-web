@@ -126,7 +126,7 @@ export function Button(props: ButtonProps) {
 
   if ('to' in props && props.to !== undefined) {
     return (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       <Link to={props.to as any} params={props.params as any} search={props.search as any} className={cls}>
         {leftIcon}
         {children}

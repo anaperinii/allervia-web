@@ -1,5 +1,5 @@
-import { Modal } from '@/shared/components/Modal'
-import { Button } from '@/shared/components/Button'
+import { Modal } from './Modal'
+import { Button } from '../forms/Button'
 
 interface ConfirmDiscardModalProps {
   open: boolean

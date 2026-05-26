@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { PatientChartTablet } from '@/features/landing-page/components/patient-chart-tablet'
-import { useScrollProgress } from '@/shared/hooks/use-scroll-progress'
+import { useScrollProgress } from '@/shared/hooks/useScrollProgress'
 
 export function ScrollRevealSection() {
   const cardRef = useRef<HTMLDivElement>(null)
