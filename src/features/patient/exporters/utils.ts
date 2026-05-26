@@ -1,7 +1,7 @@
+import { maskWithPrefix } from '@/shared/lib/mask'
+
 export function maskName(value: string, anonymized: boolean): string {
-  if (!anonymized) return value
-  if (value.length <= 3) return '***'
-  return value.slice(0, 3) + '*'.repeat(Math.max(value.length - 3, 3))
+  return anonymized ? maskWithPrefix(value) : value
 }
 
 export function maskCpf(cpf: string, anonymized: boolean): string {

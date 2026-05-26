@@ -20,8 +20,8 @@ export function DoneStep({ data, maskedEmail }: DoneStepProps) {
         </p>
       </div>
 
-      <div className="border border-(--border-custom) rounded-xl overflow-hidden">
-        <div className="bg-gray-50/80 px-4 py-2.5 border-b border-(--border-custom)">
+      <div className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
+        <div className="px-4 py-2.5 border-b border-(--border-custom)">
           <span className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted)">Resumo da conta</span>
         </div>
         <div className="px-4 py-3 flex flex-col gap-2">
