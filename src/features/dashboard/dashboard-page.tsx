@@ -5,6 +5,7 @@ import { cn } from '@/shared/lib/utils'
 import { Button, SegmentedControl, Select } from '@/shared/components'
 import { useHasPermission } from '@/shared/identity/user-store'
 import { useDashboardAnalytics } from '@/features/dashboard/hooks/use-dashboard-analytics'
+import { useDashboardStore } from '@/features/dashboard/stores/dashboard-store'
 import { StatCards } from '@/features/dashboard/components/stat-cards'
 import { ChartCard } from '@/features/dashboard/components/chart-card'
 import { ConcentrationPieChart } from '@/features/dashboard/components/charts/concentration-pie-chart'
@@ -20,20 +21,20 @@ export function DashboardPage() {
     if (!canViewDashboard) navigate({ to: '/immunotherapies' })
   }, [canViewDashboard, navigate])
 
-  const [modality, setModality] = useState<'sub' | 'sbl'>('sub')
-  const [typeFilter, setTypeFilter] = useState('all')
+  const modality = useDashboardStore((s) => s.modality)
+  const setModality = useDashboardStore((s) => s.setModality)
+  const typeFilter = useDashboardStore((s) => s.typeFilter)
+  const setTypeFilter = useDashboardStore((s) => s.setTypeFilter)
+  const archivedCharts = useDashboardStore((s) => s.archivedCharts)
+  const toggleArchiveChart = useDashboardStore((s) => s.toggleArchiveChart)
+  const showArchived = useDashboardStore((s) => s.showArchived)
+  const setShowArchived = useDashboardStore((s) => s.setShowArchived)
 
   const analytics = useDashboardAnalytics({
-    modality: modality === 'sub' ? 'subcutaneous' : 'sublingual',
+    modality,
     typeFilter,
   })
 
-  const [archivedCharts, setArchivedCharts] = useState<string[]>([])
-  const [showArchived, setShowArchived] = useState(false)
-
-  const toggleArchive = (id: string) => {
-    setArchivedCharts((prev) => (prev.includes(id) ? prev.filter((chartId) => chartId !== id) : [...prev, id]))
-  }
   const isVisible = (id: string) => (showArchived ? archivedCharts.includes(id) : !archivedCharts.includes(id))
 
   return (
@@ -43,8 +44,8 @@ export function DashboardPage() {
           <h1 className="text-2xl font-bold text-(--text)">Dashboard</h1>
           <div className="flex items-center gap-2">
             <SegmentedControl
-              value={modality}
-              onChange={setModality}
+              value={modality === 'subcutaneous' ? 'sub' : 'sbl'}
+              onChange={(val) => setModality(val === 'sub' ? 'subcutaneous' : 'sublingual')}
               options={[
                 { value: 'sub', label: 'Subcutânea' },
                 { value: 'sbl', label: 'Sublingual' },
@@ -72,7 +73,17 @@ export function DashboardPage() {
                 </span>
               )}
             </button>
-            <Button tone="brand" variant="solid" prominent leftIcon={<Download size={13} />} to="/export-report" className="px-3">
+            <Button 
+              tone="brand" 
+              variant="solid" 
+              prominent 
+              leftIcon={<Download size={13} />} 
+              to="/export-report" 
+              className="px-3"
+              onClick={() => {
+                sessionStorage.setItem('dashboardFilters', JSON.stringify({ modality, typeFilter, archivedCharts, showArchived }))
+              }}
+            >
               Exportar Relatório
             </Button>
           </div>
@@ -91,7 +102,7 @@ export function DashboardPage() {
                 id="concentration"
                 title="Ciclos de Tratamento por Concentração"
                 archived={archivedCharts.includes('concentration')}
-                onToggleArchive={toggleArchive}
+                onToggleArchive={toggleArchiveChart}
               >
                 <ConcentrationPieChart data={analytics.concentrationData} />
               </ChartCard>
@@ -102,7 +113,7 @@ export function DashboardPage() {
                 id="phase"
                 title="Distribuição de Fases"
                 archived={archivedCharts.includes('phase')}
-                onToggleArchive={toggleArchive}
+                onToggleArchive={toggleArchiveChart}
               >
                 <PhasesBarChart data={analytics.phaseData} />
               </ChartCard>
@@ -113,7 +124,7 @@ export function DashboardPage() {
                 id="status"
                 title="Status de Imunoterapias"
                 archived={archivedCharts.includes('status')}
-                onToggleArchive={toggleArchive}
+                onToggleArchive={toggleArchiveChart}
               >
                 <StatusLineChart data={analytics.statusData} />
               </ChartCard>
@@ -124,7 +135,7 @@ export function DashboardPage() {
                 id="type"
                 title="Imunoterapias Ativas por Tipo"
                 archived={archivedCharts.includes('type')}
-                onToggleArchive={toggleArchive}
+                onToggleArchive={toggleArchiveChart}
               >
                 <TypesProgressBars data={analytics.typeData} />
               </ChartCard>
@@ -135,7 +146,7 @@ export function DashboardPage() {
                 id="volume"
                 title="Volume vs Concentração"
                 archived={archivedCharts.includes('volume')}
-                onToggleArchive={toggleArchive}
+                onToggleArchive={toggleArchiveChart}
                 fullWidth
               >
                 <VolumeStackedBarChart data={analytics.volumeData} />

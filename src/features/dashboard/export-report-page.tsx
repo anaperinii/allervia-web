@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { IconButton } from '@/shared/components'
 import { useHasPermission } from '@/shared/identity/user-store'
 import { useDashboardAnalytics } from '@/features/dashboard/hooks/use-dashboard-analytics'
+import { useDashboardStore } from '@/features/dashboard/stores/dashboard-store'
 import { ExportConfigPanel, type ChartOption } from '@/features/dashboard/components/export/config-panel'
 import { ExportPreview } from '@/features/dashboard/components/export/preview'
 import { ConfirmExportModal } from '@/features/dashboard/components/export/confirm-export-modal'
@@ -24,7 +25,10 @@ export function ExportReportPage() {
     if (!canViewDashboard) navigate({ to: '/immunotherapies' })
   }, [canViewDashboard, navigate])
 
-  const [modality, setModality] = useState<'sub' | 'sbl'>('sub')
+  const dashboardModality = useDashboardStore((s) => s.modality)
+  const dashboardArchivedCharts = useDashboardStore((s) => s.archivedCharts)
+
+  const [modality, setModality] = useState(dashboardModality)
   const [fileName, setFileName] = useState('relatorio-imunecare')
   const [format, setFormat] = useState('pdf')
   const [interval, setInterval] = useState<string>('Este Mês')
@@ -32,7 +36,10 @@ export function ExportReportPage() {
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString())
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [selectedCharts, setSelectedCharts] = useState<string[]>(['concentration', 'phases', 'status'])
+  const [selectedCharts, setSelectedCharts] = useState<string[]>(() => {
+    const visibleCharts = CHART_OPTIONS.map(c => c.id).filter(id => !dashboardArchivedCharts.includes(id))
+    return visibleCharts.length > 0 ? visibleCharts : ['concentration', 'phases', 'status']
+  })
   const [anonymize, setAnonymize] = useState(false)
   const [consent, setConsent] = useState(false)
   const [justification, setJustification] = useState('')
@@ -40,7 +47,7 @@ export function ExportReportPage() {
   const [showExportModal, setShowExportModal] = useState(false)
 
   const analytics = useDashboardAnalytics({
-    modality: modality === 'sub' ? 'subcutaneous' : 'sublingual',
+    modality,
   })
 
   const toggleChart = (id: string) => {
@@ -61,8 +68,8 @@ export function ExportReportPage() {
 
         <div className="flex flex-1 min-h-0 overflow-hidden">
           <ExportConfigPanel
-            modality={modality}
-            onModalityChange={setModality}
+            modality={modality === 'subcutaneous' ? 'sub' : 'sbl'}
+            onModalityChange={(val) => setModality(val === 'sub' ? 'subcutaneous' : 'sublingual')}
             fileName={fileName}
             onFileNameChange={setFileName}
             format={format}

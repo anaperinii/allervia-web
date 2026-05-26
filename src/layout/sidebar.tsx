@@ -29,10 +29,41 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { title: 'Imunoterapias', icon: Syringe, path: '/immunotherapies' },
-  { title: 'Agendamentos', icon: CalendarDays, path: '/appointments' },
-  { title: 'Dashboard', icon: BarChart3, path: '/dashboard' },
-  { title: 'Configurações', icon: Settings, path: '/settings' },
+  { 
+    title: 'Imunoterapias', 
+    icon: Syringe, 
+    path: '/immunotherapies',
+    activePaths: ['/immunotherapies', '/add-immunotherapy', '/patient-evolution']
+  },
+  { 
+    title: 'Agendamentos', 
+    icon: CalendarDays, 
+    path: '/appointments',
+    activePaths: ['/appointments']
+  },
+  { 
+    title: 'Dashboard', 
+    icon: BarChart3, 
+    path: '/dashboard',
+    activePaths: ['/dashboard', '/export-report']
+  },
+  { 
+    title: 'Configurações', 
+    icon: Settings, 
+    path: '/settings',
+    activePaths: [
+      '/settings',
+      '/security',
+      '/advanced-settings',
+      '/profile',
+      '/teams',
+      '/personalization',
+      '/plans',
+      '/accessibility',
+      '/help',
+      '/about'
+    ]
+  },
 ]
 
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
@@ -118,7 +149,9 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto overflow-x-hidden">
         {menuItems.map((item) => {
-          const isActive = location.pathname === item.path
+          const isActive = item.activePaths.some(p => 
+            location.pathname === p || location.pathname.startsWith(`${p}/`)
+          )
           const Icon = item.icon
           return (
             <Link

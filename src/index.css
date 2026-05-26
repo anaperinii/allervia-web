@@ -206,6 +206,21 @@
   66%      { transform: translate(calc(-50% - 2vmax),  calc(-50% - 10vmax)); }
 }
 
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes slide-down-fade {
+  from { transform: translateY(0); opacity: 1; }
+  to   { transform: translateY(16px); opacity: 0; }
+}
+
 .shimmer-text {
   background-image: linear-gradient(
     110deg,
@@ -228,6 +243,16 @@
     0 2px 6px rgba(13, 148, 136, 0.2),
     0 4px 14px rgba(6, 182, 212, 0.14);
   animation: shimmer 8s ease-in-out infinite;
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-fade-out {
+    animation: fade-out 0.3s ease-in;
+  }
 }
 
 @keyframes header-rise {

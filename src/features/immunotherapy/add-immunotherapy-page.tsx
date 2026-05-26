@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, CheckCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react'
 import { Button, CancelWizardModal, IconButton, toast, WizardStepsIndicator } from '@/shared/components'
 import { useHasPermission } from '@/shared/identity/user-store'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
 import { INDUCTION_INTERVAL, INITIAL_DOSE } from '@/features/immunotherapy/constants/scit-protocol'
-import { registerPatientProfile } from '@/features/patient/constants/patient-profiles'
+import { registerPatientProfile, buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import { usePatientStore, type Application } from '@/features/patient/stores/patient-store'
 import { tomorrowStr } from '@/shared/lib/dates'
 import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
@@ -42,7 +42,9 @@ export function AddImmunotherapyPage() {
   const navigate = useNavigate()
   const canAdd = useHasPermission('add_immunotherapy')
   const addImmunotherapy = useImmunotherapiesStore((s) => s.addImmunotherapy)
+  const immunotherapies = useImmunotherapiesStore((s) => s.immunotherapies)
   const scheduleApplication = usePatientStore((s) => s.scheduleApplication)
+  const setSelectedPatient = usePatientStore((s) => s.setSelectedPatient)
 
   useEffect(() => {
     if (!canAdd) navigate({ to: '/immunotherapies' })
@@ -68,6 +70,29 @@ export function AddImmunotherapyPage() {
   }
 
   const saveImmunotherapy = handleSubmit((data) => {
+    const isDuplicate = immunotherapies.some((imm) => {
+      if (imm.status !== 'active' || imm.type !== data.type.trim()) return false
+      
+      try {
+        const patient = buildPatientFromImmunotherapy(imm)
+        if (patient && patient.cpf) {
+          return patient.cpf === data.cpf
+        }
+      } catch {
+        // Caso falhe ao construir o paciente por algum motivo, checa pelo nome como fallback
+      }
+      return imm.name.toLowerCase() === data.name.trim().toLowerCase()
+    })
+
+    if (isDuplicate) {
+      toast.danger({
+        icon: <AlertCircle size={16} />,
+        title: 'Paciente já cadastrado',
+        description: 'Já existe um tratamento ativo com este tipo de imunoterapia para este paciente.',
+      })
+      return
+    }
+
     const newId = `new-${Date.now()}`
     const modality = data.modality as Immunotherapy['modality']
 
@@ -112,19 +137,25 @@ export function AddImmunotherapyPage() {
     }
     scheduleApplication(firstApp)
 
+    sessionStorage.setItem('lastSavedImmunotherapy', JSON.stringify(data))
+
     toast.success({
       icon: <CheckCircle size={16} />,
       title: 'Registro salvo com sucesso!',
       description: (
         <>
-          Os dados de {newImm.name} foram registrados e a próxima dose já está agendada.
-          <Link
-            to="/patient/$patientId"
-            params={{ patientId: newId }}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 mt-2 transition-colors"
+          Os dados de <span className="font-semibold text-teal-700">{newImm.name}</span> foram registrados e a próxima dose já está agendada.
+          <button
+            type="button"
+            onClick={() => {
+              toast.dismiss()
+              setSelectedPatient(buildPatientFromImmunotherapy(newImm))
+              navigate({ to: '/patient/$patientId', params: { patientId: newId } })
+            }}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-700 active:text-teal-800 mt-3 transition-colors px-2.5 py-1.5 rounded-md hover:bg-teal-100/50 cursor-pointer text-left"
           >
-            Acessar prontuário do paciente &rarr;
-          </Link>
+            Acessar prontuário do paciente →
+          </button>
         </>
       ),
       autoDismissMs: 8000,
