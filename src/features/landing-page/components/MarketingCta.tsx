@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import type { ReactNode, AnchorHTMLAttributes } from 'react'
 
 type MarketingCTAVariant = 'filled' | 'outline'

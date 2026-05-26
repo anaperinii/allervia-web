@@ -1,4 +1,4 @@
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { MediaRow } from './MediaRow'
 import { ROLE_BADGES } from '@/features/settings/constants/team-roles'
 import type { TeamMember } from '@/features/settings/stores/useTeamsStore'

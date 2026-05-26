@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ArrowLeft, ChevronRight, Eye, FileDown, Lock, LogOut, Smartphone, UserX } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { Button, FieldLabel, IconButton, Modal, Switch, TextInput } from '@/shared/components'
 import { MediaRow } from '@/features/settings/components/MediaRow'
 import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'

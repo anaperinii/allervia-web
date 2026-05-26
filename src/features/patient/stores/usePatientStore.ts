@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { INDUCTION_SEQUENCE, META_DOSE, META_STEP } from '@/features/immunotherapy/constants/scit-protocol'
+import { INDUCTION_SEQUENCE, META_DOSE, META_STEP, isMaintenanceDose } from '@/features/immunotherapy/constants/scit-protocol'
 import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
 import { comparePtDateAsc } from '@/shared/lib/dates'
 
@@ -124,6 +124,18 @@ export function seedInactivationsFor(patientId: string, snapshotConcentration: s
   const seed = INACTIVATION_SEEDS[patientId]
   if (!seed) return undefined
   return [{ id: `inact-seed-${patientId}`, ...seed, snapshotConcentration, snapshotInterval }]
+}
+
+export function derivePatientDates(applications: Application[], patientId: string): {
+  inductionStart: string | null
+  maintenanceStart: string | null
+} {
+  const ofPatient = applications
+    .filter((a) => a.patientId === patientId)
+    .sort((a, b) => comparePtDateAsc(a.date, b.date))
+  const inductionStart = ofPatient[0]?.date ?? null
+  const firstMaintenance = ofPatient.find((a) => a.status === 'completed' && isMaintenanceDose(a.dose))
+  return { inductionStart, maintenanceStart: firstMaintenance?.date ?? null }
 }
 
 function fmtDate(d: Date) {

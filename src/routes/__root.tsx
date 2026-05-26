@@ -4,7 +4,7 @@ import { Sidebar } from '@/shared/layout/sidebar'
 import { useState, useEffect } from 'react'
 import { useSidebarStore } from '@/shared/layout/useSidebarStore'
 import { ToastViewport } from '@/shared/components'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 
 const publicRoutes = ['/', '/login', '/register', '/trial', '/forgot-password']
 const authRoutes = ['/login', '/register', '/forgot-password']

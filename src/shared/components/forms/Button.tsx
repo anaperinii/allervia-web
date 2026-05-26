@@ -1,4 +1,4 @@
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { Link } from '@tanstack/react-router'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 

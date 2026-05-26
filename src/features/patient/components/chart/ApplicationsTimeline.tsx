@@ -1,4 +1,4 @@
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 

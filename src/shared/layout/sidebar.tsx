@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { useUserStore, PROFILES, ROLE_LABELS } from '@/shared/stores/useUserStore'

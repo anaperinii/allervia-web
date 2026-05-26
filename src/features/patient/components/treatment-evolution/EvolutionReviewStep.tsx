@@ -1,6 +1,6 @@
 import { CalendarDays } from 'lucide-react'
 import { format, parse } from 'date-fns'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
 
 interface ReviewStepProps {

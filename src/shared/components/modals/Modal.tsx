@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 
 type Size = 'sm' | 'md' | 'lg'

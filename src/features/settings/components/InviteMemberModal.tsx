@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Shield } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { Modal, Button, TextInput, FieldLabel } from '@/shared/components'
 import { ROLE_BADGES, ROLE_DESCRIPTIONS, type TeamRole } from '@/features/settings/constants/team-roles'
 

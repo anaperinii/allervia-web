@@ -1,5 +1,5 @@
 import { ArrowLeft, Contrast, Eye, Layout, MousePointer, Type } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { IconButton, Switch } from '@/shared/components'
 import { useSettingsStore, type Density, type Theme } from '@/features/settings/stores/useSettingsStore'
 

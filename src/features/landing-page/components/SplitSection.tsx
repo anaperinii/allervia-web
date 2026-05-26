@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Blob } from './Blob'
 import { Reveal } from './Reveal'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { useAnimatedNumber } from '@/shared/hooks/useAnimatedNumber'
 import { SPLIT_FEATURES } from '@/features/landing-page/constants/split-features'
 

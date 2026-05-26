@@ -1,13 +1,12 @@
 import { EyeOff } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
-import { derivePatientDates } from '@/features/patient/lib/patient-dates'
-import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
+import { derivePatientDates, type Application, type Patient } from '@/features/patient/stores/usePatientStore'
 import type { ReportFileFormat, ReportSectionId } from '@/features/patient/exporters/types'
 import { maskCpf, maskName, maskPhone } from '@/shared/lib/mask'
 

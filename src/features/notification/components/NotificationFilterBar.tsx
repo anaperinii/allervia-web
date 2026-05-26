@@ -1,6 +1,6 @@
 import { X } from 'lucide-react'
 import { Button, Select, TextInput } from '@/shared/components'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { NOTIFICATION_TABS, type NotificationTabKey } from '@/features/notification/constants/notification-display'
 
 export type ReadFilter = 'all' | 'read' | 'unread'

@@ -1,5 +1,5 @@
 import { Trophy } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { CompletionMetrics } from '@/features/patient/components/treatment-completion/CompletionMetrics'
 import { TreatmentTimeline } from '@/features/patient/components/treatment-completion/TreatmentTimeline'
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'

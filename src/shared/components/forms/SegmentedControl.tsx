@@ -1,4 +1,4 @@
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import type { ReactNode } from 'react'
 
 export type SegmentedControlSize = 'xs' | 'sm' | 'md'

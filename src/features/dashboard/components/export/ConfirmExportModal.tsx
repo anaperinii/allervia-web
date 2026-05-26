@@ -1,6 +1,6 @@
 import { ShieldCheck } from 'lucide-react'
 import { Modal, Button } from '@/shared/components'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 
 interface ConfirmExportModalProps {
   open: boolean

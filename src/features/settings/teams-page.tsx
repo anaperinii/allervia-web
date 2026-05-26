@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, Lock, Plus } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { Button, IconButton, Select } from '@/shared/components'
 import type { TeamRole } from '@/features/settings/constants/team-roles'

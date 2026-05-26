@@ -1,5 +1,5 @@
 import { Clock, Mail, Send, Trash2, X } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { Button, IconButton } from '@/shared/components'
 import { ROLE_BADGES } from '@/features/settings/constants/team-roles'
 import type { Invite } from '@/features/settings/stores/useTeamsStore'

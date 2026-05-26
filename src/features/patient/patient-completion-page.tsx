@@ -12,9 +12,8 @@ import {
   toast,
   WizardStepsIndicator,
 } from '@/shared/components'
-import { usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { usePatientStore, derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { derivePatientDates } from '@/features/patient/lib/patient-dates'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { PROFILES } from '@/shared/stores/useUserStore'
 import { formatDurationFromIsoStart } from '@/shared/lib/dates'

@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { differenceInDays } from 'date-fns'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { parsePtDate, comparePtDateAsc, formatDurationFromDays } from '@/shared/lib/dates'
-import { isMaintenanceApplication } from '@/features/patient/lib/patient-phases'
+import { isMaintenanceDose, getPhase, type ProtocolPhase } from '@/features/immunotherapy/constants/scit-protocol'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 interface TreatmentTimelineProps {
@@ -11,7 +11,7 @@ interface TreatmentTimelineProps {
   maintenanceStart: string | null
 }
 
-type DotKind = 'induction' | 'maintenance' | 'reaction' | 'today'
+type DotKind = ProtocolPhase | 'reaction' | 'today'
 
 interface Dot {
   kind: DotKind
@@ -43,11 +43,11 @@ export function TreatmentTimeline({ applications, inductionStart, maintenanceSta
       .filter((application) => application.status === 'completed')
       .sort((a, b) => comparePtDateAsc(a.date, b.date))
 
-    const induction = realized.filter((application) => !isMaintenanceApplication(application))
-    const maintenanceStartIdx = realized.findIndex(isMaintenanceApplication)
+    const induction = realized.filter((application) => !isMaintenanceDose(application.dose))
+    const maintenanceStartIdx = realized.findIndex((a) => isMaintenanceDose(a.dose))
 
     const dots: Dot[] = realized.map((application) => ({
-      kind: application.sideEffect === 'yes' ? 'reaction' : isMaintenanceApplication(application) ? 'maintenance' : 'induction',
+      kind: application.sideEffect === 'yes' ? 'reaction' : getPhase(application.dose, application.cycle.days),
       date: parsePtDate(application.date),
       label: application.date,
       dose: application.dose,
