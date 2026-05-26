@@ -1,5 +1,5 @@
 import { ArrowLeft, Building, Calendar, Check, CreditCard, Receipt } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { Button, IconButton } from '@/shared/components'
 import { PLANS, MAX_PLAN_FEATURES, type PlanId } from '@/shared/constants/plans'
 

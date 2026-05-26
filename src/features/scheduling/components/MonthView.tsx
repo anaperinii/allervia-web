@@ -1,5 +1,5 @@
 import { format, isSameDay, isToday } from 'date-fns'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
 import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'

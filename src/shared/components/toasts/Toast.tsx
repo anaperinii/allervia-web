@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import type { ReactNode } from 'react'
 
 export type ToastVariant = 'success' | 'warning' | 'info' | 'danger'

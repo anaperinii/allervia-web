@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode, type ElementType, type CSSProperties, type HTMLAttributes } from 'react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 
 interface RevealProps extends Omit<HTMLAttributes<HTMLElement>, 'children' | 'className' | 'style'> {
   children: ReactNode

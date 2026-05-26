@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import imunecareLogo from '@/assets/imunecare-logo.png'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { Menu, X } from 'lucide-react'
 
 const navLinks = [

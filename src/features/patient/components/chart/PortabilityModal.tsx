@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Check, CheckSquare, Download, FileJson, FileSpreadsheet, Info } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { Button, ConfirmDiscardModal, Modal, SegmentedControl, TextArea } from '@/shared/components'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { useAuditStore } from '@/shared/stores/useAuditStore'

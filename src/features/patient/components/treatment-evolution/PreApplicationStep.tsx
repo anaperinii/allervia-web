@@ -1,5 +1,5 @@
 import type { UseFormReturn } from 'react-hook-form'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { FieldLabel, Select, TextArea, TextInput } from '@/shared/components'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
 

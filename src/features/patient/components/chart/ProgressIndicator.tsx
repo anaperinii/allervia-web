@@ -1,4 +1,4 @@
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 const INDUCTION_STEPS = [

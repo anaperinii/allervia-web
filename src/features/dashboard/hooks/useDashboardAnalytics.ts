@@ -35,7 +35,7 @@ export function useDashboardAnalytics({ modality, typeFilter }: UseDashboardAnal
 
   const totalActive = activeFiltered.length
   const inductionCount = activeFiltered.filter(
-    (immunotherapy) => getPhase(immunotherapy.doseConcentration, immunotherapy.cycleInterval.days) === 'inducao',
+    (immunotherapy) => getPhase(immunotherapy.doseConcentration, immunotherapy.cycleInterval.days) === 'induction',
   ).length
   const maintenanceCount = totalActive - inductionCount
 

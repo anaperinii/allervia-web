@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { IconButton } from '@/shared/components'
 import { useScrollIndicators } from '@/shared/hooks/useScrollIndicators'
 

@@ -1,6 +1,6 @@
 import { Calendar, Clock, ExternalLink, Phone, Syringe, User } from 'lucide-react'
 import { Modal, Button } from '@/shared/components'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { openWhatsApp, sendReminder } from '@/shared/lib/whatsapp'

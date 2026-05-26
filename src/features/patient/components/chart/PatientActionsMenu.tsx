@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MoreVertical } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { IconButton } from '@/shared/components'
 
 interface PatientActionsMenuProps {

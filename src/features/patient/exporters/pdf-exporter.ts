@@ -4,7 +4,7 @@ import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
-import { derivePatientDates } from '@/features/patient/lib/patient-dates'
+import { derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import type { ReportData } from './types'
 
 export function exportPdf(data: ReportData) {

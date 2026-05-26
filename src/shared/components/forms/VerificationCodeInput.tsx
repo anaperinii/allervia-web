@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 
 interface VerificationCodeInputProps {
   value: string
