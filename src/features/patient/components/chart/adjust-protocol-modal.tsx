@@ -10,7 +10,7 @@ import {
   adjustProtocolSchema,
   ADJUST_PROTOCOL_DEFAULTS,
   type AdjustProtocolForm,
-} from '@/features/patient/forms/adjust-protocol'
+} from '@/features/patient/schemas/adjust-protocol'
 import { useUnsavedChangesGuard } from '@/shared/hooks/use-unsaved-changes-guard'
 import type { Patient, ProtocolAdjustment, ProtocolAdjustmentType } from '@/features/patient/stores/patient-store'
 

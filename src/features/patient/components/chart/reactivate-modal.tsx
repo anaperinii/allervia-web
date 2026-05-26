@@ -11,7 +11,7 @@ import {
   createReactivateSchema,
   REACTIVATE_DEFAULTS,
   type ReactivateForm,
-} from '@/features/patient/forms/reactivate'
+} from '@/features/patient/schemas/reactivate'
 import type { Application, Inactivation, Patient } from '@/features/patient/stores/patient-store'
 
 interface ReactivateModalProps {

@@ -16,7 +16,7 @@ import {
   type AddImmunotherapyForm,
   STEP_1_FIELDS,
   STEP_2_FIELDS,
-} from '@/features/immunotherapy/forms/add-immunotherapy'
+} from '@/features/immunotherapy/schemas/add-immunotherapy'
 import { PatientDataStep } from '@/features/immunotherapy/components/add-steps/patient-data-step'
 import { ImmunotherapyDataStep } from '@/features/immunotherapy/components/add-steps/immunotherapy-data-step'
 import { AddImmunotherapyReviewStep } from '@/features/immunotherapy/components/add-steps/add-immunotherapy-review-step'

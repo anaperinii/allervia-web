@@ -2,7 +2,7 @@ import { Info, Syringe, User } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { MODALITY_LABELS, type Modality } from '@/features/immunotherapy/constants/modality'
-import type { AddImmunotherapyForm } from '@/features/immunotherapy/forms/add-immunotherapy'
+import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
 
 interface AddImmunotherapyReviewStepProps {
   form: AddImmunotherapyForm

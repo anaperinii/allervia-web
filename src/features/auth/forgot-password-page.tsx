@@ -9,7 +9,7 @@ import {
   forgotPasswordResetSchema,
   type ForgotPasswordEmailForm,
   type ForgotPasswordResetForm,
-} from '@/features/auth/forms/forgot-password'
+} from '@/features/auth/schemas/forgot-password'
 import { RequestEmailStep } from '@/features/auth/components/forgot-password-steps/request-email-step'
 import { VerifyCodeStep } from '@/features/auth/components/forgot-password-steps/verify-code-step'
 import { NewPasswordStep } from '@/features/auth/components/forgot-password-steps/new-password-step'

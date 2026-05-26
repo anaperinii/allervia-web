@@ -1,6 +1,6 @@
 import { CheckCircle, ArrowRight } from 'lucide-react'
 import { Button } from '@/shared/components'
-import type { RegisterForm } from '@/features/auth/forms/register'
+import type { RegisterForm } from '@/features/auth/schemas/register'
 
 interface DoneStepProps {
   data: RegisterForm

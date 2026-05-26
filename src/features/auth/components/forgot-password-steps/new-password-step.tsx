@@ -1,7 +1,7 @@
 import { ShieldCheck } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Button, FieldLabel, PasswordInput, PasswordRequirements } from '@/shared/components'
-import type { ForgotPasswordResetForm } from '@/features/auth/forms/forgot-password'
+import type { ForgotPasswordResetForm } from '@/features/auth/schemas/forgot-password'
 
 interface NewPasswordStepProps {
   form: UseFormReturn<ForgotPasswordResetForm>

@@ -1,6 +1,6 @@
 import type { UseFormReturn } from 'react-hook-form'
 import { Button, FieldLabel, TextInput, PasswordInput, PasswordRequirements } from '@/shared/components'
-import type { RegisterForm } from '@/features/auth/forms/register'
+import type { RegisterForm } from '@/features/auth/schemas/register'
 
 interface FormStepProps {
   form: UseFormReturn<RegisterForm>

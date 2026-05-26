@@ -11,7 +11,7 @@ import {
   TextInput,
 } from '@/shared/components'
 import { useUserStore } from '@/shared/identity/user-store'
-import { profileSchema, type ProfileForm } from '@/features/settings/forms/profile'
+import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
 
 const formatBirthDate = (iso: string) => {
   const [year, month, day] = iso.split('-')

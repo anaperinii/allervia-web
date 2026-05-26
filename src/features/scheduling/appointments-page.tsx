@@ -16,7 +16,7 @@ import { MonthView } from '@/features/scheduling/components/month-view'
 import { SelectedDayStrip } from '@/features/scheduling/components/selected-day-strip'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/application-details-modal'
 import { NewAppointmentModal } from '@/features/scheduling/components/new-appointment-modal'
-import type { NewAppointmentForm } from '@/features/scheduling/forms/new-appointment'
+import type { NewAppointmentForm } from '@/features/scheduling/schemas/new-appointment'
 
 export function AppointmentsPage() {
   const { applications: allApplications, scheduleApplication } = usePatientStore()
