@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { ArrowLeft, ChevronRight, Eye, FileDown, Lock, LogOut, Smartphone, UserX } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { Button, FieldLabel, IconButton, MediaRow, Modal, Switch, TextInput } from '@/shared/components'
-import { useSettingsStore } from '@/features/settings/stores/settings-store'
+import { Button, FieldLabel, IconButton, Modal, Switch, TextInput } from '@/shared/components'
+import { MediaRow } from '@/features/settings/components/MediaRow'
+import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
 
 const sessions = [
   { id: '1', device: 'Chrome · Windows 11', location: 'Anápolis, GO', time: 'Agora (sessão atual)', current: true },

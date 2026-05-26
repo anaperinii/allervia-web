@@ -1,12 +1,12 @@
-import { HeroSection } from '@/features/landing-page/sections/hero-section'
-import { FeaturesGrid } from '@/features/landing-page/sections/features-grid'
-import { SplitSection } from '@/features/landing-page/sections/split-section'
-import { AutomationSection } from '@/features/landing-page/sections/automation-section'
-import { TestimonialsSection } from '@/features/landing-page/sections/testimonials-section'
-import { TabsSection } from '@/features/landing-page/sections/tabs-section'
-import { PricingSection } from '@/features/landing-page/sections/pricing-section'
-import { CtaSection } from '@/features/landing-page/sections/cta-section'
-import { Footer } from '@/features/landing-page/sections/footer'
+import { HeroSection } from '@/features/landing-page/components/HeroSection'
+import { FeaturesGrid } from '@/features/landing-page/components/FeaturesGrid'
+import { SplitSection } from '@/features/landing-page/components/SplitSection'
+import { AutomationSection } from '@/features/landing-page/components/AutomationSection'
+import { TestimonialsSection } from '@/features/landing-page/components/TestimonialsSection'
+import { TabsSection } from '@/features/landing-page/components/TabsSection'
+import { PricingSection } from '@/features/landing-page/components/PricingSection'
+import { CtaSection } from '@/features/landing-page/components/CtaSection'
+import { Footer } from '@/features/landing-page/components/Footer'
 
 export function LandingPage() {
   return (

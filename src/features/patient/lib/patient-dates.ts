@@ -1,10 +1,10 @@
 import { comparePtDateAsc } from '@/shared/lib/dates'
-import type { Application } from '@/features/patient/stores/patient-store'
+import type { Application } from '@/features/patient/stores/usePatientStore'
 import { isMaintenanceApplication } from './patient-phases'
 
 export function derivePatientDates(applications: Application[], patientId: string): {
   inductionStart: string | null
-  maintenanceStart: string | null
+  maintenanceStart: string | null 
 } {
   const ofPatient = applications
     .filter((a) => a.patientId === patientId)

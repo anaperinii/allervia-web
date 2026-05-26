@@ -10,7 +10,7 @@ import {
   ReadOnlyField,
   TextInput,
 } from '@/shared/components'
-import { useUserStore } from '@/shared/identity/user-store'
+import { useUserStore } from '@/shared/stores/useUserStore'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
 
 const formatBirthDate = (iso: string) => {

@@ -2,7 +2,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { UserRound } from 'lucide-react'
-import { AuthLayout } from '@/features/auth/components/auth-layout'
+import { AuthLayout } from '@/features/auth/components/AuthLayout'
 import { loginSchema, type LoginForm } from '@/features/auth/schemas/login'
 import { Button, FieldLabel, TextInput, PasswordInput } from '@/shared/components'
 

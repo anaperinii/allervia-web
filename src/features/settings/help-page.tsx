@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { ArrowLeft, Book, ChevronDown, Mail, MessageCircle } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { CardButton, IconButton } from '@/shared/components'
+import { IconButton } from '@/shared/components'
+import { CardButton } from '@/features/settings/components/CardButton'
 import { CONTACT_SUPPORT_EMAIL } from '@/shared/constants/contact'
 import { FAQS } from '@/features/settings/constants/faqs'
 

@@ -1,4 +1,3 @@
-/** Shared Recharts <Tooltip> contentStyle to keep the dashboard visuals consistent. */
 export const CHART_TOOLTIP_STYLE = {
   fontSize: 11,
   borderRadius: 8,

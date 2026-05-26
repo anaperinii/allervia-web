@@ -1,8 +1,8 @@
 import { createRootRoute, Outlet, useLocation } from '@tanstack/react-router'
-import { Header } from '@/layout/header'
-import { Sidebar } from '@/layout/sidebar'
+import { Header } from '@/shared/layout/header'
+import { Sidebar } from '@/shared/layout/sidebar'
 import { useState, useEffect } from 'react'
-import { useSidebarStore } from '@/layout/stores/sidebar-store'
+import { useSidebarStore } from '@/shared/layout/useSidebarStore'
 import { ToastViewport } from '@/shared/components'
 import { cn } from '@/shared/lib/utils'
 

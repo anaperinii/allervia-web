@@ -6,19 +6,9 @@ import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/const
 const yesNo = z.enum(['yes', 'no'])
 const reactionAdjustmentValues = z.enum(['', 'reduce_dose', 'increase_interval', 'suspend', 'maintain'])
 
-/**
- * Schema da evolução clínica do paciente (registro de aplicação).
- *
- * Regras cross-field via superRefine:
- * - sideEffect/medicationNeeded = "yes" → campo de descrição correspondente obrigatório
- * - startTime >= endTime → erro em endTime
- * - nextInterval fora de [7,14,21,28] → justificativa obrigatória (min 10 chars)
- * - sideEffectPost + medicationNeededPost = "yes" → reactionAdjustment obrigatório
- * - reactionAdjustment = "maintain" → justificativa obrigatória
- */
 export const evolutionSchema = z
   .object({
-    // Step 1 — Pré-Aplicação
+
     intervalReport: z.string().min(1, 'Relato do intervalo é obrigatório'),
     sideEffect: yesNo,
     reportedEffects: z.string(),
@@ -26,7 +16,6 @@ export const evolutionSchema = z
     medications: z.string(),
     notesPre: z.string(),
 
-    // Step 2 — Pós-Aplicação
     applicationDate: z.string().min(1, 'Data é obrigatória'),
     startTime: z.string().min(1, 'Hora de início é obrigatória'),
     endTime: z.string().min(1, 'Hora de fim é obrigatória'),

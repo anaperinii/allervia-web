@@ -1,8 +1,8 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { PatientCompletionPage } from '@/features/patient/patient-completion-page'
-import { ROLE_PERMISSIONS, useUserStore } from '@/shared/identity/user-store'
-import { usePatientStore } from '@/features/patient/stores/patient-store'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { ROLE_PERMISSIONS, useUserStore } from '@/shared/stores/useUserStore'
+import { usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 
 type SearchParams = {

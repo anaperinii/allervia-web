@@ -1,5 +1,5 @@
 import { META_DOSE } from '@/features/immunotherapy/constants/scit-protocol'
-import type { Application } from '@/features/patient/stores/patient-store'
+import type { Application } from '@/features/patient/stores/usePatientStore'
 
 export type ApplicationPhase = 'induction' | 'maintenance'
 

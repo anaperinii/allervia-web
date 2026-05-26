@@ -1,7 +1,7 @@
-import type { Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
+import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { MODALITY_LABELS } from '@/features/immunotherapy/constants/modality'
-import type { Patient } from '@/features/patient/stores/patient-store'
-import { seedInactivationsFor } from '@/features/patient/stores/patient-store'
+import type { Patient } from '@/features/patient/stores/usePatientStore'
+import { seedInactivationsFor } from '@/features/patient/stores/usePatientStore'
 
 interface PatientProfile {
   birthDate: string

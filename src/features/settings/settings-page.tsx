@@ -8,8 +8,9 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useUserStore, ROLE_LABELS, ROLE_PERMISSIONS, type Permission } from '@/shared/identity/user-store'
-import { Button, CardButton } from '@/shared/components'
+import { useUserStore, ROLE_LABELS, ROLE_PERMISSIONS, type Permission } from '@/shared/stores/useUserStore'
+import { Button } from '@/shared/components'
+import { CardButton } from '@/features/settings/components/CardButton'
 
 interface SettingsOption {
   icon: LucideIcon
@@ -43,7 +44,7 @@ export function SettingsPage() {
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         <div className="flex flex-1 gap-6 p-5 min-h-0 overflow-y-auto">
-          {/* Left — Profile */}
+          {}
           <div className="w-56 shrink-0">
             <h1 className="text-2xl font-bold text-(--text) mb-4">Configurações</h1>
 
@@ -65,7 +66,7 @@ export function SettingsPage() {
             </div>
           </div>
 
-          {/* Right — Options */}
+          {}
           <div className="flex-1 pt-4">
             <div className="space-y-1.5">
               {visibleOptions.map((option) => {

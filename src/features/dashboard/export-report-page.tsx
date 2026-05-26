@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import { IconButton } from '@/shared/components'
-import { useHasPermission } from '@/shared/identity/user-store'
-import { useDashboardAnalytics } from '@/features/dashboard/hooks/use-dashboard-analytics'
-import { ExportConfigPanel, type ChartOption } from '@/features/dashboard/components/export/config-panel'
-import { ExportPreview } from '@/features/dashboard/components/export/preview'
-import { ConfirmExportModal } from '@/features/dashboard/components/export/confirm-export-modal'
-import { CancelExportModal } from '@/features/dashboard/components/export/cancel-export-modal'
+import { useHasPermission } from '@/shared/stores/useUserStore'
+import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
+import { ExportConfigPanel, type ChartOption } from '@/features/dashboard/components/export/ConfigPanel'
+import { ExportPreview } from '@/features/dashboard/components/export/Preview'
+import { ConfirmExportModal } from '@/features/dashboard/components/export/ConfirmExportModal'
+import { CancelExportModal } from '@/features/dashboard/components/export/CancelExportModal'
 
 const CHART_OPTIONS: readonly ChartOption[] = [
   { id: 'concentration', label: 'Ciclos de Tratamento por Concentração' },
@@ -47,7 +47,7 @@ export function ExportReportPage() {
     setSelectedCharts((prev) => (prev.includes(id) ? prev.filter((chartId) => chartId !== id) : [...prev, id]))
   }
 
-  void fileName // TODO: pass through to actual file generator once wired
+  void fileName 
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">

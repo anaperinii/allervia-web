@@ -1,4 +1,4 @@
-import type { NotificationCategory, NotificationType } from '@/features/notification/stores/notifications-store'
+import type { NotificationCategory, NotificationType } from '@/features/notification/stores/useNotificationsStore'
 
 export interface NotificationTypeDisplay {
   color: string

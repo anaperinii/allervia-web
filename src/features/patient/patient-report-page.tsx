@@ -4,10 +4,10 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { ArrowLeft, Download, Printer, ShieldCheck } from 'lucide-react'
 import { Button, IconButton, Modal } from '@/shared/components'
-import { usePatientStore } from '@/features/patient/stores/patient-store'
+import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
-import { useHasPermission, useDoctorFilter } from '@/shared/identity/user-store'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { useHasPermission, useDoctorFilter } from '@/shared/stores/useUserStore'
 import { comparePtDateDesc } from '@/shared/lib/dates'
 import {
   exportCsv,
@@ -17,9 +17,9 @@ import {
   type ReportFileFormat,
   type ReportSectionId,
 } from '@/features/patient/exporters'
-import { maskCpf, maskName, maskPhone } from '@/features/patient/exporters/utils'
-import { ReportClinicalPreview } from '@/features/patient/components/report/report-clinical-preview'
-import { ReportConfigPanel } from '@/features/patient/components/report/report-config-panel'
+import { maskCpf, maskName, maskPhone } from '@/shared/lib/mask'
+import { ReportClinicalPreview } from '@/features/patient/components/report/ReportClinicalPreview'
+import { ReportConfigPanel } from '@/features/patient/components/report/ReportConfigPanel'
 
 const DEFAULT_SECTIONS: ReportSectionId[] = ['personal', 'immunotherapy', 'applications', 'progress']
 

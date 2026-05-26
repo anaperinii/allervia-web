@@ -1,5 +1,5 @@
-import type { AccessLog } from '@/shared/audit/audit-store'
-import type { Application, Patient } from '@/features/patient/stores/patient-store'
+import type { AccessLog } from '@/shared/stores/useAuditStore'
+import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
 
 export type ReportFileFormat = 'pdf' | 'excel' | 'csv'
 export type LgpdFileFormat = 'json' | 'csv'

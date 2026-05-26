@@ -3,7 +3,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, CheckCircle, FileEdit } from 'lucide-react'
-import { differenceInDays, format } from 'date-fns'
+import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   Button,
@@ -12,32 +12,23 @@ import {
   toast,
   WizardStepsIndicator,
 } from '@/shared/components'
-import { usePatientStore } from '@/features/patient/stores/patient-store'
+import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import { derivePatientDates } from '@/features/patient/lib/patient-dates'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
-import { PROFILES } from '@/shared/identity/user-store'
-import { formatDurationFromDays, parsePtDate } from '@/shared/lib/dates'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { PROFILES } from '@/shared/stores/useUserStore'
+import { formatDurationFromIsoStart } from '@/shared/lib/dates'
 import {
   completionSchema,
   COMPLETION_DEFAULTS,
   type CompletionForm,
 } from '@/features/patient/schemas/completion'
-import { CompletionOverviewStep } from '@/features/patient/components/completion/completion-overview-step'
-import { CompletionFollowupStep } from '@/features/patient/components/completion/completion-followup-step'
-import { CompletionReviewStep } from '@/features/patient/components/completion/completion-review-step'
-import { useCompletionDraftsStore } from '@/features/patient/stores/completion-drafts-store'
+import { CompletionOverviewStep } from '@/features/patient/components/treatment-completion/CompletionOverviewStep'
+import { CompletionFollowupStep } from '@/features/patient/components/treatment-completion/CompletionFollowupStep'
+import { CompletionReviewStep } from '@/features/patient/components/treatment-completion/CompletionReviewStep'
+import { useCompletionDraftsStore } from '@/features/patient/stores/useCompletionDraftsStore'
 
 const STEP_LABELS = ['Visão geral', 'Plano pós-alta', 'Revisão'] as const
-
-function durationLabel(start: string | null, end: Date = new Date()): string {
-  if (!start || start === '—') return '—'
-  try {
-    return formatDurationFromDays(differenceInDays(end, parsePtDate(start)))
-  } catch {
-    return '—'
-  }
-}
 
 export function PatientCompletionPage() {
   const navigate = useNavigate()
@@ -108,7 +99,7 @@ export function PatientCompletionPage() {
   )
 
   const totalDurationLabel = useMemo(
-    () => durationLabel(inductionStart),
+    () => formatDurationFromIsoStart(inductionStart),
     [inductionStart],
   )
 

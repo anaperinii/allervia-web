@@ -1,12 +1,12 @@
 import { format } from 'date-fns'
-import { ACTION_LABELS } from '@/shared/audit/audit-store'
+import { ACTION_LABELS } from '@/shared/stores/useAuditStore'
 import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
 import { derivePatientDates } from '@/features/patient/lib/patient-dates'
 import type { LgpdExportData, LgpdFileFormat } from './types'
-import { downloadFile } from './utils'
+import { downloadFile } from '@/shared/lib/file-download'
 
 function buildPayload(data: LgpdExportData) {
   const { patient, applications, accessLogs, exportedAt, justification, exportedBy } = data
