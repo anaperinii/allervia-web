@@ -1,5 +1,5 @@
-import { Archive, FileText, Plus, Search } from 'lucide-react'
-import { cn } from '@/shared/lib/cn'
+import { Archive, CheckCircle, FileText, Plus, Search } from 'lucide-react'
+import { cn } from '@/shared/lib/utils'
 import { Button, IconButton, Select, TextInput } from '@/shared/components'
 
 interface ImmunotherapiesFilterBarProps {
@@ -11,6 +11,8 @@ interface ImmunotherapiesFilterBarProps {
   setIntervalFilter: (v: string) => void
   showInactive: boolean
   setShowInactive: (v: boolean) => void
+  showCompleted: boolean
+  setShowCompleted: (v: boolean) => void
   types: string[]
   intervals: string[]
   canAddImmunotherapy: boolean
@@ -26,6 +28,8 @@ export function ImmunotherapiesFilterBar({
   setIntervalFilter,
   showInactive,
   setShowInactive,
+  showCompleted,
+  setShowCompleted,
   types,
   intervals,
   canAddImmunotherapy,
@@ -69,13 +73,32 @@ export function ImmunotherapiesFilterBar({
         aria-label="Mostrar imunoterapias inativas"
         aria-pressed={showInactive}
         size="md"
+        disabled={showCompleted}
         onClick={() => setShowInactive(!showInactive)}
         className={cn(
-          'border-[1.5px]',
+          'border-[1.5px] transition-colors',
           showInactive ? 'border-brand bg-teal-50 text-brand' : 'border-(--border-custom)',
+          showCompleted && 'opacity-50 cursor-not-allowed',
         )}
+        title={showCompleted ? 'Desative o filtro de concluídas primeiro' : 'Mostrar imunoterapias inativas'}
       >
         <Archive size={14} />
+      </IconButton>
+
+      <IconButton
+        aria-label="Mostrar imunoterapias concluídas"
+        aria-pressed={showCompleted}
+        size="md"
+        disabled={showInactive}
+        onClick={() => setShowCompleted(!showCompleted)}
+        className={cn(
+          'border-[1.5px] transition-colors',
+          showCompleted ? 'border-brand bg-teal-50 text-brand' : 'border-(--border-custom)',
+          showInactive && 'opacity-50 cursor-not-allowed',
+        )}
+        title={showInactive ? 'Desative o filtro de arquivadas primeiro' : 'Mostrar imunoterapias concluídas'}
+      >
+        <CheckCircle size={14} />
       </IconButton>
 
       {canAddImmunotherapy && (

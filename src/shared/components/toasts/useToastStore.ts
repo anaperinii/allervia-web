@@ -36,4 +36,5 @@ export const toast = {
   warning: (input: Omit<ToastInput, 'variant'>) => useToastStore.getState().push({ variant: 'warning', ...input }),
   info: (input: Omit<ToastInput, 'variant'>) => useToastStore.getState().push({ variant: 'info', ...input }),
   danger: (input: Omit<ToastInput, 'variant'>) => useToastStore.getState().push({ variant: 'danger', ...input }),
+  dismiss: (id: string) => useToastStore.getState().removeToast(id),
 }

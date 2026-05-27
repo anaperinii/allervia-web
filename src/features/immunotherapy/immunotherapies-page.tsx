@@ -22,8 +22,19 @@ export function ImmunotherapiesPage() {
   const [typeFilter, setTypeFilter] = useState('Todos os tipos')
   const [intervalFilter, setIntervalFilter] = useState('Todos os intervalos')
   const [showInactive, setShowInactive] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+
+  const handleShowInactive = (value: boolean) => {
+    setShowInactive(value)
+    if (value) setShowCompleted(false)
+  }
+
+  const handleShowCompleted = (value: boolean) => {
+    setShowCompleted(value)
+    if (value) setShowInactive(false)
+  }
 
   const types = useMemo(
     () => customTypes.map((t) => t.label),
@@ -43,9 +54,10 @@ export function ImmunotherapiesPage() {
       const matchType = typeFilter === 'Todos os tipos' || item.type === typeFilter
       const matchInterval = intervalFilter === 'Todos os intervalos' || item.cycleInterval.days.toString() === intervalFilter
       const matchStatus = showInactive ? item.status === 'inactive' : item.status === 'active'
-      return matchDoctor && matchSearch && matchType && matchInterval && matchStatus
+      const matchCompleted = showCompleted ? item.completed === true : item.completed !== true
+      return matchDoctor && matchSearch && matchType && matchInterval && matchStatus && matchCompleted
     })
-  }, [immunotherapies, searchTerm, typeFilter, intervalFilter, showInactive, doctorFilter])
+  }, [immunotherapies, searchTerm, typeFilter, intervalFilter, showInactive, showCompleted, doctorFilter])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
   const paginated = useMemo(() => {
@@ -55,7 +67,7 @@ export function ImmunotherapiesPage() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, typeFilter, intervalFilter, showInactive, itemsPerPage])
+  }, [searchTerm, typeFilter, intervalFilter, showInactive, showCompleted, itemsPerPage])
 
   const handleSelect = (item: Immunotherapy) => {
     setSelectedPatient(buildPatientFromImmunotherapy(item))
@@ -75,7 +87,9 @@ export function ImmunotherapiesPage() {
             intervalFilter={intervalFilter}
             setIntervalFilter={setIntervalFilter}
             showInactive={showInactive}
-            setShowInactive={setShowInactive}
+            setShowInactive={handleShowInactive}
+            showCompleted={showCompleted}
+            setShowCompleted={handleShowCompleted}
             types={types}
             intervals={intervals}
             canAddImmunotherapy={canAddImmunotherapy}
