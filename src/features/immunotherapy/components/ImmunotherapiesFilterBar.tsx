@@ -1,5 +1,5 @@
 import { Archive, CheckCircle, FileText, Plus, Search } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 import { Button, IconButton, Select, TextInput } from '@/shared/components'
 
 interface ImmunotherapiesFilterBarProps {

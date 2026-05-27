@@ -8,7 +8,7 @@ import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { INDUCTION_INTERVAL, INITIAL_DOSE } from '@/features/immunotherapy/constants/scit-protocol'
 import { registerPatientProfile, buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { usePatientStore, type Application } from '@/features/patient/stores/patient-store'
+import { usePatientStore, type Application } from '@/features/patient/stores/usePatientStore'
 import { tomorrowStr, isoToPtDate, calculateAge } from '@/shared/lib/dates'
 import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
 import {
