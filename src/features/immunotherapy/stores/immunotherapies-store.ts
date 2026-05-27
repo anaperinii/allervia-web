@@ -20,6 +20,7 @@ export interface Immunotherapy {
 interface ImmunotherapiesState {
   immunotherapies: Immunotherapy[]
   addImmunotherapy: (imm: Immunotherapy) => void
+  updateImmunotherapyStatus: (id: string, status: 'active' | 'inactive') => void
 }
 
 const DEFAULT_IMMUNOTHERAPIES: Immunotherapy[] = [
@@ -42,6 +43,11 @@ export const useImmunotherapiesStore = create<ImmunotherapiesState>()(
     (set) => ({
       immunotherapies: DEFAULT_IMMUNOTHERAPIES,
       addImmunotherapy: (imm) => set((state) => ({ immunotherapies: [imm, ...state.immunotherapies] })),
+      updateImmunotherapyStatus: (id, status) => set((state) => ({
+        immunotherapies: state.immunotherapies.map((imm) =>
+          imm.id === id ? { ...imm, status } : imm
+        ),
+      })),
     }),
     {
       name: 'immunotherapies-store',

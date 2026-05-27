@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react'
@@ -52,6 +52,7 @@ export function AddImmunotherapyPage() {
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [idCounter, setIdCounter] = useState(0)
 
   const form = useForm<AddImmunotherapyForm>({
     resolver: zodResolver(addImmunotherapySchema),
@@ -61,7 +62,7 @@ export function AddImmunotherapyPage() {
       type: '', modality: '', startDate: tomorrowStr(), extract: '', targetConcentration: '', targetVolume: '',
     },
   })
-  const { handleSubmit, trigger, watch } = form
+  const { handleSubmit, trigger } = form
 
   const advanceStep = async () => {
     const fields = step === 1 ? STEP_1_FIELDS : STEP_2_FIELDS
@@ -70,13 +71,20 @@ export function AddImmunotherapyPage() {
   }
 
   const saveImmunotherapy = handleSubmit((data) => {
-    const isDuplicate = immunotherapies.some((imm) => {
-      if (imm.status !== 'active' || imm.type !== data.type.trim()) return false
+    // Verifica se já existe imunoterapia do mesmo TIPO para o mesmo CPF
+    // Permite apenas se a imunoterapia anterior foi completada
+    const isDuplicateType = immunotherapies.some((imm) => {
+      // Se a imunoterapia foi completada, permite cadastrar novamente
+      if (imm.completed) return false
       
+      // Se o tipo é diferente, não é duplicata
+      if (imm.type !== data.type.trim()) return false
+      
+      // Verifica se é o mesmo paciente (por CPF)
       try {
         const patient = buildPatientFromImmunotherapy(imm)
         if (patient && patient.cpf) {
-          return patient.cpf === data.cpf
+          return patient.cpf === data.cpf.trim()
         }
       } catch {
         // Caso falhe ao construir o paciente por algum motivo, checa pelo nome como fallback
@@ -84,16 +92,17 @@ export function AddImmunotherapyPage() {
       return imm.name.toLowerCase() === data.name.trim().toLowerCase()
     })
 
-    if (isDuplicate) {
+    if (isDuplicateType) {
       toast.danger({
         icon: <AlertCircle size={16} />,
-        title: 'Paciente já cadastrado',
-        description: 'Já existe um tratamento ativo com este tipo de imunoterapia para este paciente.',
+        title: 'Tipo de imunoterapia já cadastrado',
+        description: `Já existe um tratamento do tipo "${data.type.trim()}" cadastrado para este paciente. Um paciente pode ter diferentes tipos de imunoterapia, mas não pode repetir o mesmo tipo.`,
       })
       return
     }
 
-    const newId = `new-${Date.now()}`
+    setIdCounter((prev) => prev + 1)
+    const newId = `new-${idCounter + 1}`
     const modality = data.modality as Immunotherapy['modality']
 
     const newImm: Immunotherapy = {
@@ -148,7 +157,6 @@ export function AddImmunotherapyPage() {
           <button
             type="button"
             onClick={() => {
-              toast.dismiss()
               setSelectedPatient(buildPatientFromImmunotherapy(newImm))
               navigate({ to: '/patient/$patientId', params: { patientId: newId } })
             }}
@@ -163,7 +171,6 @@ export function AddImmunotherapyPage() {
 
     navigate({ to: '/immunotherapies' })
   })
-
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (step < 3) {
@@ -193,7 +200,7 @@ export function AddImmunotherapyPage() {
           <div className="flex-1 overflow-y-auto px-5 py-4">
             {step === 1 && <PatientDataStep form={form} />}
             {step === 2 && <ImmunotherapyDataStep form={form} />}
-            {step === 3 && <AddImmunotherapyReviewStep form={watch()} />}
+            {step === 3 && <AddImmunotherapyReviewStep form={form.getValues()} />}
           </div>
 
           <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">

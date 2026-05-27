@@ -119,12 +119,8 @@ export function Toast({
   }, [open, autoDismissMs])
 
   useEffect(() => {
-    if (!open || autoDismissMs <= 0) {
-      setProgress(100)
-      return
-    }
+    if (!open || autoDismissMs <= 0) return
 
-    setProgress(100)
     const startTime = Date.now()
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime

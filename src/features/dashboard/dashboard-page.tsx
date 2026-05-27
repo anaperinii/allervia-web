@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Download, Archive } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
@@ -80,9 +80,6 @@ export function DashboardPage() {
               leftIcon={<Download size={13} />} 
               to="/export-report" 
               className="px-3"
-              onClick={() => {
-                sessionStorage.setItem('dashboardFilters', JSON.stringify({ modality, typeFilter, archivedCharts, showArchived }))
-              }}
             >
               Exportar Relatório
             </Button>

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
 import { INDUCTION_SEQUENCE, META_DOSE, META_STEP } from '@/features/immunotherapy/constants/scit-protocol'
 import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
 import { comparePtDateAsc } from '@/shared/lib/dates'
@@ -330,6 +331,7 @@ export const usePatientStore = create<PatientState>((set) => ({
   }),
   inactivateImmunotherapy: (inactivation) => set((s) => {
     if (!s.selectedPatient) return s
+    useImmunotherapiesStore.getState().updateImmunotherapyStatus(s.selectedPatient.id, 'inactive')
     return {
       selectedPatient: {
         ...s.selectedPatient,
@@ -342,6 +344,9 @@ export const usePatientStore = create<PatientState>((set) => ({
     if (!s.selectedPatient) return s
     const list = s.selectedPatient.inactivations || []
     if (list.length === 0) return s
+    
+    useImmunotherapiesStore.getState().updateImmunotherapyStatus(s.selectedPatient.id, 'active')
+    
     const updated = [...list]
     const lastIdx = updated.length - 1
     const reactivatedAt = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' às')
