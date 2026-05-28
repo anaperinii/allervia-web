@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { cn } from '@/shared/lib/cn'
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useLayoutEffect } from 'react'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { useUserStore, PROFILES, ROLE_LABELS } from '@/shared/stores/useUserStore'
 import { useNotificationsStore } from '@/features/notification/stores/useNotificationsStore'
@@ -29,10 +29,41 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { title: 'Imunoterapias', icon: Syringe, path: '/immunotherapies' },
-  { title: 'Agendamentos', icon: CalendarDays, path: '/appointments' },
-  { title: 'Dashboard', icon: BarChart3, path: '/dashboard' },
-  { title: 'Configurações', icon: Settings, path: '/settings' },
+  { 
+    title: 'Imunoterapias', 
+    icon: Syringe, 
+    path: '/immunotherapies',
+    activePaths: ['/immunotherapies', '/add-immunotherapy', '/patient-evolution']
+  },
+  { 
+    title: 'Agendamentos', 
+    icon: CalendarDays, 
+    path: '/appointments',
+    activePaths: ['/appointments']
+  },
+  { 
+    title: 'Dashboard', 
+    icon: BarChart3, 
+    path: '/dashboard',
+    activePaths: ['/dashboard', '/export-report']
+  },
+  { 
+    title: 'Configurações', 
+    icon: Settings, 
+    path: '/settings',
+    activePaths: [
+      '/settings',
+      '/security',
+      '/advanced-settings',
+      '/profile',
+      '/teams',
+      '/personalization',
+      '/plans',
+      '/accessibility',
+      '/help',
+      '/about'
+    ]
+  },
 ]
 
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
@@ -41,6 +72,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [notificationPos, setNotificationPos] = useState({ top: 0, left: 0 })
   const notificationsRef = useRef<HTMLDivElement>(null)
   const notificationButtonRef = useRef<HTMLButtonElement>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -48,6 +80,26 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const { selectedPatient, setSelectedPatient } = usePatientStore()
+
+  useLayoutEffect(() => {
+    if (showNotifications && notificationButtonRef.current) {
+      const rect = notificationButtonRef.current.getBoundingClientRect()
+      setNotificationPos({
+        top: (rect.bottom ?? 200) + 6,
+        left: isCollapsed ? (rect.right ?? 64) + 8 : (rect.left ?? 8),
+      })
+    }
+  }, [showNotifications, isCollapsed])
+
+  useLayoutEffect(() => {
+    if (showUserMenu && userButtonRef.current) {
+      const rect = userButtonRef.current.getBoundingClientRect()
+      const topPos = (rect.bottom ?? 200) + 6
+      const leftPos = isCollapsed ? (rect.right ?? 64) + 8 : (rect.left ?? 8)
+      userMenuRef.current?.style.setProperty('--menu-top', `${topPos}px`)
+      userMenuRef.current?.style.setProperty('--menu-left', `${leftPos}px`)
+    }
+  }, [showUserMenu, isCollapsed])
 
   useEffect(() => {
     if (selectedPatient && !location.pathname.startsWith('/patient')) {
@@ -118,7 +170,9 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {}
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto overflow-x-hidden">
         {menuItems.map((item) => {
-          const isActive = location.pathname === item.path
+          const isActive = item.activePaths.some(p => 
+            location.pathname === p || location.pathname.startsWith(`${p}/`)
+          )
           const Icon = item.icon
           return (
             <Link
@@ -169,7 +223,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           </button>
 
           {showNotifications && (
-            <div ref={notificationsRef} className="fixed z-200 animate-in fade-in-0 slide-in-from-top-2 duration-200 w-80" style={{ top: (notificationButtonRef.current?.getBoundingClientRect().bottom ?? 200) + 6, left: isCollapsed ? (notificationButtonRef.current?.getBoundingClientRect().right ?? 64) + 8 : (notificationButtonRef.current?.getBoundingClientRect().left ?? 8) }}>
+            <div ref={notificationsRef} className="fixed z-200 animate-in fade-in-0 slide-in-from-top-2 duration-200 w-80" style={{ top: notificationPos.top, left: notificationPos.left }}>
               <div className="bg-white border border-(--border-custom) rounded-xl shadow-[0_12px_40px_rgba(13,148,136,0.12)] overflow-hidden">
                 <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-(--border-custom)">
                   <div className="flex items-center gap-2">

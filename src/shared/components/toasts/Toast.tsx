@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import type { ReactNode } from 'react'
@@ -15,48 +15,53 @@ interface VariantStyle {
   descColor: string
   solidBg: string
   solidBorder: string
+  progressBg: string
 }
 
 const VARIANT_CLASS: Record<ToastVariant, VariantStyle> = {
   success: {
-    bg: 'bg-emerald-100',
-    border: 'border-emerald-300',
-    iconBg: 'bg-emerald-200',
-    iconColor: 'text-emerald-700',
-    titleColor: 'text-emerald-900',
-    descColor: 'text-emerald-900/75',
-    solidBg: 'bg-emerald-500/75',
-    solidBorder: 'border-emerald-300/60',
+    bg: 'bg-white/80',
+    border: 'border-teal-200/40',
+    iconBg: 'bg-teal-100',
+    iconColor: 'text-teal-600',
+    titleColor: 'text-teal-900',
+    descColor: 'text-slate-700',
+    solidBg: 'bg-teal-500/80',
+    solidBorder: 'border-teal-300/60',
+    progressBg: 'bg-teal-500',
   },
   warning: {
-    bg: 'bg-yellow-100',
-    border: 'border-yellow-300',
-    iconBg: 'bg-yellow-200',
-    iconColor: 'text-yellow-700',
+    bg: 'bg-white/80',
+    border: 'border-yellow-200/40',
+    iconBg: 'bg-yellow-100',
+    iconColor: 'text-yellow-600',
     titleColor: 'text-yellow-900',
-    descColor: 'text-yellow-900/75',
-    solidBg: 'bg-yellow-500/75',
+    descColor: 'text-slate-700',
+    solidBg: 'bg-yellow-500/80',
     solidBorder: 'border-yellow-300/60',
+    progressBg: 'bg-yellow-500',
   },
   info: {
-    bg: 'bg-teal-100',
-    border: 'border-teal-300',
-    iconBg: 'bg-teal-200',
-    iconColor: 'text-teal-700',
+    bg: 'bg-white/80',
+    border: 'border-teal-200/40',
+    iconBg: 'bg-teal-100',
+    iconColor: 'text-teal-600',
     titleColor: 'text-teal-900',
-    descColor: 'text-teal-900/75',
-    solidBg: 'bg-teal-500/75',
+    descColor: 'text-slate-700',
+    solidBg: 'bg-teal-500/80',
     solidBorder: 'border-teal-300/60',
+    progressBg: 'bg-teal-500',
   },
   danger: {
-    bg: 'bg-red-100',
-    border: 'border-red-300',
-    iconBg: 'bg-red-200',
-    iconColor: 'text-red-700',
+    bg: 'bg-white/80',
+    border: 'border-red-200/40',
+    iconBg: 'bg-red-100',
+    iconColor: 'text-red-600',
     titleColor: 'text-red-900',
-    descColor: 'text-red-900/75',
-    solidBg: 'bg-red-600/75',
+    descColor: 'text-slate-700',
+    solidBg: 'bg-red-600/80',
     solidBorder: 'border-red-300/60',
+    progressBg: 'bg-red-500',
   },
 }
 
@@ -92,55 +97,87 @@ export function Toast({
   compact = false,
 }: ToastProps) {
   const onCloseRef = useRef(onClose)
+  const [progress, setProgress] = useState(100)
+  const [isClosing, setIsClosing] = useState(false)
+  
   useEffect(() => {
     onCloseRef.current = onClose
   }, [onClose])
 
+  const handleClose = () => {
+    setIsClosing(true)
+    setTimeout(() => {
+      onCloseRef.current()
+      setIsClosing(false)
+    }, 300)
+  }
+
   useEffect(() => {
     if (!open || autoDismissMs <= 0) return
-    const timer = setTimeout(() => onCloseRef.current(), autoDismissMs)
+    const timer = setTimeout(() => handleClose(), autoDismissMs)
     return () => clearTimeout(timer)
+  }, [open, autoDismissMs])
+
+  useEffect(() => {
+    if (!open || autoDismissMs <= 0) return
+
+    const startTime = Date.now()
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      const remaining = Math.max(0, 100 - (elapsed / autoDismissMs) * 100)
+      setProgress(remaining)
+      if (remaining <= 0) clearInterval(interval)
+    }, 50)
+
+    return () => clearInterval(interval)
   }, [open, autoDismissMs])
 
   if (!open) return null
   const v = VARIANT_CLASS[variant]
 
   return (
-    <div
-      className={cn('fixed z-50', POSITION_CLASS[position])}
-      style={{ animation: 'slide-up-fade 0.3s ease-out' }}
-    >
-      {compact ? (
-        <div
-          className={cn(
-            'flex items-center gap-2 rounded-full border px-4 py-2 text-white backdrop-blur-md',
-            v.solidBg,
-            v.solidBorder,
-            COMPACT_SHADOW,
-          )}
-        >
-          <span className="flex items-center justify-center shrink-0">{icon}</span>
-          <p className="text-xs font-semibold">{title}</p>
-        </div>
-      ) : (
-        <div className={cn('flex items-start gap-3 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] p-4 w-95 border', v.bg, v.border)}>
-          <div className={cn('flex h-8 w-8 items-center justify-center rounded-full shrink-0 mt-0.5', v.iconBg, v.iconColor)}>
-            {icon}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className={cn('text-sm font-semibold', v.titleColor)}>{title}</p>
-            {description && <p className={cn('text-xs mt-1', v.descColor)}>{description}</p>}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar"
-            className={cn('h-6 w-6 flex items-center justify-center rounded-md transition-all shrink-0 hover:bg-black/5', v.descColor)}
+    <>
+      <div
+        className={cn('fixed z-50', POSITION_CLASS[position])}
+        style={{ animation: isClosing ? 'slide-down-fade 0.3s ease-in' : 'slide-up-fade 0.3s ease-out' }}
+      >
+        {compact ? (
+          <div
+            className={cn(
+              'flex items-center gap-2 rounded-full border px-4 py-2 text-white backdrop-blur-md',
+              v.solidBg,
+              v.solidBorder,
+              COMPACT_SHADOW,
+            )}
           >
-            <X size={14} />
-          </button>
-        </div>
-      )}
-    </div>
+            <span className="flex items-center justify-center shrink-0">{icon}</span>
+            <p className="text-xs font-semibold">{title}</p>
+          </div>
+        ) : (
+          <div className={cn('flex flex-col rounded-xl border backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] overflow-hidden w-96 border-white/20', v.bg)}>
+            <div className="p-4 flex items-start gap-3">
+              <div className={cn('flex h-8 w-8 items-center justify-center rounded-full shrink-0 mt-0.5', v.iconBg, v.iconColor)}>
+                {icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={cn('text-sm font-semibold', v.titleColor)}>{title}</p>
+                {description && <div className={cn('text-xs mt-2', v.descColor)}>{description}</div>}
+              </div>
+              <button
+                type="button"
+                onClick={handleClose}
+                aria-label="Fechar"
+                className={cn('h-6 w-6 flex items-center justify-center rounded-md transition-all shrink-0 hover:bg-black/10', v.descColor)}
+              >
+                <X size={14} />
+              </button>
+            </div>
+            {autoDismissMs > 0 && (
+              <div className={cn('h-1 rounded-full', v.progressBg)} style={{ width: `${progress}%`, transition: 'width 50ms linear' }} />
+            )}
+          </div>
+        )}
+      </div>
+    </>
   )
 }
