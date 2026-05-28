@@ -1,5 +1,5 @@
-import type { AccessLog } from '@/shared/stores/useAuditStore'
-import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
+import type { AccessLog } from '@/shared/audit/audit-store'
+import type { Application, Patient } from '@/features/patient/stores/patient-store'
 
 export type ReportFileFormat = 'pdf' | 'excel' | 'csv'
 export type LgpdFileFormat = 'json' | 'csv'
@@ -16,7 +16,7 @@ export type ReportSectionId =
 export interface ReportData {
   patient: Patient
   sections: ReportSectionId[]
-  realizedApplications: Application[]
+  realizedApps: Application[]
   reactionsCount: number
   generatedAt: string
   anonymized: boolean

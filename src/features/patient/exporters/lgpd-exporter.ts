@@ -1,16 +1,14 @@
 import { format } from 'date-fns'
-import { ACTION_LABELS } from '@/shared/stores/useAuditStore'
+import { ACTION_LABELS } from '@/shared/audit/audit-store'
 import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
-import { derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import type { LgpdExportData, LgpdFileFormat } from './types'
-import { downloadFile } from '@/shared/lib/file-download'
+import { downloadFile } from './utils'
 
 function buildPayload(data: LgpdExportData) {
   const { patient, applications, accessLogs, exportedAt, justification, exportedBy } = data
-  const { inductionStart, maintenanceStart } = derivePatientDates(applications, patient.id)
   return {
     exportedAt,
     exportedBy,
@@ -33,8 +31,8 @@ function buildPayload(data: LgpdExportData) {
       tipo: patient.immunotherapyType,
       viaAdministracao: patient.administrationRoute,
       extrato: patient.extract,
-      inicioInducao: inductionStart,
-      inicioManutencao: maintenanceStart,
+      inicioInducao: patient.inductionStart,
+      inicioManutencao: patient.maintenanceStart,
       concentracaoVolumeMeta: patient.targetConcentrationVolume,
       concentracaoDoseAtuais: patient.currentDoseConcentration,
       intervaloAtual: patient.currentInterval,

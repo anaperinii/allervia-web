@@ -1,22 +1,23 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { CheckCircle, Plus } from 'lucide-react'
 import { Button, Toast } from '@/shared/components'
-import { useHasPermission, useDoctorFilter } from '@/shared/stores/useUserStore'
-import { usePatientStore } from '@/features/patient/stores/usePatientStore'
-import type { Application } from '@/features/patient/stores/usePatientStore'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
-import { useCalendarNav } from '@/features/scheduling/hooks/useCalendarNav'
-import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolbar'
-import { WeekView } from '@/features/scheduling/components/WeekView'
-import { MonthView } from '@/features/scheduling/components/MonthView'
-import { SelectedDayStrip } from '@/features/scheduling/components/SelectedDayStrip'
-import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
-import { NewAppointmentModal } from '@/features/scheduling/components/NewAppointmentModal'
-import type { NewAppointmentForm } from '@/features/scheduling/schemas/new-appointment'
+import { useHasPermission, useDoctorFilter } from '@/shared/identity/user-store'
+import { usePatientStore } from '@/features/patient/stores/patient-store'
+import { isApplicationPast } from '@/shared/lib/dates'
+import type { Application } from '@/features/patient/stores/patient-store'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useSettingsStore } from '@/features/settings/stores/settings-store'
+import { useCalendarNav } from '@/features/scheduling/hooks/use-calendar-nav'
+import { CalendarToolbar } from '@/features/scheduling/components/calendar-toolbar'
+import { WeekView } from '@/features/scheduling/components/week-view'
+import { MonthView } from '@/features/scheduling/components/month-view'
+import { SelectedDayStrip } from '@/features/scheduling/components/selected-day-strip'
+import { ApplicationDetailsModal } from '@/features/scheduling/components/application-details-modal'
+import { NewAppointmentModal } from '@/features/scheduling/components/new-appointment-modal'
+import type { NewAppointmentForm } from '@/features/scheduling/forms/new-appointment'
 
 export function AppointmentsPage() {
   const { applications: allApplications, scheduleApplication } = usePatientStore()
@@ -31,6 +32,22 @@ export function AppointmentsPage() {
   const [showToast, setShowToast] = useState(false)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
 
+  // Auto-completa agendamentos passados e marca futuros como 'scheduled'
+  // Executa na montagem e a cada minuto para capturar a virada de hora
+  useEffect(() => {
+    const autoUpdate = () => {
+      const { applications: current, setApplicationStatus } = usePatientStore.getState()
+      current.forEach((app) => {
+        if (app.status === 'scheduled' && isApplicationPast(app.date, app.endTime)) {
+          setApplicationStatus(app.id, 'completed')
+        }
+      })
+    }
+    autoUpdate()
+    const interval = setInterval(autoUpdate, 60_000)
+    return () => clearInterval(interval)
+  }, [])
+
   const applications = useMemo(() => {
     if (!doctorFilter) return allApplications
     const ownedIds = new Set(
@@ -39,8 +56,13 @@ export function AppointmentsPage() {
     return allApplications.filter((application) => ownedIds.has(application.patientId))
   }, [allApplications, immunotherapies, doctorFilter])
 
+  // Mostra agendados, perdidos e concluídos no calendário (concluídos como histórico)
   const scheduled = useMemo(
-    () => applications.filter((application) => application.status === 'scheduled' || application.status === 'missed'),
+    () => applications.filter((application) =>
+      application.status === 'scheduled' ||
+      application.status === 'missed' ||
+      application.status === 'completed',
+    ),
     [applications],
   )
 

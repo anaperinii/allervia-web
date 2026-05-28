@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { TablePagination } from '@/shared/components'
-import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
-import { usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useCustomTypesStore } from '@/features/immunotherapy/stores/custom-types-store'
+import { usePatientStore } from '@/features/patient/stores/patient-store'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { useDoctorFilter, useHasPermission } from '@/shared/stores/useUserStore'
-import { ImmunotherapiesFilterBar } from '@/features/immunotherapy/components/ImmunotherapiesFilterBar'
-import { ImmunotherapiesTable } from '@/features/immunotherapy/components/ImmunotherapiesTable'
+import { useDoctorFilter, useHasPermission } from '@/shared/identity/user-store'
+import { ImmunotherapiesFilterBar } from '@/features/immunotherapy/components/immunotherapies-filter-bar'
+import { ImmunotherapiesTable } from '@/features/immunotherapy/components/immunotherapies-table'
 
 export function ImmunotherapiesPage() {
   const navigate = useNavigate()

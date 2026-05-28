@@ -1,7 +1,7 @@
 import type {
   InactivationCategory,
   ProtocolAdjustmentType,
-} from '@/features/patient/stores/usePatientStore'
+} from '@/features/patient/stores/patient-store'
 
 export const INACTIVATION_CATEGORY_LABELS: Record<InactivationCategory, string> = {
   treatment_completion: 'Conclusão do tratamento',

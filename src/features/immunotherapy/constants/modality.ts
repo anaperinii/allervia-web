@@ -1,4 +1,4 @@
-import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import type { Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
 
 export type Modality = Immunotherapy['modality']
 

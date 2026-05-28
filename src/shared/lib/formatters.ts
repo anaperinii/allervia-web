@@ -20,6 +20,12 @@ export function formatWeight(value: string): string {
   return cleaned
 }
 
+/**
+ * Limpa entrada para o formato `1:N` preservando o separador de milhar pt-BR (`.`).
+ * Auto-prefixa `1:` quando o usuário digita só dígitos. O ponto é mantido — ex: `1:10.000`
+ * passa pela validação (`/^1:\d{1,3}(\.\d{3})*$/`). Strippar o ponto aqui faria o validator
+ * rejeitar valores que o usuário digitou corretamente.
+ */
 export function formatConcentration(value: string): string {
   const cleaned = value.replace(/[^0-9.:]/g, '')
   if (!cleaned.includes(':') && cleaned.length > 0) {
@@ -29,6 +35,7 @@ export function formatConcentration(value: string): string {
   return cleaned
 }
 
+/* Enforce up to 3 decimal digits for volume */
 export function formatVolume(value: string): string {
   const cleaned = value.replace(/[^0-9,.]/g, '').replace(',', '.')
   const parts = cleaned.split('.')

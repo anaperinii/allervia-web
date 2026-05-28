@@ -4,12 +4,10 @@ import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
-import { derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import type { ReportData } from './types'
 
 export function exportPdf(data: ReportData) {
-  const { patient, realizedApplications, sections, anonymized, reactionsCount } = data
-  const { inductionStart } = derivePatientDates(realizedApplications, patient.id)
+  const { patient, realizedApps, sections, anonymized, reactionsCount } = data
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
@@ -98,7 +96,7 @@ export function exportPdf(data: ReportData) {
     addKV('Tipo', patient.immunotherapyType)
     addKV('Via de Administração', patient.administrationRoute)
     addKV('Extrato', patient.extract)
-    addKV('Início Indução', inductionStart ?? '-')
+    addKV('Início Indução', patient.inductionStart)
     addKV('Meta', patient.targetConcentrationVolume)
     addKV('Dose Atual', patient.currentDoseConcentration)
     addKV('Intervalo', `${patient.currentInterval} dias`)
@@ -106,7 +104,7 @@ export function exportPdf(data: ReportData) {
   }
 
   if (sections.includes('applications')) {
-    addSectionTitle(`Histórico de Aplicações (${realizedApplications.length})`)
+    addSectionTitle(`Histórico de Aplicações (${realizedApps.length})`)
     ensureSpace(8)
     doc.setFillColor(245, 250, 250)
     doc.rect(margin, y, pageW - margin * 2, 6, 'F')
@@ -121,12 +119,12 @@ export function exportPdf(data: ReportData) {
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(15, 32, 39)
     doc.setFontSize(9)
-    realizedApplications.forEach((application) => {
+    realizedApps.forEach((a) => {
       ensureSpace(6)
-      doc.text(application.date, margin + 2, y + 4)
-      doc.text(application.dose, margin + 35, y + 4)
-      doc.text(`${application.cycle.days} dias`, margin + 100, y + 4)
-      doc.text(application.sideEffect === 'yes' ? 'Sim' : 'Não', margin + 140, y + 4)
+      doc.text(a.date, margin + 2, y + 4)
+      doc.text(a.dose, margin + 35, y + 4)
+      doc.text(`${a.cycle.days} dias`, margin + 100, y + 4)
+      doc.text(a.sideEffect === 'yes' ? 'Sim' : 'Não', margin + 140, y + 4)
       doc.setDrawColor(240, 240, 240)
       doc.line(margin, y + 6, pageW - margin, y + 6)
       y += 6
@@ -144,25 +142,23 @@ export function exportPdf(data: ReportData) {
       doc.text('Nenhuma reação adversa registrada.', margin, y)
       y += 6
     } else {
-      realizedApplications
-        .filter((application) => application.sideEffect === 'yes')
-        .forEach((application) => {
-          ensureSpace(12)
-          doc.setFillColor(255, 248, 235)
-          doc.rect(margin, y, pageW - margin * 2, 10, 'F')
-          doc.setDrawColor(245, 158, 11)
-          doc.setLineWidth(0.8)
-          doc.line(margin, y, margin, y + 10)
-          doc.setLineWidth(0.2)
-          doc.setFontSize(9)
-          doc.setFont('helvetica', 'bold')
-          doc.setTextColor(180, 83, 9)
-          doc.text(`${application.date} — ${application.dose}`, margin + 3, y + 4)
-          doc.setFontSize(8)
-          doc.setFont('helvetica', 'normal')
-          doc.text(application.medicationNeeded === 'yes' ? 'Com medicação' : 'Sem medicação', margin + 3, y + 8)
-          y += 12
-        })
+      realizedApps.filter((a) => a.sideEffect === 'yes').forEach((a) => {
+        ensureSpace(12)
+        doc.setFillColor(255, 248, 235)
+        doc.rect(margin, y, pageW - margin * 2, 10, 'F')
+        doc.setDrawColor(245, 158, 11)
+        doc.setLineWidth(0.8)
+        doc.line(margin, y, margin, y + 10)
+        doc.setLineWidth(0.2)
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(180, 83, 9)
+        doc.text(`${a.date} — ${a.dose}`, margin + 3, y + 4)
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'normal')
+        doc.text(a.medicationNeeded === 'yes' ? 'Com medicação' : 'Sem medicação', margin + 3, y + 8)
+        y += 12
+      })
     }
     y += 3
   }
@@ -252,7 +248,7 @@ export function exportPdf(data: ReportData) {
     ensureSpace(22)
     const boxW = (pageW - margin * 2 - 8) / 3
     const boxes: [string, string][] = [
-      [String(realizedApplications.length), 'Aplicações'],
+      [String(realizedApps.length), 'Aplicações'],
       [patient.currentDoseConcentration.split(' - ')[0], 'Concentração atual'],
       [`${patient.currentInterval}d`, 'Intervalo'],
     ]

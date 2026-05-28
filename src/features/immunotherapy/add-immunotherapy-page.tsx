@@ -4,24 +4,39 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, CheckCircle } from 'lucide-react'
 import { Button, CancelWizardModal, IconButton, toast, WizardStepsIndicator } from '@/shared/components'
-import { useHasPermission } from '@/shared/stores/useUserStore'
-import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { useHasPermission } from '@/shared/identity/user-store'
+import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
 import { INDUCTION_INTERVAL, INITIAL_DOSE } from '@/features/immunotherapy/constants/scit-protocol'
 import { registerPatientProfile } from '@/features/patient/constants/patient-profiles'
-import { usePatientStore, type Application } from '@/features/patient/stores/usePatientStore'
-import { tomorrowStr, isoToPtDate, calculateAge } from '@/shared/lib/dates'
+import { usePatientStore, type Application } from '@/features/patient/stores/patient-store'
+import { tomorrowStr } from '@/shared/lib/dates'
 import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
 import {
   addImmunotherapySchema,
   type AddImmunotherapyForm,
   STEP_1_FIELDS,
   STEP_2_FIELDS,
-} from '@/features/immunotherapy/schemas/add-immunotherapy'
-import { PatientDataStep } from '@/features/immunotherapy/components/add-steps/PatientDataStep'
-import { ImmunotherapyDataStep } from '@/features/immunotherapy/components/add-steps/ImmunotherapyDataStep'
-import { AddImmunotherapyReviewStep } from '@/features/immunotherapy/components/add-steps/AddImmunotherapyReviewStep'
+} from '@/features/immunotherapy/forms/add-immunotherapy'
+import { PatientDataStep } from '@/features/immunotherapy/components/add-steps/patient-data-step'
+import { ImmunotherapyDataStep } from '@/features/immunotherapy/components/add-steps/immunotherapy-data-step'
+import { AddImmunotherapyReviewStep } from '@/features/immunotherapy/components/add-steps/add-immunotherapy-review-step'
 
 const STEP_LABELS = ['Dados do Paciente', 'Dados da Imunoterapia', 'Revisão dos Dados']
+
+function calculateAge(birthDateIso: string): number {
+  const birth = new Date(birthDateIso + 'T12:00')
+  if (isNaN(birth.getTime())) return 0
+  const now = new Date()
+  let age = now.getFullYear() - birth.getFullYear()
+  const m = now.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--
+  return age
+}
+
+function isoToPtDate(iso: string): string {
+  const [yyyy, mm, dd] = iso.split('-')
+  return `${dd}/${mm}/${yyyy}`
+}
 
 export function AddImmunotherapyPage() {
   const navigate = useNavigate()
@@ -76,6 +91,8 @@ export function AddImmunotherapyPage() {
       cpf: data.cpf,
       weight: `${data.weight} kg`,
       extract: data.extract.trim(),
+      inductionStart: startDatePt,
+      maintenanceStart: null,
       targetConcentrationVolume: `${data.targetConcentration} - ${data.targetVolume.replace('.', ',')}ml`,
       targetReached: false,
     })

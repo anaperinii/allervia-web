@@ -45,11 +45,7 @@ export function findStepIndex(dose: string): number {
   return INDUCTION_SEQUENCE.findIndex((s) => doseString(s) === dose)
 }
 
-export type ProtocolPhase = 'induction' | 'maintenance'
-
-export function isMaintenanceDose(dose: string): boolean {
-  return dose === META_DOSE
-}
+export type ProtocolPhase = 'inducao' | 'manutencao'
 
 export interface NextDoseResult {
   dose: string
@@ -65,35 +61,35 @@ export function calculateNextDose(currentDose: string, currentInterval: number):
     return {
       dose: doseString(INDUCTION_SEQUENCE[idx + 1]),
       interval: INDUCTION_INTERVAL,
-      phase: 'induction',
+      phase: 'inducao',
       reachesMeta: idx + 1 === INDUCTION_SEQUENCE.length - 1,
       advancesMaintenanceInterval: false,
     }
   }
   if (idx === INDUCTION_SEQUENCE.length - 1 && currentInterval < 14) {
-    return { dose: META_DOSE, interval: MAINTENANCE_INTERVALS[0], phase: 'maintenance', reachesMeta: false, advancesMaintenanceInterval: true }
+    return { dose: META_DOSE, interval: MAINTENANCE_INTERVALS[0], phase: 'manutencao', reachesMeta: false, advancesMaintenanceInterval: true }
   }
   if (currentInterval < MAINTENANCE_INTERVALS[0]) {
-    return { dose: META_DOSE, interval: MAINTENANCE_INTERVALS[0], phase: 'maintenance', reachesMeta: false, advancesMaintenanceInterval: true }
+    return { dose: META_DOSE, interval: MAINTENANCE_INTERVALS[0], phase: 'manutencao', reachesMeta: false, advancesMaintenanceInterval: true }
   }
   if (currentInterval < MAINTENANCE_INTERVALS[1]) {
-    return { dose: META_DOSE, interval: MAINTENANCE_INTERVALS[1], phase: 'maintenance', reachesMeta: false, advancesMaintenanceInterval: true }
+    return { dose: META_DOSE, interval: MAINTENANCE_INTERVALS[1], phase: 'manutencao', reachesMeta: false, advancesMaintenanceInterval: true }
   }
   if (currentInterval < MAINTENANCE_INTERVALS[2]) {
-    return { dose: META_DOSE, interval: MAINTENANCE_INTERVALS[2], phase: 'maintenance', reachesMeta: false, advancesMaintenanceInterval: true }
+    return { dose: META_DOSE, interval: MAINTENANCE_INTERVALS[2], phase: 'manutencao', reachesMeta: false, advancesMaintenanceInterval: true }
   }
-  return { dose: META_DOSE, interval: MAINTENANCE_INTERVALS[2], phase: 'maintenance', reachesMeta: false, advancesMaintenanceInterval: false }
+  return { dose: META_DOSE, interval: MAINTENANCE_INTERVALS[2], phase: 'manutencao', reachesMeta: false, advancesMaintenanceInterval: false }
 }
 
 export function getPhase(dose: string, interval: number): ProtocolPhase {
   const idx = findStepIndex(dose)
-  if (idx < 0) return 'maintenance'
-  if (idx === INDUCTION_SEQUENCE.length - 1 && interval >= 14) return 'maintenance'
-  return 'induction'
+  if (idx < 0) return 'manutencao'
+  if (idx === INDUCTION_SEQUENCE.length - 1 && interval >= 14) return 'manutencao'
+  return 'inducao'
 }
 
 export function getInductionProgress(dose: string, interval: number): number {
-  if (getPhase(dose, interval) === 'maintenance') return 100
+  if (getPhase(dose, interval) === 'manutencao') return 100
   const idx = findStepIndex(dose)
   if (idx < 0) return 0
   return Math.round(((idx + 1) / INDUCTION_SEQUENCE.length) * 100)

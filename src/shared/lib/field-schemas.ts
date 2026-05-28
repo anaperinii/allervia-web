@@ -35,16 +35,19 @@ export const cpfSchema = z
   .min(1, 'CPF é obrigatório')
   .refine(isValidCPF, 'CPF inválido')
 
+
 export const phoneSchema = z
   .string()
   .min(1, 'Telefone é obrigatório')
   .refine((v) => v.replace(/\D/g, '').length === 11, 'Telefone inválido (11 dígitos)')
+
 
 export const nameSchema = z
   .string()
   .min(1, 'Nome é obrigatório')
   .min(3, 'Nome deve ter ao menos 3 caracteres')
   .regex(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/, 'Nome deve conter apenas letras')
+
 
 export const weightSchema = z
   .string()
@@ -53,6 +56,7 @@ export const weightSchema = z
     const n = parseFloat(v.replace(',', '.'))
     return !isNaN(n) && n > 0 && n <= 500
   }, 'Peso inválido (0–500 kg)')
+
 
 export const birthdateSchema = z
   .string()
@@ -66,6 +70,7 @@ export const birthdateSchema = z
     return date <= today && date >= minDate
   }, 'Data de nascimento inválida')
 
+
 export const futureDateSchema = z
   .string()
   .min(1, 'Data é obrigatória')
@@ -74,6 +79,29 @@ export const futureDateSchema = z
     today.setHours(0, 0, 0, 0)
     return new Date(v + 'T12:00') >= today
   }, 'Selecione uma data presente ou futura')
+  .refine((v) => {
+    const maxDate = new Date()
+    maxDate.setFullYear(maxDate.getFullYear() + 2)
+    return new Date(v + 'T12:00') <= maxDate
+  }, 'Data não pode ser mais de 2 anos no futuro')
+
+
+// Para campos de data futura opcionais (ex: previsão de retorno na inativação)
+export const optionalFutureDateSchema = z
+  .string()
+  .refine((v) => {
+    if (!v) return true
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return new Date(v + 'T12:00') >= today
+  }, 'Selecione uma data presente ou futura')
+  .refine((v) => {
+    if (!v) return true
+    const maxDate = new Date()
+    maxDate.setFullYear(maxDate.getFullYear() + 2)
+    return new Date(v + 'T12:00') <= maxDate
+  }, 'Data não pode ser mais de 2 anos no futuro')
+
 
 const EXTRATO_COMPONENT_RE = /^[A-Za-zÀ-ÖØ-öø-ÿ]+(?:\s[A-Za-zÀ-ÖØ-öø-ÿ]+)*\s+\d+(?:\.\d+)?%$/
 
@@ -107,10 +135,34 @@ export const extratoSchema = z
     }
   })
 
+  
+// Permite 1:N onde N tem no máximo 5 dígitos (podendo usar ponto separador de milhar)
+// Exemplos válidos: 1:10, 1:100, 1:1.000, 1:10.000, 1:10000 — máximo 5 dígitos numéricos após o :
 export const concentrationSchema = z
   .string()
   .min(1, 'Concentração é obrigatória')
-  .regex(/^1:\d{1,3}(\.\d{3})*$/, 'Formato inválido. Use 1:N (ex: 1:10, 1:1.000, 1:10.000)')
+  .superRefine((value, ctx) => {
+    // Verifica formato base: começa com "1:" seguido de dígitos/pontos separadores
+    if (!/^1:[\d.]+$/.test(value)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Formato inválido. Use 1:N (ex: 1:10, 1:1.000, 1:10.000)' })
+      return
+    }
+    const afterColon = value.slice(2)
+    // Extrai somente os dígitos para contar (ignora pontos separadores de milhar)
+    const digitsOnly = afterColon.replace(/\./g, '')
+    if (!/^\d+$/.test(digitsOnly)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Formato inválido. Use 1:N (ex: 1:10, 1:1.000, 1:10.000)' })
+      return
+    }
+    if (digitsOnly.length > 5) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Concentração inválida: máximo 5 dígitos após o : (ex: 1:10.000)' })
+      return
+    }
+    if (digitsOnly.length === 0 || parseInt(digitsOnly, 10) === 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Concentração deve ser maior que zero' })
+    }
+  })
+
 
 export const volumeSchema = z
   .string()

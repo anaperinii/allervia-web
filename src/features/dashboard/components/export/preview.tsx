@@ -1,11 +1,11 @@
 import { EyeOff } from 'lucide-react'
-import type { ChartOption } from './ConfigPanel'
-import { ConcentrationPieChart } from '@/features/dashboard/components/charts/ConcentrationPieChart'
-import { PhasesBarChart } from '@/features/dashboard/components/charts/PhasesBarChart'
-import { StatusLineChart } from '@/features/dashboard/components/charts/StatusLineChart'
-import { TypesProgressBars } from '@/features/dashboard/components/charts/TypesProgressBars'
-import { VolumeStackedBarChart } from '@/features/dashboard/components/charts/VolumeStackedBarChart'
-import type { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
+import type { ChartOption } from './config-panel'
+import { ConcentrationPieChart } from '@/features/dashboard/components/charts/concentration-pie-chart'
+import { PhasesBarChart } from '@/features/dashboard/components/charts/phases-bar-chart'
+import { StatusLineChart } from '@/features/dashboard/components/charts/status-line-chart'
+import { TypesProgressBars } from '@/features/dashboard/components/charts/types-progress-bars'
+import { VolumeStackedBarChart } from '@/features/dashboard/components/charts/volume-stacked-bar-chart'
+import type { useDashboardAnalytics } from '@/features/dashboard/hooks/use-dashboard-analytics'
 
 type Analytics = ReturnType<typeof useDashboardAnalytics>
 
