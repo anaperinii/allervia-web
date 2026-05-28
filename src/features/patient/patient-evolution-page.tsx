@@ -5,11 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, CheckCircle } from 'lucide-react'
 import { addDays, differenceInDays, format } from 'date-fns'
 import { Button, CancelWizardModal, IconButton, toast, WizardStepsIndicator } from '@/shared/components'
-import { usePatientStore, derivePatientDates } from '@/features/patient/stores/usePatientStore'
+import { usePatientStore } from '@/features/patient/stores/patient-store'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { useHasPermission, useUserStore } from '@/shared/stores/useUserStore'
-import { useAuditStore } from '@/shared/stores/useAuditStore'
+import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useHasPermission, useUserStore } from '@/shared/identity/user-store'
+import { useAuditStore } from '@/shared/audit/audit-store'
 import { calculateNextDose, parseDose } from '@/features/immunotherapy/constants/scit-protocol'
 import { comparePtDateDesc, parsePtDate } from '@/shared/lib/dates'
 import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
@@ -19,11 +19,11 @@ import {
   STEP_1_FIELDS,
   STEP_2_FIELDS,
   EVOLUTION_DEFAULTS,
-} from '@/features/patient/schemas/evolution'
-import { SelectPatientStep } from '@/features/patient/components/treatment-evolution/SelectPatientStep'
-import { PreApplicationStep } from '@/features/patient/components/treatment-evolution/PreApplicationStep'
-import { PostApplicationStep } from '@/features/patient/components/treatment-evolution/PostApplicationStep'
-import { EvolutionReviewStep } from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
+} from '@/features/patient/forms/evolution'
+import { SelectPatientStep } from '@/features/patient/components/evolution-steps/select-patient-step'
+import { PreApplicationStep } from '@/features/patient/components/evolution-steps/pre-application-step'
+import { PostApplicationStep } from '@/features/patient/components/evolution-steps/post-application-step'
+import { EvolutionReviewStep } from '@/features/patient/components/evolution-steps/evolution-review-step'
 
 export function PatientEvolutionPage() {
   const navigate = useNavigate()
@@ -59,32 +59,32 @@ export function PatientEvolutionPage() {
 
   useEffect(() => {
     if (preselectedId && !selectedImmunotherapy) {
-      const found = immunotherapies.find((immunotherapy) => immunotherapy.id === preselectedId)
+      const found = immunotherapies.find((i) => i.id === preselectedId)
       if (found) handleSelect(found)
     }
   }, [preselectedId, immunotherapies])
 
   const applicationsForPatient = useMemo(() => {
     if (!selectedImmunotherapy) return []
-    return applications.filter((application) => application.patientId === selectedImmunotherapy.id)
+    return applications.filter((a) => a.patientId === selectedImmunotherapy.id)
   }, [applications, selectedImmunotherapy])
 
-  const lastApplication = useMemo(() => {
-    const realized = applicationsForPatient.filter((application) => application.status === 'completed')
+  const lastApp = useMemo(() => {
+    const realized = applicationsForPatient.filter((a) => a.status === 'completed')
     if (!realized.length) return null
     return [...realized].sort((a, b) => comparePtDateDesc(a.date, b.date))[0]
   }, [applicationsForPatient])
 
   const doseNumber = useMemo(
-    () => applicationsForPatient.filter((application) => application.status === 'completed').length,
+    () => applicationsForPatient.filter((a) => a.status === 'completed').length,
     [applicationsForPatient],
   )
 
   const nextDose = useMemo(() => {
-    if (!lastApplication || !selectedImmunotherapy) return null
-    const [d, m, y] = lastApplication.date.split('/')
-    const currentDose = `${lastApplication.extractConcentration || lastApplication.dose.split(' - ')[0]} - ${lastApplication.appliedVolume || lastApplication.dose.split(' - ')[1]}`
-    const currentInterval = lastApplication.cycle.days
+    if (!lastApp || !selectedImmunotherapy) return null
+    const [d, m, y] = lastApp.date.split('/')
+    const currentDose = `${lastApp.extractConcentration || lastApp.dose.split(' - ')[0]} - ${lastApp.appliedVolume || lastApp.dose.split(' - ')[1]}`
+    const currentInterval = lastApp.cycle.days
     const calc = calculateNextDose(currentDose, currentInterval)
     const nextDate = addDays(new Date(+y, +m - 1, +d), calc.interval)
     const next = parseDose(calc.dose)
@@ -95,7 +95,7 @@ export function PatientEvolutionPage() {
       dose: doseNumber + 1,
       interval: calc.interval,
     }
-  }, [lastApplication, selectedImmunotherapy, doseNumber])
+  }, [lastApp, selectedImmunotherapy, doseNumber])
 
   const formValues = watch()
 
@@ -112,11 +112,9 @@ export function PatientEvolutionPage() {
   }, [formValues.applicationDate, formValues.nextInterval])
 
   const treatmentTime = useMemo(() => {
-    if (!patientFromStore) return null
-    const { inductionStart } = derivePatientDates(applications, patientFromStore.id)
-    if (!inductionStart) return null
+    if (!patientFromStore?.inductionStart) return null
     try {
-      const start = parsePtDate(inductionStart)
+      const start = parsePtDate(patientFromStore.inductionStart)
       const days = differenceInDays(new Date(), start)
       const years = Math.floor(days / 365)
       if (years > 0) return `${years} ${years === 1 ? 'ano' : 'anos'}`
@@ -126,7 +124,7 @@ export function PatientEvolutionPage() {
     } catch {
       return null
     }
-  }, [patientFromStore, applications])
+  }, [patientFromStore])
 
   const advanceStep = async () => {
     if (step === 0 && (!selectedImmunotherapy || selectedImmunotherapy.status === 'inactive')) return
@@ -263,7 +261,7 @@ export function PatientEvolutionPage() {
                 selected={selectedImmunotherapy}
                 patient={patientFromStore}
                 applicationsForPatient={applicationsForPatient}
-                lastApplication={lastApplication}
+                lastApp={lastApp}
                 doseNumber={doseNumber}
                 nextDose={nextDose}
                 treatmentTime={treatmentTime}

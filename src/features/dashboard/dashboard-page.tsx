@@ -1,13 +1,15 @@
 import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Download, Archive } from 'lucide-react'
-import { cn } from '@/shared/lib/cn'
+import { cn } from '@/shared/lib/utils'
 import { Button, SegmentedControl, Select } from '@/shared/components'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
 import { useDashboardStore } from '@/features/dashboard/stores/dashboard-store'
+
 import { StatCards } from '@/features/dashboard/components/StatCards'
 import { ChartCard } from '@/features/dashboard/components/ChartCard'
+
 import { ConcentrationPieChart } from '@/features/dashboard/components/charts/ConcentrationPieChart'
 import { PhasesBarChart } from '@/features/dashboard/components/charts/PhasesBarChart'
 import { StatusLineChart } from '@/features/dashboard/components/charts/StatusLineChart'

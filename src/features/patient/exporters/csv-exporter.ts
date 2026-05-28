@@ -3,17 +3,15 @@ import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
-import { derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import type { ReportData } from './types'
-import { downloadFile } from '@/shared/lib/file-download'
+import { downloadFile } from './utils'
 
 function escapeCsv(value: unknown): string {
   return `"${String(value ?? '').replace(/"/g, '""')}"`
 }
 
 export function exportCsv(data: ReportData) {
-  const { patient, realizedApplications, sections } = data
-  const { inductionStart } = derivePatientDates(realizedApplications, patient.id)
+  const { patient, realizedApps, sections } = data
   const lines: string[] = []
   lines.push(escapeCsv(`Relatório Clínico — ${patient.name}`))
   lines.push(escapeCsv(`Gerado em: ${data.generatedAt}`))
@@ -31,7 +29,7 @@ export function exportCsv(data: ReportData) {
       ['Peso', patient.weight],
       ['Médico Responsável', patient.responsibleDoctor],
     ]
-    rows.forEach(([label, value]) => lines.push(`${escapeCsv(label)},${escapeCsv(value)}`))
+    rows.forEach(([k, v]) => lines.push(`${escapeCsv(k)},${escapeCsv(v)}`))
     lines.push('')
   }
 
@@ -42,26 +40,21 @@ export function exportCsv(data: ReportData) {
       ['Tipo', patient.immunotherapyType],
       ['Via', patient.administrationRoute],
       ['Extrato', patient.extract],
-      ['Início Indução', inductionStart ?? '-'],
+      ['Início Indução', patient.inductionStart],
       ['Meta', patient.targetConcentrationVolume],
       ['Dose Atual', patient.currentDoseConcentration],
       ['Intervalo', `${patient.currentInterval} dias`],
     ]
-    rows.forEach(([label, value]) => lines.push(`${escapeCsv(label)},${escapeCsv(value)}`))
+    rows.forEach(([k, v]) => lines.push(`${escapeCsv(k)},${escapeCsv(v)}`))
     lines.push('')
   }
 
   if (sections.includes('applications')) {
     lines.push(escapeCsv('=== HISTÓRICO DE APLICAÇÕES ==='))
     lines.push('Data,Dose,Intervalo,Reação,Responsável')
-    realizedApplications.forEach((application) => {
-      lines.push([
-        application.date,
-        application.dose,
-        `${application.cycle.days}d`,
-        application.sideEffect === 'yes' ? 'Sim' : 'Não',
-        application.administrator || '-',
-      ].map(escapeCsv).join(','))
+    realizedApps.forEach((a) => {
+      lines.push([a.date, a.dose, `${a.cycle.days}d`, a.sideEffect === 'yes' ? 'Sim' : 'Não', a.administrator || '-']
+        .map(escapeCsv).join(','))
     })
     lines.push('')
   }
@@ -69,20 +62,10 @@ export function exportCsv(data: ReportData) {
   if (sections.includes('reactions')) {
     lines.push(escapeCsv('=== REAÇÕES ADVERSAS ==='))
     lines.push('Data,Dose,Medicação,Observação')
-    realizedApplications
-      .filter((application) => application.sideEffect === 'yes')
-      .forEach((application) => {
-        const medicationLabel =
-          application.medicationNeeded === 'yes' ? 'Sim'
-          : application.medicationNeeded === 'no' ? 'Não'
-          : '-'
-        lines.push([
-          application.date,
-          application.dose,
-          medicationLabel,
-          application.administratorNote || '',
-        ].map(escapeCsv).join(','))
-      })
+    realizedApps.filter((a) => a.sideEffect === 'yes').forEach((a) => {
+      const med = a.medicationNeeded === 'yes' ? 'Sim' : a.medicationNeeded === 'no' ? 'Não' : '-'
+      lines.push([a.date, a.dose, med, a.administratorNote || ''].map(escapeCsv).join(','))
+    })
     lines.push('')
   }
 
@@ -128,7 +111,7 @@ export function exportCsv(data: ReportData) {
   if (sections.includes('progress')) {
     lines.push(escapeCsv('=== PROGRESSÃO DO PROTOCOLO ==='))
     lines.push('Métrica,Valor')
-    lines.push(`${escapeCsv('Aplicações realizadas')},${escapeCsv(realizedApplications.length)}`)
+    lines.push(`${escapeCsv('Aplicações realizadas')},${escapeCsv(realizedApps.length)}`)
     lines.push(`${escapeCsv('Concentração atual')},${escapeCsv(patient.currentDoseConcentration.split(' - ')[0])}`)
     lines.push(`${escapeCsv('Intervalo')},${escapeCsv(`${patient.currentInterval} dias`)}`)
   }

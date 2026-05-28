@@ -2,36 +2,38 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { addDays, differenceInDays, format } from 'date-fns'
 import { CalendarDays, ChevronDown, List, Power, PowerOff, Save } from 'lucide-react'
-import { cn } from '@/shared/lib/cn'
+import { cn } from '@/shared/lib/utils'
 import { SegmentedControl, Toast } from '@/shared/components'
-import { usePatientStore, derivePatientDates, type Application } from '@/features/patient/stores/usePatientStore'
+import { usePatientStore, type Application } from '@/features/patient/stores/patient-store'
+import { isApplicationPast } from '@/shared/lib/dates'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { useAuditStore } from '@/shared/stores/useAuditStore'
-import { useDoctorFilter, useHasPermission, useUserStore } from '@/shared/stores/useUserStore'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/immunotherapies-store'
+import { useAuditStore } from '@/shared/audit/audit-store'
+import { useDoctorFilter, useHasPermission, useUserStore } from '@/shared/identity/user-store'
 import {
   calculateNextDose,
   INDUCTION_INTERVAL,
   INITIAL_DOSE,
+  META_DOSE,
 } from '@/features/immunotherapy/constants/scit-protocol'
-import { comparePtDateDesc, parsePtDate } from '@/shared/lib/dates'
+import { comparePtDateAsc, comparePtDateDesc, parsePtDate } from '@/shared/lib/dates'
 import { monthIndexFromPtUpper } from '@/shared/constants/months-pt'
-import { PatientInfoSidebar } from '@/features/patient/components/chart/PatientInfoSidebar'
-import { SummaryCards } from '@/features/patient/components/chart/SummaryCards'
-import { ApplicationsMonthFilter } from '@/features/patient/components/chart/ApplicationsMonthFilter'
-import { ApplicationsTimeline } from '@/features/patient/components/chart/ApplicationsTimeline'
-import { ApplicationsCalendar } from '@/features/patient/components/chart/ApplicationsCalendar'
-import { ProgressIndicator, PROGRESS_INDUCTION_STEPS } from '@/features/patient/components/chart/ProgressIndicator'
-import { ApplicationDetailModal } from '@/features/patient/components/chart/ApplicationDetailModal'
-import { EditPatientModal } from '@/features/patient/components/chart/EditPatientModal'
-import { AdjustProtocolModal } from '@/features/patient/components/chart/AdjustProtocolModal'
-import { AdjustHistoryModal } from '@/features/patient/components/chart/AdjustHistoryModal'
-import { InactivateModal } from '@/features/patient/components/chart/InactivateModal'
-import { InactivationHistoryModal } from '@/features/patient/components/chart/InactivationHistoryModal'
-import { ReactivateModal } from '@/features/patient/components/chart/ReactivateModal'
-import { PortabilityModal } from '@/features/patient/components/chart/PortabilityModal'
+import { PatientInfoSidebar } from '@/features/patient/components/chart/patient-info-sidebar'
+import { SummaryCards } from '@/features/patient/components/chart/summary-cards'
+import { ApplicationsMonthFilter } from '@/features/patient/components/chart/applications-month-filter'
+import { ApplicationsTimeline } from '@/features/patient/components/chart/applications-timeline'
+import { ApplicationsCalendar } from '@/features/patient/components/chart/applications-calendar'
+import { ProgressIndicator, PROGRESS_INDUCTION_STEPS } from '@/features/patient/components/chart/progress-indicator'
+import { ApplicationDetailModal } from '@/features/patient/components/chart/application-detail-modal'
+import { EditPatientModal } from '@/features/patient/components/chart/edit-patient-modal'
+import { AdjustProtocolModal } from '@/features/patient/components/chart/adjust-protocol-modal'
+import { AdjustHistoryModal } from '@/features/patient/components/chart/adjust-history-modal'
+import { InactivateModal } from '@/features/patient/components/chart/inactivate-modal'
+import { InactivationHistoryModal } from '@/features/patient/components/chart/inactivation-history-modal'
+import { ReactivateModal } from '@/features/patient/components/chart/reactivate-modal'
+import { PortabilityModal } from '@/features/patient/components/chart/portability-modal'
 
-const ALL_INDUCTION_STEPS = PROGRESS_INDUCTION_STEPS.flatMap((step) => step.vols.map((volume) => `${step.conc} - ${volume}`))
+const ALL_INDUCTION_STEPS = PROGRESS_INDUCTION_STEPS.flatMap((s) => s.vols.map((v) => `${s.conc} - ${v}`))
 
 export function PatientChartPage() {
   const navigate = useNavigate()
@@ -39,6 +41,21 @@ export function PatientChartPage() {
   const selectedPatient = usePatientStore((s) => s.selectedPatient)
   const applications = usePatientStore((s) => s.applications)
   const setSelectedPatient = usePatientStore((s) => s.setSelectedPatient)
+  const setApplicationStatus = usePatientStore((s) => s.setApplicationStatus)
+
+  // Auto-completa agendamentos passados ao abrir o perfil
+  useEffect(() => {
+    const autoUpdate = () => {
+      const { applications: current } = usePatientStore.getState()
+      current.forEach((app) => {
+        if (app.status === 'scheduled' && isApplicationPast(app.date, app.endTime)) {
+          setApplicationStatus(app.id, 'completed')
+        }
+      })
+    }
+    autoUpdate()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const inactivateImmunotherapy = usePatientStore((s) => s.inactivateImmunotherapy)
   const reactivateImmunotherapy = usePatientStore((s) => s.reactivateImmunotherapy)
   const addProtocolAdjustment = usePatientStore((s) => s.addProtocolAdjustment)
@@ -59,12 +76,12 @@ export function PatientChartPage() {
   }, [doctorFilter, selectedPatient, navigate])
 
   useEffect(() => {
-    if (!patientId) return
-    if (selectedPatient?.id === patientId) return
-    const { immunotherapies } = useImmunotherapiesStore.getState()
-    const immunotherapy = immunotherapies.find((item) => item.id === patientId)
-    if (immunotherapy) setSelectedPatient(buildPatientFromImmunotherapy(immunotherapy))
-    else navigate({ to: '/immunotherapies' })
+    if (!selectedPatient && patientId) {
+      const { immunotherapies } = useImmunotherapiesStore.getState()
+      const imm = immunotherapies.find((i) => i.id === patientId)
+      if (imm) setSelectedPatient(buildPatientFromImmunotherapy(imm))
+      else navigate({ to: '/immunotherapies' })
+    }
   }, [patientId, selectedPatient, navigate, setSelectedPatient])
 
   const currentUser = useUserStore((s) => s.current)
@@ -87,7 +104,7 @@ export function PatientChartPage() {
     })
   }, [selectedPatient, currentUser, logAccess])
 
-  const [selectedApplication, setSelectedApp] = useState<Application | null>(null)
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null)
   const [monthFilter, setMonthFilter] = useState('all')
   const [showProgress, setShowProgress] = useState(false)
   const [viewMode, setViewMode] = useState<'timeline' | 'calendar'>('timeline')
@@ -104,27 +121,28 @@ export function PatientChartPage() {
   const [showAdjustToast, setShowAdjustToast] = useState(false)
   const [showInactivationHistory, setShowInactivationHistory] = useState(false)
 
-  const patientApplications = useMemo(() => {
+  const patientApps = useMemo(() => {
     if (!selectedPatient) return []
-    return applications.filter((application) => application.patientId === selectedPatient.id)
+    return applications.filter((a) => a.patientId === selectedPatient.id)
   }, [applications, selectedPatient])
 
-  const realizedApplications = useMemo(
-    () => patientApplications.filter((application) => application.status === 'completed'),
-    [patientApplications],
-  )
+  const realizedApps = useMemo(() => patientApps.filter((a) => a.status === 'completed'), [patientApps])
 
   const lastRealized = useMemo(() => {
-    if (!realizedApplications.length) return null
-    return [...realizedApplications].sort((a, b) => comparePtDateDesc(a.date, b.date))[0]
-  }, [realizedApplications])
+    if (!realizedApps.length) return null
+    return [...realizedApps].sort((a, b) => comparePtDateDesc(a.date, b.date))[0]
+  }, [realizedApps])
 
-  const { inductionStart, maintenanceStart } = useMemo(
-    () => (selectedPatient
-      ? derivePatientDates(applications, selectedPatient.id)
-      : { inductionStart: null, maintenanceStart: null }),
-    [applications, selectedPatient],
-  )
+  const inicioInducao = useMemo(() => {
+    if (!realizedApps.length) return null
+    return [...realizedApps].sort((a, b) => comparePtDateAsc(a.date, b.date))[0].date
+  }, [realizedApps])
+
+  const inicioManutencao = useMemo(() => {
+    const meta = realizedApps.filter((a) => a.dose === META_DOSE)
+    if (!meta.length) return null
+    return [...meta].sort((a, b) => comparePtDateAsc(a.date, b.date))[0].date
+  }, [realizedApps])
 
   const currentInterval = lastRealized?.cycle.days ?? selectedPatient?.currentInterval ?? INDUCTION_INTERVAL
   const currentDose = lastRealized
@@ -144,9 +162,10 @@ export function PatientChartPage() {
   }, [lastRealized, nextCalc.interval, selectedPatient])
 
   const treatmentTime = useMemo(() => {
-    if (!inductionStart) return null
+    const inicio = inicioInducao || selectedPatient?.inductionStart
+    if (!inicio) return null
     try {
-      const start = parsePtDate(inductionStart)
+      const start = parsePtDate(inicio)
       const days = differenceInDays(new Date(), start)
       const months = Math.floor(days / 30)
       const years = Math.floor(months / 12)
@@ -156,52 +175,52 @@ export function PatientChartPage() {
     } catch {
       return null
     }
-  }, [inductionStart])
+  }, [inicioInducao, selectedPatient])
 
-  const sortedApplications = useMemo(
-    () => [...patientApplications].sort((a, b) => comparePtDateDesc(a.date, b.date)),
-    [patientApplications],
+  const sortedApps = useMemo(
+    () => [...patientApps].sort((a, b) => comparePtDateDesc(a.date, b.date)),
+    [patientApps],
   )
 
   const availableMonths = useMemo(() => {
-    const months = new Map<string, string>()
-    sortedApplications.forEach((application) => {
-      const key = `${application.year}-${application.month}`
-      if (!months.has(key)) months.set(key, `${application.month} ${application.year}`)
+    const set = new Map<string, string>()
+    sortedApps.forEach((a) => {
+      const key = `${a.year}-${a.month}`
+      if (!set.has(key)) set.set(key, `${a.month} ${a.year}`)
     })
-    return Array.from(months.entries()).map(([key, label]) => ({ key, label }))
-  }, [sortedApplications])
+    return Array.from(set.entries()).map(([key, label]) => ({ key, label }))
+  }, [sortedApps])
 
-  const filteredApplications = useMemo(() => {
-    if (monthFilter === 'all') return sortedApplications
-    return sortedApplications.filter((application) => `${application.year}-${application.month}` === monthFilter)
-  }, [sortedApplications, monthFilter])
+  const filteredApps = useMemo(() => {
+    if (monthFilter === 'all') return sortedApps
+    return sortedApps.filter((a) => `${a.year}-${a.month}` === monthFilter)
+  }, [sortedApps, monthFilter])
 
-  const groupedByMonth = useMemo(() => {
-    const byMonth: Record<string, Application[]> = {}
-    filteredApplications.forEach((application) => {
-      const key = `${application.month} ${application.year}`
-      if (!byMonth[key]) byMonth[key] = []
-      byMonth[key].push(application)
+  const grouped = useMemo(() => {
+    const g: Record<string, Application[]> = {}
+    filteredApps.forEach((a) => {
+      const key = `${a.month} ${a.year}`
+      if (!g[key]) g[key] = []
+      g[key].push(a)
     })
-    return byMonth
-  }, [filteredApplications])
+    return g
+  }, [filteredApps])
 
-  const applicationsByDate = useMemo(() => {
-    const byDate: Record<string, Application[]> = {}
-    patientApplications.forEach((application) => {
-      if (!byDate[application.date]) byDate[application.date] = []
-      byDate[application.date].push(application)
+  const appsByDate = useMemo(() => {
+    const m: Record<string, Application[]> = {}
+    patientApps.forEach((a) => {
+      if (!m[a.date]) m[a.date] = []
+      m[a.date].push(a)
     })
-    return byDate
-  }, [patientApplications])
+    return m
+  }, [patientApps])
 
   const currentDoseStr = lastRealized?.dose || selectedPatient?.currentDoseConcentration || INITIAL_DOSE
   const currentStepIndex = useMemo(() => {
-    const [concentration, volume] = currentDoseStr.split(' - ').map((part) => part?.trim() ?? '')
-    return ALL_INDUCTION_STEPS.findIndex((step) => {
-      const [stepConcentration, stepVolume] = step.split(' - ').map((part) => part.trim())
-      return concentration === stepConcentration && volume === stepVolume
+    const [conc, vol] = currentDoseStr.split(' - ').map((s) => s?.trim() ?? '')
+    return ALL_INDUCTION_STEPS.findIndex((s) => {
+      const [sc, sv] = s.split(' - ').map((p) => p.trim())
+      return conc === sc && vol === sv
     })
   }, [currentDoseStr])
   const isMaintenance = currentInterval > INDUCTION_INTERVAL
@@ -249,8 +268,8 @@ export function PatientChartPage() {
         <PatientInfoSidebar
           patient={selectedPatient}
           treatmentTime={treatmentTime}
-          inductionStart={inductionStart}
-          maintenanceStart={maintenanceStart}
+          inicioInducao={inicioInducao || ''}
+          inicioManutencao={inicioManutencao}
           activeInactivation={activeInactivation}
           inactivationCount={inactivationCount}
           canReactivate={canReactivate}
@@ -292,7 +311,7 @@ export function PatientChartPage() {
 
               <ProgressIndicator
                 open={showProgress}
-                patientApplications={patientApplications}
+                patientApps={patientApps}
                 isMaintenance={isMaintenance}
                 currentInterval={currentInterval}
                 currentStepIndex={currentStepIndex}
@@ -305,11 +324,7 @@ export function PatientChartPage() {
                   activeKey={monthFilter}
                   onChange={(key) => {
                     setMonthFilter(key)
-                    if (key === 'all') {
-                      const now = new Date()
-                      setCalMonth(now.getMonth())
-                      setCalYear(now.getFullYear())
-                    } else {
+                    if (key !== 'all') {
                       const [yr, monthName] = key.split('-')
                       const mi = monthIndexFromPtUpper(monthName)
                       if (mi >= 0) { setCalMonth(mi); setCalYear(Number(yr)) }
@@ -331,13 +346,13 @@ export function PatientChartPage() {
 
             {viewMode === 'timeline' ? (
               <div className="flex-1 overflow-y-auto px-5 py-4">
-                <ApplicationsTimeline applicationsByMonth={groupedByMonth} onSelect={setSelectedApp} />
+                <ApplicationsTimeline grouped={grouped} onSelect={setSelectedApp} />
               </div>
             ) : (
               <ApplicationsCalendar
                 month={calMonth}
                 year={calYear}
-                applicationsByDate={applicationsByDate}
+                appsByDate={appsByDate}
                 onMonthChange={(m, y) => { setCalMonth(m); setCalYear(y) }}
                 onSelect={setSelectedApp}
               />
@@ -385,12 +400,6 @@ export function PatientChartPage() {
         }}
       />
 
-      <PortabilityModal
-        open={showPortabilityModal}
-        patient={selectedPatient}
-        onClose={() => setShowPortabilityModal(false)}
-      />
-
       <InactivationHistoryModal
         open={showInactivationHistory}
         inactivations={selectedPatient.inactivations ?? []}
@@ -413,7 +422,13 @@ export function PatientChartPage() {
         }}
       />
 
-      <ApplicationDetailModal application={selectedApplication} onClose={() => setSelectedApp(null)} />
+      <ApplicationDetailModal application={selectedApp} onClose={() => setSelectedApp(null)} />
+
+      <PortabilityModal
+        open={showPortabilityModal}
+        patient={selectedPatient}
+        onClose={() => setShowPortabilityModal(false)}
+      />
 
       <Toast
         open={showAdjustToast}

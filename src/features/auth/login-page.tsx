@@ -2,8 +2,8 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { UserRound } from 'lucide-react'
-import { AuthLayout } from '@/features/auth/components/AuthLayout'
-import { loginSchema, type LoginForm } from '@/features/auth/schemas/login'
+import { AuthLayout } from '@/features/auth/components/auth-layout'
+import { loginSchema, type LoginForm } from '@/features/auth/forms/login'
 import { Button, FieldLabel, TextInput, PasswordInput } from '@/shared/components'
 
 export function LoginPage() {
@@ -37,7 +37,7 @@ export function LoginPage() {
       </div>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-        <FieldLabel label="Email" error={errors.email?.message}>
+        <FieldLabel label="Email" required error={errors.email?.message}>
           <TextInput
             type="email"
             placeholder="seu@email.com.br"
@@ -48,7 +48,7 @@ export function LoginPage() {
           />
         </FieldLabel>
 
-        <FieldLabel label="Senha" error={errors.password?.message}>
+        <FieldLabel label="Senha" required error={errors.password?.message}>
           <PasswordInput
             placeholder="Insira aqui"
             invalid={!!errors.password}

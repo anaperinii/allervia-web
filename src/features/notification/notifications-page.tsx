@@ -1,16 +1,21 @@
 import { useMemo, useState } from 'react'
-import { isAfter, isBefore, startOfDay, endOfDay } from 'date-fns'
-import { useNotificationsStore, TYPE_TO_CATEGORY } from '@/features/notification/stores/useNotificationsStore'
+import { isAfter, isBefore, parse, startOfDay, endOfDay } from 'date-fns'
+import { useNotificationsStore, TYPE_TO_CATEGORY } from '@/features/notification/stores/notifications-store'
 import type { NotificationTabKey } from '@/features/notification/constants/notification-display'
-import type { ReadFilter } from '@/features/notification/components/NotificationFilterBar'
-import { NotificationsHeader } from '@/features/notification/components/NotificationsHeader'
-import { NotificationFilterBar } from '@/features/notification/components/NotificationFilterBar'
-import { NotificationListItem } from '@/features/notification/components/NotificationListItem'
-import { NotificationsEmpty } from '@/features/notification/components/NotificationsEmpty'
-import { parseIsoDate } from '@/shared/lib/dates'
+import type { ReadFilter } from '@/features/notification/components/notification-filter-bar'
+import { NotificationsHeader } from '@/features/notification/components/notifications-header'
+import { NotificationFilterBar } from '@/features/notification/components/notification-filter-bar'
+import { NotificationListItem } from '@/features/notification/components/notification-list-item'
+import { NotificationsEmpty } from '@/features/notification/components/notifications-empty'
+
+function parseDateInput(value: string): Date | null {
+  if (!value) return null
+  const parsed = parse(value, 'yyyy-MM-dd', new Date())
+  return isNaN(parsed.getTime()) ? null : parsed
+}
 
 export function NotificationsPage() {
-  const { notifications, markAsRead, markAsUnread, markAllAsRead, markSelectedAsRead, markSelectedAsUnread } =
+  const { notifications, markAsRead, markAsUnread, markAllAsRead, markSelectedAsRead, markSelectedAsUnread, deleteSelected } =
     useNotificationsStore()
 
   const [activeTab, setActiveTab] = useState<NotificationTabKey>('all')
@@ -21,8 +26,8 @@ export function NotificationsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const { effectiveDateFrom, effectiveDateTo, dateRangeError } = useMemo(() => {
-    const from = parseIsoDate(dateFrom)
-    const to = parseIsoDate(dateTo)
+    const from = parseDateInput(dateFrom)
+    const to = parseDateInput(dateTo)
     if (from && to && from > to) {
       return { effectiveDateFrom: null, effectiveDateTo: null, dateRangeError: true }
     }
@@ -93,6 +98,11 @@ export function NotificationsPage() {
     setSelectedIds(new Set())
   }
 
+  const handleBatchDelete = () => {
+    deleteSelected([...selectedIds])
+    setSelectedIds(new Set())
+  }
+
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id))
   }
@@ -106,6 +116,7 @@ export function NotificationsPage() {
           onMarkAllRead={markAllAsRead}
           onBatchRead={handleBatchRead}
           onBatchUnread={handleBatchUnread}
+          onBatchDelete={handleBatchDelete}
         />
 
         <NotificationFilterBar

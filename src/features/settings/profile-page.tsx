@@ -10,8 +10,10 @@ import {
   ReadOnlyField,
   TextInput,
 } from '@/shared/components'
-import { useUserStore } from '@/shared/stores/useUserStore'
-import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
+import { useUserStore } from '@/shared/identity/user-store'
+import { profileSchema, type ProfileForm } from '@/features/settings/forms/profile'
+import { minDateStr } from '@/shared/lib/dates'
+import { useDateBounds } from '@/shared/hooks/use-date-bounds'
 
 const formatBirthDate = (iso: string) => {
   const [year, month, day] = iso.split('-')
@@ -19,6 +21,7 @@ const formatBirthDate = (iso: string) => {
 }
 
 export function ProfilePage() {
+  useDateBounds() // keeps date inputs updated on year change
   const currentUser = useUserStore((s) => s.current)
   const updateCurrentProfile = useUserStore((s) => s.updateCurrentProfile)
 
@@ -128,7 +131,7 @@ export function ProfilePage() {
                 <h2 className="text-xs font-bold text-(--text)">Dados Pessoais</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
-                <FieldLabel label="Nome completo" error={errors.name?.message}>
+                <FieldLabel label="Nome completo" required error={errors.name?.message}>
                   {editing
                     ? <TextInput invalid={!!errors.name} {...register('name')} />
                     : <ReadOnlyField>{watched.name}</ReadOnlyField>}
@@ -136,12 +139,12 @@ export function ProfilePage() {
                 <FieldLabel label="CPF">
                   <ReadOnlyField>{currentUser.cpf}</ReadOnlyField>
                 </FieldLabel>
-                <FieldLabel label="Data de nascimento" error={errors.birthDate?.message}>
+                <FieldLabel label="Data de nascimento" required error={errors.birthDate?.message}>
                   {editing
-                    ? <TextInput type="date" invalid={!!errors.birthDate} {...register('birthDate')} />
+                    ? <TextInput type="date" min={minDateStr()} max={todayStr()} invalid={!!errors.birthDate} {...register('birthDate')} />
                     : <ReadOnlyField>{formatBirthDate(watched.birthDate)}</ReadOnlyField>}
                 </FieldLabel>
-                <FieldLabel label="Telefone" error={errors.phone?.message}>
+                <FieldLabel label="Telefone" required error={errors.phone?.message}>
                   {editing
                     ? <TextInput invalid={!!errors.phone} {...register('phone')} />
                     : <ReadOnlyField>{watched.phone}</ReadOnlyField>}
@@ -154,7 +157,7 @@ export function ProfilePage() {
                 <h2 className="text-xs font-bold text-(--text)">Dados Profissionais</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
-                <FieldLabel label="E-mail" error={errors.email?.message}>
+                <FieldLabel label="E-mail" required error={errors.email?.message}>
                   {editing
                     ? <TextInput type="email" invalid={!!errors.email} {...register('email')} />
                     : <ReadOnlyField>{watched.email}</ReadOnlyField>}
@@ -162,7 +165,7 @@ export function ProfilePage() {
                 <FieldLabel label="CRM">
                   <ReadOnlyField>{currentUser.registration}</ReadOnlyField>
                 </FieldLabel>
-                <FieldLabel label="Especialidade" error={errors.specialty?.message}>
+                <FieldLabel label="Especialidade" required error={errors.specialty?.message}>
                   {editing
                     ? <TextInput invalid={!!errors.specialty} {...register('specialty')} />
                     : <ReadOnlyField>{watched.specialty}</ReadOnlyField>}

@@ -2,18 +2,18 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check } from 'lucide-react'
-import { AuthLayout } from '@/features/auth/components/AuthLayout'
-import { AuthStepTransition } from '@/features/auth/components/AuthStepTransition'
+import { AuthLayout } from '@/features/auth/components/auth-layout'
+import { AuthStepTransition } from '@/features/auth/components/auth-step-transition'
 import {
   forgotPasswordEmailSchema,
   forgotPasswordResetSchema,
   type ForgotPasswordEmailForm,
   type ForgotPasswordResetForm,
-} from '@/features/auth/schemas/forgot-password'
-import { RequestEmailStep } from '@/features/auth/components/forgot-password-steps/RequestEmailStep'
-import { VerifyCodeStep } from '@/features/auth/components/forgot-password-steps/VerifyCodeStep'
-import { NewPasswordStep } from '@/features/auth/components/forgot-password-steps/NewPasswordStep'
-import { DoneStep } from '@/features/auth/components/forgot-password-steps/DoneStep'
+} from '@/features/auth/forms/forgot-password'
+import { RequestEmailStep } from '@/features/auth/components/forgot-password-steps/request-email-step'
+import { VerifyCodeStep } from '@/features/auth/components/forgot-password-steps/verify-code-step'
+import { NewPasswordStep } from '@/features/auth/components/forgot-password-steps/new-password-step'
+import { DoneStep } from '@/features/auth/components/forgot-password-steps/done-step'
 import { toast } from '@/shared/components'
 
 type Step = 'request' | 'code' | 'reset' | 'done'

@@ -5,6 +5,7 @@ export const CONCENTRATION_COLORS: Record<string, string> = {
   '1:10': '#0E99A3',
 }
 
+
 export const PHASE_KEYS = ['induction', 'maintenance'] as const
 export type PhaseKey = (typeof PHASE_KEYS)[number]
 
