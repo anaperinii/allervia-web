@@ -6,9 +6,9 @@ import { useSidebarStore } from '@/shared/layout/useSidebarStore'
 import { ToastViewport } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
 
-const publicRoutes = ['/', '/login', '/register', '/trial', '/forgot-password']
+const publicRoutes = ['/', '/login', '/register', '/trial', '/forgot-password', '/presentation']
 const authRoutes = ['/login', '/register', '/forgot-password']
-const noHeaderRoutes = ['/trial']
+const noHeaderRoutes = ['/trial', '/presentation']
 
 function PageTransition({ children }: { children: React.ReactNode }) {
   const [visible, setVisible] = useState(false)

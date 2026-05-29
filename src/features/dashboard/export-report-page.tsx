@@ -5,7 +5,7 @@ import { IconButton } from '@/shared/components'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
 import { ExportConfigPanel, type ChartOption } from '@/features/dashboard/components/export/ConfigPanel'
-import { ExportPreview } from '@/features/dashboard/components/export/Preview'
+import { ExportPreview } from '@/features/dashboard/components/export/ExportPreview'
 import { ConfirmExportModal } from '@/features/dashboard/components/export/ConfirmExportModal'
 import { CancelExportModal } from '@/features/dashboard/components/export/CancelExportModal'
 
