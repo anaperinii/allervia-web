@@ -118,7 +118,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto overflow-x-hidden">
         {menuItems.map((item) => {
-          const isActive = location.pathname === item.path
+          const isActive = location.pathname === item.path || (item.path === '/immunotherapies' && location.pathname.startsWith('/add-immunotherapy')) || (item.path === '/dashboard' && location.pathname.startsWith('/export-report')) || (item.path === '/settings' && ['/advanced-settings', '/profile', '/security', '/plans', '/teams', '/personalization', '/about', '/help'].some(p => location.pathname.startsWith(p)))
           const Icon = item.icon
           return (
             <Link
