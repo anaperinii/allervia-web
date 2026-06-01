@@ -354,6 +354,8 @@ function autoCompletePastApplications(apps: Application[]): Application[] {
 
     // Gera próxima aplicação seguindo o protocolo de dias e doses progressivas
     const intervalDays = app.cycle.days
+    const [d, m, y] = app.date.split("/").map(Number);
+    const appDate = new Date(y, m - 1, d);
     const nextDate = new Date(appDate)
     nextDate.setDate(nextDate.getDate() + intervalDays)
     const { date: nextDateStr, month: nextMonth, year: nextYear } = fmtDate(nextDate)
@@ -563,7 +565,7 @@ export const usePatientStore = create<PatientState>()(
         return { applications: newApplications }
       }),
 
-    },
+    }),
     {
       name: 'imunecare:patients',
       storage: createJSONStorage(() => localStorage),

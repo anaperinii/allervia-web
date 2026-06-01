@@ -23,7 +23,6 @@ interface NotificationFilterBarProps {
 }
 
 export function NotificationFilterBar({
-  useDateBounds() // keeps date inputs updated on year change
   activeTab,
   onTabChange,
   tabCounts,
@@ -37,6 +36,7 @@ export function NotificationFilterBar({
   hasActiveFilters,
   onClearFilters,
 }: NotificationFilterBarProps) {
+  useDateBounds() // keeps date inputs updated on year change
   return (
     <div className="border-b border-(--border-custom) px-5 py-2.5">
       <div className="flex items-center justify-between gap-3">

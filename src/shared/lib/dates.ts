@@ -91,3 +91,40 @@ export function formatDurationFromDays(days: number): string {
   const label = years.toFixed(1)
   return `${label} ${label === '1.0' ? 'ano' : 'anos'}`
 }
+
+
+export function isoToPtDate(iso: string): string {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return d + "/" + m + "/" + y;
+}
+
+export function formatIsoToPtOrDash(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  return isoToPtDate(iso);
+}
+
+export function calculateAge(dateStr: string): number {
+  if (!dateStr) return 0;
+  let y, m, d;
+  if (dateStr.includes("-")) {
+    [y, m, d] = dateStr.split("-").map(Number);
+  } else {
+    [d, m, y] = dateStr.split("/").map(Number);
+  }
+  const today = new Date();
+  let age = today.getFullYear() - y;
+  if (today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d)) {
+    age--;
+  }
+  return age;
+}
+
+export function addMinutesToTime(time: string, minutes: number): string {
+  if (!time) return "";
+  const [h, m] = time.split(":").map(Number);
+  const total = h * 60 + m + minutes;
+  const newH = Math.floor(total / 60) % 24;
+  const newM = total % 60;
+  return String(newH).padStart(2, "0") + ":" + String(newM).padStart(2, "0");
+}

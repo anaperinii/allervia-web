@@ -12,7 +12,7 @@ import {
 } from '@/shared/components'
 import { useUserStore } from '@/shared/identity/user-store'
 import { profileSchema, type ProfileForm } from '@/features/settings/forms/profile'
-import { minDateStr } from '@/shared/lib/dates'
+import { minDateStr, todayStr } from '@/shared/lib/dates'
 import { useDateBounds } from '@/shared/hooks/use-date-bounds'
 
 const formatBirthDate = (iso: string) => {

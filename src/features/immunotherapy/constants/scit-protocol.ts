@@ -94,3 +94,11 @@ export function getInductionProgress(dose: string, interval: number): number {
   if (idx < 0) return 0
   return Math.round(((idx + 1) / INDUCTION_SEQUENCE.length) * 100)
 }
+
+
+export function isMaintenanceDose(dose: string, interval?: number): boolean {
+  if (interval !== undefined) {
+    return getPhase(dose, interval) === "manutencao";
+  }
+  return dose === META_DOSE;
+}

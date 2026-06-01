@@ -6,7 +6,7 @@ import { formatConcentration, formatVolume } from '@/shared/lib/formatters'
 import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
 import { APPLICATION_ADMINISTRATORS } from '@/shared/identity/user-store'
 import type { EvolutionForm } from '@/features/patient/forms/evolution'
-import { minDateStr } from '@/shared/lib/dates'
+import { minDateStr, todayStr } from '@/shared/lib/dates'
 import { useDateBounds } from '@/shared/hooks/use-date-bounds'
 
 function addMinutesToTime(time: string, minutes: number): string {

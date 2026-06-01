@@ -84,7 +84,6 @@ const PatientEvolutionRoute = PatientEvolutionRouteImport.update({
   path: '/patient-evolution',
   getParentRoute: () => rootRouteImport,
 } as any)
-
 const PatientCompletionRoute = PatientCompletionRouteImport.update({
   id: '/patient-completion',
   path: '/patient-completion',
@@ -329,8 +328,8 @@ export interface RootRouteChildren {
   ImmunotherapiesRoute: typeof ImmunotherapiesRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
-  PatientEvolutionRoute: typeof PatientEvolutionRoute
   PatientCompletionRoute: typeof PatientCompletionRoute
+  PatientEvolutionRoute: typeof PatientEvolutionRoute
   PatientReportRoute: typeof PatientReportRoute
   PersonalizationRoute: typeof PersonalizationRoute
   PlansRoute: typeof PlansRoute
@@ -413,6 +412,13 @@ declare module '@tanstack/react-router' {
       path: '/patient-evolution'
       fullPath: '/patient-evolution'
       preLoaderRoute: typeof PatientEvolutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patient-completion': {
+      id: '/patient-completion'
+      path: '/patient-completion'
+      fullPath: '/patient-completion'
+      preLoaderRoute: typeof PatientCompletionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -522,8 +528,8 @@ const rootRouteChildren: RootRouteChildren = {
   ImmunotherapiesRoute: ImmunotherapiesRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
-  PatientEvolutionRoute: PatientEvolutionRoute,
   PatientCompletionRoute: PatientCompletionRoute,
+  PatientEvolutionRoute: PatientEvolutionRoute,
   PatientReportRoute: PatientReportRoute,
   PersonalizationRoute: PersonalizationRoute,
   PlansRoute: PlansRoute,
