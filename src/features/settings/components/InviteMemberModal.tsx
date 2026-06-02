@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Shield } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Modal, Button, TextInput, FieldLabel } from '@/shared/components'
 import { ROLE_BADGES, ROLE_DESCRIPTIONS, type TeamRole } from '@/features/settings/constants/team-roles'
@@ -60,13 +59,12 @@ export function InviteMemberModal({ open, onClose, onSubmit }: InviteMemberModal
                 aria-checked={selected}
                 onClick={() => setRole(key)}
                 className={cn(
-                  'h-9 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
+                  'h-9 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center cursor-pointer',
                   selected
                     ? 'border-brand bg-brand-50 text-brand-dark'
                     : 'border-(--border-custom) text-(--text-muted) hover:border-brand/50',
                 )}
               >
-                <Shield size={12} />
                 {val.label}
               </button>
             )
