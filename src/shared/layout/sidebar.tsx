@@ -28,11 +28,25 @@ interface SidebarProps {
   onToggle: () => void
 }
 
-const menuItems = [
-  { title: 'Imunoterapias', icon: Syringe, path: '/immunotherapies' },
+const menuItems: { title: string; icon: typeof Syringe; path: string; matchPaths?: string[] }[] = [
+  { title: 'Imunoterapias', icon: Syringe, path: '/immunotherapies', matchPaths: ['/add-immunotherapy'] },
   { title: 'Agendamentos', icon: CalendarDays, path: '/appointments' },
-  { title: 'Dashboard', icon: BarChart3, path: '/dashboard' },
-  { title: 'Configurações', icon: Settings, path: '/settings' },
+  { title: 'Dashboard', icon: BarChart3, path: '/dashboard', matchPaths: ['/export-report'] },
+  {
+    title: 'Configurações',
+    icon: Settings,
+    path: '/settings',
+    matchPaths: [
+      '/security',
+      '/teams',
+      '/help',
+      '/advanced-settings',
+      '/personalization',
+      '/about',
+      '/plans',
+      '/profile',
+    ],
+  },
 ]
 
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
@@ -118,7 +132,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {}
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto overflow-x-hidden">
         {menuItems.map((item) => {
-          const isActive = location.pathname === item.path
+          const isActive = location.pathname === item.path || (item.matchPaths?.includes(location.pathname) ?? false)
           const Icon = item.icon
           return (
             <Link
@@ -152,12 +166,18 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             ref={notificationButtonRef}
             onClick={() => setShowNotifications(!showNotifications)}
             className={cn(
-              "group w-full transition-all duration-200 text-(--text-muted) hover:bg-brand-50 hover:text-brand",
+              "group w-full relative transition-all duration-200",
               isCollapsed ? collapsedItemClass : expandedItemClass,
+              location.pathname === '/notifications'
+                ? "bg-linear-to-r from-teal-500/10 to-cyan-500/10 text-brand"
+                : "text-(--text-muted) hover:bg-brand-50 hover:text-brand",
             )}
           >
+            {location.pathname === '/notifications' && !isCollapsed && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-linear-to-b from-brand to-teal-400" />
+            )}
             <div className="relative shrink-0">
-              <Bell size={18} className="group-hover:text-brand transition-colors" />
+              <Bell size={18} className={cn("transition-colors", location.pathname === '/notifications' ? "text-brand" : "group-hover:text-brand")} />
               {unreadCount > 0 && <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-linear-to-br from-red-500 to-red-600 text-[8px] font-bold text-white">{unreadCount}</span>}
             </div>
             {!isCollapsed && <span>Notificações</span>}
