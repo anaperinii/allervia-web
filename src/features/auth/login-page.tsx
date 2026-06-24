@@ -20,7 +20,7 @@ export function LoginPage() {
   })
 
   const onSubmit = handleSubmit(() => {
-    navigate({ to: '/immunotherapies' })
+    navigate({ to: '/home' })
   })
 
   return (
