@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { IconButton } from '@/shared/components'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
@@ -54,7 +54,7 @@ export function ExportReportPage() {
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
           <IconButton aria-label="Voltar" variant="danger" onClick={() => setShowCancelModal(true)}>
-            <ArrowLeft size={18} />
+            <ChevronLeft size={18} />
           </IconButton>
           <h1 className="text-3xl font-semibold text-(--text)">Exportar Relatório</h1>
         </div>

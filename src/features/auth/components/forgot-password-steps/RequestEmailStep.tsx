@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowLeft, KeyRound } from 'lucide-react'
+import { ChevronLeft, KeyRound } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Button, FieldLabel, TextInput } from '@/shared/components'
 import type { ForgotPasswordEmailForm } from '@/features/auth/schemas/forgot-password'
@@ -38,7 +38,7 @@ export function RequestEmailStep({ form, onSubmit }: RequestEmailStepProps) {
       </Button>
 
       <Link to="/login" className="flex items-center justify-start gap-1.5 text-xs font-medium text-(--text-muted) hover:text-brand no-underline transition-colors">
-        <ArrowLeft size={13} />
+        <ChevronLeft size={13} />
         Voltar
       </Link>
     </form>

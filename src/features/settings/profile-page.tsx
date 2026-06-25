@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, Camera, Save } from 'lucide-react'
+import { Camera, Save } from 'lucide-react'
 import {
   Button,
   FieldLabel,
-  IconButton,
   Modal,
   ReadOnlyField,
   TextInput,
 } from '@/shared/components'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { useUserStore } from '@/shared/stores/useUserStore'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
 
@@ -71,55 +71,51 @@ export function ProfilePage() {
     .join('')
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
-            <h1 className="text-3xl font-semibold text-(--text)">Meu Perfil</h1>
-          </div>
-          {!editing ? (
-            <Button tone="brand" variant="solid" prominent onClick={() => setEditing(true)} className="px-3">
-              Editar perfil
-            </Button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={handleCancel} className="px-3">Cancelar</Button>
-              <Button
-                tone="brand"
-                variant="solid"
-                prominent
-                leftIcon={<Save size={13} />}
-                onClick={handleSubmit(() => setShowSaveModal(true))}
-                className="px-3"
-              >
-                Salvar alterações
-              </Button>
-            </div>
-          )}
-        </div>
-
-        <form className="flex-1 overflow-y-auto p-5" onSubmit={(e) => e.preventDefault()}>
-          <div className="max-w-2xl mx-auto space-y-6">
-            <div className="flex items-center gap-5">
-              <div className="relative">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-2xl font-bold text-white">
-                  {avatarInitials}
+    <SettingsLayout subtitle="Meu Perfil">
+      <form onSubmit={(e) => e.preventDefault()}>
+        <div className="max-w-2xl mx-auto space-y-6">
+            <div className="flex items-center justify-between gap-5">
+              <div className="flex items-center gap-5 min-w-0">
+                <div className="relative shrink-0">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-2xl font-bold text-white">
+                    {avatarInitials}
+                  </div>
+                  {editing && (
+                    <button
+                      type="button"
+                      aria-label="Alterar foto"
+                      className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-white border border-(--border-custom) shadow-sm hover:bg-brand-50 transition-all cursor-pointer"
+                    >
+                      <Camera size={13} className="text-brand" />
+                    </button>
+                  )}
                 </div>
-                {editing && (
-                  <button
-                    type="button"
-                    aria-label="Alterar foto"
-                    className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-white border border-(--border-custom) shadow-sm hover:bg-brand-50 transition-all cursor-pointer"
-                  >
-                    <Camera size={13} className="text-brand" />
-                  </button>
-                )}
+                <div className="min-w-0">
+                  <div className="text-lg font-bold text-(--text)">{watched.name}</div>
+                  <div className="text-xs text-(--text-muted)">{watched.specialty}</div>
+                  <div className="text-xs text-(--text-muted) mt-0.5">{watched.institution}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-lg font-bold text-(--text)">{watched.name}</div>
-                <div className="text-xs text-(--text-muted)">{watched.specialty}</div>
-                <div className="text-xs text-(--text-muted) mt-0.5">{watched.institution}</div>
+              <div className="flex items-center gap-2 shrink-0">
+                {!editing ? (
+                  <Button tone="brand" variant="solid" prominent onClick={() => setEditing(true)} className="px-3">
+                    Editar perfil
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" onClick={handleCancel} className="px-3">Cancelar</Button>
+                    <Button
+                      tone="brand"
+                      variant="solid"
+                      prominent
+                      leftIcon={<Save size={13} />}
+                      onClick={handleSubmit(() => setShowSaveModal(true))}
+                      className="px-3"
+                    >
+                      Salvar alterações
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -173,10 +169,9 @@ export function ProfilePage() {
                     : <ReadOnlyField>{watched.institution}</ReadOnlyField>}
                 </FieldLabel>
               </div>
-            </section>
-          </div>
-        </form>
-      </div>
+          </section>
+        </div>
+      </form>
 
       <Modal
         open={showSaveModal}
@@ -193,6 +188,6 @@ export function ProfilePage() {
       >
         <p className="text-xs text-(--text-muted)">As alterações no seu perfil serão salvas e aplicadas imediatamente.</p>
       </Modal>
-    </div>
+    </SettingsLayout>
   )
 }

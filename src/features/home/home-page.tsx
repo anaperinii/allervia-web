@@ -59,6 +59,21 @@ function CalendarBadge({ size = 56 }: { size?: number }) {
       aria-label={`Calendário, dia ${day}`}
     >
       <div
+        aria-hidden="true"
+        className="absolute"
+        style={{
+          top: size * 0.1,
+          left: size * 0.16,
+          width: size * 0.74,
+          height: size * 0.74,
+          borderRadius: size * 0.2,
+          background: 'linear-gradient(150deg, #cbd5e1 0%, #94a3b8 55%, #64748b 100%)',
+          transform: 'rotate(12deg)',
+          boxShadow: `0 ${size * 0.08}px ${size * 0.14}px rgba(71,85,105,0.30)`,
+          zIndex: -1,
+        }}
+      />
+      <div
         className="absolute"
         style={{
           top: size * 0.045,
@@ -321,14 +336,20 @@ interface ShortcutProps {
   title: string
   description: string
   to: string
+  gradient?: string
 }
 
-function GlassShortcut({ icon: Icon, customIcon, title, description, to }: ShortcutProps) {
+function GlassShortcut({ icon: Icon, customIcon, title, description, to, gradient }: ShortcutProps) {
   return (
     <Link
       to={to}
       className="group relative flex h-full flex-row items-center gap-3 overflow-hidden rounded-2xl bg-white/25 px-4 py-3.5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/40"
-      style={{ boxShadow: GLASS_CARD_SHADOW, backdropFilter: 'blur(20px) saturate(150%)', WebkitBackdropFilter: 'blur(20px) saturate(150%)' }}
+      style={{
+        boxShadow: GLASS_CARD_SHADOW,
+        backdropFilter: 'blur(20px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+        backgroundImage: gradient,
+      }}
     >
       {customIcon ? (
         <div className="shrink-0 transition-transform duration-300 group-hover:scale-105">
@@ -382,8 +403,17 @@ export function HomePage() {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-10 pt-4 pb-10">
-      <div className="flex h-65 items-end justify-center pb-0" style={heroRiseStyle(0)}>
+      <div className="relative flex h-65 items-end justify-center pb-2" style={heroRiseStyle(0)}>
         <LineSphere size={240} />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-1 left-1/2 h-4 w-44 -translate-x-1/2 rounded-[50%]"
+          style={{
+            background:
+              'radial-gradient(ellipse at center, rgba(15,23,42,0.18) 0%, rgba(15,23,42,0.08) 35%, transparent 70%)',
+            filter: 'blur(6px)',
+          }}
+        />
       </div>
 
       <div className="text-center" style={heroRiseStyle(0.35)}>
@@ -403,6 +433,7 @@ export function HomePage() {
               title="Evoluir paciente"
               description="Registrar nova aplicação"
               to="/patient-evolution"
+              gradient="linear-gradient(105deg, rgba(24,193,203,0.18) 0%, rgba(77,212,219,0.10) 25%, rgba(230,249,250,0.04) 55%, transparent 80%)"
             />
           </div>
           <div className="h-27.5" style={slideUpStyle(0.75)}>
@@ -411,6 +442,7 @@ export function HomePage() {
               title="Cadastrar imunoterapia"
               description="Iniciar novo tratamento"
               to="/add-immunotherapy"
+              gradient="linear-gradient(105deg, rgba(20,184,166,0.18) 0%, rgba(94,234,212,0.10) 25%, rgba(240,253,250,0.04) 55%, transparent 80%)"
             />
           </div>
         </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, CheckCircle } from 'lucide-react'
+import { ChevronLeft, CheckCircle } from 'lucide-react'
 import { Button, CancelWizardModal, IconButton, toast, WizardStepsIndicator } from '@/shared/components'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
@@ -132,7 +132,7 @@ export function AddImmunotherapyPage() {
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
           <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
-            <ArrowLeft size={16} />
+            <ChevronLeft size={16} />
           </IconButton>
           <h1 className="text-3xl font-semibold text-(--text)">Adicionar Imunoterapia</h1>
         </div>

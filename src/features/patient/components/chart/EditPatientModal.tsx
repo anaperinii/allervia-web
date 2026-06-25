@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { Button, ConfirmDiscardModal, FieldLabel, Modal, ReadOnlyField, Select, TextInput } from '@/shared/components'
 import { PROFILES } from '@/shared/stores/useUserStore'
 import { editPatientSchema, type EditPatientForm } from '@/features/patient/schemas/edit-patient'
@@ -94,7 +94,7 @@ export function EditPatientModal({ open, patient, onClose, onSave }: EditPatient
             </>
           ) : (
             <>
-              <Button variant="outline" leftIcon={<ArrowLeft size={13} />} onClick={() => setStep('form')}>
+              <Button variant="outline" leftIcon={<ChevronLeft size={13} />} onClick={() => setStep('form')}>
                 Voltar
               </Button>
               <Button tone="brand" variant="solid" onClick={submit}>Confirmar e salvar</Button>

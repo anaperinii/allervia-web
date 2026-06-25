@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Lock, Plus } from 'lucide-react'
+import { Lock, Plus } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { useHasPermission } from '@/shared/stores/useUserStore'
-import { Button, IconButton, Select } from '@/shared/components'
+import { Button, Select } from '@/shared/components'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import type { TeamRole } from '@/features/settings/constants/team-roles'
 import { useTeamsStore, type Invite, type TeamMember } from '@/features/settings/stores/useTeamsStore'
 import { MembersTable } from '@/features/settings/components/MembersTable'
@@ -70,8 +71,8 @@ export function TeamsPage() {
 
   if (!canManageTeam) {
     return (
-      <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
-        <div className="flex flex-1 min-h-0 flex-col items-center justify-center rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] m-4 p-10 text-center">
+      <SettingsLayout subtitle="Equipes e Convites">
+        <div className="flex flex-1 flex-col items-center justify-center p-10 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 mb-4">
             <Lock size={22} className="text-(--text-muted)" />
           </div>
@@ -81,30 +82,20 @@ export function TeamsPage() {
           </p>
           <Button variant="outline" to="/settings">Voltar para configurações</Button>
         </div>
-      </div>
+      </SettingsLayout>
     )
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
-            <h1 className="text-3xl font-semibold text-(--text)">Equipes e Convites</h1>
-          </div>
-          <Button tone="brand" variant="solid" prominent leftIcon={<Plus size={14} />} onClick={() => setShowInviteModal(true)} className="px-3">
-            Convidar membro
-          </Button>
-        </div>
-
-        <div role="tablist" aria-label="Equipe" className="border-b border-(--border-custom) px-5 flex items-center gap-1">
+    <SettingsLayout subtitle="Equipes e Convites">
+      <div className="flex items-center justify-between border-b border-(--border-custom) gap-3">
+        <div role="tablist" aria-label="Equipe" className="flex items-center gap-1">
           <button
             role="tab"
             aria-selected={tab === 'members'}
             onClick={() => setTab('members')}
             className={cn(
-              'px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer',
+              'px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-all cursor-pointer',
               tab === 'members' ? 'border-brand text-brand' : 'border-transparent text-(--text-muted) hover:text-(--text)',
             )}
           >
@@ -115,7 +106,7 @@ export function TeamsPage() {
             aria-selected={tab === 'invites'}
             onClick={() => setTab('invites')}
             className={cn(
-              'px-4 py-2.5 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer',
+              'px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-all flex items-center gap-1.5 cursor-pointer',
               tab === 'invites' ? 'border-brand text-brand' : 'border-transparent text-(--text-muted) hover:text-(--text)',
             )}
           >
@@ -125,65 +116,68 @@ export function TeamsPage() {
             )}
           </button>
         </div>
+        <Button tone="brand" variant="solid" prominent leftIcon={<Plus size={14} />} onClick={() => setShowInviteModal(true)} className="px-3 mb-2">
+          Convidar membro
+        </Button>
+      </div>
 
-        {tab === 'members' ? (
-          <>
-            <div className="px-5 py-3 border-b border-(--border-custom) flex items-center gap-2">
-              <Select
-                aria-label="Filtrar por status"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                className="h-8 bg-white text-xs min-w-28"
-              >
-                <option value="active">Ativos</option>
-                <option value="inactive">Inativos</option>
-                <option value="all">Todos</option>
-              </Select>
-              <Select
-                aria-label="Filtrar por perfil"
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
-                className="h-8 bg-white text-xs min-w-36"
-              >
-                <option value="all">Todos os perfis</option>
-                <option value="admin">Administrador</option>
-                <option value="doctor">Médico</option>
-                <option value="nurse">Enfermeiro</option>
-                <option value="technician">Técnico</option>
-              </Select>
-              <span className="text-[0.65rem] text-(--text-muted)">{filteredMembers.length} membros</span>
-            </div>
+      {tab === 'members' ? (
+        <>
+          <div className="py-3 border-b border-(--border-custom) flex items-center gap-2">
+            <Select
+              aria-label="Filtrar por status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              className="h-8 bg-white text-xs min-w-28"
+            >
+              <option value="active">Ativos</option>
+              <option value="inactive">Inativos</option>
+              <option value="all">Todos</option>
+            </Select>
+            <Select
+              aria-label="Filtrar por perfil"
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+              className="h-8 bg-white text-xs min-w-36"
+            >
+              <option value="all">Todos os perfis</option>
+              <option value="admin">Administrador</option>
+              <option value="doctor">Médico</option>
+              <option value="nurse">Enfermeiro</option>
+              <option value="technician">Técnico</option>
+            </Select>
+            <span className="text-[0.65rem] text-(--text-muted)">{filteredMembers.length} membros</span>
+          </div>
 
-            <div className="flex-1 overflow-y-auto">
-              <MembersTable
-                members={paginatedMembers}
-                openMenuId={openMenuId}
-                onToggleMenu={(id) => setOpenMenuId(openMenuId === id ? null : id)}
-                onCloseMenu={() => setOpenMenuId(null)}
-                onDeactivate={(member) => { setOpenMenuId(null); setConfirmState({ type: 'deactivate', id: member.id, name: member.name }) }}
-                onActivate={(member) => { setOpenMenuId(null); setConfirmState({ type: 'activate', id: member.id, name: member.name }) }}
-                onRemove={(member) => { setOpenMenuId(null); setConfirmState({ type: 'remove-member', id: member.id, name: member.name }) }}
-              />
-            </div>
-
-            <TablePagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-              onItemsPerPageChange={setItemsPerPage}
-            />
-          </>
-        ) : (
-          <div className="flex-1 overflow-y-auto">
-            <InvitesTable
-              invites={invites}
-              onResend={(invite: Invite) => setConfirmState({ type: 'resend-invite', id: invite.id, name: invite.email })}
-              onDelete={(invite: Invite) => setConfirmState({ type: 'delete-invite', id: invite.id, name: invite.email })}
+          <div>
+            <MembersTable
+              members={paginatedMembers}
+              openMenuId={openMenuId}
+              onToggleMenu={(id) => setOpenMenuId(openMenuId === id ? null : id)}
+              onCloseMenu={() => setOpenMenuId(null)}
+              onDeactivate={(member) => { setOpenMenuId(null); setConfirmState({ type: 'deactivate', id: member.id, name: member.name }) }}
+              onActivate={(member) => { setOpenMenuId(null); setConfirmState({ type: 'activate', id: member.id, name: member.name }) }}
+              onRemove={(member) => { setOpenMenuId(null); setConfirmState({ type: 'remove-member', id: member.id, name: member.name }) }}
             />
           </div>
-        )}
-      </div>
+
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+          />
+        </>
+      ) : (
+        <div>
+          <InvitesTable
+            invites={invites}
+            onResend={(invite: Invite) => setConfirmState({ type: 'resend-invite', id: invite.id, name: invite.email })}
+            onDelete={(invite: Invite) => setConfirmState({ type: 'delete-invite', id: invite.id, name: invite.email })}
+          />
+        </div>
+      )}
 
       <InviteMemberModal
         open={showInviteModal}
@@ -196,6 +190,6 @@ export function TeamsPage() {
         onClose={() => setConfirmState(null)}
         onConfirm={handleConfirm}
       />
-    </div>
+    </SettingsLayout>
   )
 }
