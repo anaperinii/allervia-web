@@ -111,7 +111,7 @@ export function AppointmentsPage() {
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-7 pb-5">
       <div className="mb-5 flex items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold text-(--text)">Agendamentos</h1>
+        <h1 className="text-3xl font-semibold text-(--text)">Agendamentos</h1>
         <div className="flex items-center gap-3">
           <Select
             aria-label="Filtrar por mês"

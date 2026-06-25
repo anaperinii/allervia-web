@@ -247,7 +247,7 @@ export function PatientEvolutionPage() {
           <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
             <ArrowLeft size={16} />
           </IconButton>
-          <h1 className="text-3xl font-bold text-(--text)">Evolução do Paciente</h1>
+          <h1 className="text-3xl font-semibold text-(--text)">Evolução do Paciente</h1>
         </div>
 
         <WizardStepsIndicator

@@ -35,9 +35,9 @@ export function NotificationFilterBar({
   onClearFilters,
 }: NotificationFilterBarProps) {
   return (
-    <div className="border-b border-(--border-custom) px-5 py-2.5">
+    <div>
       <div className="flex items-center justify-between gap-3">
-        <div role="tablist" aria-label="Categoria" className="flex h-7 rounded-lg border border-(--border-custom) overflow-hidden">
+        <div role="tablist" aria-label="Categoria" className="flex h-7 rounded-lg border border-(--border-custom) bg-white overflow-hidden">
           {NOTIFICATION_TABS.map((tab) => {
             const active = activeTab === tab.key
             return (
@@ -48,12 +48,12 @@ export function NotificationFilterBar({
                 onClick={() => onTabChange(tab.key)}
                 className={cn(
                   'px-3 text-[0.65rem] font-semibold transition-all flex items-center gap-1',
-                  active ? 'bg-linear-to-br from-brand to-teal-400 text-white' : 'text-(--text-muted) hover:bg-gray-50',
+                  active ? 'bg-linear-to-br from-brand to-teal-400 text-white' : 'text-(--text-muted) hover:bg-teal-50/60',
                 )}
               >
                 {tab.label}
                 {tabCounts[tab.key] > 0 && (
-                  <span className={cn('text-[0.5rem] rounded-full px-1 py-px', active ? 'bg-white/25' : 'bg-red-500 text-white')}>
+                  <span className={cn('text-[0.5rem] rounded-full px-1 py-px', active ? 'bg-white/25' : 'bg-brand text-white')}>
                     {tabCounts[tab.key]}
                   </span>
                 )}

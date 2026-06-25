@@ -46,7 +46,7 @@ export function SettingsPage() {
         <div className="flex flex-1 gap-6 p-5 min-h-0 overflow-y-auto">
           {}
           <div className="w-56 shrink-0">
-            <h1 className="text-3xl font-bold text-(--text) mb-4">Configurações</h1>
+            <h1 className="text-3xl font-semibold text-(--text) mb-4">Configurações</h1>
 
             <div className="border border-(--border-custom) rounded-xl p-4">
               <div className="flex justify-center mb-2.5">

@@ -44,6 +44,7 @@ interface NotificationsState {
   markAllAsRead: () => void
   markSelectedAsRead: (ids: string[]) => void
   markSelectedAsUnread: (ids: string[]) => void
+  deleteSelected: (ids: string[]) => void
 }
 
 export const useNotificationsStore = create<NotificationsState>((set) => ({
@@ -73,4 +74,5 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
   markAllAsRead: () => set((state) => ({ notifications: state.notifications.map((notification) => ({ ...notification, read: true })) })),
   markSelectedAsRead: (ids) => set((state) => ({ notifications: state.notifications.map((notification) => ids.includes(notification.id) ? { ...notification, read: true } : notification) })),
   markSelectedAsUnread: (ids) => set((state) => ({ notifications: state.notifications.map((notification) => ids.includes(notification.id) ? { ...notification, read: false } : notification) })),
+  deleteSelected: (ids) => set((state) => ({ notifications: state.notifications.filter((notification) => !ids.includes(notification.id)) })),
 }))

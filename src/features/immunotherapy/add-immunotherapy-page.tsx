@@ -134,7 +134,7 @@ export function AddImmunotherapyPage() {
           <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
             <ArrowLeft size={16} />
           </IconButton>
-          <h1 className="text-3xl font-bold text-(--text)">Adicionar Imunoterapia</h1>
+          <h1 className="text-3xl font-semibold text-(--text)">Adicionar Imunoterapia</h1>
         </div>
 
         <WizardStepsIndicator

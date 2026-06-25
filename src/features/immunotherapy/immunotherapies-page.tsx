@@ -76,7 +76,7 @@ export function ImmunotherapiesPage() {
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-7 pb-5">
       <div className="mb-7">
-        <h1 className="mb-5 text-3xl font-bold text-(--text)">Imunoterapias</h1>
+        <h1 className="mb-5 text-3xl font-semibold text-(--text)">Imunoterapias</h1>
         <ImmunotherapiesFilterBar
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -145,6 +145,7 @@ export function ImmunotherapiesPage() {
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
+          totalItems={filtered.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={setItemsPerPage}

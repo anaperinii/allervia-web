@@ -184,7 +184,7 @@ export function PatientCompletionPage() {
             <ArrowLeft size={16} />
           </IconButton>
           <div className="flex-1 min-w-0">
-            <h1 className="text-3xl font-bold text-(--text)">Concluir tratamento</h1>
+            <h1 className="text-3xl font-semibold text-(--text)">Concluir tratamento</h1>
             <p className="text-[0.7rem] text-(--text-muted)">{patient.name}</p>
           </div>
           {draftSavedAt && (

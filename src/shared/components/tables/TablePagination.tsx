@@ -4,12 +4,13 @@ import { IconButton, Select } from '@/shared/components'
 interface TablePaginationProps {
   currentPage: number
   totalPages: number
+  totalItems?: number
   itemsPerPage: number
   onPageChange: (page: number) => void
   onItemsPerPageChange: (n: number) => void
 }
 
-export function TablePagination({ currentPage, totalPages, itemsPerPage, onPageChange, onItemsPerPageChange }: TablePaginationProps) {
+export function TablePagination({ currentPage, totalPages, totalItems, itemsPerPage, onPageChange, onItemsPerPageChange }: TablePaginationProps) {
   const controls = [
     { icon: ChevronsLeft, label: 'Primeira página', action: () => onPageChange(1), disabled: currentPage === 1 },
     { icon: ChevronLeft, label: 'Página anterior', action: () => onPageChange(currentPage - 1), disabled: currentPage === 1 },
@@ -34,6 +35,11 @@ export function TablePagination({ currentPage, totalPages, itemsPerPage, onPageC
               <option value={20}>20</option>
             </Select>
           </div>
+          {totalItems !== undefined && (
+            <span className="ml-3 text-xs text-(--text-muted)">
+              {totalItems} {totalItems === 1 ? 'registro' : 'registros'} no total
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <span className="text-xs text-(--text-muted) mr-1.5">Página {currentPage} de {totalPages}</span>

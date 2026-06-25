@@ -3,6 +3,8 @@ import { isAfter, isBefore, startOfDay, endOfDay } from 'date-fns'
 import { useNotificationsStore, TYPE_TO_CATEGORY } from '@/features/notification/stores/useNotificationsStore'
 import type { NotificationTabKey } from '@/features/notification/constants/notification-display'
 import type { ReadFilter } from '@/features/notification/components/NotificationFilterBar'
+import { CheckCheck, Mail, MailOpen, Trash2 } from 'lucide-react'
+import { Button } from '@/shared/components'
 import { NotificationsHeader } from '@/features/notification/components/NotificationsHeader'
 import { NotificationFilterBar } from '@/features/notification/components/NotificationFilterBar'
 import { NotificationListItem } from '@/features/notification/components/NotificationListItem'
@@ -10,7 +12,7 @@ import { NotificationsEmpty } from '@/features/notification/components/Notificat
 import { parseIsoDate } from '@/shared/lib/dates'
 
 export function NotificationsPage() {
-  const { notifications, markAsRead, markAsUnread, markAllAsRead, markSelectedAsRead, markSelectedAsUnread } =
+  const { notifications, markAsRead, markAsUnread, markAllAsRead, markSelectedAsRead, markSelectedAsUnread, deleteSelected } =
     useNotificationsStore()
 
   const [activeTab, setActiveTab] = useState<NotificationTabKey>('all')
@@ -30,7 +32,7 @@ export function NotificationsPage() {
   }, [dateFrom, dateTo])
 
   const hasActiveFilters =
-    activeTab !== 'all' || readFilter !== 'all' || dateFrom !== '' || dateTo !== ''
+    readFilter !== 'all' || dateFrom !== '' || dateTo !== ''
 
   const clearFilters = () => {
     setActiveTab('all')
@@ -93,21 +95,22 @@ export function NotificationsPage() {
     setSelectedIds(new Set())
   }
 
+  const handleBatchDelete = () => {
+    deleteSelected([...selectedIds])
+    setSelectedIds(new Set())
+  }
+
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id))
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <NotificationsHeader
-          unreadCount={unreadCount}
-          selectedCount={selectedIds.size}
-          onMarkAllRead={markAllAsRead}
-          onBatchRead={handleBatchRead}
-          onBatchUnread={handleBatchUnread}
-        />
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-7 pb-5">
+      <div className="mb-5">
+        <NotificationsHeader unreadCount={unreadCount} />
+      </div>
 
+      <div className="mb-4">
         <NotificationFilterBar
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -122,16 +125,45 @@ export function NotificationsPage() {
           hasActiveFilters={hasActiveFilters}
           onClearFilters={clearFilters}
         />
+      </div>
 
-        <div className="px-5 py-1.5 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={allSelected}
-            onChange={toggleSelectAll}
-            aria-label="Selecionar todas as notificações"
-            className="w-3.5 h-3.5 rounded border-gray-300 text-brand cursor-pointer accent-brand"
-          />
-          <span className="text-[0.6rem] text-(--text-muted)">{filtered.length} notificações</span>
+      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+        <div className="px-5 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleSelectAll}
+              aria-label="Selecionar todas as notificações"
+              className="w-4 h-4 rounded border-gray-300 text-brand cursor-pointer accent-brand"
+            />
+            <span className="text-xs text-(--text-muted)">{filtered.length} notificações</span>
+            {selectedIds.size > 0 && (
+              <span className="text-[0.6rem] font-semibold text-brand bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full">
+                {selectedIds.size} selecionadas
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && (
+              <>
+                <Button variant="outline" size="sm" leftIcon={<MailOpen size={11} />} onClick={handleBatchRead}>
+                  Marcar como lidas
+                </Button>
+                <Button variant="outline" size="sm" leftIcon={<Mail size={11} />} onClick={handleBatchUnread}>
+                  Marcar como não lidas
+                </Button>
+                <Button tone="danger" variant="outline" size="sm" leftIcon={<Trash2 size={11} />} onClick={handleBatchDelete}>
+                  Excluir
+                </Button>
+              </>
+            )}
+            {unreadCount > 0 && selectedIds.size === 0 && (
+              <Button variant="outline" size="sm" leftIcon={<CheckCheck size={12} />} onClick={markAllAsRead}>
+                Marcar todas como lidas
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto">

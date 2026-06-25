@@ -76,7 +76,7 @@ export function ProfilePage() {
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
-            <h1 className="text-3xl font-bold text-(--text)">Meu Perfil</h1>
+            <h1 className="text-3xl font-semibold text-(--text)">Meu Perfil</h1>
           </div>
           {!editing ? (
             <Button tone="brand" variant="solid" prominent onClick={() => setEditing(true)} className="px-3">
