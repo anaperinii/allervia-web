@@ -1,59 +1,62 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { SegmentedControl } from '@/shared/components'
-import type { CalendarViewMode } from '@/features/scheduling/hooks/useCalendarNav'
 
 interface CalendarToolbarProps {
-  viewMode: CalendarViewMode
-  onViewModeChange: (mode: CalendarViewMode) => void
   monthLabel: string
   onPrev: () => void
   onNext: () => void
   onToday: () => void
 }
 
+const LEGEND_ITEMS = [
+  { color: '#FB923C', label: 'Subcutânea' },
+  { color: '#8B5CF6', label: 'Sublingual' },
+  { color: '#94A3B8', label: 'Ausente' },
+]
+
 export function CalendarToolbar({
-  viewMode,
-  onViewModeChange,
   monthLabel,
   onPrev,
   onNext,
   onToday,
 }: CalendarToolbarProps) {
   return (
-    <div className="border-b border-(--border-custom) px-5 py-2.5 flex items-center justify-between">
-      <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
         <button
           onClick={onPrev}
           aria-label="Período anterior"
-          className="h-7 w-7 flex items-center justify-center rounded-md border border-(--border-custom) text-(--text-muted) hover:border-brand hover:text-brand transition-all"
+          className="flex items-center justify-center text-(--text) hover:text-brand transition-colors"
         >
-          <ChevronLeft size={14} />
+          <ChevronLeft size={20} strokeWidth={2.2} />
         </button>
+        <span className="text-base font-semibold text-(--text) min-w-[8rem] text-center capitalize">
+          {monthLabel}
+        </span>
         <button
           onClick={onNext}
           aria-label="Próximo período"
-          className="h-7 w-7 flex items-center justify-center rounded-md border border-(--border-custom) text-(--text-muted) hover:border-brand hover:text-brand transition-all"
+          className="flex items-center justify-center text-(--text) hover:text-brand transition-colors"
         >
-          <ChevronRight size={14} />
+          <ChevronRight size={20} strokeWidth={2.2} />
         </button>
         <button
           onClick={onToday}
-          className="h-7 px-2.5 rounded-md border border-(--border-custom) text-xs font-medium text-(--text-muted) hover:border-brand hover:text-brand transition-all"
+          className="ml-3 h-7 px-3 rounded-md border border-(--border-custom) bg-white text-xs font-medium text-(--text-muted) hover:border-brand hover:text-brand transition-all"
         >
           Hoje
         </button>
-        <span className="text-sm font-semibold text-(--text) ml-1">{monthLabel}</span>
       </div>
-      <SegmentedControl
-        value={viewMode}
-        onChange={onViewModeChange}
-        size="sm"
-        options={[
-          { value: 'week', label: 'Semana' },
-          { value: 'month', label: 'Mês' },
-        ]}
-        aria-label="Modo de visualização"
-      />
+      <div className="flex items-center gap-4 text-[0.7rem] text-(--text-muted)">
+        {LEGEND_ITEMS.map((item) => (
+          <span key={item.label} className="flex items-center gap-1.5">
+            <span
+              className="w-2 h-2 rounded-full shrink-0"
+              style={{ backgroundColor: item.color }}
+            />
+            {item.label}
+          </span>
+        ))}
+      </div>
     </div>
   )
 }

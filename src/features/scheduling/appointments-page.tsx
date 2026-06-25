@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { CheckCircle, Plus } from 'lucide-react'
-import { Button, Toast } from '@/shared/components'
+import { Button, SegmentedControl, Select, Toast } from '@/shared/components'
 import { useHasPermission, useDoctorFilter } from '@/shared/stores/useUserStore'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
@@ -17,6 +17,24 @@ import { SelectedDayStrip } from '@/features/scheduling/components/SelectedDaySt
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
 import { NewAppointmentModal } from '@/features/scheduling/components/NewAppointmentModal'
 import type { NewAppointmentForm } from '@/features/scheduling/schemas/new-appointment'
+
+const MONTH_OPTIONS = [
+  { value: 0, label: 'Janeiro' },
+  { value: 1, label: 'Fevereiro' },
+  { value: 2, label: 'Março' },
+  { value: 3, label: 'Abril' },
+  { value: 4, label: 'Maio' },
+  { value: 5, label: 'Junho' },
+  { value: 6, label: 'Julho' },
+  { value: 7, label: 'Agosto' },
+  { value: 8, label: 'Setembro' },
+  { value: 9, label: 'Outubro' },
+  { value: 10, label: 'Novembro' },
+  { value: 11, label: 'Dezembro' },
+]
+
+const CURRENT_YEAR = new Date().getFullYear()
+const YEAR_OPTIONS = Array.from({ length: 7 }, (_, i) => CURRENT_YEAR - 2 + i)
 
 export function AppointmentsPage() {
   const { applications: allApplications, scheduleApplication } = usePatientStore()
@@ -91,10 +109,41 @@ export function AppointmentsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-(--text)">Agendamentos</h1>
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-7 pb-5">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold text-(--text)">Agendamentos</h1>
+        <div className="flex items-center gap-3">
+          <Select
+            aria-label="Filtrar por mês"
+            value={calendar.currentDate.getMonth()}
+            onChange={(e) => calendar.setMonth(Number(e.target.value))}
+            className="h-8 bg-white w-auto"
+          >
+            {MONTH_OPTIONS.map((m) => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+          </Select>
+          <Select
+            aria-label="Filtrar por ano"
+            value={calendar.currentDate.getFullYear()}
+            onChange={(e) => calendar.setYear(Number(e.target.value))}
+            className="h-8 bg-white w-auto"
+          >
+            {YEAR_OPTIONS.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </Select>
+          <SegmentedControl
+            value={calendar.viewMode}
+            onChange={calendar.setViewMode}
+            size="md"
+            className="bg-white"
+            options={[
+              { value: 'week', label: 'Semana' },
+              { value: 'month', label: 'Mês' },
+            ]}
+            aria-label="Modo de visualização"
+          />
           {canNewAppointment && (
             <Button
               tone="brand"
@@ -109,16 +158,18 @@ export function AppointmentsPage() {
             </Button>
           )}
         </div>
+      </div>
 
+      <div className="mb-4">
         <CalendarToolbar
-          viewMode={calendar.viewMode}
-          onViewModeChange={calendar.setViewMode}
           monthLabel={calendar.monthLabel}
           onPrev={calendar.goToPrev}
           onNext={calendar.goToNext}
           onToday={calendar.goToToday}
         />
+      </div>
 
+      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <div className="flex-1 overflow-auto">
           {calendar.viewMode === 'week' ? (
             <WeekView

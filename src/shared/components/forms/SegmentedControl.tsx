@@ -15,6 +15,7 @@ interface SegmentedControlProps<T extends string> {
   options: SegmentedControlOption<T>[]
   size?: SegmentedControlSize
   fullWidth?: boolean
+  className?: string
   'aria-label'?: string
 }
 
@@ -36,6 +37,7 @@ export function SegmentedControl<T extends string>({
   options,
   size = 'md',
   fullWidth,
+  className,
   'aria-label': ariaLabel,
 }: SegmentedControlProps<T>) {
   return (
@@ -45,7 +47,8 @@ export function SegmentedControl<T extends string>({
       className={cn(
         'flex rounded-lg border border-(--border-custom) overflow-hidden',
         SIZE_CLASS[size],
-        fullWidth && 'w-full'
+        fullWidth && 'w-full',
+        className,
       )}
     >
       {options.map((opt) => {

@@ -1,7 +1,7 @@
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Calendar } from 'lucide-react'
-import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
+import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
 import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
@@ -27,6 +27,9 @@ export function SelectedDayStrip({
       <div className="flex items-center justify-between mb-2">
         <div className="text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider">
           {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+          <span className="ml-1.5 text-[0.55rem] font-medium normal-case lowercase">
+            ({applications.length})
+          </span>
         </div>
         {googleConnected && (
           <span className="text-[0.5rem] text-(--text-muted) flex items-center gap-1">
@@ -37,27 +40,28 @@ export function SelectedDayStrip({
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {applications.map((application) => {
-          const color = getIntervalColor(application.cycle.days)
+          const modalityColor = getApplicationEventColor(application)
           return (
             <div
               key={application.id}
               onClick={() => onSelectApplication(application)}
-              className="shrink-0 border border-(--border-custom) rounded-lg p-2.5 min-w-45 cursor-pointer hover:border-brand/50 hover:shadow-sm transition-all"
+              className="group relative shrink-0 rounded-lg p-2.5 pl-4 min-w-45 cursor-pointer hover:brightness-95 hover:-translate-y-px backdrop-blur-sm transition-all"
+              style={{
+                backgroundColor: modalityColor.bg + '80',
+                color: modalityColor.text,
+                boxShadow: '0 2px 8px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
+              }}
             >
-              <div className="text-xs font-semibold text-(--text)">{getName(application.patientId)}</div>
-              <div className="text-[0.65rem] text-(--text-muted) mt-0.5">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1.5 top-2 bottom-2 w-[3px] rounded-full"
+                style={{ backgroundColor: modalityColor.border }}
+              />
+              <div className="text-xs font-semibold">{getName(application.patientId)}</div>
+              <div className="text-[0.65rem] opacity-75 mt-0.5">
                 {application.startTime} – {application.endTime}
               </div>
-              <div className="flex items-center gap-2 mt-1.5">
-                <span className="text-[0.6rem] font-medium text-(--text-muted)">{application.dose}</span>
-                <span
-                  className="inline-flex items-center gap-1 px-2 py-px rounded-full text-[0.55rem] font-semibold border"
-                  style={{ backgroundColor: color.bg, color: color.text, borderColor: color.dot + '30' }}
-                >
-                  <span className="w-1 h-1 rounded-full" style={{ backgroundColor: color.dot }} />
-                  {application.cycle.days}d
-                </span>
-              </div>
+              <div className="text-[0.6rem] font-medium opacity-75 mt-1.5">{application.dose}</div>
             </div>
           )
         })}

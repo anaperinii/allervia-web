@@ -48,6 +48,18 @@ export function useCalendarNav() {
     setSelectedDate(new Date())
   }
 
+  const setMonth = (month: number) => {
+    const next = new Date(currentDate)
+    next.setMonth(month)
+    setCurrentDate(next)
+  }
+
+  const setYear = (year: number) => {
+    const next = new Date(currentDate)
+    next.setFullYear(year)
+    setCurrentDate(next)
+  }
+
   return {
     viewMode,
     setViewMode,
@@ -60,5 +72,7 @@ export function useCalendarNav() {
     goToPrev,
     goToNext,
     goToToday,
+    setMonth,
+    setYear,
   }
 }
