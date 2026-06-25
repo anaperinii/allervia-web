@@ -90,23 +90,6 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
               }}
             >
               <span
-                aria-hidden="true"
-                className="absolute"
-                style={{
-                  top: '-10px',
-                  left: '-2px',
-                  width: '11px',
-                  height: '11px',
-                  borderRadius: '50%',
-                  background:
-                    'linear-gradient(160deg, rgba(230,249,250,0.85), rgba(77,212,219,0.55))',
-                  border: '1.5px solid rgba(255,255,255,0.55)',
-                  backdropFilter: 'blur(10px) saturate(140%)',
-                  WebkitBackdropFilter: 'blur(10px) saturate(140%)',
-                  boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.6)',
-                }}
-              />
-              <span
                 className="text-lg font-bold text-white"
                 style={{
                   textShadow:
