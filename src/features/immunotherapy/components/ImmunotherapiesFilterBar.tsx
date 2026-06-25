@@ -1,6 +1,6 @@
 import { Archive, FileText, Plus, Search } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-import { Button, IconButton, Select, TextInput } from '@/shared/components'
+import { Button, Select, TextInput } from '@/shared/components'
 
 interface ImmunotherapiesFilterBarProps {
   searchTerm: string
@@ -32,7 +32,7 @@ export function ImmunotherapiesFilterBar({
   canEvolve,
 }: ImmunotherapiesFilterBarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-3">
       <div className="relative flex-1 min-w-45">
         <label htmlFor="immunotherapy-search" className="sr-only">Pesquisar paciente</label>
         <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) z-10" />
@@ -41,7 +41,7 @@ export function ImmunotherapiesFilterBar({
           placeholder="Pesquisar paciente"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-8 pl-8"
+          className="h-8 pl-8 bg-white"
         />
       </div>
 
@@ -65,18 +65,17 @@ export function ImmunotherapiesFilterBar({
         {intervals.map((c) => <option key={c} value={c}>{c} dias</option>)}
       </Select>
 
-      <IconButton
-        aria-label="Mostrar imunoterapias inativas"
+      <Button
+        type="button"
+        tone={showInactive ? 'brand' : 'neutral'}
+        variant="outline"
+        leftIcon={<Archive size={14} />}
         aria-pressed={showInactive}
-        size="md"
         onClick={() => setShowInactive(!showInactive)}
-        className={cn(
-          'border-[1.5px]',
-          showInactive ? 'border-brand bg-teal-50 text-brand' : 'border-(--border-custom)',
-        )}
+        className={cn('px-3', showInactive ? 'bg-teal-50' : 'bg-white')}
       >
-        <Archive size={14} />
-      </IconButton>
+        Inativas
+      </Button>
 
       {canAddImmunotherapy && (
         <Button tone="brand" variant="solid" prominent leftIcon={<Plus size={14} />} to="/add-immunotherapy" className="px-3">
@@ -85,7 +84,7 @@ export function ImmunotherapiesFilterBar({
       )}
 
       {canEvolve && (
-        <Button tone="brand" variant="outline" leftIcon={<FileText size={14} />} to="/patient-evolution" className="px-3">
+        <Button tone="brand" variant="outline" leftIcon={<FileText size={14} />} to="/patient-evolution" className="px-3 bg-white">
           Evoluir Paciente
         </Button>
       )}

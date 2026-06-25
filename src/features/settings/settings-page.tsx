@@ -41,12 +41,12 @@ export function SettingsPage() {
     .map((part) => part[0]?.toUpperCase())
     .join('')
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         <div className="flex flex-1 gap-6 p-5 min-h-0 overflow-y-auto">
           {}
           <div className="w-56 shrink-0">
-            <h1 className="text-2xl font-bold text-(--text) mb-4">Configurações</h1>
+            <h1 className="text-3xl font-bold text-(--text) mb-4">Configurações</h1>
 
             <div className="border border-(--border-custom) rounded-xl p-4">
               <div className="flex justify-center mb-2.5">

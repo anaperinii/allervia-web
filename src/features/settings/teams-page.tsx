@@ -70,7 +70,7 @@ export function TeamsPage() {
 
   if (!canManageTeam) {
     return (
-      <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
+      <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
         <div className="flex flex-1 min-h-0 flex-col items-center justify-center rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] m-4 p-10 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 mb-4">
             <Lock size={22} className="text-(--text-muted)" />
@@ -86,12 +86,12 @@ export function TeamsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
-            <h1 className="text-2xl font-bold text-(--text)">Equipes e Convites</h1>
+            <h1 className="text-3xl font-bold text-(--text)">Equipes e Convites</h1>
           </div>
           <Button tone="brand" variant="solid" prominent leftIcon={<Plus size={14} />} onClick={() => setShowInviteModal(true)} className="px-3">
             Convidar membro

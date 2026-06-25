@@ -244,7 +244,7 @@ export function PatientChartPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
       <div className="mx-4 my-4 flex flex-1 gap-4 min-h-0 min-w-0">
         <PatientInfoSidebar
           patient={selectedPatient}

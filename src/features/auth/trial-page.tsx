@@ -72,7 +72,7 @@ export function TrialPage() {
         </p>
       </div>
 
-      <div className="flex-1 flex items-center justify-center bg-gray-50/80 px-6 py-8 overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center px-6 py-8 overflow-y-auto">
         <form onSubmit={onSubmit} noValidate className="bg-white rounded-2xl border border-(--border-custom) shadow-[0_2px_40px_rgba(24,193,203,0.07)] p-6 xl:p-8 w-full max-w-110">
           <div className="flex items-center gap-2 mb-6 lg:hidden">
             <img src={imunecareLogo} alt="ImuneCare" className="w-7 h-7 rounded-md" />

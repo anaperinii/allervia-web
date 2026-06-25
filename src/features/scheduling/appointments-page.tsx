@@ -91,10 +91,10 @@ export function AppointmentsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-(--text)">Agendamentos</h1>
+          <h1 className="text-3xl font-bold text-(--text)">Agendamentos</h1>
           {canNewAppointment && (
             <Button
               tone="brand"

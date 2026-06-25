@@ -327,7 +327,7 @@ function GlassShortcut({ icon: Icon, customIcon, title, description, to }: Short
   return (
     <Link
       to={to}
-      className="group relative flex h-full flex-row items-center gap-3 overflow-hidden rounded-2xl bg-white/45 px-4 py-3.5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/60"
+      className="group relative flex h-full flex-row items-center gap-3 overflow-hidden rounded-2xl bg-white/25 px-4 py-3.5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/40"
       style={{ boxShadow: GLASS_CARD_SHADOW, backdropFilter: 'blur(20px) saturate(150%)', WebkitBackdropFilter: 'blur(20px) saturate(150%)' }}
     >
       {customIcon ? (
@@ -372,6 +372,11 @@ export function HomePage() {
       ? 'Nenhuma aplicação prevista'
       : `${todayAppsCount} ${todayAppsCount === 1 ? 'aplicação prevista' : 'aplicações previstas'}`
 
+  const weekday = useMemo(
+    () => new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(new Date()),
+    [],
+  )
+
   const greeting = getGreeting()
   const name = firstName(current.name)
 
@@ -413,7 +418,7 @@ export function HomePage() {
         <div style={slideUpStyle(0.9)}>
           <Link
             to="/appointments"
-            className="group flex h-full flex-col justify-between rounded-2xl bg-white/45 px-5 py-5 transition-all duration-300 hover:-translate-y-1 hover:bg-white/60"
+            className="group flex h-full flex-col justify-between rounded-2xl bg-white/25 px-5 py-5 transition-all duration-300 hover:-translate-y-1 hover:bg-white/40"
             style={{
               boxShadow: GLASS_CARD_SHADOW,
               backdropFilter: 'blur(20px) saturate(150%)',
@@ -425,7 +430,9 @@ export function HomePage() {
                 <CalendarBadge size={56} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-slate-800">Resumo de hoje</div>
+                <div className="text-sm font-semibold text-slate-800">
+                  Resumo de hoje <span className="font-normal text-slate-500">({weekday})</span>
+                </div>
                 <div className="mt-0.5 text-[0.78rem] text-slate-500">{appointmentsDescription}</div>
               </div>
             </div>
