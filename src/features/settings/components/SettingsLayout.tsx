@@ -108,14 +108,14 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
             <Button
               tone="danger"
               variant="outline"
-              size="sm"
-              leftIcon={<LogOut size={12} />}
+              size="md"
+              leftIcon={<LogOut size={14} />}
               onClick={() => setShowLogoutModal(true)}
-              className="px-3"
+              className="px-4"
             >
               Encerrar sessão
             </Button>
-            <Button tone="brand" variant="solid" size="sm" to="/profile" className="px-3">
+            <Button tone="brand" variant="solid" prominent size="md" to="/profile" className="px-4">
               Seu Perfil
             </Button>
           </div>

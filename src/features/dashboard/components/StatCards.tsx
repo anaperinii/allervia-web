@@ -145,7 +145,7 @@ function InactiveLockGlassIcon() {
         <div
           style={{
             width: '17px',
-            height: '17px',
+            height: '13px',
             border: '3px solid #94A3B8',
             borderBottom: 'none',
             borderRadius: '8.5px 8.5px 0 0',
@@ -154,7 +154,7 @@ function InactiveLockGlassIcon() {
         <div
           style={{
             width: '29px',
-            height: '24px',
+            height: '30px',
             borderRadius: '9px',
             marginTop: '-3px',
             background:
@@ -176,7 +176,7 @@ function InactiveLockGlassIcon() {
         <div
           style={{
             width: '18px',
-            height: '18px',
+            height: '14px',
             border: '3px solid rgba(148,163,184,0.85)',
             borderBottom: 'none',
             borderRadius: '9px 9px 0 0',
@@ -187,7 +187,7 @@ function InactiveLockGlassIcon() {
           style={{
             position: 'relative',
             width: '31px',
-            height: '25px',
+            height: '32px',
             borderRadius: '9px',
             marginTop: '-3px',
             background:
@@ -229,8 +229,8 @@ function PeopleGlassIcon() {
             width: '15px',
             height: '15px',
             background:
-              'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.35), transparent 60%), linear-gradient(150deg, #FFDAB9, #FCA48C 55%, #F58F6A)',
-            boxShadow: '0 2px 4px rgba(245,143,106,0.18)',
+              'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.3), transparent 60%), linear-gradient(150deg, #67E8F9, #0891B2 55%, #155E75)',
+            boxShadow: '0 2px 4px rgba(21,94,117,0.22)',
           }}
         />
         <div
@@ -241,8 +241,8 @@ function PeopleGlassIcon() {
             marginTop: '2px',
             borderRadius: '11px 11px 7px 7px',
             background:
-              'radial-gradient(120% 90% at 50% 15%, rgba(255,255,255,0.25), transparent 60%), linear-gradient(160deg, #FFDAB9, #FCA48C 55%, #F58F6A)',
-            boxShadow: '0 3px 6px rgba(245,143,106,0.18)',
+              'radial-gradient(120% 90% at 50% 15%, rgba(255,255,255,0.20), transparent 60%), linear-gradient(160deg, #67E8F9, #0891B2 55%, #155E75)',
+            boxShadow: '0 3px 6px rgba(21,94,117,0.22)',
           }}
         />
       </div>
@@ -253,12 +253,12 @@ function PeopleGlassIcon() {
             width: '16px',
             height: '16px',
             background:
-              'linear-gradient(160deg, rgba(255,229,220,0.70), rgba(252,164,140,0.50))',
+              'linear-gradient(160deg, rgba(165,243,252,0.65), rgba(8,145,178,0.55))',
             backdropFilter: 'blur(8px) saturate(150%)',
             WebkitBackdropFilter: 'blur(8px) saturate(150%)',
             border: '1.2px solid rgba(255,255,255,0.55)',
             boxShadow:
-              'inset 0 1px 2px rgba(255,255,255,0.65), 0 4px 8px rgba(245,143,106,0.20)',
+              'inset 0 1px 2px rgba(255,255,255,0.65), 0 4px 8px rgba(21,94,117,0.22)',
           }}
         />
         <div
@@ -269,12 +269,12 @@ function PeopleGlassIcon() {
             marginTop: '2px',
             borderRadius: '14px 14px 8px 8px',
             background:
-              'linear-gradient(160deg, rgba(255,229,220,0.70), rgba(252,164,140,0.50))',
+              'linear-gradient(160deg, rgba(165,243,252,0.65), rgba(8,145,178,0.55))',
             backdropFilter: 'blur(8px) saturate(150%)',
             WebkitBackdropFilter: 'blur(8px) saturate(150%)',
             border: '1.2px solid rgba(255,255,255,0.55)',
             boxShadow:
-              'inset 0 1px 2px rgba(255,255,255,0.65), 0 4px 8px rgba(245,143,106,0.20)',
+              'inset 0 1px 2px rgba(255,255,255,0.65), 0 4px 8px rgba(21,94,117,0.22)',
           }}
         />
       </div>
@@ -305,11 +305,11 @@ const STAT_DEFINITIONS: StatDefinition[] = [
     key: 'active',
     customIcon: <PeopleGlassIcon />,
     label: 'Pacientes Ativos',
-    color: 'text-[#F58F6A]',
-    iconBg: 'bg-[#FFE5DC]/80',
-    accentColor: '#F58F6A',
+    color: 'text-[#0E7490]',
+    iconBg: 'bg-[#CFFAFE]/80',
+    accentColor: '#0E7490',
     gradient:
-      'linear-gradient(105deg, rgba(245,143,106,0.20) 0%, rgba(255,229,220,0.10) 30%, transparent 70%)',
+      'linear-gradient(105deg, rgba(8,145,178,0.32) 0%, rgba(165,243,252,0.18) 30%, transparent 75%)',
   },
   {
     key: 'inactive',
