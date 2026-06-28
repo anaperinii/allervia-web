@@ -8,20 +8,20 @@ interface WizardStepsIndicatorProps {
 
 export function WizardStepsIndicator({ labels, current, ariaLabel = 'Etapas' }: WizardStepsIndicatorProps) {
   return (
-    <ol className="px-5 py-7 flex items-center justify-center gap-4 list-none m-0" aria-label={ariaLabel}>
+    <ol className="px-5 pt-10 pb-7 flex items-center justify-center gap-5 list-none m-0" aria-label={ariaLabel}>
       {labels.map((label, i) => {
         const active = current === i
         const done = current > i
         return (
-          <li key={label} className="flex items-center gap-4">
+          <li key={label} className="flex items-center gap-5">
             <div className="flex items-center gap-2.5" aria-current={active ? 'step' : undefined}>
               <div
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-all',
                   active
-                    ? 'bg-linear-to-br from-brand to-teal-400 text-white'
+                    ? 'bg-brand text-white'
                     : done
-                    ? 'bg-teal-100 text-teal-600 opacity-50'
+                    ? 'bg-teal-100 text-brand-dark opacity-50'
                     : 'bg-gray-200 text-gray-500',
                 )}
               >
@@ -29,8 +29,8 @@ export function WizardStepsIndicator({ labels, current, ariaLabel = 'Etapas' }: 
               </div>
               <span
                 className={cn(
-                  'text-[0.8rem] font-medium',
-                  active ? 'text-teal-600' : done ? 'text-teal-600 opacity-50' : 'text-gray-400',
+                  'text-[0.85rem] font-medium',
+                  active ? 'text-brand-dark' : done ? 'text-brand-dark opacity-50' : 'text-gray-400',
                 )}
               >
                 {label}
@@ -38,12 +38,19 @@ export function WizardStepsIndicator({ labels, current, ariaLabel = 'Etapas' }: 
             </div>
             {i < labels.length - 1 && (
               <div
-                className={cn(
-                  'h-px w-14 border-t-[1.5px]',
-                  done ? 'border-teal-400 border-solid' : 'border-gray-200 border-dashed',
-                )}
+                className="relative h-[2.5px] w-16 overflow-hidden rounded-full bg-gray-200"
                 aria-hidden="true"
-              />
+              >
+                <div
+                  className={cn(
+                    'absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out',
+                    done ? 'bg-teal-100 opacity-50' : 'bg-brand',
+                  )}
+                  style={{
+                    width: done ? '100%' : '0%',
+                  }}
+                />
+              </div>
             )}
           </li>
         )

@@ -241,15 +241,41 @@ export function PatientEvolutionPage() {
   const continueDisabled = step === 0 && (!selectedImmunotherapy || selectedImmunotherapy.status === 'inactive')
 
   return (
-    <div className="flex flex-1 flex-col p-4 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
-            <ChevronLeft size={16} />
-          </IconButton>
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-8 pb-5">
+      <div className="mb-5 flex items-center gap-3">
+        <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
+          <ChevronLeft size={16} />
+        </IconButton>
+        {selectedImmunotherapy ? (
+          <div className="flex items-end gap-2.5">
+            <h1 className="text-3xl font-semibold leading-none text-(--text-muted)">Evolução do Paciente</h1>
+            <div key={selectedImmunotherapy.id} className="flex items-end gap-2.5">
+              <span
+                className="text-2xl font-light leading-none text-(--text-muted)/60 mb-0.5"
+                style={{
+                  opacity: 0,
+                  animation: 'slide-up-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards',
+                }}
+              >
+                /
+              </span>
+              <span
+                className="text-xl font-medium leading-none text-(--text) mb-0.5"
+                style={{
+                  opacity: 0,
+                  animation: 'slide-up-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards',
+                }}
+              >
+                {selectedImmunotherapy.name}
+              </span>
+            </div>
+          </div>
+        ) : (
           <h1 className="text-3xl font-semibold text-(--text)">Evolução do Paciente</h1>
-        </div>
+        )}
+      </div>
 
+      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <WizardStepsIndicator
           current={step}
           ariaLabel="Etapas da evolução"

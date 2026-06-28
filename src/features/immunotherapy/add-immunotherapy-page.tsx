@@ -128,15 +128,15 @@ export function AddImmunotherapyPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col p-4 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
-            <ChevronLeft size={16} />
-          </IconButton>
-          <h1 className="text-3xl font-semibold text-(--text)">Adicionar Imunoterapia</h1>
-        </div>
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-8 pb-5">
+      <div className="mb-5 flex items-center gap-3">
+        <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
+          <ChevronLeft size={16} />
+        </IconButton>
+        <h1 className="text-3xl font-semibold text-(--text)">Adicionar Imunoterapia</h1>
+      </div>
 
+      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <WizardStepsIndicator
           current={step - 1}
           ariaLabel="Etapas do cadastro"

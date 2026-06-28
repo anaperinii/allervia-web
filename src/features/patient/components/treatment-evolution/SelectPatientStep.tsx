@@ -69,9 +69,10 @@ export function SelectPatientStep({
       setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : filtered.length - 1))
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      if (highlightedIndex >= 0 && filtered[highlightedIndex]) {
-        onSelect(filtered[highlightedIndex])
-        setSearch(filtered[highlightedIndex].name)
+      const idx = highlightedIndex >= 0 ? highlightedIndex : 0
+      if (filtered[idx]) {
+        onSelect(filtered[idx])
+        setSearch(filtered[idx].name)
         setShowSuggestions(false)
       }
     } else if (e.key === 'Escape') {
