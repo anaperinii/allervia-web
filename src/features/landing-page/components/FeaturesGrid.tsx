@@ -7,15 +7,16 @@ export function FeaturesGrid() {
     <section
       id="features"
       className="relative overflow-x-clip py-28 px-[5%]"
-      style={{ background: '#08191d', color: '#DCE1E5' }}
+      style={{ background: 'var(--ll-bg)', color: 'var(--ll-ink)' }}
     >
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            'radial-gradient(rgba(220,225,229,0.04) 0.5px, transparent 0.5px)',
+            'radial-gradient(var(--ll-dot) 0.5px, transparent 0.5px)',
           backgroundSize: '3px 3px',
+          opacity: 0.18,
         }}
       />
       <div
@@ -26,7 +27,7 @@ export function FeaturesGrid() {
           left: '0%',
           width: '50vmax',
           height: '50vmax',
-          background: 'radial-gradient(circle, rgba(108,158,165,0.10), transparent 60%)',
+          background: 'radial-gradient(circle, var(--ll-halo-accent), transparent 60%)',
           transform: 'translate(-50%, -50%)',
           animation: 'av-drift-3 26s ease-in-out infinite',
         }}
@@ -51,26 +52,25 @@ export function FeaturesGrid() {
                 feature.large ? 'sm:col-span-2' : ''
               }`}
               style={{
-                background:
-                  'linear-gradient(160deg, rgba(220,225,229,0.07), rgba(220,225,229,0.018))',
-                border: '1px solid rgba(220,225,229,0.13)',
-                boxShadow: '0 30px 80px -30px rgba(0,0,0,0.7)',
+                background: 'var(--ll-surface-grad)',
+                border: '1px solid var(--ll-border)',
+                boxShadow: 'var(--ll-shadow-card)',
               }}
             >
               <div
                 className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border"
                 style={{
                   background:
-                    'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04) 46%, rgba(255,255,255,0) 56%), rgba(108,158,165,0.18)',
-                  borderColor: 'rgba(108,158,165,0.30)',
+                    'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04) 46%, rgba(255,255,255,0) 56%), var(--ll-accent-bg-soft)',
+                  borderColor: 'var(--ll-accent-border-soft)',
                 }}
               >
-                <Icon size={22} style={{ color: '#9BC1C4' }} />
+                <Icon size={22} style={{ color: 'var(--ll-accent-strong)' }} />
               </div>
-              <h3 className="mb-2 text-base font-semibold" style={{ color: '#DCE1E5' }}>
+              <h3 className="mb-2 text-base font-semibold" style={{ color: 'var(--ll-ink)' }}>
                 {feature.title}
               </h3>
-              <p className="text-[0.875rem] leading-[1.7]" style={{ color: '#7FA6AC' }}>
+              <p className="text-[0.875rem] leading-[1.7]" style={{ color: 'var(--ll-ink-muted)' }}>
                 {feature.description}
               </p>
             </Reveal>

@@ -7,28 +7,28 @@ export function Footer() {
     <footer
       className="border-t"
       style={{
-        background: '#0a181b',
-        borderColor: 'rgba(220,225,229,0.10)',
-        color: '#DCE1E5',
+        background: 'var(--ll-bg-foot)',
+        borderColor: 'var(--ll-border)',
+        color: 'var(--ll-ink)',
       }}
     >
       <div className="pt-20 pb-10 px-[5%]">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-8 sm:gap-12 mb-12">
         <div>
           <div className="mb-4">
-            <AllerviaLogo size={32} color="#9BC1C4" />
+            <AllerviaLogo size={32} color="var(--ll-accent-strong)" />
           </div>
-          <div className="text-[1.3rem] font-semibold tracking-[2px] mb-4" style={{ color: '#DCE1E5' }}>
+          <div className="text-[1.3rem] font-semibold tracking-[2px] mb-4" style={{ color: 'var(--ll-ink)' }}>
             ALLERVIA
           </div>
-          <p className="text-[0.875rem] leading-[1.7] max-w-72" style={{ color: '#7FA6AC' }}>
+          <p className="text-[0.875rem] leading-[1.7] max-w-72" style={{ color: 'var(--ll-ink-muted)' }}>
             Plataforma completa para gestão de protocolos de imunoterapia alérgica. Feito para clínicas, por engenheiros de software.
           </p>
         </div>
 
         {FOOTER_COLUMNS.map((column) => (
           <div key={column.title}>
-            <h4 className="text-[0.85rem] font-semibold mb-4 tracking-wide uppercase" style={{ color: '#DCE1E5' }}>
+            <h4 className="text-[0.85rem] font-semibold mb-4 tracking-wide uppercase" style={{ color: 'var(--ll-ink)' }}>
               {column.title}
             </h4>
             <ul className="list-none flex flex-col gap-2.5">
@@ -38,9 +38,7 @@ export function Footer() {
                     <a
                       href={link.href}
                       className="text-[0.85rem] no-underline transition-colors duration-200"
-                      style={{ color: '#7FA6AC' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#DCE1E5' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = '#7FA6AC' }}
+                      style={{ color: 'var(--ll-ink-muted)' }}
                     >
                       {link.label}
                     </a>
@@ -48,7 +46,7 @@ export function Footer() {
                     <span
                       aria-disabled="true"
                       className="text-[0.85rem] cursor-default"
-                      style={{ color: 'rgba(127,166,172,0.5)' }}
+                      style={{ color: 'var(--ll-ink-tertiary)' }}
                     >
                       {link.label}
                     </span>
@@ -62,13 +60,13 @@ export function Footer() {
 
       <div
         className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t gap-3"
-        style={{ borderColor: 'rgba(220,225,229,0.10)' }}
+        style={{ borderColor: 'var(--ll-border)' }}
       >
-        <p className="text-[0.8rem]" style={{ color: '#7FA6AC' }}>
+        <p className="text-[0.8rem]" style={{ color: 'var(--ll-ink-muted)' }}>
           &copy; {new Date().getFullYear()} Allervia. Todos os direitos reservados.
         </p>
-        <p className="text-[0.8rem] inline-flex items-center gap-1" style={{ color: '#7FA6AC' }}>
-          Feito com <Heart size={13} className="fill-current" style={{ color: '#6C9EA5' }} /> para a alergologia brasileira
+        <p className="text-[0.8rem] inline-flex items-center gap-1" style={{ color: 'var(--ll-ink-muted)' }}>
+          Feito com <Heart size={13} className="fill-current" style={{ color: 'var(--ll-accent)' }} /> para a alergologia brasileira
         </p>
       </div>
       </div>
@@ -92,7 +90,7 @@ export function Footer() {
             height: '115%',
             pointerEvents: 'none',
             backgroundImage:
-              'radial-gradient(circle, #DCE1E5 1.4px, transparent 1.9px)',
+              'radial-gradient(circle, var(--ll-ink) 1.4px, transparent 1.9px)',
             backgroundSize: '15px 15px',
             backgroundPosition: 'left bottom',
             opacity: 0.42,
@@ -112,7 +110,7 @@ export function Footer() {
             height: '115%',
             pointerEvents: 'none',
             backgroundImage:
-              'radial-gradient(circle, #DCE1E5 1.4px, transparent 1.9px)',
+              'radial-gradient(circle, var(--ll-ink) 1.4px, transparent 1.9px)',
             backgroundSize: '15px 15px',
             backgroundPosition: 'right bottom',
             opacity: 0.42,
@@ -139,7 +137,7 @@ export function Footer() {
             whiteSpace: 'nowrap',
             paddingTop: '0.08em',
             marginBottom: '-0.16em',
-            color: '#0a181b',
+            color: 'var(--ll-bg-foot-mark)',
           }}
         >
           Allervia
@@ -156,8 +154,8 @@ export function Footer() {
             whiteSpace: 'nowrap',
             paddingTop: '0.08em',
             marginBottom: '-0.16em',
-            color: '#DCE1E5',
-            opacity: 0.16,
+            color: 'var(--ll-ink)',
+            opacity: 0.09,
             WebkitMaskImage:
               'linear-gradient(to bottom, #000 0%, #000 30%, rgba(0,0,0,0.12) 100%)',
             maskImage:

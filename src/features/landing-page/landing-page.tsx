@@ -10,7 +10,7 @@ import { Footer } from '@/features/landing-page/components/Footer'
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen" style={{ background: '#08191d', color: '#DCE1E5' }}>
+    <div className="min-h-screen" style={{ background: 'var(--ll-bg)', color: 'var(--ll-ink)' }}>
       <HeroSection />
       <FeaturesGrid />
       <SplitSection />

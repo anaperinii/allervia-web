@@ -20,7 +20,7 @@ export function TabsSection() {
   return (
     <section
       className="py-24 px-[5%] relative overflow-hidden"
-      style={{ background: '#08191d' }}
+      style={{ background: 'var(--ll-bg)' }}
     >
       <div
         aria-hidden="true"
@@ -30,7 +30,7 @@ export function TabsSection() {
           left: '20%',
           width: '60vmax',
           height: '60vmax',
-          background: 'radial-gradient(circle, rgba(155,193,196,0.08), transparent 62%)',
+          background: 'radial-gradient(circle, var(--ll-halo-soft), transparent 62%)',
           transform: 'translate(-50%, -50%)',
           animation: 'av-drift-2 30s ease-in-out infinite',
         }}
@@ -60,15 +60,16 @@ export function TabsSection() {
                 isActive
                   ? {
                       background:
-                        'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
-                      color: '#06232a',
-                      boxShadow: '0 4px 16px rgba(108,158,165,0.30), inset 0 1px 0 rgba(255,255,255,0.4)',
+                        'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), var(--ll-accent)',
+                      color: 'var(--ll-accent-ink)',
+                      boxShadow:
+                        '0 4px 16px var(--ll-halo-accent-strong), inset 0 1px 0 rgba(255,255,255,0.4)',
                       border: 'none',
                     }
                   : {
-                      background: 'rgba(220,225,229,0.04)',
-                      color: '#7FA6AC',
-                      border: '1px solid rgba(220,225,229,0.13)',
+                      background: 'var(--ll-surface)',
+                      color: 'var(--ll-ink-muted)',
+                      border: '1px solid var(--ll-border)',
                     }
               }
             >
@@ -80,23 +81,22 @@ export function TabsSection() {
 
       <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-[4%] items-center">
         <Reveal>
-          <h3 className="text-[1.6rem] font-light tracking-tight mb-4" style={{ color: '#DCE1E5' }}>
+          <h3 className="text-[1.6rem] font-light tracking-tight mb-4" style={{ color: 'var(--ll-ink)' }}>
             {active.title}
           </h3>
-          <p className="text-[0.95rem] leading-[1.7] mb-6" style={{ color: '#7FA6AC' }}>
+          <p className="text-[0.95rem] leading-[1.7] mb-6" style={{ color: 'var(--ll-ink-muted)' }}>
             {active.description}
           </p>
-          <span className="font-semibold text-[0.9rem] cursor-default" style={{ color: '#9BC1C4' }}>
+          <span className="font-semibold text-[0.9rem] cursor-default" style={{ color: 'var(--ll-accent-strong)' }}>
             {active.linkLabel} →
           </span>
         </Reveal>
         <Reveal
           className="rounded-2xl p-3 relative overflow-hidden"
           style={{
-            background:
-              'linear-gradient(160deg, rgba(220,225,229,0.05), rgba(220,225,229,0.018))',
-            border: '1px solid rgba(220,225,229,0.13)',
-            boxShadow: '0 30px 80px -30px rgba(0,0,0,0.7)',
+            background: 'var(--ll-surface-grad)',
+            border: '1px solid var(--ll-border)',
+            boxShadow: 'var(--ll-shadow-card)',
           }}
         >
           <div className="flex items-center gap-1.5 mb-2 px-1">
@@ -106,11 +106,11 @@ export function TabsSection() {
             <div
               className="ml-2 flex-1 rounded-md h-4 flex items-center px-2"
               style={{
-                background: 'rgba(8,25,29,0.6)',
-                border: '1px solid rgba(220,225,229,0.10)',
+                background: 'var(--ll-surface)',
+                border: '1px solid var(--ll-border)',
               }}
             >
-              <span className="text-[0.5rem] font-medium" style={{ color: '#7FA6AC' }}>
+              <span className="text-[0.5rem] font-medium" style={{ color: 'var(--ll-ink-muted)' }}>
                 allervia.com.br/{active.urlSlug}
               </span>
             </div>
@@ -118,8 +118,8 @@ export function TabsSection() {
           <div
             className="rounded-xl overflow-hidden relative"
             style={{
-              background: 'rgba(8,25,29,0.4)',
-              border: '1px solid rgba(220,225,229,0.10)',
+              background: 'var(--ll-surface)',
+              border: '1px solid var(--ll-border)',
             }}
           >
             {PRODUCT_TABS.filter((tab) => visited.has(tab.id)).map((tab, index) => (

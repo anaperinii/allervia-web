@@ -11,17 +11,17 @@ interface SectionHeaderProps {
 }
 
 const EYEBROW_TONE: Record<'light' | 'dark', string> = {
-  light: 'text-[#9BC1C4] bg-[rgba(108,158,165,0.12)] border border-[rgba(108,158,165,0.30)]',
+  light: 'text-[color:var(--ll-accent-strong)] bg-[color:var(--ll-accent-bg-soft)] border border-[color:var(--ll-accent-border-soft)]',
   dark: 'text-white bg-white/15 border border-white/20',
 }
 
 const TITLE_TONE: Record<'light' | 'dark', string> = {
-  light: 'text-[#DCE1E5]',
+  light: 'text-[color:var(--ll-ink)]',
   dark: 'text-white',
 }
 
 const DESCRIPTION_TONE: Record<'light' | 'dark', string> = {
-  light: 'text-[#7FA6AC]',
+  light: 'text-[color:var(--ll-ink-muted)]',
   dark: 'text-white/70',
 }
 

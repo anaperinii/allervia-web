@@ -7,6 +7,7 @@ import { ToastViewport } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
 import { useUserStore, PROFILES, ROLE_LABELS } from '@/shared/stores/useUserStore'
 import imunecareLogo from '@/assets/imunecare-logo.png'
+import { LandingThemeProvider, useLandingTheme } from '@/features/landing-page/theme-context'
 
 function getInitials(name: string): string {
   return name
@@ -158,6 +159,30 @@ function FloatingProfile() {
   )
 }
 
+interface PublicShellProps {
+  hideHeader: boolean
+  isAuthRoute: boolean
+  hasHero: boolean
+  pathname: string
+}
+
+function PublicShell({ hideHeader, isAuthRoute, hasHero, pathname }: PublicShellProps) {
+  const { theme } = useLandingTheme()
+  return (
+    <div data-landing-theme={theme} className="min-h-screen">
+      {!hideHeader && <Header isAuthPage={isAuthRoute} hasHero={hasHero} />}
+      {isAuthRoute ? (
+        <Outlet />
+      ) : (
+        <PageTransition key={pathname}>
+          <Outlet />
+        </PageTransition>
+      )}
+      <ToastViewport />
+    </div>
+  )
+}
+
 function RootComponent() {
   const location = useLocation()
   const isPublicRoute = publicRoutes.includes(location.pathname)
@@ -167,17 +192,14 @@ function RootComponent() {
 
   if (isPublicRoute) {
     return (
-      <div className="min-h-screen">
-        {!hideHeader && <Header isAuthPage={isAuthRoute} hasHero={hasHero} />}
-        {isAuthRoute ? (
-          <Outlet />
-        ) : (
-          <PageTransition key={location.pathname}>
-            <Outlet />
-          </PageTransition>
-        )}
-        <ToastViewport />
-      </div>
+      <LandingThemeProvider>
+        <PublicShell
+          hideHeader={hideHeader}
+          isAuthRoute={isAuthRoute}
+          hasHero={hasHero}
+          pathname={location.pathname}
+        />
+      </LandingThemeProvider>
     )
   }
 

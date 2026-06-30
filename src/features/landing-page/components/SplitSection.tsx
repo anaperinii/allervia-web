@@ -13,15 +13,14 @@ export function SplitSection() {
   const displayPct = useAnimatedNumber(targetPct)
 
   return (
-    <section className="py-20 relative overflow-hidden" style={{ background: '#08191d' }}>
+    <section className="py-20 relative overflow-hidden" style={{ background: 'var(--ll-bg)' }}>
       <Reveal
         id="about"
         className="grid grid-cols-1 lg:grid-cols-2 gap-[5%] items-center rounded-3xl p-6 sm:p-8 lg:p-16 mx-[5%] relative overflow-hidden"
         style={{
-          background:
-            'linear-gradient(160deg, rgba(220,225,229,0.05), rgba(220,225,229,0.018))',
-          border: '1px solid rgba(220,225,229,0.13)',
-          boxShadow: '0 30px 80px -30px rgba(0,0,0,0.7)',
+          background: 'var(--ll-surface-grad)',
+          border: '1px solid var(--ll-border)',
+          boxShadow: 'var(--ll-shadow-card)',
         }}
       >
         <div
@@ -107,7 +106,7 @@ export function SplitSection() {
 
         <div className="py-4">
           {SPLIT_FEATURES.map((feature, index) => {
-            const TONES = ['#DCE1E5', '#9BC1C4', '#7FA6AC', '#4d7e85']
+            const TONES = ['var(--ll-ink)', 'var(--ll-accent-strong)', 'var(--ll-ink-muted)', 'var(--ll-ink-tertiary)']
             return (
               <Reveal
                 key={feature.title}
@@ -129,10 +128,10 @@ export function SplitSection() {
                   {String(index + 1).padStart(2, '0')}.
                 </span>
                 <div className="pt-1">
-                  <h4 className="text-[0.95rem] font-semibold mb-1" style={{ color: '#DCE1E5' }}>
+                  <h4 className="text-[0.95rem] font-semibold mb-1" style={{ color: 'var(--ll-ink)' }}>
                     {feature.title}
                   </h4>
-                  <p className="text-[0.85rem] leading-relaxed" style={{ color: '#7FA6AC' }}>
+                  <p className="text-[0.85rem] leading-relaxed" style={{ color: 'var(--ll-ink-muted)' }}>
                     {feature.description}
                   </p>
                 </div>

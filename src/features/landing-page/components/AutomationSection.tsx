@@ -7,15 +7,14 @@ export function AutomationSection() {
     <section
       id="automation"
       className="py-24 px-[5%] relative overflow-hidden"
-      style={{ background: '#08191d' }}
+      style={{ background: 'var(--ll-bg)' }}
     >
       <Reveal
         className="relative overflow-hidden rounded-3xl p-8 sm:p-12 lg:p-16 mx-0"
         style={{
-          background:
-            'linear-gradient(160deg, rgba(220,225,229,0.05), rgba(220,225,229,0.018))',
-          border: '1px solid rgba(108,158,165,0.35)',
-          boxShadow: '0 30px 80px -30px rgba(0,0,0,0.7)',
+          background: 'var(--ll-surface-grad)',
+          border: '1px solid var(--ll-accent-border-soft)',
+          boxShadow: 'var(--ll-shadow-card)',
         }}
       >
         <div
@@ -26,7 +25,7 @@ export function AutomationSection() {
             left: '50%',
             width: '60vmax',
             height: '60vmax',
-            background: 'radial-gradient(circle, rgba(108,158,165,0.10), transparent 60%)',
+            background: 'radial-gradient(circle, var(--ll-halo-accent), transparent 60%)',
             transform: 'translate(-50%, -50%)',
             animation: 'av-drift-2 24s ease-in-out infinite',
           }}
@@ -49,26 +48,25 @@ export function AutomationSection() {
                   key={feature.title}
                   className="group rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1"
                   style={{
-                    background:
-                      'linear-gradient(160deg, rgba(220,225,229,0.07), rgba(220,225,229,0.018))',
-                    border: '1px solid rgba(220,225,229,0.13)',
-                    boxShadow: '0 12px 32px -12px rgba(0,0,0,0.5)',
+                    background: 'var(--ll-surface-grad)',
+                    border: '1px solid var(--ll-border)',
+                    boxShadow: 'var(--ll-shadow-card-soft)',
                   }}
                 >
                   <div
                     className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border"
                     style={{
                       background:
-                        'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04) 46%, rgba(255,255,255,0) 56%), rgba(108,158,165,0.18)',
-                      borderColor: 'rgba(108,158,165,0.30)',
+                        'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04) 46%, rgba(255,255,255,0) 56%), var(--ll-accent-bg-soft)',
+                      borderColor: 'var(--ll-accent-border-soft)',
                     }}
                   >
-                    <Icon size={22} style={{ color: '#9BC1C4' }} />
+                    <Icon size={22} style={{ color: 'var(--ll-accent-strong)' }} />
                   </div>
-                  <h4 className="text-base font-semibold mb-2" style={{ color: '#DCE1E5' }}>
+                  <h4 className="text-base font-semibold mb-2" style={{ color: 'var(--ll-ink)' }}>
                     {feature.title}
                   </h4>
-                  <p className="text-[0.875rem] leading-[1.7]" style={{ color: '#7FA6AC' }}>
+                  <p className="text-[0.875rem] leading-[1.7]" style={{ color: 'var(--ll-ink-muted)' }}>
                     {feature.description}
                   </p>
                 </div>

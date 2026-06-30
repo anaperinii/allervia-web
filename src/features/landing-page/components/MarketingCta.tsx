@@ -34,20 +34,22 @@ const SHAPE: Record<MarketingCTAShape, string> = {
 }
 
 const VARIANT_CLASS: Record<MarketingCTAVariant, string> = {
-  filled:
-    'border-none text-[#06232a] hover:-translate-y-0.5',
-  outline:
-    'border-[1.5px] border-[rgba(108,158,165,0.55)] bg-transparent text-[#9BC1C4] hover:bg-[rgba(108,158,165,0.10)] hover:border-[rgba(108,158,165,0.85)]',
+  filled: 'border-none hover:-translate-y-0.5',
+  outline: 'border-[1.5px] bg-transparent',
 }
 
-const VARIANT_STYLE: Record<MarketingCTAVariant, CSSProperties | undefined> = {
+const VARIANT_STYLE: Record<MarketingCTAVariant, CSSProperties> = {
   filled: {
     background:
-      'linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.06) 100%), #9BC1C4',
+      'linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.06) 100%), var(--ll-accent-strong)',
+    color: 'var(--ll-accent-ink)',
     boxShadow:
-      '0 4px 20px rgba(155,193,196,0.40), inset 0 1px 0 rgba(255,255,255,0.55)',
+      '0 4px 20px var(--ll-halo-accent-strong), inset 0 1px 0 rgba(255,255,255,0.55)',
   },
-  outline: undefined,
+  outline: {
+    borderColor: 'var(--ll-accent-border)',
+    color: 'var(--ll-accent-strong)',
+  },
 }
 
 export function MarketingCTA(props: MarketingCTAProps) {

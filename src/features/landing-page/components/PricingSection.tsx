@@ -17,7 +17,7 @@ export function PricingSection() {
     <section
       id="pricing"
       className="relative overflow-hidden py-28 px-[5%]"
-      style={{ background: '#08191d' }}
+      style={{ background: 'var(--ll-bg)' }}
     >
       <div
         aria-hidden="true"
@@ -27,7 +27,7 @@ export function PricingSection() {
           right: '0%',
           width: '50vmax',
           height: '50vmax',
-          background: 'radial-gradient(circle, rgba(108,158,165,0.10), transparent 60%)',
+          background: 'radial-gradient(circle, var(--ll-halo-accent), transparent 60%)',
           transform: 'translate(50%, -50%)',
           animation: 'av-drift-1 28s ease-in-out infinite',
         }}
@@ -54,14 +54,13 @@ export function PricingSection() {
                 highlighted && 'scale-[1.02]',
               )}
               style={{
-                background:
-                  'linear-gradient(160deg, rgba(220,225,229,0.07), rgba(220,225,229,0.018))',
+                background: 'var(--ll-surface-grad)',
                 border: highlighted
-                  ? '1.5px solid rgba(108,158,165,0.55)'
-                  : '1px solid rgba(220,225,229,0.13)',
+                  ? '1.5px solid var(--ll-accent-border)'
+                  : '1px solid var(--ll-border)',
                 boxShadow: highlighted
-                  ? '0 24px 60px -20px rgba(108,158,165,0.30), 0 30px 80px -30px rgba(0,0,0,0.7)'
-                  : '0 30px 80px -30px rgba(0,0,0,0.6)',
+                  ? '0 24px 60px -20px var(--ll-halo-accent-strong), var(--ll-shadow-card)'
+                  : 'var(--ll-shadow-card)',
               }}
             >
               {highlighted && (
@@ -69,8 +68,8 @@ export function PricingSection() {
                   className="text-center py-2 text-[0.7rem] font-semibold uppercase tracking-[2px]"
                   style={{
                     background:
-                      'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
-                    color: '#06232a',
+                      'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), var(--ll-accent)',
+                    color: 'var(--ll-accent-ink)',
                   }}
                 >
                   Mais popular
@@ -81,28 +80,28 @@ export function PricingSection() {
                   <div
                     className="flex h-11 w-11 items-center justify-center rounded-xl shrink-0 border"
                     style={{
-                      background: 'rgba(108,158,165,0.18)',
-                      borderColor: 'rgba(108,158,165,0.30)',
+                      background: 'var(--ll-accent-bg-soft)',
+                      borderColor: 'var(--ll-accent-border-soft)',
                     }}
                   >
-                    <Icon size={20} style={{ color: '#9BC1C4' }} />
+                    <Icon size={20} style={{ color: 'var(--ll-accent-strong)' }} />
                   </div>
                   <div>
-                    <div className="text-base font-semibold" style={{ color: '#DCE1E5' }}>
+                    <div className="text-base font-semibold" style={{ color: 'var(--ll-ink)' }}>
                       {plan.name}
                     </div>
-                    <div className="text-[0.7rem]" style={{ color: '#7FA6AC' }}>
+                    <div className="text-[0.7rem]" style={{ color: 'var(--ll-ink-muted)' }}>
                       {plan.description}
                     </div>
                   </div>
                 </div>
 
                 <div className="mb-6">
-                  <span className="text-3xl font-light tracking-tight" style={{ color: '#DCE1E5' }}>
+                  <span className="text-3xl font-light tracking-tight" style={{ color: 'var(--ll-ink)' }}>
                     {plan.price}
                   </span>
                   {plan.period && (
-                    <span className="text-sm ml-1" style={{ color: '#7FA6AC' }}>
+                    <span className="text-sm ml-1" style={{ color: 'var(--ll-ink-muted)' }}>
                       {plan.period}
                     </span>
                   )}
@@ -113,11 +112,11 @@ export function PricingSection() {
                     <div key={feature} className="flex items-start gap-2.5">
                       <div
                         className="flex h-5 w-5 items-center justify-center rounded-full shrink-0 mt-px"
-                        style={{ background: 'rgba(108,158,165,0.18)' }}
+                        style={{ background: 'var(--ll-accent-bg-soft)' }}
                       >
-                        <Check size={11} style={{ color: '#9BC1C4' }} />
+                        <Check size={11} style={{ color: 'var(--ll-accent-strong)' }} />
                       </div>
-                      <span className="text-[0.85rem] leading-[1.5]" style={{ color: '#7FA6AC' }}>
+                      <span className="text-[0.85rem] leading-[1.5]" style={{ color: 'var(--ll-ink-muted)' }}>
                         {feature}
                       </span>
                     </div>
@@ -138,7 +137,7 @@ export function PricingSection() {
         })}
       </div>
 
-      <Reveal className="text-center mt-12 text-sm" style={{ color: '#7FA6AC' }}>
+      <Reveal className="text-center mt-12 text-sm" style={{ color: 'var(--ll-ink-muted)' }}>
         Todos os planos incluem criptografia end-to-end e conformidade com a LGPD.
       </Reveal>
     </section>
