@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { ArrowLeft, Book, ChevronDown, Mail, MessageCircle } from 'lucide-react'
+import { Book, ChevronDown, Mail, MessageCircle } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-import { IconButton } from '@/shared/components'
 import { CardButton } from '@/features/settings/components/CardButton'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { CONTACT_SUPPORT_EMAIL } from '@/shared/constants/contact'
 import { FAQS } from '@/features/settings/constants/faqs'
 
@@ -16,15 +16,8 @@ export function HelpPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
-          <h1 className="text-2xl font-bold text-(--text)">Ajuda</h1>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-5">
-          <div className="max-w-2xl mx-auto space-y-5">
+    <SettingsLayout subtitle="Ajuda">
+      <div className="max-w-2xl mx-auto space-y-5">
             <div className="grid grid-cols-3 gap-3">
               {quickLinks.map((item) => {
                 const Icon = item.icon
@@ -74,12 +67,10 @@ export function HelpPage() {
               </div>
             </section>
 
-            <div className="text-center text-[0.65rem] text-(--text-muted) py-2">
-              ImuneCare v2.0.0-beta · Precisa de ajuda? Entre em contato pelo chat.
-            </div>
-          </div>
+        <div className="text-center text-[0.65rem] text-(--text-muted) py-2">
+          Allervia v2.0.0-beta · Precisa de ajuda? Entre em contato pelo chat.
         </div>
       </div>
-    </div>
+    </SettingsLayout>
   )
 }

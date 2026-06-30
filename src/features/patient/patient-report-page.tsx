@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ArrowLeft, Download, Printer, ShieldCheck } from 'lucide-react'
+import { ChevronLeft, Download, Printer, ShieldCheck } from 'lucide-react'
 import { Button, IconButton, Modal } from '@/shared/components'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
@@ -113,12 +113,12 @@ export function PatientReportPage() {
   const exportDisabled = !consented || !justification.trim()
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <IconButton aria-label="Voltar para o prontuário" to="/patient/$patientId" params={{ patientId: patient.id }}>
-              <ArrowLeft size={16} />
+              <ChevronLeft size={16} />
             </IconButton>
             <div>
               <h1 className="text-lg font-bold text-(--text)">Emitir Relatório</h1>

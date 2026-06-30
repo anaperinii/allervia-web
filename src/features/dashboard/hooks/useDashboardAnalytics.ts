@@ -53,25 +53,30 @@ export function useDashboardAnalytics({ modality, typeFilter }: UseDashboardAnal
     return Object.entries(counts).map(([name, value]) => ({ name, value }))
   }, [activeFiltered])
 
-  const phaseData = useMemo(
-    () => [
-      { month: 'Jan', induction: Math.max(0, inductionCount - 2), maintenance: Math.max(0, maintenanceCount - 1) },
-      { month: 'Fev', induction: Math.max(0, inductionCount - 1), maintenance: Math.max(0, maintenanceCount - 1) },
-      { month: 'Mar', induction: inductionCount, maintenance: maintenanceCount },
-      { month: 'Abr', induction: inductionCount, maintenance: maintenanceCount },
-    ],
-    [inductionCount, maintenanceCount],
-  )
+  const phaseData = useMemo(() => {
+    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+    return months.map((month, i) => {
+      const factor = (i + 1) / months.length
+      return {
+        month,
+        induction: Math.max(0, Math.round(inductionCount * factor)),
+        maintenance: Math.max(0, Math.round(maintenanceCount * factor)),
+      }
+    })
+  }, [inductionCount, maintenanceCount])
 
-  const statusData = useMemo(
-    () => [
-      { month: 'Jan', active: Math.max(0, totalActive - 2), interrupted: Math.max(0, inactiveFiltered.length - 1), completed: 0 },
-      { month: 'Fev', active: Math.max(0, totalActive - 1), interrupted: Math.max(0, inactiveFiltered.length - 1), completed: 0 },
-      { month: 'Mar', active: totalActive, interrupted: inactiveFiltered.length, completed: 0 },
-      { month: 'Abr', active: totalActive, interrupted: inactiveFiltered.length, completed: 0 },
-    ],
-    [totalActive, inactiveFiltered.length],
-  )
+  const statusData = useMemo(() => {
+    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+    return months.map((month, i) => {
+      const factor = (i + 1) / months.length
+      return {
+        month,
+        active: Math.max(0, Math.round(totalActive * factor)),
+        interrupted: Math.max(0, Math.round(inactiveFiltered.length * factor)),
+        completed: Math.max(0, Math.round((i / (months.length - 1)) * Math.floor(totalActive * 0.2))),
+      }
+    })
+  }, [totalActive, inactiveFiltered.length])
 
   const typeData = useMemo(() => {
     const counts: Record<string, number> = {}

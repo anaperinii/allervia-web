@@ -1,0 +1,54 @@
+interface AllerviaLogoProps {
+  size?: number
+  color?: string
+  withWordmark?: boolean
+  wordmarkColor?: string
+  className?: string
+}
+
+const DOTS = [
+  { x: -11, y: -22, r: 1.7 }, { x: 0, y: -22, r: 2.3 }, { x: 11, y: -22, r: 1.7 },
+  { x: -22, y: -11, r: 1.7 }, { x: -11, y: -11, r: 2.9 }, { x: 0, y: -11, r: 3.5 }, { x: 11, y: -11, r: 2.9 }, { x: 22, y: -11, r: 1.7 },
+  { x: -22, y: 0, r: 2.3 }, { x: -11, y: 0, r: 3.5 }, { x: 0, y: 0, r: 4.3 }, { x: 11, y: 0, r: 3.5 }, { x: 22, y: 0, r: 2.3 },
+  { x: -22, y: 11, r: 1.7 }, { x: -11, y: 11, r: 2.9 }, { x: 0, y: 11, r: 3.5 }, { x: 11, y: 11, r: 2.9 }, { x: 22, y: 11, r: 1.7 },
+  { x: -11, y: 22, r: 1.7 }, { x: 0, y: 22, r: 2.3 }, { x: 11, y: 22, r: 1.7 },
+]
+
+export function AllerviaLogo({
+  size = 56,
+  color = '#6C9EA5',
+  withWordmark = false,
+  wordmarkColor = '#DCE1E5',
+  className,
+}: AllerviaLogoProps) {
+  const viewBox = withWordmark ? '0 0 220 80' : '0 0 70 70'
+  return (
+    <svg
+      width={withWordmark ? size * 3 : size}
+      height={size}
+      viewBox={viewBox}
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-label="Allervia"
+    >
+      <g fill={color} transform={withWordmark ? 'translate(35 40)' : 'translate(35 35)'}>
+        {DOTS.map((d, i) => (
+          <circle key={i} cx={d.x} cy={d.y} r={d.r} />
+        ))}
+      </g>
+      {withWordmark && (
+        <text
+          x="80"
+          y="50"
+          fill={wordmarkColor}
+          fontFamily="Manrope, sans-serif"
+          fontSize="26"
+          fontWeight="600"
+          letterSpacing="3"
+        >
+          ALLERVIA
+        </text>
+      )}
+    </svg>
+  )
+}

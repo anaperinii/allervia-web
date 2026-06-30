@@ -17,7 +17,7 @@ export function WelcomeStep({ maskedEmail, inviterName, organizationName, onCont
         </div>
         <h1 className="font-extrabold text-2xl text-(--text)">É um prazer ter você aqui</h1>
         <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
-          Seu acesso ao <span className="font-semibold text-(--text)">ImuneCare</span> chegou! Configure sua conta agora e comece a usar o sistema.
+          Seu acesso ao <span className="font-semibold text-(--text)">Allervia</span> chegou! Configure sua conta agora e comece a usar o sistema.
         </p>
       </div>
 

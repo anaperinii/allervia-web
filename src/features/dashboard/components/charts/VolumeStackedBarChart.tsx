@@ -14,7 +14,7 @@ export function VolumeStackedBarChart({ data, height = 208, showValueLabels = fa
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis type="number" tick={{ fontSize: 10 }} />
             <YAxis type="category" dataKey="conc" tick={{ fontSize: 10 }} width={60} />
             <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={CHART_TOOLTIP_CURSOR} />

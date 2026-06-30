@@ -1,5 +1,6 @@
 import { cn } from '@/shared/lib/cn'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
+import { MODALITY_LABELS } from '@/features/immunotherapy/constants/modality'
 import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 
 interface ImmunotherapiesTableProps {
@@ -14,6 +15,7 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
         <tr className="border-b border-(--border-custom) bg-gray-50/80">
           <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-4 py-2.5">Nome</th>
           <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-4 py-2.5">Tipo</th>
+          <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-4 py-2.5">Via de administração</th>
           <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-4 py-2.5">Dose e Concentração Atuais</th>
           <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-4 py-2.5">Intervalo Atual</th>
         </tr>
@@ -21,7 +23,7 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
       <tbody>
         {items.length === 0 ? (
           <tr>
-            <td colSpan={4} className="text-center text-(--text-muted) py-10 text-xs">Nenhum resultado encontrado</td>
+            <td colSpan={5} className="text-center text-(--text-muted) py-10 text-xs">Nenhum resultado encontrado</td>
           </tr>
         ) : (
           items.map((item) => {
@@ -57,6 +59,7 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
                     {item.type}
                   </span>
                 </td>
+                <td className="px-4 py-2 text-xs text-(--text-muted)">{MODALITY_LABELS[item.modality]}</td>
                 <td className="px-4 py-2 text-xs text-(--text-muted)">{item.doseConcentration}</td>
                 <td className="px-4 py-2">
                   <span

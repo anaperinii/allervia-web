@@ -15,7 +15,7 @@ export const PHASE_LABELS: Record<PhaseKey, string> = {
 
 export const PHASE_COLORS: Record<PhaseKey, string> = {
   induction: '#18C1CB',
-  maintenance: '#A78BFA',
+  maintenance: '#22E58D',
 }
 
 export const TREATMENT_STATUS_KEYS = ['active', 'interrupted', 'completed'] as const

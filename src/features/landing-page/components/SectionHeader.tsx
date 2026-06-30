@@ -11,17 +11,17 @@ interface SectionHeaderProps {
 }
 
 const EYEBROW_TONE: Record<'light' | 'dark', string> = {
-  light: 'text-teal-600 bg-teal-50 border border-teal-200',
+  light: 'text-[color:var(--ll-accent-strong)] bg-[color:var(--ll-accent-bg-soft)] border border-[color:var(--ll-accent-border-soft)]',
   dark: 'text-white bg-white/15 border border-white/20',
 }
 
 const TITLE_TONE: Record<'light' | 'dark', string> = {
-  light: '',
+  light: 'text-[color:var(--ll-ink)]',
   dark: 'text-white',
 }
 
 const DESCRIPTION_TONE: Record<'light' | 'dark', string> = {
-  light: 'text-(--text-muted)',
+  light: 'text-[color:var(--ll-ink-muted)]',
   dark: 'text-white/70',
 }
 
@@ -44,7 +44,7 @@ export function SectionHeader({
       )}
       <h2
         className={cn(
-          'text-[clamp(1.4rem,2.8vw,2.1rem)] font-extrabold tracking-[-0.5px] leading-[1.15]',
+          'text-[clamp(1.4rem,2.8vw,2.4rem)] font-light tracking-tight leading-[1.15]',
           TITLE_TONE[tone],
           !centered && titleMaxWidth,
         )}

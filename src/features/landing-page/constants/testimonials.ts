@@ -6,7 +6,7 @@ export interface Testimonial {
 }
 
 export const TESTIMONIALS: Testimonial[] = [
-  { quote: 'O ImuneCare transformou a gestão da nossa clínica. Antes dependíamos de planilhas — agora temos controle total dos protocolos.', name: 'Dra. Sofia Andrade', handle: '@sofia.alergista', initials: 'SA' },
+  { quote: 'O Allervia transformou a gestão da nossa clínica. Antes dependíamos de planilhas — agora temos controle total dos protocolos.', name: 'Dra. Sofia Andrade', handle: '@sofia.alergista', initials: 'SA' },
   { quote: 'O cálculo automático de doses eliminou os erros manuais. Minha equipe confia muito mais no processo agora.', name: 'Dr. Marcos Rezende', handle: '@mrezende_imuno', initials: 'MR' },
   { quote: 'Consigo acompanhar cada paciente em diferentes fases do protocolo sem perder nenhum detalhe. Ferramenta essencial.', name: 'Dra. Camila Alves', handle: '@camilaalergol', initials: 'CA' },
   { quote: 'A rastreabilidade das aplicações e reações adversas nos deu uma segurança clínica que não tínhamos antes.', name: 'Dr. Rodrigo Figueiredo', handle: '@rodrifig', initials: 'RF' },

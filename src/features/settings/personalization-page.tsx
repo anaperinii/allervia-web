@@ -1,6 +1,7 @@
-import { ArrowLeft, Contrast, Eye, Layout, MousePointer, Type } from 'lucide-react'
+import { Contrast, Eye, Layout, MousePointer, Type } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-import { IconButton, Switch } from '@/shared/components'
+import { Switch } from '@/shared/components'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { useSettingsStore, type Density, type Theme } from '@/features/settings/stores/useSettingsStore'
 
 const THEME_OPTIONS: { id: Theme; label: string; preview: string }[] = [
@@ -42,15 +43,8 @@ export function PersonalizationPage() {
   ] as const
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
-          <h1 className="text-2xl font-bold text-(--text)">Personalização e Acessibilidade</h1>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-5">
-          <div className="max-w-2xl mx-auto space-y-5">
+    <SettingsLayout subtitle="Personalização e Acessibilidade">
+      <div className="max-w-2xl mx-auto space-y-5">
             <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Tema</h2>
@@ -184,10 +178,8 @@ export function PersonalizationPage() {
                   </div>
                 ))}
               </div>
-            </section>
-          </div>
-        </div>
+      </section>
       </div>
-    </div>
+    </SettingsLayout>
   )
 }

@@ -56,8 +56,8 @@ export function TrialPage() {
         <div className="absolute -bottom-20 -left-30 w-95 h-95 rounded-full border-2 border-white/15 pointer-events-none" />
         <div className="absolute bottom-[35%] left-[35%] w-50 h-50 rounded-full border-2 border-white/12 pointer-events-none" />
         <Link to="/" className="flex items-center gap-2.5 no-underline mb-8 relative z-10">
-          <img src={imunecareWhiteLogo} alt="ImuneCare" className="w-9 h-9 rounded-lg" />
-          <span className="text-xl font-bold text-white">ImuneCare</span>
+          <img src={imunecareWhiteLogo} alt="Allervia" className="w-9 h-9 rounded-lg" />
+          <span className="text-xl font-bold text-white">Allervia</span>
         </Link>
         <div className="inline-flex items-center gap-2 bg-white/15 border border-white/25 backdrop-blur-md text-white text-xs font-semibold px-3.5 py-1.5 rounded-full mb-5 w-fit relative z-10">
           <span className="w-1.5 h-1.5 bg-[#7FFFD4] rounded-full animate-pulse" />
@@ -72,11 +72,11 @@ export function TrialPage() {
         </p>
       </div>
 
-      <div className="flex-1 flex items-center justify-center bg-gray-50/80 px-6 py-8 overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center px-6 py-8 overflow-y-auto">
         <form onSubmit={onSubmit} noValidate className="bg-white rounded-2xl border border-(--border-custom) shadow-[0_2px_40px_rgba(24,193,203,0.07)] p-6 xl:p-8 w-full max-w-110">
           <div className="flex items-center gap-2 mb-6 lg:hidden">
-            <img src={imunecareLogo} alt="ImuneCare" className="w-7 h-7 rounded-md" />
-            <span className="text-base font-bold gradient-text">ImuneCare</span>
+            <img src={imunecareLogo} alt="Allervia" className="w-7 h-7 rounded-md" />
+            <span className="text-base font-bold gradient-text">Allervia</span>
           </div>
 
           <h2 className="text-lg font-extrabold text-(--text) tracking-tight mb-1">Solicite seu acesso gratuito</h2>
@@ -204,7 +204,7 @@ export function TrialPage() {
           </p>
           <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-4 py-3">
             <p className="text-[0.65rem] text-(--text-muted) font-medium mb-1">Fique atento à sua caixa de entrada</p>
-            <p className="text-sm font-semibold text-brand">contato@imunecare.com.br</p>
+            <p className="text-sm font-semibold text-brand">contato@allervia.com.br</p>
             <p className="text-[0.6rem] text-(--text-muted) mt-1">Prazo de retorno: até 1 dia útil</p>
           </div>
           <Button tone="brand" variant="solid" prominent fullWidth size="lg" to="/">

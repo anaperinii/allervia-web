@@ -6,11 +6,22 @@ import {
   Users,
   CreditCard,
   HelpCircle,
+  ArrowRight,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useUserStore, ROLE_LABELS, ROLE_PERMISSIONS, type Permission } from '@/shared/stores/useUserStore'
-import { Button } from '@/shared/components'
-import { CardButton } from '@/features/settings/components/CardButton'
+import { Link } from '@tanstack/react-router'
+import { useUserStore, ROLE_PERMISSIONS, type Permission } from '@/shared/stores/useUserStore'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
+
+const ICON_BOX_SHADOW = '0 2px 6px rgba(20,184,166,0.18), inset 0 1px 0 rgba(255,255,255,0.9)'
+
+const GLASS_CARD_SHADOW = [
+  '0 10px 32px rgba(15,23,42,0.08)',
+  '0 2px 8px rgba(15,23,42,0.04)',
+  'inset 0 1.5px 0 rgba(255,255,255,0.95)',
+  'inset 0 -1.5px 3px rgba(15,23,42,0.04)',
+  'inset 0 0 0 1px rgba(255,255,255,0.55)',
+].join(', ')
 
 interface SettingsOption {
   icon: LucideIcon
@@ -34,57 +45,41 @@ export function SettingsPage() {
   const current = useUserStore((s) => s.current)
   const permissions = ROLE_PERMISSIONS[current.role]
   const visibleOptions = settingsOptions.filter((o) => !o.requires || permissions.includes(o.requires))
-  const initials = current.name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
+
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="flex flex-1 gap-6 p-5 min-h-0 overflow-y-auto">
-          {}
-          <div className="w-56 shrink-0">
-            <h1 className="text-2xl font-bold text-(--text) mb-4">Configurações</h1>
-
-            <div className="border border-(--border-custom) rounded-xl p-4">
-              <div className="flex justify-center mb-2.5">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-teal-500 to-cyan-400">
-                  <span className="text-lg font-bold text-white">{initials}</span>
-                </div>
+    <SettingsLayout>
+      <div className="grid grid-cols-3 gap-4">
+        {visibleOptions.map((option) => {
+          const Icon = option.icon
+          return (
+            <Link
+              key={option.label}
+              to={option.route!}
+              className="group relative flex h-full flex-row items-center gap-3 overflow-hidden rounded-2xl bg-white/25 px-4 py-7 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/40"
+              style={{
+                boxShadow: GLASS_CARD_SHADOW,
+                backdropFilter: 'blur(20px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+              }}
+            >
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/80 text-brand transition-transform duration-300 group-hover:scale-105"
+                style={{ boxShadow: ICON_BOX_SHADOW }}
+              >
+                <Icon size={20} strokeWidth={2.2} />
               </div>
-
-              <div className="text-center mb-3">
-                <div className="text-xs font-semibold text-(--text)">{current.name}</div>
-                <div className="text-[0.65rem] text-(--text-muted)">{ROLE_LABELS[current.role]}</div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold text-slate-800">{option.label}</div>
+                <div className="mt-0.5 text-[0.78rem] text-slate-500 truncate">{option.description}</div>
               </div>
-
-              <Button tone="brand" variant="solid" size="sm" fullWidth to="/profile">
-                Seu Perfil
-              </Button>
-            </div>
-          </div>
-
-          {}
-          <div className="flex-1 pt-4">
-            <div className="space-y-1.5">
-              {visibleOptions.map((option) => {
-                const Icon = option.icon
-                return (
-                  <CardButton
-                    key={option.label}
-                    to={option.route!}
-                    icon={<Icon size={17} />}
-                    title={option.label}
-                    description={option.description}
-                  />
-                )
-              })}
-            </div>
-          </div>
-        </div>
+              <ArrowRight
+                size={16}
+                className="shrink-0 text-slate-300 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-brand"
+              />
+            </Link>
+          )
+        })}
       </div>
-    </div>
+    </SettingsLayout>
   )
 }

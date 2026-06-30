@@ -73,7 +73,7 @@ function Section({ title, children }: SectionProps) {
   return (
     <div className="border border-(--border-custom) rounded-xl overflow-hidden">
       <div className="px-4 py-3 border-b border-(--border-custom) bg-white">
-        <span className="text-xs font-bold text-(--text)">{title}</span>
+        <span className="text-[0.82rem] font-bold text-(--text)">{title}</span>
       </div>
       <div className="bg-gray-50/60 p-4">{children}</div>
     </div>

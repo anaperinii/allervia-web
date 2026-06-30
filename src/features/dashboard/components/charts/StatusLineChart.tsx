@@ -1,4 +1,4 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import {
   TREATMENT_STATUS_KEYS,
   TREATMENT_STATUS_LABELS,
@@ -24,23 +24,40 @@ export function StatusLineChart({ data, height = 192, showMonthSummary = false }
     <>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <AreaChart data={data}>
+            <defs>
+              {TREATMENT_STATUS_KEYS.map((key) => (
+                <linearGradient
+                  key={key}
+                  id={`status-gradient-${key}`}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="0%" stopColor={TREATMENT_STATUS_COLORS[key]} stopOpacity={0.22} />
+                  <stop offset="100%" stopColor={TREATMENT_STATUS_COLORS[key]} stopOpacity={0} />
+                </linearGradient>
+              ))}
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="month" tick={{ fontSize: 10 }} />
             <YAxis tick={{ fontSize: 10 }} />
             <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={CHART_TOOLTIP_CURSOR} />
             {TREATMENT_STATUS_KEYS.map((key) => (
-              <Line
+              <Area
                 key={key}
                 type="monotone"
                 dataKey={key}
                 name={TREATMENT_STATUS_LABELS[key]}
                 stroke={TREATMENT_STATUS_COLORS[key]}
                 strokeWidth={2}
+                fill={`url(#status-gradient-${key})`}
+                fillOpacity={1}
                 dot={{ r: 3 }}
               />
             ))}
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </div>
       <div className="flex justify-center gap-4 mt-2">

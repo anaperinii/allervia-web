@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  ArrowLeft,
   Bell,
   Calendar,
   Check,
@@ -33,6 +32,7 @@ import {
   TextInput,
 } from '@/shared/components'
 import { MediaRow } from '@/features/settings/components/MediaRow'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 
 const FIXED_EVENT_IDS = ['subcutaneous', 'sublingual', 'missed']
 
@@ -111,8 +111,8 @@ export function AdvancedSettingsPage() {
 
   if (!canAdvanced) {
     return (
-      <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-        <div className="flex flex-1 min-h-0 flex-col items-center justify-center rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] m-4 p-10 text-center">
+      <SettingsLayout subtitle="Configurações Avançadas">
+        <div className="flex flex-1 flex-col items-center justify-center p-10 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 mb-4">
             <Lock size={22} className="text-(--text-muted)" />
           </div>
@@ -122,20 +122,13 @@ export function AdvancedSettingsPage() {
           </p>
           <Button variant="outline" to="/settings">Voltar para configurações</Button>
         </div>
-      </div>
+      </SettingsLayout>
     )
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
-          <h1 className="text-2xl font-bold text-(--text)">Configurações Avançadas</h1>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-5">
-          <div className="max-w-2xl mx-auto space-y-5">
+    <SettingsLayout subtitle="Configurações Avançadas">
+      <div className="max-w-2xl mx-auto space-y-5">
             <section className="border border-(--border-custom) rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Notificações</h2>
@@ -233,7 +226,7 @@ export function AdvancedSettingsPage() {
                       </div>
                       <div className="flex items-center gap-1.5 text-[0.6rem] text-(--text-muted)">
                         <ExternalLink size={10} />
-                        <span>Conta vinculada: <span className="font-medium text-(--text)">clinica@imunecare.com.br</span></span>
+                        <span>Conta vinculada: <span className="font-medium text-(--text)">clinica@allervia.com.br</span></span>
                       </div>
                     </div>
                   )}
@@ -407,10 +400,8 @@ export function AdvancedSettingsPage() {
                   trailing={<span className="text-[0.65rem] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Sucesso</span>}
                 />
               </div>
-            </section>
-          </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </SettingsLayout>
   )
 }

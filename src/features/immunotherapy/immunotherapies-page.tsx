@@ -8,6 +8,15 @@ import { buildPatientFromImmunotherapy } from '@/features/patient/constants/pati
 import { useDoctorFilter, useHasPermission } from '@/shared/stores/useUserStore'
 import { ImmunotherapiesFilterBar } from '@/features/immunotherapy/components/ImmunotherapiesFilterBar'
 import { ImmunotherapiesTable } from '@/features/immunotherapy/components/ImmunotherapiesTable'
+import { cn } from '@/shared/lib/cn'
+
+type ModalityTab = 'all' | 'subcutaneous' | 'sublingual'
+
+const MODALITY_TABS: { value: ModalityTab; label: string }[] = [
+  { value: 'all', label: 'Todas' },
+  { value: 'subcutaneous', label: 'Subcutânea' },
+  { value: 'sublingual', label: 'Sublingual' },
+]
 
 export function ImmunotherapiesPage() {
   const navigate = useNavigate()
@@ -22,6 +31,7 @@ export function ImmunotherapiesPage() {
   const [typeFilter, setTypeFilter] = useState('Todos os tipos')
   const [intervalFilter, setIntervalFilter] = useState('Todos os intervalos')
   const [showInactive, setShowInactive] = useState(false)
+  const [modalityTab, setModalityTab] = useState<ModalityTab>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
@@ -43,9 +53,10 @@ export function ImmunotherapiesPage() {
       const matchType = typeFilter === 'Todos os tipos' || item.type === typeFilter
       const matchInterval = intervalFilter === 'Todos os intervalos' || item.cycleInterval.days.toString() === intervalFilter
       const matchStatus = showInactive ? item.status === 'inactive' : item.status === 'active'
-      return matchDoctor && matchSearch && matchType && matchInterval && matchStatus
+      const matchModality = modalityTab === 'all' || item.modality === modalityTab
+      return matchDoctor && matchSearch && matchType && matchInterval && matchStatus && matchModality
     })
-  }, [immunotherapies, searchTerm, typeFilter, intervalFilter, showInactive, doctorFilter])
+  }, [immunotherapies, searchTerm, typeFilter, intervalFilter, showInactive, doctorFilter, modalityTab])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
   const paginated = useMemo(() => {
@@ -55,7 +66,7 @@ export function ImmunotherapiesPage() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, typeFilter, intervalFilter, showInactive, itemsPerPage])
+  }, [searchTerm, typeFilter, intervalFilter, showInactive, itemsPerPage, modalityTab])
 
   const handleSelect = (item: Immunotherapy) => {
     setSelectedPatient(buildPatientFromImmunotherapy(item))
@@ -63,26 +74,70 @@ export function ImmunotherapiesPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="mx-4 my-4 flex flex-1 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
-        <div className="border-b border-(--border-custom) px-5 py-4">
-          <h1 className="mb-3.5 text-2xl font-bold text-(--text)">Imunoterapias</h1>
-          <ImmunotherapiesFilterBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
-            intervalFilter={intervalFilter}
-            setIntervalFilter={setIntervalFilter}
-            showInactive={showInactive}
-            setShowInactive={setShowInactive}
-            types={types}
-            intervals={intervals}
-            canAddImmunotherapy={canAddImmunotherapy}
-            canEvolve={canEvolve}
-          />
-        </div>
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-7 pb-5">
+      <div className="mb-7">
+        <h1 className="mb-5 text-3xl font-semibold text-(--text)">Imunoterapias</h1>
+        <ImmunotherapiesFilterBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          typeFilter={typeFilter}
+          setTypeFilter={setTypeFilter}
+          intervalFilter={intervalFilter}
+          setIntervalFilter={setIntervalFilter}
+          showInactive={showInactive}
+          setShowInactive={setShowInactive}
+          types={types}
+          intervals={intervals}
+          canAddImmunotherapy={canAddImmunotherapy}
+          canEvolve={canEvolve}
+        />
+      </div>
 
+      <div className="flex items-end gap-1">
+        {MODALITY_TABS.map((tab, idx) => {
+          const isActive = modalityTab === tab.value
+          const isFirst = idx === 0
+          return (
+            <button
+              key={tab.value}
+              type="button"
+              onClick={() => setModalityTab(tab.value)}
+              className={cn(
+                'relative px-5 py-2 text-[0.78rem] font-medium transition-colors rounded-t-xl',
+                isActive
+                  ? 'bg-white text-slate-800 z-10'
+                  : 'bg-white/55 text-slate-400 hover:bg-white/75 hover:text-slate-600',
+              )}
+            >
+              {isActive && (
+                <>
+                  {!isFirst && (
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute -left-3 bottom-0 h-3 w-3"
+                      style={{
+                        background:
+                          'radial-gradient(circle at 0% 0%, transparent 11.5px, white 12.5px)',
+                      }}
+                    />
+                  )}
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3"
+                    style={{
+                      background:
+                        'radial-gradient(circle at 100% 0%, transparent 11.5px, white 12.5px)',
+                    }}
+                  />
+                </>
+              )}
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-tr-xl rounded-b-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <div className="flex-1 overflow-auto">
           <ImmunotherapiesTable items={paginated} onSelect={handleSelect} />
         </div>
@@ -90,6 +145,7 @@ export function ImmunotherapiesPage() {
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
+          totalItems={filtered.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={setItemsPerPage}

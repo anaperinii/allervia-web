@@ -1,4 +1,4 @@
-import { Info, Syringe, User } from 'lucide-react'
+import { Info } from 'lucide-react'
 import { MODALITY_LABELS, type Modality } from '@/features/immunotherapy/constants/modality'
 import { formatIsoToPtOrDash } from '@/shared/lib/dates'
 import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
@@ -33,8 +33,8 @@ export function AddImmunotherapyReviewStep({ form }: AddImmunotherapyReviewStepP
         <p className="text-[0.7rem] text-(--text-muted) mt-1">Confirme os dados antes de salvar a prescrição.</p>
       </div>
 
-      <ReviewSection icon={<User size={13} className="text-teal-600" />} title="Dados do Paciente" items={patientItems} />
-      <ReviewSection icon={<Syringe size={13} className="text-teal-600" />} title="Dados da Imunoterapia" items={immunoItems} />
+      <ReviewSection title="Dados do Paciente" items={patientItems} />
+      <ReviewSection title="Dados da Imunoterapia" items={immunoItems} />
 
       <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg p-3.5">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 shrink-0">
@@ -49,17 +49,15 @@ export function AddImmunotherapyReviewStep({ form }: AddImmunotherapyReviewStepP
 }
 
 interface ReviewSectionProps {
-  icon: React.ReactNode
   title: string
   items: { label: string; value: string }[]
 }
 
-function ReviewSection({ icon, title, items }: ReviewSectionProps) {
+function ReviewSection({ title, items }: ReviewSectionProps) {
   return (
     <div className="border border-(--border-custom) rounded-xl overflow-hidden">
-      <div className="flex items-center gap-2.5 px-4 py-3 border-b border-(--border-custom) bg-white">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-100 shrink-0">{icon}</div>
-        <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-(--text-muted)">{title}</span>
+      <div className="px-4 py-3 border-b border-(--border-custom) bg-white">
+        <span className="text-[0.82rem] font-bold text-(--text)">{title}</span>
       </div>
       <div className="bg-gray-50/60 p-4">
         <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">

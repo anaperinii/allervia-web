@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Blob } from './Blob'
 import { Reveal } from './Reveal'
 import { cn } from '@/shared/lib/cn'
 import { useAnimatedNumber } from '@/shared/hooks/useAnimatedNumber'
@@ -14,21 +13,59 @@ export function SplitSection() {
   const displayPct = useAnimatedNumber(targetPct)
 
   return (
-    <section className="py-16 relative overflow-hidden">
-      <Blob className="top-1/2 -left-40 -translate-y-1/2 w-105 h-105 bg-linear-to-br from-cyan-200/20 to-teal-300/15" />
-      <Blob className="top-1/2 -right-40 -translate-y-1/2 w-100 h-100 bg-teal-200/20" />
+    <section className="py-20 relative overflow-hidden" style={{ background: 'var(--ll-bg)' }}>
+      <Reveal
+        id="about"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-[5%] items-center rounded-3xl p-6 sm:p-8 lg:p-16 mx-[5%] relative overflow-hidden"
+        style={{
+          background: 'var(--ll-surface-grad)',
+          border: '1px solid var(--ll-border)',
+          boxShadow: 'var(--ll-shadow-card)',
+        }}
+      >
+        <div
+          className="rounded-3xl p-8 sm:p-10 min-h-70 sm:min-h-80 flex flex-col justify-between relative overflow-hidden"
+          style={{
+            background:
+              'linear-gradient(150deg, #6C9EA5 0%, #4d7e85 55%, #06232a 100%)',
+          }}
+        >
+          <div
+            aria-hidden="true"
+            className="absolute right-0 top-0 pointer-events-none"
+            style={{
+              width: '60%',
+              height: '70%',
+              backgroundImage:
+                'radial-gradient(circle, #DCE1E5 1.4px, transparent 1.9px)',
+              backgroundSize: '15px 15px',
+              backgroundPosition: 'right top',
+              opacity: 0.42,
+              WebkitMaskImage:
+                'radial-gradient(72% 118% at 100% 0%, #000 0%, rgba(0,0,0,0.42) 30%, transparent 62%)',
+              maskImage:
+                'radial-gradient(72% 118% at 100% 0%, #000 0%, rgba(0,0,0,0.42) 30%, transparent 62%)',
+            }}
+          />
+          <div
+            aria-hidden="true"
+            className="absolute left-0 bottom-0 pointer-events-none"
+            style={{
+              width: '50%',
+              height: '55%',
+              backgroundImage:
+                'radial-gradient(circle, #DCE1E5 1.4px, transparent 1.9px)',
+              backgroundSize: '15px 15px',
+              backgroundPosition: 'left bottom',
+              opacity: 0.32,
+              WebkitMaskImage:
+                'radial-gradient(72% 118% at 0% 100%, #000 0%, rgba(0,0,0,0.42) 30%, transparent 62%)',
+              maskImage:
+                'radial-gradient(72% 118% at 0% 100%, #000 0%, rgba(0,0,0,0.42) 30%, transparent 62%)',
+            }}
+          />
 
-      <Reveal id="about" className="grid grid-cols-1 lg:grid-cols-2 gap-[5%] items-center bg-(--bg2) rounded-4xl p-6 sm:p-8 lg:p-16 mx-[5%] relative">
-        <div className="bg-linear-to-br from-teal-500 to-cyan-400 rounded-3xl p-8 sm:p-10 min-h-70 sm:min-h-80 flex flex-col justify-between relative overflow-hidden">
-          <svg className="absolute -right-10 -top-10 w-60 h-60 opacity-20" viewBox="0 0 280 280" fill="none">
-            <path d="M240 40 C200 20, 120 60, 100 120 C80 180, 140 220, 180 200 C220 180, 240 120, 200 100 C160 80, 100 120, 120 160" stroke="white" strokeWidth="16" strokeLinecap="round" fill="none" />
-            <path d="M200 20 C160 0, 80 40, 60 100 C40 160, 100 200, 140 180" stroke="white" strokeWidth="10" strokeLinecap="round" fill="none" opacity=".6" />
-          </svg>
-          <svg className="absolute -left-8 -bottom-10 w-44 h-44 opacity-15" viewBox="0 0 200 200" fill="none">
-            <path d="M160 160 C120 140, 40 160, 20 120 C0 80, 40 40, 80 60 C120 80, 140 140, 100 160" stroke="white" strokeWidth="12" strokeLinecap="round" fill="none" />
-          </svg>
-
-          <h3 className="text-xl sm:text-[1.5rem] font-extrabold text-white max-w-65 leading-[1.3] relative z-1">
+          <h3 className="text-xl sm:text-[1.5rem] font-light text-white max-w-72 leading-[1.3] relative z-1 tracking-tight">
             Controle total do ciclo imunoterápico com segurança e clareza
           </h3>
 
@@ -45,8 +82,10 @@ export function SplitSection() {
                       aria-pressed={isActive}
                       aria-label={`Avançar até ${conc}`}
                       className={cn(
-                        'px-2.5 py-1 rounded-full text-[0.65rem] font-bold backdrop-blur-md border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-teal-500 hover:-translate-y-px',
-                        isActive ? 'bg-white text-teal-700 border-white shadow-[0_2px_8px_rgba(255,255,255,0.25)]' : 'bg-white/15 text-white border-white/25 hover:bg-white/25',
+                        'px-2.5 py-1 rounded-full text-[0.65rem] font-bold backdrop-blur-md border transition-all cursor-pointer focus:outline-none hover:-translate-y-px',
+                        isActive
+                          ? 'bg-white text-[#06232a] border-white shadow-[0_2px_8px_rgba(255,255,255,0.25)]'
+                          : 'bg-white/15 text-white border-white/25 hover:bg-white/25',
                       )}
                     >
                       {conc}
@@ -66,18 +105,37 @@ export function SplitSection() {
         </div>
 
         <div className="py-4">
-          {SPLIT_FEATURES.map((feature) => {
-            const Icon = feature.icon
+          {SPLIT_FEATURES.map((feature, index) => {
+            const TONES = ['var(--ll-ink)', 'var(--ll-accent-strong)', 'var(--ll-ink-muted)', 'var(--ll-ink-tertiary)']
             return (
-              <div key={feature.title} className="flex gap-4 mb-7 last:mb-0">
-                <div className="w-11 h-11 shrink-0 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center">
-                  <Icon size={20} className="text-teal-600" />
+              <Reveal
+                key={feature.title}
+                className="flex gap-5 mb-7 last:mb-0 items-start"
+                delay={index * 140}
+                threshold={0.25}
+              >
+                <span
+                  className="shrink-0 tabular-nums leading-none"
+                  style={{
+                    color: TONES[index] ?? TONES[TONES.length - 1],
+                    fontSize: '2.6rem',
+                    fontWeight: 300,
+                    letterSpacing: '-0.04em',
+                    minWidth: '3.6rem',
+                    marginTop: '0.45rem',
+                  }}
+                >
+                  {String(index + 1).padStart(2, '0')}.
+                </span>
+                <div className="pt-1">
+                  <h4 className="text-[0.95rem] font-semibold mb-1" style={{ color: 'var(--ll-ink)' }}>
+                    {feature.title}
+                  </h4>
+                  <p className="text-[0.85rem] leading-relaxed" style={{ color: 'var(--ll-ink-muted)' }}>
+                    {feature.description}
+                  </p>
                 </div>
-                <div>
-                  <h4 className="text-[0.95rem] font-bold mb-1">{feature.title}</h4>
-                  <p className="text-[0.85rem] text-(--text-muted) leading-normal">{feature.description}</p>
-                </div>
-              </div>
+              </Reveal>
             )
           })}
         </div>

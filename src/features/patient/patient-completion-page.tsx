@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, CheckCircle, FileEdit } from 'lucide-react'
+import { ChevronLeft, CheckCircle, FileEdit } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
@@ -110,7 +110,7 @@ export function PatientCompletionPage() {
 
   if (!patient) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-gray-50/80">
+      <div className="flex flex-1 items-center justify-center">
         <span className="text-xs text-(--text-muted)">Paciente não encontrado</span>
       </div>
     )
@@ -177,14 +177,14 @@ export function PatientCompletionPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 p-4 min-h-0 overflow-hidden">
+    <div className="flex flex-1 flex-col p-4 min-h-0 overflow-hidden">
       <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
         <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
           <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
-            <ArrowLeft size={16} />
+            <ChevronLeft size={16} />
           </IconButton>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-(--text)">Concluir tratamento</h1>
+            <h1 className="text-3xl font-semibold text-(--text)">Concluir tratamento</h1>
             <p className="text-[0.7rem] text-(--text-muted)">{patient.name}</p>
           </div>
           {draftSavedAt && (

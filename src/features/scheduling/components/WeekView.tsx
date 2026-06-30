@@ -61,14 +61,26 @@ export function WeekView({
                       onSelectApplication(application)
                     }}
                     className={cn(
-                      'rounded-md px-2 py-1.5 text-[0.6rem] border-l-2 cursor-pointer hover:opacity-80 transition-opacity',
+                      'group relative rounded-md px-2.5 py-1.5 text-[0.6rem] backdrop-blur-sm cursor-pointer hover:brightness-95 transition-all',
                       application.status === 'missed' && 'line-through opacity-70',
                     )}
-                    style={{ backgroundColor: color.bg, color: color.text, borderLeftColor: color.border }}
+                    style={{
+                      backgroundColor: color.bg + '88',
+                      color: color.text,
+                      boxShadow: '0 1px 4px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.04)',
+                    }}
                   >
-                    <div className="font-semibold truncate">{getName(application.patientId)}</div>
-                    <div className="opacity-75">
-                      {application.startTime} · {application.dose.split(' - ')[1]}
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-1.5 top-1.5 bottom-1.5 w-[3px] rounded-full"
+                      style={{ backgroundColor: color.border }}
+                    />
+                    <div className="pl-2.5 space-y-0.5">
+                      <div className="font-semibold truncate">{getName(application.patientId)}</div>
+                      <div className="opacity-75">
+                        {application.startTime} – {application.endTime}
+                      </div>
+                      <div className="opacity-75 truncate">{application.dose}</div>
                     </div>
                   </div>
                 )

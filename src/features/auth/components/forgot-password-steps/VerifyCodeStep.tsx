@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, Mail } from 'lucide-react'
+import { ChevronLeft, Clock, Mail } from 'lucide-react'
 import { Button, VerificationCodeInput } from '@/shared/components'
 import { useCountdown } from '@/shared/hooks/useCountdown'
 
@@ -46,7 +46,7 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
         </Button>
         <div className="flex items-center justify-between">
           <button onClick={onBack} className="flex items-center gap-1.5 text-xs font-medium text-(--text-muted) hover:text-brand transition-colors bg-transparent border-none cursor-pointer">
-            <ArrowLeft size={13} />
+            <ChevronLeft size={13} />
             Voltar
           </button>
           <button onClick={onResend} className="text-xs font-medium text-brand hover:underline bg-transparent border-none cursor-pointer">

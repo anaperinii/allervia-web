@@ -1,15 +1,39 @@
-import { Blob } from './Blob'
 import { Reveal } from './Reveal'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
 import { FEATURES } from '@/features/landing-page/constants/features'
 
 export function FeaturesGrid() {
   return (
-    <section id="features" className="py-24 px-[5%] relative overflow-x-clip">
-      <Blob className="top-1/2 -left-40 -translate-y-1/2 w-105 h-105 bg-linear-to-br from-cyan-200/20 to-teal-300/20" />
-      <Blob className="top-1/2 -right-40 -translate-y-1/2 w-100 h-100 bg-linear-to-br from-teal-200/25 to-cyan-100/15" />
+    <section
+      id="features"
+      className="relative overflow-x-clip py-28 px-[5%]"
+      style={{ background: 'var(--ll-bg)', color: 'var(--ll-ink)' }}
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            'radial-gradient(var(--ll-dot) 0.5px, transparent 0.5px)',
+          backgroundSize: '3px 3px',
+          opacity: 0.18,
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute"
+        style={{
+          top: '40%',
+          left: '0%',
+          width: '50vmax',
+          height: '50vmax',
+          background: 'radial-gradient(circle, var(--ll-halo-accent), transparent 60%)',
+          transform: 'translate(-50%, -50%)',
+          animation: 'av-drift-3 26s ease-in-out infinite',
+        }}
+      />
 
-      <Reveal className="relative mb-12">
+      <Reveal className="relative mb-16">
         <SectionHeader
           eyebrow="Funcionalidades"
           title="Projetado para especialistas em imunoterapia alérgica"
@@ -17,22 +41,38 @@ export function FeaturesGrid() {
         />
       </Reveal>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {FEATURES.map((feature, index) => {
           const Icon = feature.icon
           return (
             <Reveal
               key={feature.title}
               delay={50 * (index + 1)}
-              className={`bg-(--card) border-[1.5px] border-(--border-custom) rounded-(--radius) p-7 transition-all duration-250 cursor-default hover:border-teal-300 hover:shadow-[0_8px_32px_rgba(20,184,166,0.1)] hover:-translate-y-0.75 ${
+              className={`group relative overflow-hidden rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1 ${
                 feature.large ? 'sm:col-span-2' : ''
               }`}
+              style={{
+                background: 'var(--ll-surface-grad)',
+                border: '1px solid var(--ll-border)',
+                boxShadow: 'var(--ll-shadow-card)',
+              }}
             >
-              <div className="w-12 h-12 rounded-xl bg-[linear-gradient(135deg,var(--color-teal-50),var(--color-teal-100))] border border-teal-200 flex items-center justify-center mb-4">
-                <Icon size={22} className="text-teal-600" />
+              <div
+                className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border"
+                style={{
+                  background:
+                    'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04) 46%, rgba(255,255,255,0) 56%), var(--ll-accent-bg-soft)',
+                  borderColor: 'var(--ll-accent-border-soft)',
+                }}
+              >
+                <Icon size={22} style={{ color: 'var(--ll-accent-strong)' }} />
               </div>
-              <h3 className="text-base font-bold mb-2">{feature.title}</h3>
-              <p className="text-[0.875rem] text-(--text-muted) leading-[1.6]">{feature.description}</p>
+              <h3 className="mb-2 text-base font-semibold" style={{ color: 'var(--ll-ink)' }}>
+                {feature.title}
+              </h3>
+              <p className="text-[0.875rem] leading-[1.7]" style={{ color: 'var(--ll-ink-muted)' }}>
+                {feature.description}
+              </p>
             </Reveal>
           )
         })}

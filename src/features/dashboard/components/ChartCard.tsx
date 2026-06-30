@@ -9,8 +9,18 @@ interface ChartCardProps {
   onToggleArchive: (id: string) => void
   filterSlot?: ReactNode
   fullWidth?: boolean
+  widthBasis?: string
+  gradient?: string
   children: ReactNode
 }
+
+const CHART_CARD_SHADOW = [
+  '0 10px 28px rgba(15,23,42,0.07)',
+  '0 2px 6px rgba(15,23,42,0.04)',
+  'inset 0 1.5px 0 rgba(255,255,255,0.95)',
+  'inset 0 -1.5px 3px rgba(15,23,42,0.03)',
+  'inset 0 0 0 1px rgba(226,232,240,0.7)',
+].join(', ')
 
 export function ChartCard({
   id,
@@ -19,17 +29,24 @@ export function ChartCard({
   onToggleArchive,
   filterSlot,
   fullWidth,
+  widthBasis,
+  gradient,
   children,
 }: ChartCardProps) {
   return (
     <div
       className={cn(
-        'border border-(--border-custom) rounded-xl p-4 group',
-        fullWidth ? 'basis-full w-full' : 'flex-1 basis-[calc(50%-0.5rem)] min-w-95',
+        'group relative overflow-hidden rounded-xl bg-slate-100 p-4',
+        fullWidth ? 'basis-full w-full' : 'flex-1 min-w-72',
       )}
+      style={{
+        boxShadow: CHART_CARD_SHADOW,
+        flexBasis: !fullWidth ? widthBasis ?? 'calc(50% - 0.5rem)' : undefined,
+        backgroundImage: gradient,
+      }}
     >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-bold text-(--text)">{title}</h3>
+        <h3 className="text-sm font-bold text-(--text)">{title}</h3>
         <div className="flex items-center gap-1">
           {filterSlot}
           <button
