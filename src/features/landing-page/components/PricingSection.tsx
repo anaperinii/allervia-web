@@ -1,6 +1,5 @@
 import { Check } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-import { Blob } from './Blob'
 import { MarketingCTA } from './MarketingCta'
 import { Reveal } from './Reveal'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
@@ -15,19 +14,35 @@ const CTA_LABELS: Record<PlanId, string> = {
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="py-24 px-[5%] relative overflow-hidden">
-      <Blob className="top-1/2 -left-40 -translate-y-1/2 w-100 h-100 bg-linear-to-br from-teal-200/20 to-cyan-200/20" />
-      <Blob className="top-1/2 -right-40 -translate-y-1/2 w-105 h-105 bg-teal-200/20" />
+    <section
+      id="pricing"
+      className="relative overflow-hidden py-28 px-[5%]"
+      style={{ background: '#08191d' }}
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute"
+        style={{
+          top: '30%',
+          right: '0%',
+          width: '50vmax',
+          height: '50vmax',
+          background: 'radial-gradient(circle, rgba(108,158,165,0.10), transparent 60%)',
+          transform: 'translate(50%, -50%)',
+          animation: 'av-drift-1 28s ease-in-out infinite',
+        }}
+      />
 
-      <Reveal className="mb-14 relative">
+      <Reveal className="mb-16 relative">
         <SectionHeader
           eyebrow="Preços"
           title="Planos para cada fase da sua clínica"
           description="Comece gratuitamente e escale conforme sua demanda cresce. Sem surpresas."
+          align="center"
         />
       </Reveal>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+      <div className="relative grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {PLANS.map((plan) => {
           const Icon = plan.icon
           const highlighted = plan.id === HIGHLIGHTED_PLAN
@@ -35,40 +50,76 @@ export function PricingSection() {
             <Reveal
               key={plan.id}
               className={cn(
-                'rounded-2xl overflow-hidden flex flex-col transition-all',
-                highlighted
-                  ? 'border-2 border-brand shadow-[0_8px_32px_rgba(24,193,203,0.15)] scale-[1.02]'
-                  : 'border border-(--border-custom)',
+                'rounded-3xl overflow-hidden flex flex-col transition-all',
+                highlighted && 'scale-[1.02]',
               )}
+              style={{
+                background:
+                  'linear-gradient(160deg, rgba(220,225,229,0.07), rgba(220,225,229,0.018))',
+                border: highlighted
+                  ? '1.5px solid rgba(108,158,165,0.55)'
+                  : '1px solid rgba(220,225,229,0.13)',
+                boxShadow: highlighted
+                  ? '0 24px 60px -20px rgba(108,158,165,0.30), 0 30px 80px -30px rgba(0,0,0,0.7)'
+                  : '0 30px 80px -30px rgba(0,0,0,0.6)',
+              }}
             >
               {highlighted && (
-                <div className="bg-linear-to-r from-brand to-teal-400 text-center py-2 text-[0.7rem] font-bold text-white uppercase tracking-wider">
+                <div
+                  className="text-center py-2 text-[0.7rem] font-semibold uppercase tracking-[2px]"
+                  style={{
+                    background:
+                      'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
+                    color: '#06232a',
+                  }}
+                >
                   Mais popular
                 </div>
               )}
               <div className="p-7 flex flex-col flex-1">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand/10 shrink-0">
-                    <Icon size={20} className="text-brand" />
+                  <div
+                    className="flex h-11 w-11 items-center justify-center rounded-xl shrink-0 border"
+                    style={{
+                      background: 'rgba(108,158,165,0.18)',
+                      borderColor: 'rgba(108,158,165,0.30)',
+                    }}
+                  >
+                    <Icon size={20} style={{ color: '#9BC1C4' }} />
                   </div>
                   <div>
-                    <div className="text-base font-bold text-(--text)">{plan.name}</div>
-                    <div className="text-[0.7rem] text-(--text-muted)">{plan.description}</div>
+                    <div className="text-base font-semibold" style={{ color: '#DCE1E5' }}>
+                      {plan.name}
+                    </div>
+                    <div className="text-[0.7rem]" style={{ color: '#7FA6AC' }}>
+                      {plan.description}
+                    </div>
                   </div>
                 </div>
 
                 <div className="mb-6">
-                  <span className="text-3xl font-extrabold text-(--text)">{plan.price}</span>
-                  {plan.period && <span className="text-sm text-(--text-muted)">{plan.period}</span>}
+                  <span className="text-3xl font-light tracking-tight" style={{ color: '#DCE1E5' }}>
+                    {plan.price}
+                  </span>
+                  {plan.period && (
+                    <span className="text-sm ml-1" style={{ color: '#7FA6AC' }}>
+                      {plan.period}
+                    </span>
+                  )}
                 </div>
 
-                <div className="space-y-2.5 flex-1">
+                <div className="space-y-3 flex-1">
                   {plan.features.map((feature) => (
                     <div key={feature} className="flex items-start gap-2.5">
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand/10 shrink-0 mt-px">
-                        <Check size={11} className="text-brand" />
+                      <div
+                        className="flex h-5 w-5 items-center justify-center rounded-full shrink-0 mt-px"
+                        style={{ background: 'rgba(108,158,165,0.18)' }}
+                      >
+                        <Check size={11} style={{ color: '#9BC1C4' }} />
                       </div>
-                      <span className="text-[0.85rem] text-(--text-muted) leading-[1.4]">{feature}</span>
+                      <span className="text-[0.85rem] leading-[1.5]" style={{ color: '#7FA6AC' }}>
+                        {feature}
+                      </span>
                     </div>
                   ))}
                   {Array.from({ length: MAX_PLAN_FEATURES - plan.features.length }).map((_, index) => (
@@ -87,7 +138,7 @@ export function PricingSection() {
         })}
       </div>
 
-      <Reveal className="text-center mt-10 text-sm text-(--text-muted)">
+      <Reveal className="text-center mt-12 text-sm" style={{ color: '#7FA6AC' }}>
         Todos os planos incluem criptografia end-to-end e conformidade com a LGPD.
       </Reveal>
     </section>

@@ -21,7 +21,7 @@ export function DoneStep() {
       <div className="flex items-center gap-2 bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5">
         <ShieldCheck size={14} className="text-brand shrink-0" />
         <p className="text-[0.6rem] text-(--text-muted) leading-relaxed">
-          Caso não tenha solicitado esta alteração, entre em contato imediatamente com nosso suporte pelo e-mail seguranca@imunecare.com.br.
+          Caso não tenha solicitado esta alteração, entre em contato imediatamente com nosso suporte pelo e-mail seguranca@allervia.com.br.
         </p>
       </div>
     </>

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { cn } from '@/shared/lib/cn'
-import { Blob } from './Blob'
 import { Reveal } from './Reveal'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
 import { PRODUCT_TABS, type TabId } from '@/features/landing-page/constants/tabs'
@@ -19,14 +18,25 @@ export function TabsSection() {
   const active = PRODUCT_TABS.find((tab) => tab.id === activeTab) ?? PRODUCT_TABS[0]
 
   return (
-    <section className="py-24 px-[5%] relative overflow-hidden">
-      <Blob className="-top-28 -left-20 w-95 h-95 bg-teal-200/20" />
-      <Blob className="-top-32 -right-20 w-100 h-100 bg-cyan-100/25" />
-      <Blob className="top-1/2 left-1/3 w-75 h-75 bg-teal-100/20" />
-      <Blob className="-bottom-32 -left-16 w-100 h-100 bg-linear-to-br from-teal-200/25 to-cyan-200/20" />
-      <Blob className="-bottom-28 -right-20 w-95 h-95 bg-teal-100/25" />
+    <section
+      className="py-24 px-[5%] relative overflow-hidden"
+      style={{ background: '#08191d' }}
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute"
+        style={{
+          top: '40%',
+          left: '20%',
+          width: '60vmax',
+          height: '60vmax',
+          background: 'radial-gradient(circle, rgba(155,193,196,0.08), transparent 62%)',
+          transform: 'translate(-50%, -50%)',
+          animation: 'av-drift-2 30s ease-in-out infinite',
+        }}
+      />
 
-      <Reveal className="mb-12 relative">
+      <Reveal className="mb-14 relative">
         <SectionHeader
           eyebrow="Aprofunde-se"
           title="Projetado para o fluxo clínico real"
@@ -36,43 +46,82 @@ export function TabsSection() {
         />
       </Reveal>
 
-      <div className="flex gap-2 justify-center flex-wrap mb-12">
-        {PRODUCT_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => handleSelectTab(tab.id)}
-            className={cn(
-              'px-5 py-2 rounded-full border-[1.5px] font-semibold text-[0.875rem] cursor-pointer transition-all duration-200',
-              activeTab === tab.id
-                ? 'bg-linear-to-br from-brand to-teal-400 border-transparent text-white shadow-[0_4px_16px_rgba(20,184,166,0.3)]'
-                : 'border-(--border-custom) bg-transparent text-(--text-muted) hover:border-teal-300 hover:text-teal-600',
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="relative flex gap-2 justify-center flex-wrap mb-14">
+        {PRODUCT_TABS.map((tab) => {
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleSelectTab(tab.id)}
+              className={cn(
+                'px-5 py-2 rounded-full font-semibold text-[0.875rem] cursor-pointer transition-all duration-200 hover:-translate-y-px',
+              )}
+              style={
+                isActive
+                  ? {
+                      background:
+                        'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
+                      color: '#06232a',
+                      boxShadow: '0 4px 16px rgba(108,158,165,0.30), inset 0 1px 0 rgba(255,255,255,0.4)',
+                      border: 'none',
+                    }
+                  : {
+                      background: 'rgba(220,225,229,0.04)',
+                      color: '#7FA6AC',
+                      border: '1px solid rgba(220,225,229,0.13)',
+                    }
+              }
+            >
+              {tab.label}
+            </button>
+          )
+        })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-[4%] items-center">
+      <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-[4%] items-center">
         <Reveal>
-          <h3 className="text-[1.4rem] font-extrabold mb-4">{active.title}</h3>
-          <p className="text-[0.95rem] text-(--text-muted) leading-[1.7] mb-6">{active.description}</p>
-          <span className="text-teal-600 font-semibold text-[0.9rem] cursor-default opacity-70">
+          <h3 className="text-[1.6rem] font-light tracking-tight mb-4" style={{ color: '#DCE1E5' }}>
+            {active.title}
+          </h3>
+          <p className="text-[0.95rem] leading-[1.7] mb-6" style={{ color: '#7FA6AC' }}>
+            {active.description}
+          </p>
+          <span className="font-semibold text-[0.9rem] cursor-default" style={{ color: '#9BC1C4' }}>
             {active.linkLabel} →
           </span>
         </Reveal>
-        <Reveal className="bg-gray-50/80 border border-(--border-custom) rounded-2xl p-3 relative overflow-hidden shadow-[0_8px_40px_rgba(0,70,40,0.08)]">
+        <Reveal
+          className="rounded-2xl p-3 relative overflow-hidden"
+          style={{
+            background:
+              'linear-gradient(160deg, rgba(220,225,229,0.05), rgba(220,225,229,0.018))',
+            border: '1px solid rgba(220,225,229,0.13)',
+            boxShadow: '0 30px 80px -30px rgba(0,0,0,0.7)',
+          }}
+        >
           <div className="flex items-center gap-1.5 mb-2 px-1">
-            <div className="w-2 h-2 rounded-full bg-red-400" />
-            <div className="w-2 h-2 rounded-full bg-amber-400" />
-            <div className="w-2 h-2 rounded-full bg-emerald-400" />
-            <div className="ml-2 flex-1 bg-white border border-(--border-custom) rounded-md h-4 flex items-center px-2">
-              <span className="text-[0.5rem] text-(--text-muted) font-medium">
-                imunecare.com.br/{active.urlSlug}
+            <div className="w-2 h-2 rounded-full bg-red-400/80" />
+            <div className="w-2 h-2 rounded-full bg-amber-400/80" />
+            <div className="w-2 h-2 rounded-full bg-emerald-400/80" />
+            <div
+              className="ml-2 flex-1 rounded-md h-4 flex items-center px-2"
+              style={{
+                background: 'rgba(8,25,29,0.6)',
+                border: '1px solid rgba(220,225,229,0.10)',
+              }}
+            >
+              <span className="text-[0.5rem] font-medium" style={{ color: '#7FA6AC' }}>
+                allervia.com.br/{active.urlSlug}
               </span>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-(--border-custom) shadow-[0_2px_12px_rgba(0,70,40,0.05)] overflow-hidden relative">
+          <div
+            className="rounded-xl overflow-hidden relative"
+            style={{
+              background: 'rgba(8,25,29,0.4)',
+              border: '1px solid rgba(220,225,229,0.10)',
+            }}
+          >
             {PRODUCT_TABS.filter((tab) => visited.has(tab.id)).map((tab, index) => (
               <img
                 key={tab.id}

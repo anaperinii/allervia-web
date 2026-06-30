@@ -41,7 +41,7 @@ export function ReportClinicalPreview({
             </p>
           </div>
           <div className="text-[0.6rem] text-(--text-muted) text-right">
-            <div>ImuneCare</div>
+            <div>Allervia</div>
             <div>Formato: {fileFormat.toUpperCase()}</div>
             {anonymized && (
               <div className="flex items-center gap-1 text-brand font-semibold mt-0.5 justify-end">
@@ -204,7 +204,7 @@ export function ReportClinicalPreview({
 
       <div className="px-6 py-3 border-t border-(--border-custom)">
         <div className="flex justify-between mb-2">
-          <span className="text-[0.6rem] text-(--text-muted)">ImuneCare © 2026</span>
+          <span className="text-[0.6rem] text-(--text-muted)">Allervia © 2026</span>
           <span className="text-[0.6rem] text-(--text-muted)">Página 1 de 1</span>
         </div>
         <p className="text-[0.5rem] text-(--text-muted)/60 leading-relaxed mb-2">

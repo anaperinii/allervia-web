@@ -7,10 +7,10 @@ export function AboutPage() {
     <SettingsLayout subtitle="Sobre o Sistema">
       <div className="max-w-lg mx-auto text-center space-y-6 py-8">
         <div className="flex justify-center">
-          <img src={imunecareLogo} alt="ImuneCare" className="w-16 h-16 rounded-2xl" />
+          <img src={imunecareLogo} alt="Allervia" className="w-16 h-16 rounded-2xl" />
         </div>
         <div>
-          <h2 className="text-xl font-extrabold gradient-text mb-1">ImuneCare</h2>
+          <h2 className="text-xl font-extrabold gradient-text mb-1">Allervia</h2>
           <p className="text-xs text-(--text-muted)">Gestão de Protocolos de Imunoterapia Alérgica</p>
         </div>
 

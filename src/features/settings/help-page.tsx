@@ -68,7 +68,7 @@ export function HelpPage() {
             </section>
 
         <div className="text-center text-[0.65rem] text-(--text-muted) py-2">
-          ImuneCare v2.0.0-beta · Precisa de ajuda? Entre em contato pelo chat.
+          Allervia v2.0.0-beta · Precisa de ajuda? Entre em contato pelo chat.
         </div>
       </div>
     </SettingsLayout>

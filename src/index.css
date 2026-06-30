@@ -28,6 +28,15 @@
   --color-brand-dark: #0FA8B2;
   --color-brand-light: #4DD4DB;
   --color-brand-50: #E6F9FA;
+  --color-allervia-bg: #08191d;
+  --color-allervia-bg-2: #0e353d;
+  --color-allervia-bg-3: #061215;
+  --color-allervia-accent: #6C9EA5;
+  --color-allervia-accent-ink: #06232a;
+  --color-allervia-ink: #DCE1E5;
+  --color-allervia-ink-muted: #7FA6AC;
+  --color-allervia-dot: #9BC1C4;
+  --color-allervia-foot: #0a181b;
   --font-family-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-family-heading: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
@@ -214,6 +223,20 @@
   0%, 100% { transform: translate(-50%, -50%); }
   33%      { transform: translate(calc(-50% + 4vmax),  calc(-50% - 4vmax)); }
   66%      { transform: translate(calc(-50% - 2vmax),  calc(-50% - 10vmax)); }
+}
+
+@keyframes av-drift-1 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  33%      { transform: translate(calc(-50% + 9vmax),  calc(-50% - 7vmax)) scale(1.08); }
+  66%      { transform: translate(calc(-50% - 11vmax), calc(-50% + 8vmax)) scale(1.04); }
+}
+@keyframes av-drift-2 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(calc(-50% + 12vmax), calc(-50% - 10vmax)) scale(1.1); }
+}
+@keyframes av-drift-3 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(calc(-50% - 10vmax), calc(-50% + 6vmax)) scale(0.95); }
 }
 
 .shimmer-text {

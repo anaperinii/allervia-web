@@ -43,7 +43,7 @@ function FloatingLogo() {
       aria-label="Início"
       className="fixed left-5 top-5 z-30 flex h-14 w-14 items-center justify-center"
     >
-      <img src={imunecareLogo} alt="ImuneCare" className="h-10 w-10 rounded-full object-contain" />
+      <img src={imunecareLogo} alt="Allervia" className="h-10 w-10 rounded-full object-contain" />
     </Link>
   )
 }

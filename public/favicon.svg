@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -30 60 60">
+  <g fill="#0e353d">
+    <circle cx="-11" cy="-22" r="1.7"/><circle cx="0" cy="-22" r="2.3"/><circle cx="11" cy="-22" r="1.7"/>
+    <circle cx="-22" cy="-11" r="1.7"/><circle cx="-11" cy="-11" r="2.9"/><circle cx="0" cy="-11" r="3.5"/><circle cx="11" cy="-11" r="2.9"/><circle cx="22" cy="-11" r="1.7"/>
+    <circle cx="-22" cy="0" r="2.3"/><circle cx="-11" cy="0" r="3.5"/><circle cx="0" cy="0" r="4.3"/><circle cx="11" cy="0" r="3.5"/><circle cx="22" cy="0" r="2.3"/>
+    <circle cx="-22" cy="11" r="1.7"/><circle cx="-11" cy="11" r="2.9"/><circle cx="0" cy="11" r="3.5"/><circle cx="11" cy="11" r="2.9"/><circle cx="22" cy="11" r="1.7"/>
+    <circle cx="-11" cy="22" r="1.7"/><circle cx="0" cy="22" r="2.3"/><circle cx="11" cy="22" r="1.7"/>
+  </g>
+</svg>

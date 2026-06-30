@@ -25,7 +25,7 @@ export function ExportReportPage() {
   }, [canViewDashboard, navigate])
 
   const [modality, setModality] = useState<'sub' | 'sbl'>('sub')
-  const [fileName, setFileName] = useState('relatorio-imunecare')
+  const [fileName, setFileName] = useState('relatorio-allervia')
   const [format, setFormat] = useState('pdf')
   const [interval, setInterval] = useState<string>('Este Mês')
   const [monthFilter, setMonthFilter] = useState('all')

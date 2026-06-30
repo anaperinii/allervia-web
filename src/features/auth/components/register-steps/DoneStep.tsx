@@ -41,7 +41,7 @@ export function DoneStep({ data, maskedEmail }: DoneStepProps) {
       </div>
 
       <Button tone="brand" variant="solid" prominent fullWidth size="lg" to="/login" rightIcon={<ArrowRight size={14} />}>
-        Acessar o ImuneCare
+        Acessar o Allervia
       </Button>
     </>
   )

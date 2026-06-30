@@ -226,7 +226,7 @@ export function AdvancedSettingsPage() {
                       </div>
                       <div className="flex items-center gap-1.5 text-[0.6rem] text-(--text-muted)">
                         <ExternalLink size={10} />
-                        <span>Conta vinculada: <span className="font-medium text-(--text)">clinica@imunecare.com.br</span></span>
+                        <span>Conta vinculada: <span className="font-medium text-(--text)">clinica@allervia.com.br</span></span>
                       </div>
                     </div>
                   )}

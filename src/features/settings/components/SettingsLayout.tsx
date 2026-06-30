@@ -145,7 +145,7 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
         }
       >
         <p className="text-xs text-(--text-muted)">
-          Você será desconectado do ImuneCare e redirecionado para a tela de login. Continuar?
+          Você será desconectado do Allervia e redirecionado para a tela de login. Continuar?
         </p>
       </Modal>
     </div>

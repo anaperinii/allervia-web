@@ -17,7 +17,7 @@ export function FormStep({ form, maskedEmail, onSubmit }: FormStepProps) {
       <div className="flex flex-col items-center text-center gap-1.5">
         <h1 className="font-extrabold text-2xl text-(--text)">Complete seu cadastro</h1>
         <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
-          Preencha os dados abaixo para finalizar a configuração da sua conta e começar a utilizar o ImuneCare.
+          Preencha os dados abaixo para finalizar a configuração da sua conta e começar a utilizar o Allervia.
         </p>
       </div>
 
@@ -83,7 +83,7 @@ export function FormStep({ form, maskedEmail, onSubmit }: FormStepProps) {
       <p className="text-[0.55rem] text-(--text-muted) text-center leading-relaxed">
         Ao criar sua conta, você concorda com os{' '}
         <a href="#" className="text-brand no-underline hover:underline">Termos de Uso</a> e a{' '}
-        <a href="#" className="text-brand no-underline hover:underline">Política de Privacidade</a> do ImuneCare.
+        <a href="#" className="text-brand no-underline hover:underline">Política de Privacidade</a> do Allervia.
       </p>
     </form>
   )

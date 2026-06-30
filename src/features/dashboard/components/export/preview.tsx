@@ -47,7 +47,7 @@ export function ExportPreview({
         <div className="px-6 py-5 border-b border-(--border-custom)">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-(--text)">ImuneCare — Relatório Clínico</h2>
+              <h2 className="text-sm font-bold text-(--text)">Allervia — Relatório Clínico</h2>
               <p className="text-[0.65rem] text-(--text-muted) mt-0.5">
                 {periodLabel} · Gerado em {new Date().toLocaleDateString('pt-BR')}
               </p>
@@ -109,7 +109,7 @@ export function ExportPreview({
 
         <div className="px-6 py-3 border-t border-(--border-custom)">
           <div className="flex justify-between mb-2">
-            <span className="text-[0.6rem] text-(--text-muted)">ImuneCare © 2026</span>
+            <span className="text-[0.6rem] text-(--text-muted)">Allervia © 2026</span>
             <span className="text-[0.6rem] text-(--text-muted)">Página 1 de 1</span>
           </div>
           <p className="text-[0.5rem] text-(--text-muted)/60 leading-relaxed mb-2">
