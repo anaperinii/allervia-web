@@ -85,7 +85,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
         </Link>
 
         {!isAuthPage && (
-          <ul className="hidden md:flex gap-8 list-none">
+          <ul className="hidden md:flex gap-8 list-none absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link) => (
               <li key={link.href}>
                 <a

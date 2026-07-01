@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { AllerviaLogo } from '@/features/landing-page/components/AllerviaLogo'
+import { ArrowUpRight } from 'lucide-react'
 
 const heroRiseStyle = (delay: number): CSSProperties => ({
   opacity: 0,
@@ -97,17 +97,14 @@ export function HeroSection() {
           }}
         />
 
-        <div className="relative z-10 flex max-w-5xl flex-col items-center text-center">
-          <div className="mb-10" style={heroRiseStyle(0.05)}>
-            <AllerviaLogo size={64} color="#9BC1C4" />
-          </div>
-
+        <div className="relative z-10 mt-12 flex max-w-5xl flex-col items-center text-center">
           <h1 className="mb-6 text-[clamp(2rem,5vw,4rem)] font-light leading-[1.1] tracking-tight text-balance text-white">
             <span className="block" style={heroRiseStyle(0.2)}>
-              Imunoterapia conduzida
+              Conduza, acompanhe e enxergue
             </span>
-            <span className="block font-semibold" style={heroRiseStyle(0.4)}>
-              com clareza.
+            <span className="block" style={heroRiseStyle(0.4)}>
+              toda a <span className="whitespace-nowrap">imunoterapia alérgica</span>{' '}
+              <span className="font-semibold">em um só lugar.</span>
             </span>
           </h1>
 
@@ -115,8 +112,8 @@ export function HeroSection() {
             className="max-w-2xl text-[clamp(0.95rem,1.6vw,1.2rem)] font-light leading-relaxed text-white/70"
             style={heroRiseStyle(0.7)}
           >
-            Cuidado contínuo, decisões precisas — a plataforma Allervia integra protocolos, agenda
-            e prontuário em um único fluxo clínico.
+            Do protocolo à evolução do paciente, do prontuário aos indicadores — a Allervia
+            reúne a operação clínica num único fluxo, em constante evolução.
           </p>
 
           <div
@@ -142,7 +139,11 @@ export function HeroSection() {
               }}
             >
               Começar agora
-              <span className="transition-transform group-hover:translate-x-0.5">→</span>
+              <ArrowUpRight
+                size={16}
+                strokeWidth={2.25}
+                className="transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+              />
             </a>
             <a
               href="/login"
