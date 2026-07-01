@@ -1,5 +1,6 @@
 import { Reveal } from './Reveal'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
+import { AutomationGlyph } from '@/features/landing-page/components/AutomationGlyph'
 import { AUTOMATION_FEATURES } from '@/features/landing-page/constants/automation-features'
 
 export function AutomationSection() {
@@ -41,37 +42,27 @@ export function AutomationSection() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {AUTOMATION_FEATURES.map((feature) => {
-              const Icon = feature.icon
-              return (
-                <div
-                  key={feature.title}
-                  className="group rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1"
-                  style={{
-                    background: 'var(--ll-surface-grad)',
-                    border: '1px solid var(--ll-border)',
-                    boxShadow: 'var(--ll-shadow-card-soft)',
-                  }}
-                >
-                  <div
-                    className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border"
-                    style={{
-                      background:
-                        'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04) 46%, rgba(255,255,255,0) 56%), var(--ll-accent-bg-soft)',
-                      borderColor: 'var(--ll-accent-border-soft)',
-                    }}
-                  >
-                    <Icon size={22} style={{ color: 'var(--ll-accent-strong)' }} />
-                  </div>
-                  <h4 className="text-base font-semibold mb-2" style={{ color: 'var(--ll-ink)' }}>
-                    {feature.title}
-                  </h4>
-                  <p className="text-[0.875rem] leading-[1.7]" style={{ color: 'var(--ll-ink-muted)' }}>
-                    {feature.description}
-                  </p>
+            {AUTOMATION_FEATURES.map((feature, index) => (
+              <div
+                key={feature.title}
+                className="group rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1"
+                style={{
+                  background: 'var(--ll-surface-grad)',
+                  border: '1px solid var(--ll-border)',
+                  boxShadow: 'var(--ll-shadow-card-soft)',
+                }}
+              >
+                <div className="mb-5 transition-transform duration-300 group-hover:scale-[1.04]">
+                  <AutomationGlyph kind={feature.kind} size={88} delay={index * 140} />
                 </div>
-              )
-            })}
+                <h4 className="text-base font-semibold mb-2" style={{ color: 'var(--ll-ink)' }}>
+                  {feature.title}
+                </h4>
+                <p className="text-[0.875rem] leading-[1.7]" style={{ color: 'var(--ll-ink-muted)' }}>
+                  {feature.description}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </Reveal>

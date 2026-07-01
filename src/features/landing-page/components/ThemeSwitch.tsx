@@ -12,6 +12,10 @@ export function ThemeSwitch({ overHero = false }: ThemeSwitchProps) {
   const knobBg = overHero ? '#6C9EA5' : 'var(--ll-accent)'
   const knobInk = overHero ? '#06232a' : 'var(--ll-accent-ink)'
   const knobHalo = overHero ? 'rgba(108,158,165,0.30)' : 'var(--ll-halo-accent-strong)'
+  const trackBg = overHero ? 'rgba(255,255,255,0.04)' : 'transparent'
+  const trackBorder = overHero
+    ? '1.5px solid rgba(255,255,255,0.25)'
+    : '1.5px solid var(--ll-border-strong)'
 
   return (
     <button
@@ -20,11 +24,11 @@ export function ThemeSwitch({ overHero = false }: ThemeSwitchProps) {
       role="switch"
       aria-checked={!isDark}
       aria-label={isDark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
-      className="relative inline-flex h-8 w-[56px] shrink-0 items-center rounded-full transition-all duration-300 cursor-pointer"
+      className="relative inline-flex h-8 w-[56px] shrink-0 items-center rounded-full cursor-pointer"
       style={{
-        background: 'var(--ll-surface-strong)',
-        border: '1px solid var(--ll-border)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+        background: trackBg,
+        border: trackBorder,
+        transition: 'background 0.5s ease, border-color 0.5s ease',
       }}
     >
       <span

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ArrowRight } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Reveal } from './Reveal'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
@@ -7,15 +8,22 @@ import { PRODUCT_TABS, type TabId } from '@/features/landing-page/constants/tabs
 export function TabsSection() {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard')
   const [visited, setVisited] = useState<Set<TabId>>(() => new Set(['dashboard']))
+  const [direction, setDirection] = useState<1 | -1>(1)
 
   const handleSelectTab = (id: TabId) => {
+    if (id === activeTab) return
+    const newIndex = PRODUCT_TABS.findIndex((t) => t.id === id)
+    const currentIndex = PRODUCT_TABS.findIndex((t) => t.id === activeTab)
+    setDirection(newIndex > currentIndex ? 1 : -1)
     setActiveTab(id)
     if (!visited.has(id)) {
       setVisited((prev) => new Set(prev).add(id))
     }
   }
 
-  const active = PRODUCT_TABS.find((tab) => tab.id === activeTab) ?? PRODUCT_TABS[0]
+  const activeIndex = PRODUCT_TABS.findIndex((t) => t.id === activeTab)
+  const active = PRODUCT_TABS[activeIndex] ?? PRODUCT_TABS[0]
+  const slideFrom = direction === 1 ? '24px' : '-24px'
 
   return (
     <section
@@ -81,15 +89,27 @@ export function TabsSection() {
 
       <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-[4%] items-center">
         <Reveal>
-          <h3 className="text-[1.6rem] font-light tracking-tight mb-4" style={{ color: 'var(--ll-ink)' }}>
-            {active.title}
-          </h3>
-          <p className="text-[0.95rem] leading-[1.7] mb-6" style={{ color: 'var(--ll-ink-muted)' }}>
-            {active.description}
-          </p>
-          <span className="font-semibold text-[0.9rem] cursor-default" style={{ color: 'var(--ll-accent-strong)' }}>
-            {active.linkLabel} →
-          </span>
+          <div
+            key={active.id}
+            style={{
+              ['--tab-slide-from' as string]: slideFrom,
+              animation: 'tab-slide-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both',
+            }}
+          >
+            <h3 className="text-[1.6rem] font-light tracking-tight mb-4" style={{ color: 'var(--ll-ink)' }}>
+              {active.title}
+            </h3>
+            <p className="text-[0.95rem] leading-[1.7] mb-6" style={{ color: 'var(--ll-ink-muted)' }}>
+              {active.description}
+            </p>
+            <span
+              className="inline-flex items-center gap-1.5 font-semibold text-[0.9rem] cursor-default"
+              style={{ color: 'var(--ll-accent-strong)' }}
+            >
+              {active.linkLabel}
+              <ArrowRight size={15} strokeWidth={2.25} />
+            </span>
+          </div>
         </Reveal>
         <Reveal
           className="rounded-2xl p-3 relative overflow-hidden"
@@ -122,20 +142,31 @@ export function TabsSection() {
               border: '1px solid var(--ll-border)',
             }}
           >
-            {PRODUCT_TABS.filter((tab) => visited.has(tab.id)).map((tab, index) => (
-              <img
-                key={tab.id}
-                src={tab.image}
-                alt={tab.label}
-                loading="lazy"
-                decoding="async"
-                className={cn(
-                  'w-full block transition-opacity duration-500 ease-out',
-                  index === 0 ? 'relative' : 'absolute inset-0',
-                  activeTab === tab.id ? 'opacity-100' : 'opacity-0 pointer-events-none',
-                )}
-              />
-            ))}
+            {PRODUCT_TABS.filter((tab) => visited.has(tab.id)).map((tab, stackIndex) => {
+              const tabIndex = PRODUCT_TABS.findIndex((t) => t.id === tab.id)
+              const isActive = activeTab === tab.id
+              const offset = isActive ? '0px' : tabIndex < activeIndex ? '-24px' : '24px'
+              return (
+                <img
+                  key={tab.id}
+                  src={tab.image}
+                  alt={tab.label}
+                  loading="lazy"
+                  decoding="async"
+                  className={cn(
+                    'w-full block',
+                    stackIndex === 0 ? 'relative' : 'absolute inset-0',
+                    !isActive && 'pointer-events-none',
+                  )}
+                  style={{
+                    opacity: isActive ? 1 : 0,
+                    transform: `translateX(${offset})`,
+                    transition:
+                      'opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
+                  }}
+                />
+              )
+            })}
           </div>
         </Reveal>
       </div>
