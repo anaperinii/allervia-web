@@ -16,10 +16,17 @@ interface HeaderProps {
   isAuthPage?: boolean
   hasHero?: boolean
   hideNav?: boolean
+  hideThemeSwitch?: boolean
 }
 
-export function Header({ isAuthPage = false, hasHero = false, hideNav = false }: HeaderProps) {
+export function Header({
+  isAuthPage = false,
+  hasHero = false,
+  hideNav = false,
+  hideThemeSwitch = false,
+}: HeaderProps) {
   const showNavLinks = !isAuthPage && !hideNav
+  const showThemeSwitch = hasHero && !hideThemeSwitch
   const [scrolled, setScrolled] = useState(false)
   const [pastHero, setPastHero] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -59,7 +66,8 @@ export function Header({ isAuthPage = false, hasHero = false, hideNav = false }:
   const ctaBgGradient = 'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%)'
   const ctaBaseColor = isTransparent ? '#6C9EA5' : 'var(--ll-accent)'
   const ctaInkColor = isTransparent ? '#06232a' : 'var(--ll-accent-ink)'
-  const ctaHaloColor = isTransparent ? 'rgba(108,158,165,0.30)' : 'var(--ll-halo-accent-strong)'
+  const ctaHaloColor = isTransparent ? 'rgba(108,158,165,0.30)' : 'var(--ll-cta-halo)'
+  const ctaHaloHoverColor = isTransparent ? 'rgba(108,158,165,0.45)' : 'var(--ll-cta-halo-hover)'
 
   return (
     <>
@@ -135,7 +143,7 @@ export function Header({ isAuthPage = false, hasHero = false, hideNav = false }:
                 'background 0.5s ease, color 0.5s ease, box-shadow 0.35s ease, filter 0.25s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = `0 14px 36px ${ctaHaloColor}, inset 0 1px 0 rgba(255,255,255,0.55)`
+              e.currentTarget.style.boxShadow = `0 14px 36px ${ctaHaloHoverColor}, inset 0 1px 0 rgba(255,255,255,0.55)`
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.boxShadow = `0 6px 18px ${ctaHaloColor}, inset 0 1px 0 rgba(255,255,255,0.4)`
@@ -143,7 +151,7 @@ export function Header({ isAuthPage = false, hasHero = false, hideNav = false }:
           >
             Começar agora
           </Link>
-          {hasHero && <ThemeSwitch overHero={isTransparent} />}
+          {showThemeSwitch && <ThemeSwitch overHero={isTransparent} />}
         </div>
 
         <button
@@ -217,7 +225,7 @@ export function Header({ isAuthPage = false, hasHero = false, hideNav = false }:
             >
               Começar agora
             </Link>
-            {hasHero && (
+            {showThemeSwitch && (
               <div className="flex justify-center pt-2">
                 <ThemeSwitch overHero={isTransparent} />
               </div>

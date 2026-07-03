@@ -35,7 +35,7 @@ const SHAPE: Record<MarketingCTAShape, string> = {
 
 const VARIANT_CLASS: Record<MarketingCTAVariant, string> = {
   filled:
-    'border-none hover:brightness-95 hover:!shadow-[0_14px_40px_var(--ll-halo-accent-strong),inset_0_1px_0_rgba(255,255,255,0.55)]',
+    'border-none hover:brightness-95 hover:!shadow-[0_14px_40px_var(--ll-cta-halo-hover),inset_0_1px_0_rgba(255,255,255,0.55)]',
   outline:
     'border-[1.5px] bg-transparent hover:bg-[color:var(--ll-accent-bg-soft)] hover:shadow-[0_10px_24px_var(--ll-halo-accent)]',
 }
@@ -43,10 +43,10 @@ const VARIANT_CLASS: Record<MarketingCTAVariant, string> = {
 const VARIANT_STYLE: Record<MarketingCTAVariant, CSSProperties> = {
   filled: {
     background:
-      'linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.06) 100%), var(--ll-accent-strong)',
+      'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), var(--ll-accent)',
     color: 'var(--ll-accent-ink)',
     boxShadow:
-      '0 4px 20px var(--ll-halo-accent-strong), inset 0 1px 0 rgba(255,255,255,0.55)',
+      '0 4px 20px var(--ll-cta-halo), inset 0 1px 0 rgba(255,255,255,0.4)',
   },
   outline: {
     borderColor: 'var(--ll-accent-border)',

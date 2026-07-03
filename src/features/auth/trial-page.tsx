@@ -85,7 +85,7 @@ export function TrialPage() {
               <form
                 onSubmit={onSubmit}
                 noValidate
-                className="allervia-dark-form rounded-2xl p-6 xl:p-8 w-full max-w-lg lg:mx-0 mx-auto [&_label]:!text-white/80 [&_input]:!bg-white/[0.06] [&_input]:!border-white/15 [&_input]:!text-white [&_input::placeholder]:!text-white/40 [&_select]:!bg-white/[0.06] [&_select]:!border-white/15 [&_select]:!text-white [&_select_option]:!text-[#0f2027] [&_select+svg]:!text-white/50"
+                className="allervia-dark-form rounded-2xl p-6 xl:p-8 w-full max-w-lg lg:mx-0 mx-auto [&_label]:text-white/80! [&_input]:bg-white/6! [&_input]:border-white/15! [&_input]:text-white! [&_input::placeholder]:text-white/40! [&_select]:bg-white/6! [&_select]:border-white/15! [&_select]:text-white! [&_select_option]:text-[#0f2027]! [&_select+svg]:text-white/50!"
               style={{
                 background: 'rgba(8,25,29,0.40)',
                 backdropFilter: 'blur(28px) saturate(160%)',
@@ -188,7 +188,7 @@ export function TrialPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex w-full items-center justify-center rounded-xl py-3 text-sm font-semibold transition-all hover:brightness-95 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                className="inline-flex w-full items-center justify-center rounded-xl py-3 text-sm font-semibold transition-all hover:brightness-95 hover:shadow-[0_14px_40px_rgba(108,158,165,0.45),inset_0_1px_0_rgba(255,255,255,0.55)]! disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                 style={{
                   background:
                     'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
@@ -208,7 +208,7 @@ export function TrialPage() {
                 <a
                   href="#"
                   className="no-underline hover:underline"
-                  style={{ color: 'var(--ll-accent-strong)' }}
+                  style={{ color: '#9BC1C4' }}
                 >
                   Termos de Uso
                 </a>{' '}
@@ -216,7 +216,7 @@ export function TrialPage() {
                 <a
                   href="#"
                   className="no-underline hover:underline"
-                  style={{ color: 'var(--ll-accent-strong)' }}
+                  style={{ color: '#9BC1C4' }}
                 >
                   Política de Privacidade
                 </a>
@@ -234,7 +234,7 @@ export function TrialPage() {
                       className="flex items-center gap-1.5 text-[0.65rem] font-medium"
                       style={{ color: 'rgba(255,255,255,0.65)' }}
                     >
-                      <Icon size={13} style={{ color: 'var(--ll-accent-strong)' }} />
+                      <Icon size={13} style={{ color: '#9BC1C4' }} />
                       {badge.label}
                     </span>
                   )

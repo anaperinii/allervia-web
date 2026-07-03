@@ -76,7 +76,7 @@ export function HeroSection() {
             width: '70vmax',
             height: '70vmax',
             background:
-              'radial-gradient(circle, var(--ll-halo-accent-strong), transparent 62%)',
+              'radial-gradient(circle, rgba(108,158,165,0.18), transparent 62%)',
             transform: 'translate(-50%, -50%)',
             animation: 'av-drift-1 18s ease-in-out infinite',
           }}
@@ -91,7 +91,7 @@ export function HeroSection() {
             width: '50vmax',
             height: '50vmax',
             background:
-              'radial-gradient(circle, var(--ll-halo-dot), transparent 60%)',
+              'radial-gradient(circle, rgba(155,193,196,0.12), transparent 60%)',
             transform: 'translate(-50%, -50%)',
             animation: 'av-drift-2 22s ease-in-out infinite',
           }}
