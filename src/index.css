@@ -214,6 +214,21 @@
   }
 }
 
+.allervia-dark-form input:-webkit-autofill,
+.allervia-dark-form input:-webkit-autofill:hover,
+.allervia-dark-form input:-webkit-autofill:focus,
+.allervia-dark-form input:-webkit-autofill:active,
+.allervia-dark-form select:-webkit-autofill,
+.allervia-dark-form select:-webkit-autofill:hover,
+.allervia-dark-form select:-webkit-autofill:focus,
+.allervia-dark-form select:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.06) inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 @keyframes slide-in {
   from { transform: translateX(-100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }

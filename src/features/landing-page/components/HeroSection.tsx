@@ -129,7 +129,7 @@ export function HeroSection() {
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4" style={socialRiseStyle(1.4)}>
             <a
               href="/trial"
-              className="group inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 no-underline"
+              className="group inline-flex items-center gap-2 rounded-xl px-7 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 no-underline"
               style={{
                 background:
                   'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
@@ -147,7 +147,7 @@ export function HeroSection() {
             </a>
             <a
               href="/login"
-              className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-medium backdrop-blur-xl transition-all hover:-translate-y-0.5 no-underline"
+              className="inline-flex items-center gap-2 rounded-xl px-7 py-3 text-sm font-medium backdrop-blur-xl transition-all hover:-translate-y-0.5 no-underline"
               style={{
                 background: 'rgba(8,25,29,0.85)',
                 border: '1px solid rgba(220,225,229,0.13)',

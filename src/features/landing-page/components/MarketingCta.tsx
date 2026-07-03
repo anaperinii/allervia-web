@@ -29,13 +29,15 @@ type MarketingCTAProps = AsLink | AsAnchor
 const BASE = 'font-semibold cursor-pointer transition-all duration-250 no-underline'
 
 const SHAPE: Record<MarketingCTAShape, string> = {
-  pill: 'inline-block px-6 py-2.5 rounded-full text-[0.9rem]',
+  pill: 'inline-block px-6 py-2.5 rounded-xl text-[0.9rem]',
   block: 'block w-full py-3 rounded-xl text-center text-sm',
 }
 
 const VARIANT_CLASS: Record<MarketingCTAVariant, string> = {
-  filled: 'border-none hover:-translate-y-0.5',
-  outline: 'border-[1.5px] bg-transparent',
+  filled:
+    'border-none hover:brightness-95 hover:!shadow-[0_14px_40px_var(--ll-halo-accent-strong),inset_0_1px_0_rgba(255,255,255,0.55)]',
+  outline:
+    'border-[1.5px] bg-transparent hover:bg-[color:var(--ll-accent-bg-soft)] hover:shadow-[0_10px_24px_var(--ll-halo-accent)]',
 }
 
 const VARIANT_STYLE: Record<MarketingCTAVariant, CSSProperties> = {

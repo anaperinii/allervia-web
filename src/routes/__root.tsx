@@ -20,7 +20,8 @@ function getInitials(name: string): string {
 
 const publicRoutes = ['/', '/login', '/register', '/trial', '/forgot-password']
 const authRoutes = ['/login', '/register', '/forgot-password']
-const noHeaderRoutes = ['/trial']
+const noHeaderRoutes: string[] = []
+const heroRoutes = ['/', '/trial']
 
 function PageTransition({ children }: { children: React.ReactNode }) {
   const [visible, setVisible] = useState(false)
@@ -168,9 +169,10 @@ interface PublicShellProps {
 
 function PublicShell({ hideHeader, isAuthRoute, hasHero, pathname }: PublicShellProps) {
   const { theme } = useLandingTheme()
+  const hideNav = pathname === '/trial'
   return (
     <div data-landing-theme={theme} className="min-h-screen">
-      {!hideHeader && <Header isAuthPage={isAuthRoute} hasHero={hasHero} />}
+      {!hideHeader && <Header isAuthPage={isAuthRoute} hasHero={hasHero} hideNav={hideNav} />}
       {isAuthRoute ? (
         <Outlet />
       ) : (
@@ -188,7 +190,7 @@ function RootComponent() {
   const isPublicRoute = publicRoutes.includes(location.pathname)
   const isAuthRoute = authRoutes.includes(location.pathname)
   const hideHeader = noHeaderRoutes.includes(location.pathname)
-  const hasHero = location.pathname === '/'
+  const hasHero = heroRoutes.includes(location.pathname)
 
   if (isPublicRoute) {
     return (

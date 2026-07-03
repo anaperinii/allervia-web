@@ -39,17 +39,18 @@ export function CtaSection() {
           className="text-[clamp(1.6rem,3.2vw,2.6rem)] font-light tracking-tight leading-[1.15] max-w-160 mx-auto mb-5"
           style={{ color: 'var(--ll-ink)' }}
         >
-          Gestão imunoterápica com controle e precisão
+          Gestão imunoterápica alérgica com controle e precisão
         </h2>
         <p
-          className="text-base max-w-110 mx-auto mb-10 leading-[1.7]"
+          className="text-base max-w-125 mx-auto mb-10 leading-[1.7]"
           style={{ color: 'var(--ll-ink-muted)' }}
         >
-          Comece gratuitamente. Sem cartão de crédito. Cancele quando quiser.
+          Agende uma demonstração personalizada e veja como o Allervia se adapta ao fluxo clínico
+          da sua equipe. Sem compromisso, direto com quem entende do dia a dia da imunoterapia.
         </p>
         <div className="flex gap-3 justify-center flex-wrap">
           <MarketingCTA to="/trial" variant="filled">
-            Começar agora
+            Solicitar demonstração
           </MarketingCTA>
           <MarketingCTA
             href={CONTACT_WHATSAPP_SPECIALIST_URL}

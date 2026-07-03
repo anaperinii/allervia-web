@@ -15,9 +15,11 @@ const navLinks = [
 interface HeaderProps {
   isAuthPage?: boolean
   hasHero?: boolean
+  hideNav?: boolean
 }
 
-export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
+export function Header({ isAuthPage = false, hasHero = false, hideNav = false }: HeaderProps) {
+  const showNavLinks = !isAuthPage && !hideNav
   const [scrolled, setScrolled] = useState(false)
   const [pastHero, setPastHero] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -84,7 +86,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
           </span>
         </Link>
 
-        {!isAuthPage && (
+        {showNavLinks && (
           <ul className="hidden md:flex gap-8 list-none absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link) => (
               <li key={link.href}>
@@ -105,23 +107,38 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
         <div className="hidden md:flex gap-2.5 items-center">
           <Link
             to="/login"
-            className="px-5 py-1.5 rounded-full text-[0.8rem] font-medium cursor-pointer transition-all duration-200 no-underline"
+            className="px-5 py-1.5 rounded-xl text-[0.8rem] font-medium cursor-pointer transition-all duration-200 no-underline hover:shadow-[0_10px_24px_var(--ll-halo-accent)]"
             style={{
               border: loginBorder,
               color: brandColor,
               background: loginBg,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = isTransparent
+                ? 'rgba(255,255,255,0.10)'
+                : 'var(--ll-accent-bg-soft)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = loginBg
             }}
           >
             Log in
           </Link>
           <Link
             to="/trial"
-            className="px-5 py-1.5 rounded-full text-[0.8rem] font-semibold cursor-pointer no-underline hover:-translate-y-px"
+            className="px-5 py-1.5 rounded-xl text-[0.8rem] font-semibold cursor-pointer no-underline hover:brightness-95"
             style={{
               background: `${ctaBgGradient}, ${ctaBaseColor}`,
               color: ctaInkColor,
               boxShadow: `0 6px 18px ${ctaHaloColor}, inset 0 1px 0 rgba(255,255,255,0.4)`,
-              transition: 'background 0.5s ease, color 0.5s ease, box-shadow 0.5s ease, transform 0.2s ease',
+              transition:
+                'background 0.5s ease, color 0.5s ease, box-shadow 0.35s ease, filter 0.25s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = `0 14px 36px ${ctaHaloColor}, inset 0 1px 0 rgba(255,255,255,0.55)`
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = `0 6px 18px ${ctaHaloColor}, inset 0 1px 0 rgba(255,255,255,0.4)`
             }}
           >
             Começar agora
@@ -163,7 +180,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
         }}
       >
         <div className="flex flex-col p-6 gap-2">
-          {!isAuthPage && navLinks.map((link) => (
+          {showNavLinks && navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -175,12 +192,12 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
             </a>
           ))}
           <div
-            className={cn('flex flex-col gap-3', !isAuthPage && 'mt-4 pt-4 border-t')}
+            className={cn('flex flex-col gap-3', showNavLinks && 'mt-4 pt-4 border-t')}
             style={{ borderColor: 'var(--ll-border)' }}
           >
             <Link
               to="/login"
-              className="text-center px-4 py-2.5 rounded-full text-sm font-semibold no-underline"
+              className="text-center px-4 py-2.5 rounded-xl text-sm font-semibold no-underline"
               style={{
                 border: '1.5px solid var(--ll-border-strong)',
                 color: 'var(--ll-ink)',
@@ -190,7 +207,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
             </Link>
             <Link
               to="/trial"
-              className="text-center px-4 py-2.5 rounded-full text-sm font-semibold no-underline"
+              className="text-center px-4 py-2.5 rounded-xl text-sm font-semibold no-underline"
               style={{
                 background: `${ctaBgGradient}, ${ctaBaseColor}`,
                 color: ctaInkColor,
