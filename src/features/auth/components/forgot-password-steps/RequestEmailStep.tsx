@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { ChevronLeft, KeyRound } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
-import { Button, FieldLabel, TextInput } from '@/shared/components'
+import { FieldLabel, TextInput } from '@/shared/components'
 import type { ForgotPasswordEmailForm } from '@/features/auth/schemas/forgot-password'
 
 interface RequestEmailStepProps {
@@ -15,12 +15,19 @@ export function RequestEmailStep({ form, onSubmit }: RequestEmailStepProps) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6" noValidate>
       <div className="flex flex-col items-center text-center gap-1.5">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand/10 mb-2">
-          <KeyRound size={22} className="text-brand" />
+        <div
+          className="flex h-12 w-12 items-center justify-center rounded-full mb-2 border"
+          style={{
+            background: 'var(--ll-accent-bg-soft)',
+            borderColor: 'var(--ll-accent-border-soft)',
+          }}
+        >
+          <KeyRound size={22} style={{ color: 'var(--ll-accent-strong)' }} />
         </div>
-        <h1 className="font-extrabold text-2xl text-(--text)">Redefinição de senha</h1>
-        <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
-          Informe o e-mail associado à sua conta. Enviaremos um código de verificação para confirmar sua identidade.
+        <h1 className="font-semibold text-2xl tracking-tight text-white">Redefinição de senha</h1>
+        <p className="text-xs leading-relaxed max-w-xs" style={{ color: 'rgba(255,255,255,0.65)' }}>
+          Informe o e-mail associado à sua conta. Enviaremos um código de verificação para
+          confirmar sua identidade.
         </p>
       </div>
 
@@ -33,11 +40,26 @@ export function RequestEmailStep({ form, onSubmit }: RequestEmailStepProps) {
         />
       </FieldLabel>
 
-      <Button type="submit" tone="brand" variant="solid" prominent fullWidth size="lg" disabled={form.formState.isSubmitting}>
+      <button
+        type="submit"
+        disabled={form.formState.isSubmitting}
+        className="inline-flex w-full items-center justify-center rounded-xl py-3 text-sm font-semibold transition-all hover:brightness-95 hover:!shadow-[0_14px_40px_var(--ll-halo-accent-strong),inset_0_1px_0_rgba(255,255,255,0.55)] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
+          color: '#06232a',
+          boxShadow:
+            '0 12px 28px rgba(108,158,165,0.30), inset 0 1px 0 rgba(255,255,255,0.4)',
+        }}
+      >
         Enviar código de verificação
-      </Button>
+      </button>
 
-      <Link to="/login" className="flex items-center justify-start gap-1.5 text-xs font-medium text-(--text-muted) hover:text-brand no-underline transition-colors">
+      <Link
+        to="/login"
+        className="flex items-center justify-start gap-1.5 text-xs font-medium no-underline transition-colors"
+        style={{ color: 'rgba(255,255,255,0.65)' }}
+      >
         <ChevronLeft size={13} />
         Voltar
       </Link>

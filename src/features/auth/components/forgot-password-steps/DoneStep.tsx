@@ -1,27 +1,51 @@
+import { Link } from '@tanstack/react-router'
 import { CheckCircle, ShieldCheck } from 'lucide-react'
-import { Button } from '@/shared/components'
 
 export function DoneStep() {
   return (
     <>
       <div className="flex flex-col items-center text-center gap-1.5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 mb-2">
-          <CheckCircle size={26} className="text-brand" />
+        <div
+          className="flex h-14 w-14 items-center justify-center rounded-full mb-2 border"
+          style={{
+            background: 'var(--ll-accent-bg-soft)',
+            borderColor: 'var(--ll-accent-border-soft)',
+          }}
+        >
+          <CheckCircle size={26} style={{ color: 'var(--ll-accent-strong)' }} />
         </div>
-        <h1 className="font-extrabold text-2xl text-(--text)">Senha redefinida</h1>
-        <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
-          Sua senha foi atualizada com sucesso. Agora você pode acessar sua conta com a nova senha. Por segurança, todas as sessões anteriores foram encerradas.
+        <h1 className="font-semibold text-2xl tracking-tight text-white">Senha redefinida</h1>
+        <p className="text-xs leading-relaxed max-w-xs" style={{ color: 'rgba(255,255,255,0.65)' }}>
+          Sua senha foi atualizada com sucesso. Agora você pode acessar sua conta com a nova
+          senha. Por segurança, todas as sessões anteriores foram encerradas.
         </p>
       </div>
 
-      <Button tone="brand" variant="solid" prominent fullWidth size="lg" to="/login">
+      <Link
+        to="/login"
+        className="inline-flex w-full items-center justify-center rounded-xl py-3 text-sm font-semibold transition-all hover:brightness-95 hover:!shadow-[0_14px_40px_var(--ll-halo-accent-strong),inset_0_1px_0_rgba(255,255,255,0.55)] no-underline cursor-pointer"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
+          color: '#06232a',
+          boxShadow:
+            '0 12px 28px rgba(108,158,165,0.30), inset 0 1px 0 rgba(255,255,255,0.4)',
+        }}
+      >
         Acessar minha conta
-      </Button>
+      </Link>
 
-      <div className="flex items-center gap-2 bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5">
-        <ShieldCheck size={14} className="text-brand shrink-0" />
-        <p className="text-[0.6rem] text-(--text-muted) leading-relaxed">
-          Caso não tenha solicitado esta alteração, entre em contato imediatamente com nosso suporte pelo e-mail seguranca@allervia.com.br.
+      <div
+        className="flex items-center gap-2 rounded-lg px-3.5 py-2.5"
+        style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.10)',
+        }}
+      >
+        <ShieldCheck size={14} className="shrink-0" style={{ color: 'var(--ll-accent-strong)' }} />
+        <p className="text-[0.6rem] leading-relaxed" style={{ color: 'rgba(255,255,255,0.60)' }}>
+          Caso não tenha solicitado esta alteração, entre em contato imediatamente com nosso
+          suporte pelo e-mail seguranca@allervia.com.br.
         </p>
       </div>
     </>

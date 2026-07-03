@@ -53,7 +53,7 @@ export function AutomationSection() {
                 }}
               >
                 <div className="mb-5 transition-transform duration-300 group-hover:scale-[1.04]">
-                  <AutomationGlyph kind={feature.kind} size={88} delay={index * 140} />
+                  <AutomationGlyph kind={feature.kind} size={72} delay={index * 140} />
                 </div>
                 <h4 className="text-base font-semibold mb-2" style={{ color: 'var(--ll-ink)' }}>
                   {feature.title}

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { UserRound } from 'lucide-react'
 import { AuthLayout } from '@/features/auth/components/AuthLayout'
 import { loginSchema, type LoginForm } from '@/features/auth/schemas/login'
-import { Button, FieldLabel, TextInput, PasswordInput } from '@/shared/components'
+import { FieldLabel, TextInput, PasswordInput } from '@/shared/components'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -26,13 +26,25 @@ export function LoginPage() {
   return (
     <AuthLayout>
       <div className="flex flex-col items-center text-center gap-1.5">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand/10 mb-2">
-          <UserRound size={22} className="text-brand" />
+        <div
+          className="flex h-12 w-12 items-center justify-center rounded-full mb-2 border"
+          style={{
+            background: 'var(--ll-accent-bg-soft)',
+            borderColor: 'var(--ll-accent-border-soft)',
+          }}
+        >
+          <UserRound size={22} style={{ color: 'var(--ll-accent-strong)' }} />
         </div>
-        <h1 className="font-extrabold text-2xl text-(--text)">Bem-vindo(a) de volta</h1>
-        <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
+        <h1 className="font-semibold text-2xl tracking-tight text-white">Bem-vindo(a) de volta</h1>
+        <p className="text-xs leading-relaxed max-w-xs" style={{ color: 'rgba(255,255,255,0.65)' }}>
           Não possui uma conta?{' '}
-          <Link to="/trial" className="font-medium text-brand hover:underline no-underline">Começar agora</Link>
+          <Link
+            to="/trial"
+            className="font-medium hover:underline no-underline"
+            style={{ color: 'var(--ll-accent-strong)' }}
+          >
+            Solicitar demonstração
+          </Link>
         </p>
       </div>
 
@@ -59,11 +71,28 @@ export function LoginPage() {
         </FieldLabel>
 
         <div className="flex flex-col gap-3">
-          <Button type="submit" tone="brand" variant="solid" prominent fullWidth size="lg" disabled={isSubmitting}>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex w-full items-center justify-center rounded-xl py-3 text-sm font-semibold transition-all hover:brightness-95 hover:!shadow-[0_14px_40px_var(--ll-halo-accent-strong),inset_0_1px_0_rgba(255,255,255,0.55)] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
+              color: '#06232a',
+              boxShadow:
+                '0 12px 28px rgba(108,158,165,0.30), inset 0 1px 0 rgba(255,255,255,0.4)',
+            }}
+          >
             Log in
-          </Button>
+          </button>
           <div className="flex justify-end">
-            <Link to="/forgot-password" className="text-xs font-medium text-brand hover:underline no-underline">Esqueceu a senha?</Link>
+            <Link
+              to="/forgot-password"
+              className="text-xs font-medium hover:underline no-underline"
+              style={{ color: 'var(--ll-accent-strong)' }}
+            >
+              Esqueceu a senha?
+            </Link>
           </div>
         </div>
       </form>
