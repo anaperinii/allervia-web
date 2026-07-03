@@ -139,6 +139,8 @@
     --ll-halo-accent-strong: rgba(108,158,165,0.18);
     --ll-halo-dot: rgba(155,193,196,0.12);
     --ll-halo-soft: rgba(108,158,165,0.08);
+    --ll-cta-halo: rgba(108,158,165,0.30);
+    --ll-cta-halo-hover: rgba(108,158,165,0.45);
     --ll-hero-border: rgba(255,255,255,0.85);
     --ll-hero-frame-pad: 0px;
     --ll-hero-frame-radius: 0px;
@@ -177,6 +179,8 @@
     --ll-halo-accent-strong: rgba(37,126,140,0.18);
     --ll-halo-dot: rgba(108,158,165,0.20);
     --ll-halo-soft: rgba(108,158,165,0.12);
+    --ll-cta-halo: rgba(37,126,140,0.35);
+    --ll-cta-halo-hover: rgba(37,126,140,0.50);
     --ll-hero-border: rgba(255,255,255,1);
     --ll-hero-frame-pad: 16px;
     --ll-hero-frame-radius: 32px;

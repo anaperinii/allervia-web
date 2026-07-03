@@ -18,11 +18,11 @@ export function NewPasswordStep({ form, onSubmit }: NewPasswordStepProps) {
         <div
           className="flex h-12 w-12 items-center justify-center rounded-full mb-2 border"
           style={{
-            background: 'var(--ll-accent-bg-soft)',
-            borderColor: 'var(--ll-accent-border-soft)',
+            background: 'rgba(108,158,165,0.18)',
+            borderColor: 'rgba(108,158,165,0.30)',
           }}
         >
-          <ShieldCheck size={22} style={{ color: 'var(--ll-accent-strong)' }} />
+          <ShieldCheck size={22} style={{ color: '#9BC1C4' }} />
         </div>
         <h1 className="font-semibold text-2xl tracking-tight text-white">Criar nova senha</h1>
         <p className="text-xs leading-relaxed max-w-xs" style={{ color: 'rgba(255,255,255,0.65)' }}>
@@ -53,7 +53,7 @@ export function NewPasswordStep({ form, onSubmit }: NewPasswordStepProps) {
       <button
         type="submit"
         disabled={form.formState.isSubmitting}
-        className="inline-flex w-full items-center justify-center rounded-xl py-3 text-sm font-semibold transition-all hover:brightness-95 hover:!shadow-[0_14px_40px_var(--ll-halo-accent-strong),inset_0_1px_0_rgba(255,255,255,0.55)] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+        className="inline-flex w-full items-center justify-center rounded-xl py-3 text-sm font-semibold transition-all hover:brightness-95 hover:shadow-[0_14px_40px_rgba(108,158,165,0.45),inset_0_1px_0_rgba(255,255,255,0.55)]! disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
         style={{
           background:
             'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',

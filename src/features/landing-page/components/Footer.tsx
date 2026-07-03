@@ -37,8 +37,16 @@ export function Footer() {
                   {link.href ? (
                     <a
                       href={link.href}
-                      className="text-[0.85rem] no-underline transition-colors duration-200"
+                      className="text-[0.85rem] no-underline transition-all duration-200 hover:translate-x-0.5"
                       style={{ color: 'var(--ll-ink-muted)' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'var(--ll-ink-strong)'
+                        e.currentTarget.style.textShadow = '0 0 12px var(--ll-halo-accent-strong)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'var(--ll-ink-muted)'
+                        e.currentTarget.style.textShadow = 'none'
+                      }}
                     >
                       {link.label}
                     </a>
