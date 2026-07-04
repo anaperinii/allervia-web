@@ -22,10 +22,15 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
     <>
       <div className="flex flex-col items-center text-center gap-1.5">
         <div
-          className="flex h-12 w-12 items-center justify-center rounded-full mb-2 border"
+          className="relative flex h-12 w-12 items-center justify-center rounded-full mb-2 overflow-hidden"
           style={{
-            background: 'rgba(108,158,165,0.18)',
-            borderColor: 'rgba(108,158,165,0.30)',
+            background:
+              'radial-gradient(circle at 20% 22%, rgba(255,255,255,0.28) 0%, transparent 40%), radial-gradient(circle at 80% 18%, rgba(255,255,255,0.16) 0%, transparent 45%), radial-gradient(circle at 78% 82%, rgba(255,255,255,0.22) 0%, transparent 45%), radial-gradient(circle at 22% 80%, rgba(255,255,255,0.14) 0%, transparent 42%), rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.22)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            boxShadow:
+              'inset 0 0 14px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.20)',
           }}
         >
           <Mail size={22} style={{ color: '#9BC1C4' }} />

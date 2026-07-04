@@ -1,9 +1,21 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { Home, Syringe, CalendarDays, BarChart3, Bell, Settings } from 'lucide-react'
+import {
+  Home,
+  Syringe,
+  CalendarDays,
+  BarChart3,
+  Bell,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
+import { AllerviaLogo } from '@/features/landing-page/components/AllerviaLogo'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { useSidebarStore } from '@/shared/layout/useSidebarStore'
+import { SidebarProfile } from '@/shared/layout/SidebarProfile'
 
 interface SidebarItem {
   icon: LucideIcon
@@ -26,29 +38,61 @@ const ITEMS: SidebarItem[] = [
   },
 ]
 
-function SidebarLink({ item, isActive }: { item: SidebarItem; isActive: boolean }) {
+interface SidebarLinkProps {
+  item: SidebarItem
+  isActive: boolean
+  isCollapsed: boolean
+}
+
+function SidebarLink({ item, isActive, isCollapsed }: SidebarLinkProps) {
   const Icon = item.icon
   return (
     <Link
       to={item.path}
-      className={cn(
-        'group relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200',
-        isActive
-          ? 'bg-brand text-white shadow-[0_4px_12px_rgba(20,184,166,0.35)]'
-          : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700',
-      )}
       aria-label={item.label}
+      className={cn(
+        'group relative flex items-center rounded-xl transition-all duration-200 no-underline',
+        isCollapsed ? 'h-10 w-10 justify-center mx-auto' : 'h-10 gap-3 px-3',
+      )}
+      style={{
+        background: isActive ? 'rgba(255,255,255,0.10)' : 'transparent',
+        color: isActive ? '#DCE1E5' : 'rgba(220,225,229,0.65)',
+      }}
+      onMouseEnter={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+          e.currentTarget.style.color = '#DCE1E5'
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = 'rgba(220,225,229,0.65)'
+        }
+      }}
     >
-      <Icon size={18} strokeWidth={2} />
-      <span className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[0.7rem] font-medium text-white opacity-0 shadow-md transition-opacity duration-200 group-hover:opacity-100">
-        {item.label}
-      </span>
+      <Icon size={18} strokeWidth={1.8} className="shrink-0" />
+      {!isCollapsed && <span className="text-[0.85rem] font-medium whitespace-nowrap">{item.label}</span>}
+      {isCollapsed && (
+        <span
+          className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50"
+          style={{
+            background: 'rgba(8,25,29,0.95)',
+            color: '#DCE1E5',
+            border: '1px solid rgba(220,225,229,0.12)',
+          }}
+        >
+          {item.label}
+        </span>
+      )}
     </Link>
   )
 }
 
 export function Sidebar() {
   const location = useLocation()
+  const isCollapsed = useSidebarStore((s) => s.isCollapsed)
+  const toggle = useSidebarStore((s) => s.toggle)
   const { selectedPatient, setSelectedPatient } = usePatientStore()
 
   useEffect(() => {
@@ -58,15 +102,80 @@ export function Sidebar() {
   }, [location.pathname, selectedPatient, setSelectedPatient])
 
   return (
-    <aside className="fixed left-5 top-1/2 z-30 -translate-y-1/2 flex w-14 flex-col items-center gap-1.5 rounded-full border border-slate-200/70 bg-white py-4 shadow-[0_8px_32px_rgba(15,23,42,0.06)]">
-      <nav className="flex flex-col items-center gap-1.5">
+    <aside
+      className={cn(
+        'relative flex flex-col shrink-0 rounded-xl transition-[width] duration-300 ease-out',
+        isCollapsed ? 'w-16' : 'w-56',
+      )}
+      style={{
+        background:
+          'linear-gradient(180deg, #4d7e85 0%, #234e58 100%)',
+      }}
+    >
+      <Link
+        to="/home"
+        className={cn(
+          'flex items-center no-underline transition-all duration-300',
+          isCollapsed ? 'justify-center h-17 px-0' : 'gap-2.5 h-17 px-5',
+        )}
+      >
+        <AllerviaLogo size={28} color="#9BC1C4" />
+        {!isCollapsed && (
+          <span
+            className="text-lg font-semibold tracking-[2px]"
+            style={{ color: '#DCE1E5' }}
+          >
+            ALLERVIA
+          </span>
+        )}
+      </Link>
+
+      <nav
+        className={cn(
+          'flex-1 flex flex-col gap-1 mt-2 overflow-y-auto',
+          isCollapsed ? 'px-3' : 'px-3',
+        )}
+      >
         {ITEMS.map((item) => {
           const isActive =
             location.pathname === item.path ||
             (item.matchPaths?.includes(location.pathname) ?? false)
-          return <SidebarLink key={item.path} item={item} isActive={isActive} />
+          return (
+            <SidebarLink
+              key={item.path}
+              item={item}
+              isActive={isActive}
+              isCollapsed={isCollapsed}
+            />
+          )
         })}
       </nav>
+
+      <div
+        className="p-3 pb-5"
+        style={{ borderTop: '1px solid rgba(220,225,229,0.06)' }}
+      >
+        <SidebarProfile isCollapsed={isCollapsed} />
+      </div>
+
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={isCollapsed ? 'Expandir menu' : 'Colapsar menu'}
+        className="absolute top-20 right-0 translate-x-[85%] flex h-7 w-7 items-center justify-center rounded-full overflow-hidden transition-all duration-200 z-30 cursor-pointer hover:scale-110"
+        style={{
+          background:
+            'radial-gradient(circle at 20% 22%, rgba(255,255,255,0.28) 0%, transparent 40%), radial-gradient(circle at 80% 18%, rgba(255,255,255,0.16) 0%, transparent 45%), radial-gradient(circle at 78% 82%, rgba(255,255,255,0.22) 0%, transparent 45%), radial-gradient(circle at 22% 80%, rgba(255,255,255,0.14) 0%, transparent 42%), rgba(255,255,255,0.03)',
+          color: '#EDF2F3',
+          border: '1px solid rgba(255,255,255,0.22)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          boxShadow:
+            'inset 0 0 14px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.20)',
+        }}
+      >
+        {isCollapsed ? <ChevronRight size={14} strokeWidth={2.5} /> : <ChevronLeft size={14} strokeWidth={2.5} />}
+      </button>
     </aside>
   )
 }
