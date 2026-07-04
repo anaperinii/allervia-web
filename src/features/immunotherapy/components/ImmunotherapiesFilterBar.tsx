@@ -83,7 +83,7 @@ export function ImmunotherapiesFilterBar({
           className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold no-underline transition-all cursor-pointer hover:brightness-95 hover:shadow-[0_14px_40px_rgba(108,158,165,0.45),inset_0_1px_0_rgba(255,255,255,0.55)]!"
           style={{
             background:
-              'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), linear-gradient(180deg, #A2C1C6 0%, #6C9EA5 100%)',
+              'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
             color: '#ffffff',
             boxShadow: '0 12px 28px rgba(108,158,165,0.30), inset 0 1px 0 rgba(255,255,255,0.4)',
           }}
@@ -99,7 +99,7 @@ export function ImmunotherapiesFilterBar({
           className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold no-underline transition-all cursor-pointer hover:brightness-95 hover:shadow-[0_14px_40px_rgba(108,158,165,0.45),inset_0_1px_0_rgba(255,255,255,0.55)]!"
           style={{
             background:
-              'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), linear-gradient(180deg, #A2C1C6 0%, #6C9EA5 100%)',
+              'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
             color: '#ffffff',
             boxShadow: '0 12px 28px rgba(108,158,165,0.30), inset 0 1px 0 rgba(255,255,255,0.4)',
           }}
