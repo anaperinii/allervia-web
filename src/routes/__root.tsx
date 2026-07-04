@@ -82,7 +82,7 @@ function RootComponent() {
 
   return (
     <div
-      className="flex h-screen overflow-hidden p-2 gap-2"
+      className="flex h-screen overflow-hidden"
       style={{
         background:
           'linear-gradient(180deg, #4d7e85 0%, #234e58 100%)',
@@ -91,10 +91,9 @@ function RootComponent() {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <div
-          className="flex-1 flex flex-col rounded-2xl overflow-hidden relative"
+          className="flex-1 flex flex-col overflow-hidden relative rounded-l-2xl"
           style={{
-            background:
-              'linear-gradient(to right, rgba(77,126,133,0.18) 0%, rgba(77,126,133,0) 64px), #f8fafc',
+            background: '#E4E9EA',
           }}
         >
           <PageTransition key={location.pathname}>

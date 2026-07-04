@@ -56,7 +56,7 @@ export function ExportReportPage() {
           <IconButton aria-label="Voltar" variant="danger" onClick={() => setShowCancelModal(true)}>
             <ChevronLeft size={18} />
           </IconButton>
-          <h1 className="text-3xl font-semibold text-(--text)">Exportar Relatório</h1>
+          <h1 className="text-3xl font-medium text-(--text)">Exportar Relatório</h1>
         </div>
 
         <div className="flex flex-1 min-h-0 overflow-hidden">

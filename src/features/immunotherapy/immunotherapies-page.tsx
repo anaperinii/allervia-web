@@ -30,7 +30,7 @@ export function ImmunotherapiesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState('Todos os tipos')
   const [intervalFilter, setIntervalFilter] = useState('Todos os intervalos')
-  const [showInactive, setShowInactive] = useState(false)
+  const [statusFilter, setStatusFilter] = useState('active')
   const [modalityTab, setModalityTab] = useState<ModalityTab>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -52,11 +52,11 @@ export function ImmunotherapiesPage() {
       const matchSearch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase())
       const matchType = typeFilter === 'Todos os tipos' || item.type === typeFilter
       const matchInterval = intervalFilter === 'Todos os intervalos' || item.cycleInterval.days.toString() === intervalFilter
-      const matchStatus = showInactive ? item.status === 'inactive' : item.status === 'active'
+      const matchStatus = statusFilter === 'all' || item.status === statusFilter
       const matchModality = modalityTab === 'all' || item.modality === modalityTab
       return matchDoctor && matchSearch && matchType && matchInterval && matchStatus && matchModality
     })
-  }, [immunotherapies, searchTerm, typeFilter, intervalFilter, showInactive, doctorFilter, modalityTab])
+  }, [immunotherapies, searchTerm, typeFilter, intervalFilter, statusFilter, doctorFilter, modalityTab])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
   const paginated = useMemo(() => {
@@ -66,7 +66,7 @@ export function ImmunotherapiesPage() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, typeFilter, intervalFilter, showInactive, itemsPerPage, modalityTab])
+  }, [searchTerm, typeFilter, intervalFilter, statusFilter, itemsPerPage, modalityTab])
 
   const handleSelect = (item: Immunotherapy) => {
     setSelectedPatient(buildPatientFromImmunotherapy(item))
@@ -76,7 +76,7 @@ export function ImmunotherapiesPage() {
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-7 pb-5">
       <div className="mb-7">
-        <h1 className="mb-5 text-3xl font-semibold text-(--text)">Imunoterapias</h1>
+        <h1 className="mb-8 text-3xl font-medium text-(--text)">Imunoterapias</h1>
         <ImmunotherapiesFilterBar
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -84,8 +84,8 @@ export function ImmunotherapiesPage() {
           setTypeFilter={setTypeFilter}
           intervalFilter={intervalFilter}
           setIntervalFilter={setIntervalFilter}
-          showInactive={showInactive}
-          setShowInactive={setShowInactive}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
           types={types}
           intervals={intervals}
           canAddImmunotherapy={canAddImmunotherapy}

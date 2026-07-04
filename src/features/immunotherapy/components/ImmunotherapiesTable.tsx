@@ -63,8 +63,8 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
                 <td className="px-4 py-2 text-xs text-(--text-muted)">{item.doseConcentration}</td>
                 <td className="px-4 py-2">
                   <span
-                    className="inline-flex items-center gap-1.5 px-2 py-px rounded-full text-[0.65rem] font-semibold border"
-                    style={{ backgroundColor: color.bg, color: color.text, borderColor: color.dot + '30' }}
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[0.65rem] font-semibold"
+                    style={{ backgroundColor: color.bg, color: color.text }}
                   >
                     <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color.dot }} />
                     {item.cycleInterval.days} dias

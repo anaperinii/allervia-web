@@ -55,7 +55,9 @@ function SidebarLink({ item, isActive, isCollapsed }: SidebarLinkProps) {
         isCollapsed ? 'h-10 w-10 justify-center mx-auto' : 'h-10 gap-3 px-3',
       )}
       style={{
-        background: isActive ? 'rgba(255,255,255,0.10)' : 'transparent',
+        background: isActive
+          ? 'linear-gradient(90deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 55%, rgba(255,255,255,0) 100%)'
+          : 'transparent',
         color: isActive ? '#DCE1E5' : 'rgba(220,225,229,0.65)',
       }}
       onMouseEnter={(e) => {
@@ -130,12 +132,7 @@ export function Sidebar() {
         )}
       </Link>
 
-      <nav
-        className={cn(
-          'flex-1 flex flex-col gap-1 mt-2 overflow-y-auto',
-          isCollapsed ? 'px-3' : 'px-3',
-        )}
-      >
+      <nav className="flex-1 flex flex-col gap-1 mt-2 px-3 overflow-visible min-h-0">
         {ITEMS.map((item) => {
           const isActive =
             location.pathname === item.path ||
@@ -152,17 +149,33 @@ export function Sidebar() {
       </nav>
 
       <div
-        className="p-3 pb-5"
+        className="relative p-3 pb-5"
         style={{ borderTop: '1px solid rgba(220,225,229,0.06)' }}
       >
-        <SidebarProfile isCollapsed={isCollapsed} />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle, rgba(220,225,229,0.4) 1.1px, transparent 1.6px)',
+            backgroundSize: '14px 14px',
+            backgroundPosition: 'center bottom',
+            WebkitMaskImage:
+              'radial-gradient(130% 110% at 50% 100%, #000 0%, rgba(0,0,0,0.4) 35%, transparent 72%)',
+            maskImage:
+              'radial-gradient(130% 110% at 50% 100%, #000 0%, rgba(0,0,0,0.4) 35%, transparent 72%)',
+          }}
+        />
+        <div className="relative">
+          <SidebarProfile isCollapsed={isCollapsed} />
+        </div>
       </div>
 
       <button
         type="button"
         onClick={toggle}
         aria-label={isCollapsed ? 'Expandir menu' : 'Colapsar menu'}
-        className="absolute top-20 right-0 translate-x-[85%] flex h-7 w-7 items-center justify-center rounded-full overflow-hidden transition-all duration-200 z-30 cursor-pointer hover:scale-110"
+        className="absolute top-20 right-0 translate-x-[55%] flex h-7 w-7 items-center justify-center rounded-full overflow-hidden transition-all duration-200 z-30 cursor-pointer hover:scale-110"
         style={{
           background:
             'radial-gradient(circle at 20% 22%, rgba(255,255,255,0.28) 0%, transparent 40%), radial-gradient(circle at 80% 18%, rgba(255,255,255,0.16) 0%, transparent 45%), radial-gradient(circle at 78% 82%, rgba(255,255,255,0.22) 0%, transparent 45%), radial-gradient(circle at 22% 80%, rgba(255,255,255,0.14) 0%, transparent 42%), rgba(255,255,255,0.03)',

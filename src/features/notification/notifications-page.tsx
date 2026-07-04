@@ -106,7 +106,7 @@ export function NotificationsPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-7 pb-5">
-      <div className="mb-5">
+      <div className="mb-8">
         <NotificationsHeader unreadCount={unreadCount} />
       </div>
 

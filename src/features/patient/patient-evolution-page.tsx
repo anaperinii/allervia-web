@@ -242,13 +242,13 @@ export function PatientEvolutionPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-8 pb-5">
-      <div className="mb-5 flex items-center gap-3">
+      <div className="mb-8 flex items-center gap-3">
         <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
           <ChevronLeft size={16} />
         </IconButton>
         {selectedImmunotherapy ? (
           <div className="flex items-end gap-2.5">
-            <h1 className="text-3xl font-semibold leading-none text-(--text-muted)">Evolução do Paciente</h1>
+            <h1 className="text-3xl font-medium leading-none text-(--text-muted)">Evolução do Paciente</h1>
             <div key={selectedImmunotherapy.id} className="flex items-end gap-2.5">
               <span
                 className="text-2xl font-light leading-none text-(--text-muted)/60 mb-0.5"
@@ -271,7 +271,7 @@ export function PatientEvolutionPage() {
             </div>
           </div>
         ) : (
-          <h1 className="text-3xl font-semibold text-(--text)">Evolução do Paciente</h1>
+          <h1 className="text-3xl font-medium text-(--text)">Evolução do Paciente</h1>
         )}
       </div>
 

@@ -35,7 +35,7 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
             <>
               <Link
                 to="/settings"
-                className="text-3xl font-semibold leading-none text-(--text-muted) hover:text-(--text) transition-colors no-underline"
+                className="text-3xl font-medium leading-none text-(--text-muted) hover:text-(--text) transition-colors no-underline"
               >
                 Configurações
               </Link>
@@ -43,7 +43,7 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
               <span className="text-xl font-medium leading-none text-(--text) mb-0.5">{subtitle}</span>
             </>
           ) : (
-            <h1 className="text-3xl font-semibold leading-none text-(--text)">Configurações</h1>
+            <h1 className="text-3xl font-medium leading-none text-(--text)">Configurações</h1>
           )}
         </div>
         {headerActions && <div className="flex items-center gap-2">{headerActions}</div>}

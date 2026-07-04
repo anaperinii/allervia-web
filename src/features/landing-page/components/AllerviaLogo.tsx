@@ -14,6 +14,10 @@ const DOTS = [
   { x: -11, y: 22, r: 1.7 }, { x: 0, y: 22, r: 2.3 }, { x: 11, y: 22, r: 1.7 },
 ]
 
+// Furthest dots sit at (±22, ±11) → hypot ≈ 24.6. Used to fade dots from a
+// strong center peak out to lighter tips.
+const MAX_DOT_DISTANCE = Math.hypot(22, 11)
+
 export function AllerviaLogo({
   size = 56,
   color = '#6C9EA5',
@@ -32,9 +36,11 @@ export function AllerviaLogo({
       aria-label="Allervia"
     >
       <g fill={color} transform={withWordmark ? 'translate(35 40)' : 'translate(35 35)'}>
-        {DOTS.map((d, i) => (
-          <circle key={i} cx={d.x} cy={d.y} r={d.r} />
-        ))}
+        {DOTS.map((d, i) => {
+          const distance = Math.hypot(d.x, d.y)
+          const fillOpacity = 1 - (distance / MAX_DOT_DISTANCE) * 0.5
+          return <circle key={i} cx={d.x} cy={d.y} r={d.r} fillOpacity={fillOpacity} />
+        })}
       </g>
       {withWordmark && (
         <text
