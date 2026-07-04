@@ -68,7 +68,7 @@ export function PricingSection() {
                   className="text-center py-2 text-[0.7rem] font-semibold uppercase tracking-[2px]"
                   style={{
                     background:
-                      'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), var(--ll-accent)',
+                      'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), var(--ll-accent-fill)',
                     color: 'var(--ll-accent-ink)',
                   }}
                 >

@@ -121,6 +121,7 @@
     --ll-ink-muted: #7FA6AC;
     --ll-ink-tertiary: #4d7e85;
     --ll-accent: #6C9EA5;
+    --ll-accent-fill: #6C9EA5;
     --ll-accent-strong: #9BC1C4;
     --ll-accent-ink: #06232a;
     --ll-accent-bg-soft: rgba(108,158,165,0.18);
@@ -161,6 +162,7 @@
     --ll-ink-muted: #587E84;
     --ll-ink-tertiary: #8ba8ad;
     --ll-accent: #257E8C;
+    --ll-accent-fill: linear-gradient(180deg, #588a91 0%, #4d7e85 100%);
     --ll-accent-strong: #1d6772;
     --ll-accent-ink: #ffffff;
     --ll-accent-bg-soft: rgba(37,126,140,0.10);

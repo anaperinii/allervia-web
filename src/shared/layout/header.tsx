@@ -64,7 +64,7 @@ export function Header({
   const loginBg = isTransparent ? 'rgba(255,255,255,0.04)' : 'transparent'
 
   const ctaBgGradient = 'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%)'
-  const ctaBaseColor = isTransparent ? '#6C9EA5' : 'var(--ll-accent)'
+  const ctaBaseColor = isTransparent ? '#6C9EA5' : 'var(--ll-accent-fill)'
   const ctaInkColor = isTransparent ? '#06232a' : 'var(--ll-accent-ink)'
   const ctaHaloColor = isTransparent ? 'rgba(108,158,165,0.30)' : 'var(--ll-cta-halo)'
   const ctaHaloHoverColor = isTransparent ? 'rgba(108,158,165,0.45)' : 'var(--ll-cta-halo-hover)'

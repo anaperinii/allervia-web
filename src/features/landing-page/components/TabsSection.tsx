@@ -68,7 +68,7 @@ export function TabsSection() {
                 isActive
                   ? {
                       background:
-                        'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), var(--ll-accent)',
+                        'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), var(--ll-accent-fill)',
                       color: 'var(--ll-accent-ink)',
                       boxShadow:
                         '0 4px 16px var(--ll-halo-accent-strong), inset 0 1px 0 rgba(255,255,255,0.4)',
