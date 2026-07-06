@@ -415,11 +415,11 @@ textarea:-webkit-autofill:focus {
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(100, 116, 139, 0.35);
+    background: rgba(148, 163, 184, 0.4);
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(100, 116, 139, 0.55);
+    background: rgba(148, 163, 184, 0.6);
   }
 }

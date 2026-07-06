@@ -111,10 +111,7 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
 
       {open && (
         <div
-          className={cn(
-            'absolute w-64 rounded-xl overflow-hidden z-50',
-            isCollapsed ? 'bottom-0 left-full ml-3' : 'bottom-full left-0 mb-2',
-          )}
+          className="absolute w-64 rounded-xl overflow-hidden z-50 bottom-full left-0 mb-2"
           style={{
             background: 'rgba(255,255,255,0.68)',
             backdropFilter: 'blur(20px) saturate(150%)',

@@ -19,7 +19,7 @@ interface VariantStyle {
 
 const VARIANT_CLASS: Record<ToastVariant, VariantStyle> = {
   success: {
-    bg: 'bg-emerald-100',
+    bg: 'bg-emerald-100/70',
     border: 'border-emerald-300',
     iconBg: 'bg-emerald-200',
     iconColor: 'text-emerald-700',
@@ -29,7 +29,7 @@ const VARIANT_CLASS: Record<ToastVariant, VariantStyle> = {
     solidBorder: 'border-emerald-300/60',
   },
   warning: {
-    bg: 'bg-yellow-100',
+    bg: 'bg-yellow-100/70',
     border: 'border-yellow-300',
     iconBg: 'bg-yellow-200',
     iconColor: 'text-yellow-700',
@@ -39,7 +39,7 @@ const VARIANT_CLASS: Record<ToastVariant, VariantStyle> = {
     solidBorder: 'border-yellow-300/60',
   },
   info: {
-    bg: 'bg-teal-100',
+    bg: 'bg-teal-100/70',
     border: 'border-teal-300',
     iconBg: 'bg-teal-200',
     iconColor: 'text-teal-700',
@@ -49,7 +49,7 @@ const VARIANT_CLASS: Record<ToastVariant, VariantStyle> = {
     solidBorder: 'border-teal-300/60',
   },
   danger: {
-    bg: 'bg-red-100',
+    bg: 'bg-red-100/70',
     border: 'border-red-300',
     iconBg: 'bg-red-200',
     iconColor: 'text-red-700',
@@ -123,7 +123,7 @@ export function Toast({
           <p className="text-xs font-semibold">{title}</p>
         </div>
       ) : (
-        <div className={cn('flex items-start gap-3 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] p-4 w-95 border', v.bg, v.border)}>
+        <div className={cn('flex items-start gap-3 rounded-xl backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.5)] p-4 w-95 border', v.bg, v.border)}>
           <div className={cn('flex h-8 w-8 items-center justify-center rounded-full shrink-0 mt-0.5', v.iconBg, v.iconColor)}>
             {icon}
           </div>

@@ -1,7 +1,6 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import {
-  Home,
   Syringe,
   CalendarDays,
   BarChart3,
@@ -25,7 +24,6 @@ interface SidebarItem {
 }
 
 const ITEMS: SidebarItem[] = [
-  { icon: Home, label: 'Início', path: '/home' },
   { icon: Syringe, label: 'Imunoterapias', path: '/immunotherapies', matchPaths: ['/add-immunotherapy'] },
   { icon: CalendarDays, label: 'Agendamentos', path: '/appointments' },
   { icon: BarChart3, label: 'Dashboard', path: '/dashboard', matchPaths: ['/export-report'] },
@@ -116,7 +114,7 @@ export function Sidebar() {
       }}
     >
       <Link
-        to="/home"
+        to="/immunotherapies"
         className={cn(
           'flex items-center no-underline transition-all duration-300',
           isCollapsed ? 'justify-center h-17 px-0' : 'gap-2.5 h-17 px-5',
