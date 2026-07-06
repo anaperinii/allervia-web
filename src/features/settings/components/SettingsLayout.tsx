@@ -54,7 +54,7 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
           className="relative mb-8 flex items-center gap-6 overflow-hidden rounded-xl bg-white/45 px-8 py-6 shadow-[0_4px_24px_rgba(0,0,0,0.06)] backdrop-blur-xl"
           style={{
             backgroundImage:
-              'linear-gradient(105deg, rgba(24,193,203,0.13) 0%, rgba(77,212,219,0.07) 25%, rgba(230,249,250,0.03) 55%, transparent 80%)',
+              'linear-gradient(105deg, rgba(108,158,165,0.13) 0%, rgba(155,193,196,0.07) 25%, rgba(234,241,241,0.03) 55%, transparent 80%)',
           }}
         >
           <div className="relative h-18 w-18 shrink-0" style={{ width: '72px', height: '72px' }}>
@@ -67,9 +67,9 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
                 top: '5px',
                 right: '3px',
                 borderRadius: '15px',
-                background: 'linear-gradient(150deg, #4DD4DB 0%, #18C1CB 55%, #0FA8B2 100%)',
+                background: 'linear-gradient(150deg, #9BC1C4 0%, #6C9EA5 55%, #4d7e85 100%)',
                 transform: 'rotate(14deg)',
-                boxShadow: '0 10px 18px rgba(15,118,144,0.30)',
+                boxShadow: '0 10px 18px rgba(77,126,133,0.30)',
               }}
             />
             <div
@@ -81,19 +81,19 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
                 left: '0',
                 borderRadius: '18px',
                 background:
-                  'linear-gradient(155deg, rgba(230,249,250,0.65) 0%, rgba(77,212,219,0.45) 100%)',
+                  'linear-gradient(155deg, rgba(234,241,241,0.65) 0%, rgba(155,193,196,0.45) 100%)',
                 backdropFilter: 'blur(10px) saturate(140%)',
                 WebkitBackdropFilter: 'blur(10px) saturate(140%)',
                 border: '1.5px solid rgba(255,255,255,0.55)',
                 boxShadow:
-                  '0 12px 22px rgba(24,193,203,0.22), inset 0 1px 1px rgba(255,255,255,0.65)',
+                  '0 12px 22px rgba(108,158,165,0.22), inset 0 1px 1px rgba(255,255,255,0.65)',
               }}
             >
               <span
                 className="text-lg font-bold text-white"
                 style={{
                   textShadow:
-                    '0 1px 2px rgba(14,116,144,0.45), 0 0 6px rgba(255,255,255,0.35)',
+                    '0 1px 2px rgba(77,126,133,0.45), 0 0 6px rgba(255,255,255,0.35)',
                 }}
               >
                 {initials}

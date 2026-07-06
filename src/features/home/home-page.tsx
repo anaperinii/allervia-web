@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useUserStore } from '@/shared/stores/useUserStore'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { GLASS_CARD_SHADOW, PaperIcon, TickIcon } from '@/shared/components/glass-card'
 
 function getGreeting(): string {
   const hour = new Date().getHours()
@@ -32,14 +33,6 @@ const slideUpStyle = (delay: number): CSSProperties => ({
 })
 
 const ICON_BOX_SHADOW = '0 2px 6px rgba(20,184,166,0.18), inset 0 1px 0 rgba(255,255,255,0.9)'
-
-const GLASS_CARD_SHADOW = [
-  '0 10px 32px rgba(15,23,42,0.08)',
-  '0 2px 8px rgba(15,23,42,0.04)',
-  'inset 0 1.5px 0 rgba(255,255,255,0.95)',
-  'inset 0 -1.5px 3px rgba(15,23,42,0.04)',
-  'inset 0 0 0 1px rgba(255,255,255,0.55)',
-].join(', ')
 
 function CalendarBadge({ size = 56 }: { size?: number }) {
   const day = new Date().getDate()
@@ -168,7 +161,7 @@ function LineSphere({ size = 280 }: { size?: number }) {
     const grad = ctx.createLinearGradient(cx - outerR, 0, cx + outerR, 0)
     grad.addColorStop(0, '#0891B2')
     grad.addColorStop(0.3, '#06B6D4')
-    grad.addColorStop(0.65, '#18C1CB')
+    grad.addColorStop(0.65, '#6C9EA5')
     grad.addColorStop(1, '#0D9488')
 
     let raf = 0
@@ -233,100 +226,6 @@ function LineSphere({ size = 280 }: { size?: number }) {
       style={{ width: size, height: size, backgroundColor: '#f1f5f9' }}
       aria-hidden="true"
     />
-  )
-}
-
-function PaperIcon({ size = 48 }: { size?: number }) {
-  const backId = useId()
-  const frontId = useId()
-  const foldId = useId()
-  const shadowBackId = useId()
-  const shadowFrontId = useId()
-  return (
-    <svg width={size} height={size} viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs>
-        <linearGradient id={backId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#5eead6" />
-          <stop offset="1" stopColor="#14b8a6" />
-        </linearGradient>
-        <linearGradient id={frontId} x1="0.15" y1="0" x2="0.85" y2="1">
-          <stop offset="0" stopColor="#f0fdfa" />
-          <stop offset="0.5" stopColor="#99f6e4" />
-          <stop offset="1" stopColor="#5eead6" />
-        </linearGradient>
-        <linearGradient id={foldId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#f0fdfa" />
-          <stop offset="1" stopColor="#ccfbf1" />
-        </linearGradient>
-        <filter id={shadowBackId} x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#0f766e" floodOpacity="0.30" />
-        </filter>
-        <filter id={shadowFrontId} x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="10" stdDeviation="11" floodColor="#0d9488" floodOpacity="0.32" />
-        </filter>
-      </defs>
-      <g filter={`url(#${shadowBackId})`}>
-        <rect x="52" y="46" width="80" height="104" rx="17" fill={`url(#${backId})`} />
-      </g>
-      <g filter={`url(#${shadowFrontId})`}>
-        <path
-          d="M 87 60 L 132 60 L 158 86 L 158 151 Q 158 164 145 164 L 87 164 Q 74 164 74 151 L 74 73 Q 74 60 87 60 Z"
-          fill={`url(#${frontId})`}
-          fillOpacity="0.72"
-        />
-        <path
-          d="M 131 60 L 158 86 L 138 86 Q 131 86 131 79 Z"
-          fill={`url(#${foldId})`}
-          fillOpacity="0.9"
-        />
-      </g>
-      <g fill="#ffffff" opacity="0.92">
-        <rect x="90" y="106" width="30" height="8" rx="4" />
-        <rect x="90" y="126" width="20" height="8" rx="4" />
-      </g>
-    </svg>
-  )
-}
-
-function TickIcon({ size = 44 }: { size?: number }) {
-  const backId = useId()
-  const frontId = useId()
-  const shadowBackId = useId()
-  const shadowFrontId = useId()
-  return (
-    <svg width={size} height={size} viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs>
-        <linearGradient id={backId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#4DD4DB" />
-          <stop offset="1" stopColor="#0FA8B2" />
-        </linearGradient>
-        <linearGradient id={frontId} x1="0.1" y1="0.05" x2="0.9" y2="1">
-          <stop offset="0" stopColor="#E6F9FA" />
-          <stop offset="0.45" stopColor="#4DD4DB" />
-          <stop offset="1" stopColor="#18C1CB" />
-        </linearGradient>
-        <filter id={shadowBackId} x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#0FA8B2" floodOpacity="0.30" />
-        </filter>
-        <filter id={shadowFrontId} x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="10" stdDeviation="10" floodColor="#18C1CB" floodOpacity="0.32" />
-        </filter>
-      </defs>
-      <g filter={`url(#${shadowBackId})`} transform="rotate(9 132 72)">
-        <rect x="86" y="26" width="92" height="92" rx="26" fill={`url(#${backId})`} />
-      </g>
-      <g filter={`url(#${shadowFrontId})`}>
-        <rect x="40" y="52" width="104" height="104" rx="30" fill={`url(#${frontId})`} fillOpacity="0.72" />
-      </g>
-      <path
-        d="M 76 103 L 88 115 L 110 88"
-        fill="none"
-        stroke="#ffffff"
-        strokeWidth="9"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   )
 }
 
@@ -433,7 +332,7 @@ export function HomePage() {
               title="Evoluir paciente"
               description="Registrar nova aplicação"
               to="/patient-evolution"
-              gradient="linear-gradient(105deg, rgba(24,193,203,0.18) 0%, rgba(77,212,219,0.10) 25%, rgba(230,249,250,0.04) 55%, transparent 80%)"
+              gradient="linear-gradient(105deg, rgba(108,158,165,0.18) 0%, rgba(155,193,196,0.10) 25%, rgba(234,241,241,0.04) 55%, transparent 80%)"
             />
           </div>
           <div className="h-27.5" style={slideUpStyle(0.75)}>

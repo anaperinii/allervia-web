@@ -60,7 +60,7 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
       className={cn(
         'shrink-0 px-3 py-1 rounded-full text-[0.65rem] font-semibold border transition-all cursor-pointer',
         active
-          ? 'bg-linear-to-br from-brand to-teal-400 text-white border-transparent'
+          ? 'bg-linear-to-br from-brand to-brand-dark text-white border-transparent'
           : 'bg-white text-(--text-muted) border-(--border-custom) hover:border-teal-300 hover:text-teal-600',
       )}
     >

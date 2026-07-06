@@ -7,7 +7,7 @@ import { CONTACT_SUPPORT_EMAIL } from '@/shared/constants/contact'
 import { FAQS } from '@/features/settings/constants/faqs'
 
 const quickLinks = [
-  { icon: Book, label: 'Documentação', desc: 'Guias e tutoriais', color: '#18C1CB' },
+  { icon: Book, label: 'Documentação', desc: 'Guias e tutoriais', color: '#6C9EA5' },
   { icon: MessageCircle, label: 'Chat de suporte', desc: 'Fale com a equipe', color: '#6366F1' },
   { icon: Mail, label: 'E-mail', desc: CONTACT_SUPPORT_EMAIL, color: '#F4845F' },
 ]

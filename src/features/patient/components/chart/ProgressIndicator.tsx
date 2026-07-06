@@ -48,7 +48,7 @@ function InductionProgress({ currentStepIndex, progressPct }: { currentStepIndex
         <span className="text-[0.7rem] font-bold text-brand">{progressPct}%</span>
       </div>
       <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden mb-3">
-        <div className="h-full bg-linear-to-r from-brand to-teal-400 rounded-full transition-all duration-1000 ease-out" style={{ width: `${progressPct}%` }} />
+        <div className="h-full bg-linear-to-r from-brand to-brand-dark rounded-full transition-all duration-1000 ease-out" style={{ width: `${progressPct}%` }} />
       </div>
       <div className="flex gap-0">
         {INDUCTION_STEPS.map((group, groupIndex) => {

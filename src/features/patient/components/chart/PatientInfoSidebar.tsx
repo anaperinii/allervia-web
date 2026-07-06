@@ -100,7 +100,7 @@ export function PatientInfoSidebar({
     <div className="flex w-[320px] shrink-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
       <div className="border-b border-(--border-custom) px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-base font-bold text-white shrink-0">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-base font-bold text-white shrink-0">
             {getInitials(patient.name)}
           </div>
           <div className="min-w-0">

@@ -40,7 +40,7 @@ const SIZE_CLASS: Record<ButtonSize, string> = {
 }
 
 const PROMINENT_SHADOW: Record<ButtonTone, string> = {
-  brand: 'shadow-[0_2px_12px_rgba(20,184,166,0.3)]',
+  brand: 'shadow-[0_2px_12px_rgba(108,158,165,0.3)]',
   danger: 'shadow-[0_2px_12px_rgba(220,38,38,0.3)]',
   warning: 'shadow-[0_2px_12px_rgba(234,179,8,0.3)]',
   success: 'shadow-[0_2px_12px_rgba(52,211,153,0.3)]',
@@ -49,9 +49,9 @@ const PROMINENT_SHADOW: Record<ButtonTone, string> = {
 
 const STYLES: Record<ButtonTone, Record<ButtonVariant, string>> = {
   brand: {
-    solid: 'bg-linear-to-br from-brand to-teal-400 text-white before:content-[""] before:absolute before:inset-0 before:bg-linear-to-br before:from-brand-dark before:to-teal-500 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 before:pointer-events-none',
-    outline: 'border-[1.5px] border-brand text-brand hover:bg-teal-50',
-    ghost: 'text-brand hover:bg-teal-50',
+    solid: 'bg-linear-to-br from-brand to-brand-dark text-white before:content-[""] before:absolute before:inset-0 before:bg-linear-to-br before:from-brand-dark before:to-brand-dark before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 before:pointer-events-none',
+    outline: 'border-[1.5px] border-brand text-brand hover:bg-brand/15 hover:border-brand-dark hover:text-brand-dark',
+    ghost: 'text-brand hover:bg-brand/15',
   },
   danger: {
     solid: 'bg-red-600 text-white hover:bg-red-700',

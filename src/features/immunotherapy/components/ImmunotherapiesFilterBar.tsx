@@ -1,6 +1,5 @@
-import { Link } from '@tanstack/react-router'
-import { FileText, Plus, Search } from 'lucide-react'
-import { Select, TextInput } from '@/shared/components'
+import { Search } from 'lucide-react'
+import { Button, Select, TextInput } from '@/shared/components'
 
 interface ImmunotherapiesFilterBarProps {
   searchTerm: string
@@ -78,35 +77,15 @@ export function ImmunotherapiesFilterBar({
       </Select>
 
       {canAddImmunotherapy && (
-        <Link
-          to="/add-immunotherapy"
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold no-underline transition-all cursor-pointer hover:brightness-95 hover:shadow-[0_14px_40px_rgba(108,158,165,0.45),inset_0_1px_0_rgba(255,255,255,0.55)]!"
-          style={{
-            background:
-              'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
-            color: '#ffffff',
-            boxShadow: '0 12px 28px rgba(108,158,165,0.30), inset 0 1px 0 rgba(255,255,255,0.4)',
-          }}
-        >
-          <Plus size={14} />
+        <Button tone="brand" variant="solid" prominent to="/add-immunotherapy" className="w-44">
           Adicionar Imunoterapia
-        </Link>
+        </Button>
       )}
 
       {canEvolve && (
-        <Link
-          to="/patient-evolution"
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold no-underline transition-all cursor-pointer hover:brightness-95 hover:shadow-[0_14px_40px_rgba(108,158,165,0.45),inset_0_1px_0_rgba(255,255,255,0.55)]!"
-          style={{
-            background:
-              'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
-            color: '#ffffff',
-            boxShadow: '0 12px 28px rgba(108,158,165,0.30), inset 0 1px 0 rgba(255,255,255,0.4)',
-          }}
-        >
-          <FileText size={14} />
+        <Button tone="brand" variant="solid" prominent to="/patient-evolution" className="w-44">
           Evoluir Paciente
-        </Link>
+        </Button>
       )}
     </div>
   )

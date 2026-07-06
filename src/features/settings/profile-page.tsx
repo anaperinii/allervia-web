@@ -77,7 +77,7 @@ export function ProfilePage() {
             <div className="flex items-center justify-between gap-5">
               <div className="flex items-center gap-5 min-w-0">
                 <div className="relative shrink-0">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-2xl font-bold text-white">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-2xl font-bold text-white">
                     {avatarInitials}
                   </div>
                   {editing && (

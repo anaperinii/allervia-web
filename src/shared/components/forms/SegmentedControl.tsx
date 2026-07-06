@@ -64,7 +64,7 @@ export function SegmentedControl<T extends string>({
               ITEM_PADDING[size],
               fullWidth && 'flex-1',
               active
-                ? 'bg-linear-to-br from-brand to-teal-400 text-white'
+                ? 'bg-linear-to-br from-brand to-brand-dark text-white'
                 : 'text-(--text-muted) hover:bg-gray-50'
             )}
           >

@@ -74,7 +74,7 @@ function SidebarLink({ item, isActive, isCollapsed }: SidebarLinkProps) {
       }}
     >
       <Icon size={18} strokeWidth={1.8} className="shrink-0" />
-      {!isCollapsed && <span className="text-[0.85rem] font-medium whitespace-nowrap">{item.label}</span>}
+      {!isCollapsed && <span className="text-[0.8rem] font-medium whitespace-nowrap">{item.label}</span>}
       {isCollapsed && (
         <span
           className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50"
@@ -111,7 +111,7 @@ export function Sidebar() {
       )}
       style={{
         background:
-          'linear-gradient(180deg, #4d7e85 0%, #234e58 100%)',
+          'linear-gradient(180deg, #0e353d 0%, #08191d 100%)',
         boxShadow: '0 6px 24px rgba(0,0,0,0.28)',
       }}
     >
@@ -122,10 +122,10 @@ export function Sidebar() {
           isCollapsed ? 'justify-center h-17 px-0' : 'gap-2.5 h-17 px-5',
         )}
       >
-        <AllerviaLogo size={28} color="#9BC1C4" />
+        <AllerviaLogo size={28} color="#B4D6D8" className="opacity-90 drop-shadow-[0_0_9px_rgba(155,193,196,0.4)]" />
         {!isCollapsed && (
           <span
-            className="text-lg font-semibold tracking-[2px]"
+            className="text-base font-semibold tracking-[2px]"
             style={{ color: '#DCE1E5' }}
           >
             ALLERVIA

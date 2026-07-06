@@ -15,8 +15,8 @@ function ChartGlassIcon() {
           borderRadius: '10px',
           transform: 'rotate(-6deg)',
           background:
-            'radial-gradient(120% 90% at 32% 20%, rgba(255,255,255,0.3), transparent 60%), linear-gradient(150deg, #4DD4DB 0%, #18C1CB 55%, #0FA8B2 100%)',
-          boxShadow: '0 3px 6px rgba(15,118,144,0.18)',
+            'radial-gradient(120% 90% at 32% 20%, rgba(255,255,255,0.3), transparent 60%), linear-gradient(150deg, #9BC1C4 0%, #6C9EA5 55%, #4d7e85 100%)',
+          boxShadow: '0 3px 6px rgba(77,126,133,0.18)',
         }}
       />
       <div
@@ -28,12 +28,12 @@ function ChartGlassIcon() {
           height: '30px',
           borderRadius: '10px',
           background:
-            'linear-gradient(155deg, rgba(230,249,250,0.65) 0%, rgba(77,212,219,0.45) 100%)',
+            'linear-gradient(155deg, rgba(234,241,241,0.65) 0%, rgba(155,193,196,0.45) 100%)',
           backdropFilter: 'blur(9px) saturate(150%)',
           WebkitBackdropFilter: 'blur(9px) saturate(150%)',
           border: '1.2px solid rgba(255,255,255,0.55)',
           boxShadow:
-            'inset 0 1px 2px rgba(255,255,255,0.65), 0 5px 10px rgba(24,193,203,0.22)',
+            'inset 0 1px 2px rgba(255,255,255,0.65), 0 5px 10px rgba(108,158,165,0.22)',
         }}
       >
         <svg width="20" height="20" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -43,7 +43,7 @@ function ChartGlassIcon() {
             strokeWidth="5.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ filter: 'drop-shadow(0 1px 1px rgba(14,116,144,0.40))' }}
+            style={{ filter: 'drop-shadow(0 1px 1px rgba(77,126,133,0.40))' }}
           />
         </svg>
       </div>
@@ -56,8 +56,8 @@ function ChartGlassIcon() {
           height: '8px',
           borderRadius: '50%',
           background:
-            'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), transparent 60%), linear-gradient(150deg, #4DD4DB, #18C1CB)',
-          boxShadow: '0 2px 4px rgba(15,118,144,0.35)',
+            'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), transparent 60%), linear-gradient(150deg, #9BC1C4, #6C9EA5)',
+          boxShadow: '0 2px 4px rgba(77,126,133,0.35)',
           zIndex: 3,
         }}
       />
@@ -325,11 +325,11 @@ const STAT_DEFINITIONS: StatDefinition[] = [
     key: 'induction',
     customIcon: <ChartGlassIcon />,
     label: 'Em Indução',
-    color: 'text-[#18C1CB]',
+    color: 'text-[#6C9EA5]',
     iconBg: 'bg-[#B6F2EC]/70',
-    accentColor: '#18C1CB',
+    accentColor: '#6C9EA5',
     gradient:
-      'linear-gradient(105deg, rgba(24,193,203,0.20) 0%, rgba(182,242,236,0.10) 30%, transparent 70%)',
+      'linear-gradient(105deg, rgba(108,158,165,0.20) 0%, rgba(182,242,236,0.10) 30%, transparent 70%)',
   },
   {
     key: 'maintenance',

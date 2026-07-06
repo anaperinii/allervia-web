@@ -23,7 +23,7 @@ export function exportPdf(data: ReportData) {
     }
   }
 
-  doc.setFillColor(24, 193, 203)
+  doc.setFillColor(108, 158, 165)
   doc.rect(0, 0, pageW, 2, 'F')
   doc.setFontSize(16)
   doc.setTextColor(14, 153, 163)
@@ -262,7 +262,7 @@ export function exportPdf(data: ReportData) {
       doc.roundedRect(x, y, boxW, 18, 2, 2, 'F')
       doc.setFontSize(14)
       doc.setFont('helvetica', 'bold')
-      doc.setTextColor(24, 193, 203)
+      doc.setTextColor(108, 158, 165)
       doc.text(v, x + boxW / 2, y + 9, { align: 'center' })
       doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
