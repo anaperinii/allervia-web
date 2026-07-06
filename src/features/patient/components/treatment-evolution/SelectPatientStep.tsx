@@ -136,7 +136,7 @@ export function SelectPatientStep({
       {selected && patient && (
         <div className="border border-(--border-custom) rounded-xl mt-4 overflow-hidden">
           <div className="px-4 py-3.5 border-b border-(--border-custom) flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-sm font-bold text-white shrink-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-sm font-bold text-white shrink-0">
               {patient.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">

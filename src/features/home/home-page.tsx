@@ -168,7 +168,7 @@ function LineSphere({ size = 280 }: { size?: number }) {
     const grad = ctx.createLinearGradient(cx - outerR, 0, cx + outerR, 0)
     grad.addColorStop(0, '#0891B2')
     grad.addColorStop(0.3, '#06B6D4')
-    grad.addColorStop(0.65, '#18C1CB')
+    grad.addColorStop(0.65, '#6C9EA5')
     grad.addColorStop(1, '#0D9488')
 
     let raf = 0
@@ -297,19 +297,19 @@ function TickIcon({ size = 44 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>
         <linearGradient id={backId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#4DD4DB" />
-          <stop offset="1" stopColor="#0FA8B2" />
+          <stop offset="0" stopColor="#9BC1C4" />
+          <stop offset="1" stopColor="#4d7e85" />
         </linearGradient>
         <linearGradient id={frontId} x1="0.1" y1="0.05" x2="0.9" y2="1">
-          <stop offset="0" stopColor="#E6F9FA" />
-          <stop offset="0.45" stopColor="#4DD4DB" />
-          <stop offset="1" stopColor="#18C1CB" />
+          <stop offset="0" stopColor="#EAF1F1" />
+          <stop offset="0.45" stopColor="#9BC1C4" />
+          <stop offset="1" stopColor="#6C9EA5" />
         </linearGradient>
         <filter id={shadowBackId} x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#0FA8B2" floodOpacity="0.30" />
+          <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#4d7e85" floodOpacity="0.30" />
         </filter>
         <filter id={shadowFrontId} x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="10" stdDeviation="10" floodColor="#18C1CB" floodOpacity="0.32" />
+          <feDropShadow dx="0" dy="10" stdDeviation="10" floodColor="#6C9EA5" floodOpacity="0.32" />
         </filter>
       </defs>
       <g filter={`url(#${shadowBackId})`} transform="rotate(9 132 72)">
@@ -433,7 +433,7 @@ export function HomePage() {
               title="Evoluir paciente"
               description="Registrar nova aplicação"
               to="/patient-evolution"
-              gradient="linear-gradient(105deg, rgba(24,193,203,0.18) 0%, rgba(77,212,219,0.10) 25%, rgba(230,249,250,0.04) 55%, transparent 80%)"
+              gradient="linear-gradient(105deg, rgba(108,158,165,0.18) 0%, rgba(155,193,196,0.10) 25%, rgba(234,241,241,0.04) 55%, transparent 80%)"
             />
           </div>
           <div className="h-27.5" style={slideUpStyle(0.75)}>

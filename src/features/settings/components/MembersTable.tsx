@@ -42,7 +42,7 @@ export function MembersTable({
               <td className="px-5 py-3">
                 <MediaRow
                   leading={
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-white text-[0.6rem] font-bold shrink-0">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-white text-[0.6rem] font-bold shrink-0">
                       {member.avatar}
                     </div>
                   }

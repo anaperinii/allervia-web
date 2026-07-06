@@ -55,7 +55,7 @@ export function ApplicationDetailsModal({
       {application && (
         <>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-sm font-bold text-white shrink-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-sm font-bold text-white shrink-0">
               {getFullName(application.patientId)
                 .split(' ')
                 .map((part) => part[0])

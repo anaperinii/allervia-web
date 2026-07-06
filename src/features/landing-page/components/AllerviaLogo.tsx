@@ -38,7 +38,7 @@ export function AllerviaLogo({
       <g fill={color} transform={withWordmark ? 'translate(35 40)' : 'translate(35 35)'}>
         {DOTS.map((d, i) => {
           const distance = Math.hypot(d.x, d.y)
-          const fillOpacity = 1 - (distance / MAX_DOT_DISTANCE) * 0.5
+          const fillOpacity = 1 - (distance / MAX_DOT_DISTANCE) * 0.25
           return <circle key={i} cx={d.x} cy={d.y} r={d.r} fillOpacity={fillOpacity} />
         })}
       </g>

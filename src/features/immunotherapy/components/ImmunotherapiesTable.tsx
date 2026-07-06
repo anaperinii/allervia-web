@@ -64,7 +64,7 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
                 <td className="px-4 py-2">
                   <span
                     className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border"
-                    style={{ backgroundColor: color.bg + '73', color: color.text, borderColor: color.dot + '30' }}
+                    style={{ backgroundColor: color.bg + '4D', color: color.text, borderColor: color.dot + '30' }}
                   >
                     {item.cycleInterval.days} dias
                   </span>

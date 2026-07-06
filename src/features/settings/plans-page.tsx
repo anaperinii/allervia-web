@@ -78,7 +78,7 @@ export function PlansPage() {
                       )}
                     >
                       {isCurrent && (
-                        <div className="bg-linear-to-r from-brand to-teal-400 text-center py-1.5 text-[0.6rem] font-bold text-white uppercase tracking-wider">
+                        <div className="bg-linear-to-r from-brand to-brand-dark text-center py-1.5 text-[0.6rem] font-bold text-white uppercase tracking-wider">
                           Plano atual
                         </div>
                       )}

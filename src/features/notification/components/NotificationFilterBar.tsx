@@ -48,7 +48,7 @@ export function NotificationFilterBar({
                 onClick={() => onTabChange(tab.key)}
                 className={cn(
                   'px-3 text-[0.65rem] font-semibold transition-all flex items-center gap-1',
-                  active ? 'bg-linear-to-br from-brand to-teal-400 text-white' : 'text-(--text-muted) hover:bg-teal-50/60',
+                  active ? 'bg-linear-to-br from-brand to-brand-dark text-white' : 'text-(--text-muted) hover:bg-teal-50/60',
                 )}
               >
                 {tab.label}
