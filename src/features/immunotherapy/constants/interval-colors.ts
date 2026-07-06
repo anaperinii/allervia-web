@@ -5,16 +5,16 @@ export interface IntervalColor {
 }
 
 export const INTERVAL_COLORS: Record<number, IntervalColor> = {
-  7: { bg: '#FDECF0', text: '#E8768E', dot: '#E8768E' },
-  14: { bg: '#FDEEE8', text: '#E8766A', dot: '#E8766A' },
-  21: { bg: '#DBEAFE', text: '#2563EB', dot: '#2563EB' },
-  28: { bg: '#EDE9FE', text: '#7C3AED', dot: '#7C3AED' },
+  7: { bg: '#C3A5E6', text: '#4B2E7A', dot: '#B28BDF' },
+  14: { bg: '#E3969E', text: '#8A3E46', dot: '#E3969E' },
+  21: { bg: '#B8DF8B', text: '#46661F', dot: '#B8DF8B' },
+  28: { bg: '#8BDFDC', text: '#1C5854', dot: '#8BDFDC' },
 }
 
 export const DEFAULT_INTERVAL_COLOR: IntervalColor = {
-  bg: '#F3F4F6',
-  text: '#374151',
-  dot: '#6B7280',
+  bg: '#ECEEF1',
+  text: '#4A5568',
+  dot: '#A0AEC0',
 }
 
 export function getIntervalColor(dias: number): IntervalColor {

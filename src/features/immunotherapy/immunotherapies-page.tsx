@@ -105,7 +105,7 @@ export function ImmunotherapiesPage() {
               className={cn(
                 'relative px-5 py-2 text-[0.78rem] font-medium transition-colors rounded-t-xl',
                 isActive
-                  ? 'bg-white text-slate-800 z-10'
+                  ? 'bg-gray-50/80 text-slate-800 z-10'
                   : 'bg-white/55 text-slate-400 hover:bg-white/75 hover:text-slate-600',
               )}
             >
@@ -117,7 +117,7 @@ export function ImmunotherapiesPage() {
                       className="pointer-events-none absolute -left-3 bottom-0 h-3 w-3"
                       style={{
                         background:
-                          'radial-gradient(circle at 0% 0%, transparent 11.5px, white 12.5px)',
+                          'radial-gradient(circle at 0% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)',
                       }}
                     />
                   )}
@@ -126,7 +126,7 @@ export function ImmunotherapiesPage() {
                     className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3"
                     style={{
                       background:
-                        'radial-gradient(circle at 100% 0%, transparent 11.5px, white 12.5px)',
+                        'radial-gradient(circle at 100% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)',
                     }}
                   />
                 </>
@@ -137,7 +137,7 @@ export function ImmunotherapiesPage() {
         })}
       </div>
 
-      <div className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-tr-xl rounded-b-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+      <div className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-tr-xl rounded-b-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <div className="flex-1 overflow-auto">
           <ImmunotherapiesTable items={paginated} onSelect={handleSelect} />
         </div>
