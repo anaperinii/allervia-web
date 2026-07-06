@@ -3,6 +3,13 @@ import { cn } from '@/shared/lib/cn'
 import { GLASS_CARD_SHADOW, TickIcon } from '@/shared/components/glass-card'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
 
+const REACTION_LABELS: Record<string, string> = {
+  reduce_dose: 'Reduzir dose',
+  increase_interval: 'Aumentar intervalo',
+  suspend: 'Suspender temporariamente',
+  maintain: 'Manter protocolo',
+}
+
 interface ReviewStepProps {
   form: EvolutionForm
   plannedNextDate: string | null
@@ -26,7 +33,15 @@ export function EvolutionReviewStep({ form, plannedNextDate, plannedNextInterval
     { label: 'Intervalo Próxima Dose', value: form.nextInterval ? `${form.nextInterval} dias` : '—' },
     { label: 'Responsável', value: form.administrator || '—' },
     { label: 'Efeito Colateral', value: form.sideEffectPost === 'yes' ? 'Sim' : 'Não' },
+    ...(form.sideEffectPost === 'yes' ? [{ label: 'Efeitos Relatados', value: form.reportedEffectsPost || '—' }] : []),
     { label: 'Necessidade de Medicação', value: form.medicationNeededPost === 'yes' ? 'Sim' : 'Não' },
+    ...(form.medicationNeededPost === 'yes' ? [{ label: 'Medicações', value: form.medicationsPost || '—' }] : []),
+    ...(form.sideEffectPost === 'yes' && form.medicationNeededPost === 'yes' && form.reactionAdjustment
+      ? [{ label: 'Conduta no protocolo', value: REACTION_LABELS[form.reactionAdjustment] ?? '—' }]
+      : []),
+    ...(form.reactionAdjustmentJustification
+      ? [{ label: 'Justificativa da conduta', value: form.reactionAdjustmentJustification }]
+      : []),
     ...(form.notesPost ? [{ label: 'Notas', value: form.notesPost }] : []),
   ]
 

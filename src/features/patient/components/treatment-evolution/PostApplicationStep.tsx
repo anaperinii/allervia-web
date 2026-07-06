@@ -197,9 +197,10 @@ export function PostApplicationStep({ form }: PostApplicationStepProps) {
             }}
           >
             <div className="flex items-start gap-2">
-              <Info size={14} className="text-amber-700 shrink-0 mt-0.5" />
-              <div className="text-[0.65rem] text-amber-800 leading-relaxed">
-                <span className="font-bold">Reação adversa com uso de medicação registrada.</span> Selecione a conduta a ser aplicada no protocolo antes de concluir a evolução. A escolha fica vinculada a esta aplicação no histórico clínico.
+              <Info size={16} className="text-amber-700 shrink-0 mt-0.5" />
+              <div className="leading-relaxed">
+                <div className="text-[0.78rem] font-bold text-amber-800">Reação adversa com uso de medicação registrada</div>
+                <div className="text-[0.68rem] text-amber-800/80 mt-0.5">Selecione a conduta a ser aplicada no protocolo antes de concluir a evolução. A escolha fica vinculada a esta aplicação no histórico clínico.</div>
               </div>
             </div>
             <Controller
@@ -223,8 +224,8 @@ export function PostApplicationStep({ form }: PostApplicationStepProps) {
                             : 'border-amber-200 bg-gray-50/60 hover:border-amber-400',
                         )}
                       >
-                        <div className="text-[0.65rem] font-bold text-(--text)">{opt.label}</div>
-                        <div className="text-[0.55rem] text-(--text-muted) mt-0.5">{opt.desc}</div>
+                        <div className="text-[0.75rem] font-bold text-(--text)">{opt.label}</div>
+                        <div className="text-[0.65rem] text-(--text-muted) mt-0.5">{opt.desc}</div>
                       </button>
                     )
                   })}

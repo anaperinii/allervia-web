@@ -142,18 +142,9 @@ export function SelectPatientStep({
             <div className="min-w-0 flex-1">
               <div className="text-sm font-bold text-(--text)">{patient.name}</div>
               <div className="text-[0.7rem] text-(--text-muted)">
-                {patient.age} anos · {patient.weight} · {patient.responsibleDoctor}
+                {patient.age} anos · {patient.weight} · {patient.responsibleDoctor} · {selected.type}
+                {treatmentTime && <> · {treatmentTime}</>}
               </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 text-[0.6rem] font-semibold border border-teal-200">
-                {selected.type}
-              </span>
-              {treatmentTime && (
-                <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 text-[0.6rem] font-medium border border-amber-200">
-                  {treatmentTime}
-                </span>
-              )}
             </div>
           </div>
 
