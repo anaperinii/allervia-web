@@ -81,7 +81,7 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
           style={{
             background:
               'radial-gradient(circle at 20% 22%, rgba(255,255,255,0.14) 0%, transparent 40%), radial-gradient(circle at 80% 18%, rgba(255,255,255,0.08) 0%, transparent 45%), radial-gradient(circle at 78% 82%, rgba(255,255,255,0.11) 0%, transparent 45%), radial-gradient(circle at 22% 80%, rgba(255,255,255,0.07) 0%, transparent 42%), rgba(255,255,255,0.02)',
-            color: '#9BC1C4',
+            color: 'rgba(255,255,255,0.8)',
             border: '1px solid rgba(255,255,255,0.14)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
@@ -116,13 +116,15 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
             isCollapsed ? 'bottom-0 left-full ml-3' : 'bottom-full left-0 mb-2',
           )}
           style={{
-            background: '#ffffff',
-            border: '1px solid rgba(15,23,42,0.12)',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.35)',
+            background: 'rgba(255,255,255,0.68)',
+            backdropFilter: 'blur(20px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+            border: '1px solid rgba(255,255,255,0.5)',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.6)',
           }}
         >
           <div className="px-3 py-2.5 border-b border-slate-100">
-            <div className="text-[0.6rem] uppercase tracking-wider font-semibold text-slate-400">
+            <div className="text-[0.6rem] uppercase tracking-wider font-semibold text-slate-600">
               Trocar perfil
             </div>
           </div>
@@ -136,8 +138,16 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
                   onClick={() => handleSelectProfile(profile.id)}
                   className={cn(
                     'w-full flex items-center gap-3 px-3 py-2 text-left transition-colors cursor-pointer',
-                    isActive ? 'bg-teal-50' : 'hover:bg-slate-50',
+                    isActive ? '' : 'hover:bg-teal-900/10',
                   )}
+                  style={
+                    isActive
+                      ? {
+                          background:
+                            'linear-gradient(90deg, rgba(35,78,88,0.22) 0%, rgba(35,78,88,0.07) 55%, rgba(35,78,88,0) 100%)',
+                        }
+                      : undefined
+                  }
                 >
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-white text-[0.65rem] font-bold">
                     {getInitials(profile.name)}
@@ -146,7 +156,7 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
                     <div className="text-xs font-semibold text-slate-800 truncate">
                       {profile.name}
                     </div>
-                    <div className="text-[0.6rem] text-slate-500">
+                    <div className="text-[0.6rem] text-slate-600">
                       {ROLE_LABELS[profile.role]}
                     </div>
                   </div>
@@ -159,15 +169,15 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
             <button
               type="button"
               onClick={handleOpenProfilePage}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-slate-600 hover:bg-teal-900/10 transition-colors cursor-pointer"
             >
-              <UserCog size={14} className="text-slate-500" />
+              <UserCog size={14} className="text-slate-600" />
               <span className="text-xs font-medium">Meu perfil</span>
             </button>
             <button
               type="button"
               onClick={handleLogout}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-red-600 hover:bg-red-900/10 transition-colors cursor-pointer"
             >
               <LogOut size={14} />
               <span className="text-xs font-medium">Sair</span>
