@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { TablePagination } from '@/shared/components'
+import { CheckCircle } from 'lucide-react'
+import { TablePagination, toast } from '@/shared/components'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
@@ -76,7 +77,22 @@ export function ImmunotherapiesPage() {
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-7 pb-5">
       <div className="mb-7">
-        <h1 className="mb-8 text-3xl font-medium text-(--text)">Imunoterapias</h1>
+        <div className="mb-8 flex items-center gap-3">
+          <h1 className="text-3xl font-medium text-(--text)">Imunoterapias</h1>
+          <button
+            type="button"
+            onClick={() =>
+              toast.success({
+                icon: <CheckCircle size={16} />,
+                title: 'Formulário finalizado com sucesso!',
+                description: 'Os dados foram validados e salvos no prontuário.',
+              })
+            }
+            className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-medium text-(--text-muted) hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            Testar toast
+          </button>
+        </div>
         <ImmunotherapiesFilterBar
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}

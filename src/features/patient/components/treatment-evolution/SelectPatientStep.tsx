@@ -135,25 +135,16 @@ export function SelectPatientStep({
 
       {selected && patient && (
         <div className="border border-(--border-custom) rounded-xl mt-4 overflow-hidden">
-          <div className="px-4 py-3.5 border-b border-(--border-custom) flex items-center gap-3">
+          <div className="px-4 py-3.5 border-b border-(--border-custom) flex items-center gap-3 bg-gray-50/80">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-sm font-bold text-white shrink-0">
               {patient.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-bold text-(--text)">{patient.name}</div>
               <div className="text-[0.7rem] text-(--text-muted)">
-                {patient.age} anos · {patient.weight} · {patient.responsibleDoctor}
+                {patient.age} anos · {patient.weight} · {patient.responsibleDoctor} · {selected.type}
+                {treatmentTime && <> · {treatmentTime}</>}
               </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 text-[0.6rem] font-semibold border border-teal-200">
-                {selected.type}
-              </span>
-              {treatmentTime && (
-                <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 text-[0.6rem] font-medium border border-amber-200">
-                  {treatmentTime}
-                </span>
-              )}
             </div>
           </div>
 
