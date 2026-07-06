@@ -397,6 +397,14 @@ textarea:-webkit-autofill:focus {
   transition: background-color 99999s ease-out, color 99999s ease-out;
 }
 
+/* Slightly darker field borders inside the wizard forms (matches the
+   immunotherapies search bar). Skips invalid fields so they stay red. */
+.wizard-fields input:not([aria-invalid]),
+.wizard-fields select:not([aria-invalid]),
+.wizard-fields textarea:not([aria-invalid]) {
+  border-color: #CBD6D6;
+}
+
 @layer base {
   ::-webkit-scrollbar {
     width: 6px;
@@ -407,11 +415,11 @@ textarea:-webkit-autofill:focus {
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(13, 148, 136, 0.25);
+    background: rgba(100, 116, 139, 0.35);
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(13, 148, 136, 0.4);
+    background: rgba(100, 116, 139, 0.55);
   }
 }

@@ -50,8 +50,8 @@ const PROMINENT_SHADOW: Record<ButtonTone, string> = {
 const STYLES: Record<ButtonTone, Record<ButtonVariant, string>> = {
   brand: {
     solid: 'bg-linear-to-br from-brand to-brand-dark text-white before:content-[""] before:absolute before:inset-0 before:bg-linear-to-br before:from-brand-dark before:to-brand-dark before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 before:pointer-events-none',
-    outline: 'border-[1.5px] border-brand text-brand hover:bg-teal-50',
-    ghost: 'text-brand hover:bg-teal-50',
+    outline: 'border-[1.5px] border-brand text-brand hover:bg-brand/15 hover:border-brand-dark hover:text-brand-dark',
+    ghost: 'text-brand hover:bg-brand/15',
   },
   danger: {
     solid: 'bg-red-600 text-white hover:bg-red-700',

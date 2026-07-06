@@ -77,13 +77,13 @@ export function ImmunotherapiesFilterBar({
       </Select>
 
       {canAddImmunotherapy && (
-        <Button tone="brand" variant="solid" prominent to="/add-immunotherapy" className="px-3">
+        <Button tone="brand" variant="solid" prominent to="/add-immunotherapy" className="w-44">
           Adicionar Imunoterapia
         </Button>
       )}
 
       {canEvolve && (
-        <Button tone="brand" variant="solid" prominent to="/patient-evolution" className="px-3">
+        <Button tone="brand" variant="solid" prominent to="/patient-evolution" className="w-44">
           Evoluir Paciente
         </Button>
       )}

@@ -17,12 +17,12 @@ export function WizardStepsIndicator({ labels, current, ariaLabel = 'Etapas' }: 
             <div className="flex items-center gap-2.5" aria-current={active ? 'step' : undefined}>
               <div
                 className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-all',
+                  'flex h-7 w-7 items-center justify-center rounded-full text-[0.7rem] font-semibold transition-all',
                   active
-                    ? 'bg-brand text-white'
+                    ? 'bg-brand text-white shadow-[0_0_14px_2px_rgba(108,158,165,0.55)]'
                     : done
-                    ? 'bg-teal-100 text-brand-dark opacity-50'
-                    : 'bg-gray-200 text-gray-500',
+                    ? 'bg-brand/40 text-brand-dark shadow-[0_0_10px_1px_rgba(108,158,165,0.3)]'
+                    : 'bg-gray-300 text-gray-600 shadow-[0_0_8px_1px_rgba(148,163,184,0.4)]',
                 )}
               >
                 {i + 1}
@@ -30,7 +30,7 @@ export function WizardStepsIndicator({ labels, current, ariaLabel = 'Etapas' }: 
               <span
                 className={cn(
                   'text-[0.85rem] font-medium',
-                  active ? 'text-brand-dark' : done ? 'text-brand-dark opacity-50' : 'text-gray-400',
+                  active ? 'text-brand-dark' : done ? 'text-brand-dark opacity-50' : 'text-gray-500',
                 )}
               >
                 {label}
@@ -38,19 +38,14 @@ export function WizardStepsIndicator({ labels, current, ariaLabel = 'Etapas' }: 
             </div>
             {i < labels.length - 1 && (
               <div
-                className="relative h-[2.5px] w-16 overflow-hidden rounded-full bg-gray-200"
                 aria-hidden="true"
-              >
-                <div
-                  className={cn(
-                    'absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out',
-                    done ? 'bg-teal-100 opacity-50' : 'bg-brand',
-                  )}
-                  style={{
-                    width: done ? '100%' : '0%',
-                  }}
-                />
-              </div>
+                className="h-px w-16"
+                style={{
+                  background: done
+                    ? 'linear-gradient(to right, transparent 0%, rgba(108,158,165,0.5) 50%, transparent 100%)'
+                    : 'linear-gradient(to right, transparent 0%, rgba(148,163,184,0.4) 50%, transparent 100%)',
+                }}
+              />
             )}
           </li>
         )

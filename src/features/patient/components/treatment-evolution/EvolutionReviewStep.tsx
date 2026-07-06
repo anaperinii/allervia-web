@@ -1,6 +1,6 @@
-import { CalendarDays } from 'lucide-react'
 import { format, parse } from 'date-fns'
 import { cn } from '@/shared/lib/cn'
+import { GLASS_CARD_SHADOW, TickIcon } from '@/shared/components/glass-card'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
 
 interface ReviewStepProps {
@@ -38,12 +38,21 @@ export function EvolutionReviewStep({ form, plannedNextDate, plannedNextInterval
           <p className="text-[0.7rem] text-(--text-muted) mt-1">Confirme os dados antes de registrar a dose.</p>
         </div>
         {plannedNextDate && (
-          <div className="flex items-center gap-2 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2 shrink-0">
-            <CalendarDays size={13} className="text-teal-600 shrink-0" />
-            <p className="text-[0.7rem] text-teal-800 leading-relaxed">
-              Próxima dose agendada para <span className="font-bold">{plannedNextDate}</span>
+          <div
+            className="flex items-center gap-3 rounded-2xl bg-white/25 px-4 py-2 backdrop-blur-xl shrink-0"
+            style={{
+              boxShadow: GLASS_CARD_SHADOW,
+              backdropFilter: 'blur(20px) saturate(150%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+              backgroundImage:
+                'linear-gradient(105deg, rgba(20,184,166,0.18) 0%, rgba(94,234,212,0.10) 25%, rgba(240,253,250,0.04) 55%, transparent 80%)',
+            }}
+          >
+            <TickIcon size={32} variant="aqua" />
+            <p className="text-[0.75rem] text-slate-600 leading-relaxed whitespace-nowrap">
+              Próxima dose agendada para <span className="font-bold text-slate-800">{plannedNextDate}</span>
               {plannedNextInterval != null && (
-                <> (intervalo de <span className="font-bold">{plannedNextInterval} dias</span> a partir da aplicação).</>
+                <> (intervalo de <span className="font-bold text-slate-800">{plannedNextInterval} dias</span> a partir da aplicação).</>
               )}
             </p>
           </div>
@@ -71,11 +80,19 @@ interface SectionProps {
 
 function Section({ title, children }: SectionProps) {
   return (
-    <div className="border border-(--border-custom) rounded-xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-(--border-custom) bg-white">
+    <div>
+      <div className="relative inline-block rounded-t-xl border border-b-0 border-(--border-custom) bg-gray-50/80 px-4 py-2">
         <span className="text-[0.82rem] font-bold text-(--text)">{title}</span>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3"
+          style={{
+            background:
+              'radial-gradient(circle at 100% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)',
+          }}
+        />
       </div>
-      <div className="bg-gray-50/60 p-4">{children}</div>
+      <div className="-mt-px rounded-b-xl rounded-tr-xl border border-(--border-custom) bg-gray-50/80 p-4">{children}</div>
     </div>
   )
 }

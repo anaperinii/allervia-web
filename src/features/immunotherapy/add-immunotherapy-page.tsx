@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ChevronLeft, CheckCircle } from 'lucide-react'
-import { Button, CancelWizardModal, IconButton, toast, WizardStepsIndicator } from '@/shared/components'
+import { CheckCircle } from 'lucide-react'
+import { Button, CancelWizardModal, toast, WizardStepsIndicator } from '@/shared/components'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { INDUCTION_INTERVAL, INITIAL_DOSE } from '@/features/immunotherapy/constants/scit-protocol'
@@ -129,14 +129,21 @@ export function AddImmunotherapyPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-8 pb-5">
-      <div className="mb-8 flex items-center gap-3">
-        <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
-          <ChevronLeft size={16} />
-        </IconButton>
+      <div className="mb-8">
+        <div className="mb-1 flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setShowCancelModal(true)}
+            className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
+          >
+            Imunoterapias
+          </button>
+          <span className="text-[0.7rem] text-(--text-muted)/50">/</span>
+        </div>
         <h1 className="text-3xl font-medium text-(--text)">Adicionar Imunoterapia</h1>
       </div>
 
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+      <div className="wizard-fields flex flex-1 min-h-0 flex-col overflow-hidden">
         <WizardStepsIndicator
           current={step - 1}
           ariaLabel="Etapas do cadastro"
