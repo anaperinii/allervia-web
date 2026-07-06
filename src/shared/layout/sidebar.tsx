@@ -106,12 +106,13 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'relative flex flex-col shrink-0 rounded-xl transition-[width] duration-300 ease-out',
-        isCollapsed ? 'w-16' : 'w-56',
+        'relative z-10 m-2 flex flex-col shrink-0 rounded-xl transition-[width] duration-300 ease-out',
+        isCollapsed ? 'w-16' : 'w-52',
       )}
       style={{
         background:
           'linear-gradient(180deg, #4d7e85 0%, #234e58 100%)',
+        boxShadow: '0 6px 24px rgba(0,0,0,0.28)',
       }}
     >
       <Link
