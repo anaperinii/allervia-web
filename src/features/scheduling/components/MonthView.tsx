@@ -50,7 +50,7 @@ export function MonthView({
               className={cn(
                 'border-r border-b border-(--border-custom) last:border-r-0 p-1.5 min-h-20 cursor-pointer transition-colors relative',
                 !isCurrentMonth && 'opacity-40 bg-gray-50',
-                today ? 'bg-teal-50/80 hover:bg-teal-50' : 'hover:bg-teal-50/30',
+                today ? 'bg-brand/10 hover:bg-brand/16' : 'hover:bg-brand/10',
                 selected && 'ring-2 ring-brand ring-inset',
               )}
             >
@@ -76,10 +76,10 @@ export function MonthView({
                         onSelectApplication(application)
                       }}
                       className={cn(
-                        'rounded px-1 py-0.5 text-[0.55rem] font-medium truncate border-l-[1.5px] cursor-pointer hover:opacity-80 transition-opacity',
-                        application.status === 'missed' && 'line-through opacity-70',
+                        'rounded px-1 py-0.5 text-[0.55rem] font-medium truncate border-l-[1.5px] backdrop-blur-md cursor-pointer hover:opacity-80 transition-opacity',
+                        application.status === 'missed' && 'opacity-70',
                       )}
-                      style={{ backgroundColor: color.bg, color: color.text, borderLeftColor: color.border }}
+                      style={{ backgroundColor: color.bg, backgroundImage: color.grad, color: color.text, borderLeftColor: color.border }}
                     >
                       {application.startTime} · {getName(application.patientId)}
                     </div>

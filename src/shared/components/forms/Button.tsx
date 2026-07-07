@@ -55,8 +55,8 @@ const STYLES: Record<ButtonTone, Record<ButtonVariant, string>> = {
   },
   danger: {
     solid: 'bg-red-600 text-white hover:bg-red-700',
-    outline: 'border-[1.5px] border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400',
-    ghost: 'text-red-600 hover:bg-red-50',
+    outline: 'border-[1.5px] border-[#A41517]/35 text-[#A41517] hover:bg-[#A41517]/10 hover:border-[#A41517]/55',
+    ghost: 'text-[#A41517] hover:bg-[#A41517]/10',
   },
   warning: {
     solid: 'bg-linear-to-br from-yellow-500 to-amber-500 text-white before:content-[""] before:absolute before:inset-0 before:bg-linear-to-br before:from-yellow-600 before:to-amber-600 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 before:pointer-events-none',

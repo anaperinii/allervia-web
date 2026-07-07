@@ -1,4 +1,31 @@
 import { useId } from 'react'
+import { cn } from '@/shared/lib/cn'
+
+export function PatientInitials({ name, size = 40, className }: { name: string; size?: number; className?: string }) {
+  const initials = name
+    .split(' ')
+    .filter((p) => !['Dr.', 'Dra.', 'Dr', 'Dra'].includes(p))
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join('')
+  return (
+    <div
+      className={cn('relative flex items-center justify-center rounded-full font-bold text-white shrink-0 overflow-hidden', className)}
+      style={{
+        width: size,
+        height: size,
+        fontSize: Math.round(size * 0.34),
+        background:
+          'radial-gradient(circle at 22% 20%, rgba(255,255,255,0.38) 0%, transparent 45%), radial-gradient(circle at 80% 82%, rgba(255,255,255,0.18) 0%, transparent 48%), linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
+        border: '1px solid rgba(255,255,255,0.4)',
+        boxShadow:
+          'inset 0 1px 0 rgba(255,255,255,0.5), inset 0 0 12px rgba(255,255,255,0.15), 0 4px 12px rgba(0,0,0,0.15)',
+      }}
+    >
+      {initials}
+    </div>
+  )
+}
 
 export const GLASS_CARD_SHADOW = [
   '0 10px 32px rgba(15,23,42,0.08)',

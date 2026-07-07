@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PatientInitials } from '@/shared/components/glass-card'
 import {
   AlertTriangle,
   ChevronDown,
@@ -38,10 +39,6 @@ interface PatientInfoSidebarProps {
   onShowInactivationHistory: () => void
   onPortability: () => void
   onComplete: () => void
-}
-
-function getInitials(name: string) {
-  return name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
 }
 
 export function PatientInfoSidebar({
@@ -100,9 +97,7 @@ export function PatientInfoSidebar({
     <div className="flex w-[320px] shrink-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
       <div className="border-b border-(--border-custom) px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-base font-bold text-white shrink-0">
-            {getInitials(patient.name)}
-          </div>
+          <PatientInitials name={patient.name} size={48} />
           <div className="min-w-0">
             <h1 className="text-base font-extrabold text-(--text) leading-tight">{patient.name}</h1>
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">

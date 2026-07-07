@@ -65,18 +65,25 @@ export function NotificationListItem({
             {notification.message}
           </div>
 
-          {expanded && notification.details && (
-            <div className="mt-2 pt-2 border-t border-(--border-custom)">
-              <p className="text-[0.65rem] text-(--text-muted) leading-relaxed">{notification.details}</p>
-              {notification.actionUrl && (
-                <Link
-                  to={notification.actionUrl}
-                  className="inline-flex items-center gap-1 text-[0.7rem] font-semibold text-brand hover:underline no-underline mt-2"
-                >
-                  {notification.actionLabel || 'Ver detalhes'}
-                  <ChevronRight size={12} />
-                </Link>
+          {notification.details && (
+            <div
+              className={cn(
+                'overflow-hidden transition-[max-height,opacity] duration-300 ease-out',
+                expanded ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0',
               )}
+            >
+              <div className="mt-2 pt-2 border-t border-(--border-custom)">
+                <p className="text-[0.65rem] text-(--text-muted) leading-relaxed">{notification.details}</p>
+                {notification.actionUrl && (
+                  <Link
+                    to={notification.actionUrl}
+                    className="inline-flex items-center gap-1 text-[0.7rem] font-semibold text-brand hover:underline no-underline mt-2"
+                  >
+                    {notification.actionLabel || 'Ver detalhes'}
+                    <ChevronRight size={12} />
+                  </Link>
+                )}
+              </div>
             </div>
           )}
         </div>

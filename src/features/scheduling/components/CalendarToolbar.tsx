@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Button } from '@/shared/components'
 
 interface CalendarToolbarProps {
   monthLabel: string
@@ -8,10 +9,12 @@ interface CalendarToolbarProps {
 }
 
 const LEGEND_ITEMS = [
-  { color: '#FB923C', label: 'Subcutânea' },
-  { color: '#8B5CF6', label: 'Sublingual' },
+  { color: '#4d7e85', label: 'Subcutânea' },
+  { color: '#3CA6AD', label: 'Sublingual' },
   { color: '#94A3B8', label: 'Ausente' },
 ]
+
+const NOTCH = 'rgba(249,250,251,0.8)'
 
 export function CalendarToolbar({
   monthLabel,
@@ -20,8 +23,8 @@ export function CalendarToolbar({
   onToday,
 }: CalendarToolbarProps) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-3">
+    <div className="flex items-end justify-between gap-3">
+      <div className="relative flex items-center gap-3 rounded-t-xl h-11 border border-b-0 border-(--border-custom) bg-gray-50/80 px-4">
         <button
           onClick={onPrev}
           aria-label="Período anterior"
@@ -39,14 +42,22 @@ export function CalendarToolbar({
         >
           <ChevronRight size={20} strokeWidth={2.2} />
         </button>
-        <button
-          onClick={onToday}
-          className="ml-3 h-7 px-3 rounded-md border border-(--border-custom) bg-white text-xs font-medium text-(--text-muted) hover:border-brand hover:text-brand transition-all"
-        >
+        <Button tone="brand" variant="outline" size="sm" onClick={onToday} className="ml-1 text-(--text)! text-[0.7rem]!">
           Hoje
-        </button>
+        </Button>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3"
+          style={{ background: `radial-gradient(circle at 100% 0%, transparent 11.5px, ${NOTCH} 12.5px)` }}
+        />
       </div>
-      <div className="flex items-center gap-4 text-[0.7rem] text-(--text-muted)">
+
+      <div className="relative flex items-center gap-4 rounded-t-xl h-11 border border-b-0 border-(--border-custom) bg-gray-50/80 px-4 text-[0.7rem] text-(--text-muted)">
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-3 bottom-0 h-3 w-3"
+          style={{ background: `radial-gradient(circle at 0% 0%, transparent 11.5px, ${NOTCH} 12.5px)` }}
+        />
         {LEGEND_ITEMS.map((item) => (
           <span key={item.label} className="flex items-center gap-1.5">
             <span

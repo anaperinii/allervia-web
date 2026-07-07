@@ -37,7 +37,7 @@ export function NotificationFilterBar({
   return (
     <div>
       <div className="flex items-center justify-between gap-3">
-        <div role="tablist" aria-label="Categoria" className="flex h-7 rounded-lg border border-(--border-custom) bg-white overflow-hidden">
+        <div role="tablist" aria-label="Categoria" className="flex h-7 rounded-lg border-[#CBD6D6]! bg-[#F3F5F6]! overflow-hidden">
           {NOTIFICATION_TABS.map((tab) => {
             const active = activeTab === tab.key
             return (
@@ -67,7 +67,7 @@ export function NotificationFilterBar({
             value={readFilter}
             onChange={(e) => onReadFilterChange(e.target.value as ReadFilter)}
             aria-label="Status de leitura"
-            className="h-7 bg-white text-[0.65rem] min-w-28"
+            className="h-7 bg-[#F3F5F6]! border-[#CBD6D6]! text-[0.65rem] min-w-28"
           >
             <option value="all">Todas</option>
             <option value="unread">Não lidas</option>
@@ -79,7 +79,7 @@ export function NotificationFilterBar({
             onChange={(e) => onDateFromChange(e.target.value)}
             aria-label="Data início"
             aria-invalid={dateRangeError || undefined}
-            className={cn('h-7 bg-white text-[0.65rem]', dateRangeError && 'border-red-400')}
+            className={cn('h-7 bg-[#F3F5F6]! text-[0.65rem]', dateRangeError ? 'border-red-400!' : 'border-[#CBD6D6]!')}
           />
           <span className="text-[0.6rem] text-(--text-muted)" aria-hidden="true">—</span>
           <TextInput
@@ -88,7 +88,7 @@ export function NotificationFilterBar({
             onChange={(e) => onDateToChange(e.target.value)}
             aria-label="Data fim"
             aria-invalid={dateRangeError || undefined}
-            className={cn('h-7 bg-white text-[0.65rem]', dateRangeError && 'border-red-400')}
+            className={cn('h-7 bg-[#F3F5F6]! text-[0.65rem]', dateRangeError ? 'border-red-400!' : 'border-[#CBD6D6]!')}
           />
           {hasActiveFilters && (
             <Button tone="danger" variant="outline" size="sm" leftIcon={<X size={11} />} onClick={onClearFilters}>
