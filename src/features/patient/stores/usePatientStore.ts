@@ -301,7 +301,15 @@ function buildSeedApplications(): Application[] {
   out.push(...maintenanceFlow('11', 'j', 14, new Date(2026, 0, 20), null, '11:00', '11:30', r))
   out.push(...inductionFlow('12', 'r', 5, new Date(2026, 0, 10), null, '15:00', '15:30', r))
 
-  return applyReactions(out)
+  // Três agendamentos de teste em "hoje" para visualizar as cores de evento
+  const t = fmtDate(new Date())
+  const testApps: Application[] = [
+    { id: 'test-subcutaneous', patientId: '1', date: t.date, month: t.month, year: t.year, startTime: '09:00', endTime: '09:30', status: 'scheduled', dose: '1:100 - 0,3ml', cycle: { number: 1, days: 7 }, modality: 'subcutaneous', administrator: r },
+    { id: 'test-sublingual', patientId: '3', date: t.date, month: t.month, year: t.year, startTime: '10:00', endTime: '10:30', status: 'scheduled', dose: '1:100 - 0,4ml', cycle: { number: 1, days: 7 }, modality: 'sublingual', administrator: r },
+    { id: 'test-missed', patientId: '2', date: t.date, month: t.month, year: t.year, startTime: '11:00', endTime: '11:30', status: 'missed', dose: '1:1.000 - 0,2ml', cycle: { number: 1, days: 7 }, modality: 'subcutaneous', administrator: r },
+  ]
+
+  return [...applyReactions(out), ...testApps]
 }
 
 export const usePatientStore = create<PatientState>((set) => ({

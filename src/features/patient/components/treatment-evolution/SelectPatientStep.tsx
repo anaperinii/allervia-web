@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Info, Search } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { TextInput } from '@/shared/components'
+import { PatientInitials } from '@/shared/components/glass-card'
 import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
 
@@ -136,9 +137,7 @@ export function SelectPatientStep({
       {selected && patient && (
         <div className="border border-(--border-custom) rounded-xl mt-4 overflow-hidden">
           <div className="px-4 py-3.5 border-b border-(--border-custom) flex items-center gap-3 bg-gray-50/80">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-sm font-bold text-white shrink-0">
-              {patient.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
-            </div>
+            <PatientInitials name={patient.name} size={40} />
             <div className="min-w-0 flex-1">
               <div className="text-sm font-bold text-(--text)">{patient.name}</div>
               <div className="text-[0.7rem] text-(--text-muted)">

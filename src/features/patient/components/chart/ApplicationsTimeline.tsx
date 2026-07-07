@@ -67,10 +67,9 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect }: Applicat
                       <div className="flex flex-col items-end gap-1">
                         {isNext && <span className="text-[0.6rem] font-bold text-teal-700">PRÓXIMA</span>}
                         <span
-                          className="inline-flex items-center gap-1.5 px-2 py-px rounded-full text-[0.65rem] font-semibold border"
-                          style={{ backgroundColor: color.bg, color: color.text, borderColor: color.dot + '30' }}
+                          className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border"
+                          style={{ backgroundColor: color.bg + '4D', color: color.text, borderColor: color.dot + '30' }}
                         >
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color.dot }} />
                           {application.cycle.days} dias
                         </span>
                       </div>

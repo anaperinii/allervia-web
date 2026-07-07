@@ -55,7 +55,16 @@ export function ApplicationDetailsModal({
       {application && (
         <>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-sm font-bold text-white shrink-0">
+            <div
+              className="relative flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white shrink-0 overflow-hidden"
+              style={{
+                background:
+                  'radial-gradient(circle at 22% 20%, rgba(255,255,255,0.38) 0%, transparent 45%), radial-gradient(circle at 80% 82%, rgba(255,255,255,0.18) 0%, transparent 48%), linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
+                border: '1px solid rgba(255,255,255,0.4)',
+                boxShadow:
+                  'inset 0 1px 0 rgba(255,255,255,0.5), inset 0 0 12px rgba(255,255,255,0.15), 0 4px 12px rgba(0,0,0,0.15)',
+              }}
+            >
               {getFullName(application.patientId)
                 .split(' ')
                 .map((part) => part[0])
@@ -114,10 +123,9 @@ export function ApplicationDetailsModal({
                   const intervalColor = getIntervalColor(application.cycle.days)
                   return (
                     <span
-                      className="inline-flex items-center gap-1 px-2 py-px rounded-full text-[0.6rem] font-semibold border"
-                      style={{ backgroundColor: intervalColor.bg, color: intervalColor.text, borderColor: intervalColor.dot + '30' }}
+                      className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border"
+                      style={{ backgroundColor: intervalColor.bg + '4D', color: intervalColor.text, borderColor: intervalColor.dot + '30' }}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: intervalColor.dot }} />
                       {application.cycle.days} dias
                     </span>
                   )
@@ -126,10 +134,8 @@ export function ApplicationDetailsModal({
             </div>
             <div className="bg-white px-3.5 py-2.5">
               <div className="text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">Status</div>
-              <div className="text-xs font-medium">
-                <span className={cn('px-2 py-0.5 rounded-full text-[0.6rem] font-semibold', APPLICATION_STATUS_DISPLAY[application.status].className)}>
-                  {APPLICATION_STATUS_DISPLAY[application.status].label}
-                </span>
+              <div className="text-xs font-medium text-(--text)">
+                {APPLICATION_STATUS_DISPLAY[application.status].label}
               </div>
             </div>
             <div className="bg-white px-3.5 py-2.5">

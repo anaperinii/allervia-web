@@ -34,8 +34,8 @@ export function WeekView({
             onClick={() => onSelectDate(day)}
             className={cn(
               'border-r border-(--border-custom) last:border-r-0 p-2.5 cursor-pointer transition-colors flex flex-col min-h-0 relative',
-              today ? 'bg-teal-50/80 hover:bg-teal-50' : 'hover:bg-teal-50/30',
-              selected && !today && 'bg-teal-50/50',
+              today ? 'bg-brand/10 hover:bg-brand/16' : 'hover:bg-brand/10',
+              selected && !today && 'bg-brand/12',
             )}
           >
             {today && (
@@ -62,10 +62,11 @@ export function WeekView({
                     }}
                     className={cn(
                       'group relative rounded-md px-2.5 py-1.5 text-[0.6rem] backdrop-blur-sm cursor-pointer hover:brightness-95 transition-all',
-                      application.status === 'missed' && 'line-through opacity-70',
+                      application.status === 'missed' && 'opacity-70',
                     )}
                     style={{
-                      backgroundColor: color.bg + '88',
+                      backgroundColor: color.bg,
+                      backgroundImage: color.grad,
                       color: color.text,
                       boxShadow: '0 1px 4px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.04)',
                     }}

@@ -408,6 +408,7 @@ textarea:-webkit-autofill:focus {
 @layer base {
   ::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {

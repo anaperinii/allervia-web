@@ -117,7 +117,7 @@ export function AppointmentsPage() {
             aria-label="Filtrar por mês"
             value={calendar.currentDate.getMonth()}
             onChange={(e) => calendar.setMonth(Number(e.target.value))}
-            className="h-8 bg-white w-auto"
+            className="h-8 bg-[#F3F5F6]! w-auto border-[#CBD6D6]!"
           >
             {MONTH_OPTIONS.map((m) => (
               <option key={m.value} value={m.value}>{m.label}</option>
@@ -127,7 +127,7 @@ export function AppointmentsPage() {
             aria-label="Filtrar por ano"
             value={calendar.currentDate.getFullYear()}
             onChange={(e) => calendar.setYear(Number(e.target.value))}
-            className="h-8 bg-white w-auto"
+            className="h-8 bg-[#F3F5F6]! w-auto border-[#CBD6D6]!"
           >
             {YEAR_OPTIONS.map((y) => (
               <option key={y} value={y}>{y}</option>
@@ -137,7 +137,7 @@ export function AppointmentsPage() {
             value={calendar.viewMode}
             onChange={calendar.setViewMode}
             size="md"
-            className="bg-white"
+            className="bg-[#F3F5F6]! border-[#CBD6D6]!"
             options={[
               { value: 'week', label: 'Semana' },
               { value: 'month', label: 'Mês' },
@@ -160,7 +160,7 @@ export function AppointmentsPage() {
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="relative z-10 -mb-px">
         <CalendarToolbar
           monthLabel={calendar.monthLabel}
           onPrev={calendar.goToPrev}
@@ -169,7 +169,7 @@ export function AppointmentsPage() {
         />
       </div>
 
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-b-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <div className="flex-1 overflow-auto">
           {calendar.viewMode === 'week' ? (
             <WeekView
