@@ -1,5 +1,6 @@
 import { cn } from '@/shared/lib/cn'
 import { MediaRow } from './MediaRow'
+import { PatientInitials } from '@/shared/components/glass-card'
 import { ROLE_BADGES } from '@/features/settings/constants/team-roles'
 import type { TeamMember } from '@/features/settings/stores/useTeamsStore'
 import { MemberActionMenu } from './MemberActionMenu'
@@ -41,17 +42,13 @@ export function MembersTable({
             <tr key={member.id} className="border-b border-(--border-custom) last:border-0 hover:bg-gray-50/50 transition-colors">
               <td className="px-5 py-3">
                 <MediaRow
-                  leading={
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-white text-[0.6rem] font-bold shrink-0">
-                      {member.avatar}
-                    </div>
-                  }
+                  leading={<PatientInitials name={member.name} size={32} />}
                   title={member.name}
                   description={member.email}
                 />
               </td>
               <td className="px-5 py-3">
-                <span className={cn('text-[0.65rem] font-semibold px-2 py-0.5 rounded-full', role.bg, role.color)}>
+                <span className="inline-block px-2 py-0.5 rounded-md bg-gray-200/70 text-[0.65rem] font-medium text-(--text-muted) border border-gray-200">
                   {role.label}
                 </span>
               </td>

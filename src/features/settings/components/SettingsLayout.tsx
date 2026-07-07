@@ -30,17 +30,19 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-8 pb-5">
       <div className="mb-8 flex items-center justify-between gap-3">
-        <div className="flex items-end gap-2.5">
+        <div>
           {subtitle ? (
             <>
-              <Link
-                to="/settings"
-                className="text-3xl font-medium leading-none text-(--text-muted) hover:text-(--text) transition-colors no-underline"
-              >
-                Configurações
-              </Link>
-              <span className="text-2xl font-light leading-none text-(--text-muted)/60 mb-0.5">/</span>
-              <span className="text-xl font-medium leading-none text-(--text) mb-0.5">{subtitle}</span>
+              <div className="mb-1 flex items-center gap-1.5">
+                <Link
+                  to="/settings"
+                  className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
+                >
+                  Configurações
+                </Link>
+                <span className="text-[0.7rem] text-(--text-muted)/50">/</span>
+              </div>
+              <h1 className="text-3xl font-medium text-(--text)">{subtitle}</h1>
             </>
           ) : (
             <h1 className="text-3xl font-medium leading-none text-(--text)">Configurações</h1>
@@ -54,7 +56,7 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
           className="relative mb-8 flex items-center gap-6 overflow-hidden rounded-xl bg-white/45 px-8 py-6 shadow-[0_4px_24px_rgba(0,0,0,0.06)] backdrop-blur-xl"
           style={{
             backgroundImage:
-              'linear-gradient(105deg, rgba(108,158,165,0.13) 0%, rgba(155,193,196,0.07) 25%, rgba(234,241,241,0.03) 55%, transparent 80%)',
+              'linear-gradient(105deg, rgba(108,158,165,0.28) 0%, rgba(155,193,196,0.16) 25%, rgba(234,241,241,0.07) 55%, transparent 80%)',
           }}
         >
           <div className="relative h-18 w-18 shrink-0" style={{ width: '72px', height: '72px' }}>
@@ -123,11 +125,9 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
       )}
 
       {subtitle ? (
-        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
-          <div className="flex-1 min-h-0 overflow-y-auto p-5">{children}</div>
-        </div>
-      ) : (
         <div className="flex-1 min-h-0 overflow-y-auto">{children}</div>
+      ) : (
+        <div className="flex-1 min-h-0 overflow-y-auto p-2">{children}</div>
       )}
 
       <Modal

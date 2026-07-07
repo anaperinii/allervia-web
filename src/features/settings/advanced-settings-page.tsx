@@ -11,7 +11,6 @@ import {
   Pencil,
   Plus,
   Server,
-  Syringe,
   Trash2,
   X,
 } from 'lucide-react'
@@ -129,7 +128,7 @@ export function AdvancedSettingsPage() {
   return (
     <SettingsLayout subtitle="Configurações Avançadas">
       <div className="max-w-2xl mx-auto space-y-5">
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Notificações</h2>
               </div>
@@ -154,7 +153,7 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Sistema</h2>
               </div>
@@ -187,7 +186,7 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Agendamentos</h2>
               </div>
@@ -322,7 +321,7 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Tipos de Imunoterapia</h2>
               </div>
@@ -345,9 +344,6 @@ export function AdvancedSettingsPage() {
                 <div className="space-y-1.5">
                   {customTypes.map((t) => (
                     <div key={t.id} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-(--border-custom) bg-gray-50/40">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-50 shrink-0">
-                        <Syringe size={11} className="text-brand" />
-                      </div>
                       {editingTypeId === t.id ? (
                         <>
                           <TextInput
@@ -367,7 +363,7 @@ export function AdvancedSettingsPage() {
                       ) : (
                         <>
                           <span className="flex-1 text-xs font-medium text-(--text)">{t.label}</span>
-                          <IconButton aria-label={`Editar ${t.label}`} size="sm" tone="brand" onClick={() => startEditType(t.id, t.label)}>
+                          <IconButton aria-label={`Editar ${t.label}`} size="sm" tone="brand" onClick={() => startEditType(t.id, t.label)} className="hover:bg-brand/15! hover:text-brand-dark!">
                             <Pencil size={12} />
                           </IconButton>
                           <IconButton aria-label={`Remover ${t.label}`} size="sm" tone="danger" onClick={() => removeType(t.id)}>
@@ -381,7 +377,7 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados e Backup</h2>
               </div>

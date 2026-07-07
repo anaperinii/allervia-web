@@ -13,6 +13,17 @@ function getInitials(name: string): string {
     .join('')
 }
 
+const GLASS_AVATAR_STYLE: React.CSSProperties = {
+  background:
+    'radial-gradient(circle at 20% 22%, rgba(255,255,255,0.14) 0%, transparent 40%), radial-gradient(circle at 80% 18%, rgba(255,255,255,0.08) 0%, transparent 45%), radial-gradient(circle at 78% 82%, rgba(255,255,255,0.11) 0%, transparent 45%), radial-gradient(circle at 22% 80%, rgba(255,255,255,0.07) 0%, transparent 42%), rgba(255,255,255,0.02)',
+  color: 'rgba(255,255,255,0.8)',
+  border: '1px solid rgba(255,255,255,0.14)',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
+  boxShadow:
+    'inset 0 0 14px rgba(255,255,255,0.10), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.20)',
+}
+
 interface SidebarProfileProps {
   isCollapsed: boolean
 }
@@ -78,16 +89,7 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
       >
         <span
           className="relative flex h-8 w-8 items-center justify-center rounded-full text-[0.65rem] font-bold shrink-0 overflow-hidden"
-          style={{
-            background:
-              'radial-gradient(circle at 20% 22%, rgba(255,255,255,0.14) 0%, transparent 40%), radial-gradient(circle at 80% 18%, rgba(255,255,255,0.08) 0%, transparent 45%), radial-gradient(circle at 78% 82%, rgba(255,255,255,0.11) 0%, transparent 45%), radial-gradient(circle at 22% 80%, rgba(255,255,255,0.07) 0%, transparent 42%), rgba(255,255,255,0.02)',
-            color: 'rgba(255,255,255,0.8)',
-            border: '1px solid rgba(255,255,255,0.14)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            boxShadow:
-              'inset 0 0 14px rgba(255,255,255,0.10), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.20)',
-          }}
+          style={GLASS_AVATAR_STYLE}
         >
           {getInitials(current.name)}
         </span>
@@ -146,9 +148,6 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
                       : undefined
                   }
                 >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-white text-[0.65rem] font-bold">
-                    {getInitials(profile.name)}
-                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-semibold text-slate-800 truncate">
                       {profile.name}

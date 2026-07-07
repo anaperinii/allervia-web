@@ -1,20 +1,17 @@
 import { Heart } from 'lucide-react'
-import imunecareLogo from '@/assets/imunecare-logo.png'
+import { AllerviaLogo } from '@/features/landing-page/components/AllerviaLogo'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 
 export function AboutPage() {
   return (
     <SettingsLayout subtitle="Sobre o Sistema">
       <div className="max-w-lg mx-auto text-center space-y-6 py-8">
-        <div className="flex justify-center">
-          <img src={imunecareLogo} alt="Allervia" className="w-16 h-16 rounded-2xl" />
-        </div>
-        <div>
-          <h2 className="text-xl font-extrabold gradient-text mb-1">Allervia</h2>
+        <div className="flex flex-col items-center gap-2">
+          <AllerviaLogo withWordmark size={48} color="#4d7e85" wordmarkColor="#234E58" />
           <p className="text-xs text-(--text-muted)">Gestão de Protocolos de Imunoterapia Alérgica</p>
         </div>
 
-        <div className="border border-(--border-custom) rounded-xl p-4 text-left space-y-2.5">
+        <div className="border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-4 text-left space-y-2.5">
           {[
             ['Versão', '2.0.0-beta'],
             ['Build', '2026.04.10'],
@@ -31,14 +28,14 @@ export function AboutPage() {
           ))}
         </div>
 
-        <div className="border border-(--border-custom) rounded-xl p-4 text-left">
+        <div className="border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-4 text-left">
           <h3 className="text-xs font-bold text-(--text) mb-2">Licença</h3>
           <p className="text-[0.7rem] text-(--text-muted) leading-relaxed">
             Software proprietário desenvolvido como Projeto Integrador do curso de Bacharelado em Engenharia de Software da Universidade Evangélica de Goiás (UniEVANGÉLICA). Todos os direitos reservados.
           </p>
         </div>
 
-        <div className="border border-(--border-custom) rounded-xl p-4 text-left">
+        <div className="border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-4 text-left">
           <h3 className="text-xs font-bold text-(--text) mb-2">Equipe de Desenvolvimento</h3>
           <div className="space-y-1.5">
             {['Ana Luisa Lima Perini', 'Daniella Nogueira e Silva', 'Esther Carolina Batista Lima', 'Victória Gomes Garcia'].map((name) => (

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { CheckCircle } from 'lucide-react'
-import { TablePagination, toast } from '@/shared/components'
+import { TablePagination } from '@/shared/components'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
@@ -59,6 +58,15 @@ export function ImmunotherapiesPage() {
     })
   }, [immunotherapies, searchTerm, typeFilter, intervalFilter, statusFilter, doctorFilter, modalityTab])
 
+  const modalityCounts = useMemo(() => {
+    const base = immunotherapies.filter((i) => !doctorFilter || i.responsibleDoctor === doctorFilter)
+    return {
+      all: base.length,
+      subcutaneous: base.filter((i) => i.modality === 'subcutaneous').length,
+      sublingual: base.filter((i) => i.modality === 'sublingual').length,
+    } as Record<ModalityTab, number>
+  }, [immunotherapies, doctorFilter])
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
   const paginated = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage
@@ -79,19 +87,6 @@ export function ImmunotherapiesPage() {
       <div className="mb-7">
         <div className="mb-8 flex items-center gap-3">
           <h1 className="text-3xl font-medium text-(--text)">Imunoterapias</h1>
-          <button
-            type="button"
-            onClick={() =>
-              toast.success({
-                icon: <CheckCircle size={16} />,
-                title: 'Formulário finalizado com sucesso!',
-                description: 'Os dados foram validados e salvos no prontuário.',
-              })
-            }
-            className="h-8 px-3 rounded-lg border border-(--border-custom) text-xs font-medium text-(--text-muted) hover:bg-gray-100 transition-colors cursor-pointer"
-          >
-            Testar toast
-          </button>
         </div>
         <ImmunotherapiesFilterBar
           searchTerm={searchTerm}
@@ -119,7 +114,7 @@ export function ImmunotherapiesPage() {
               type="button"
               onClick={() => setModalityTab(tab.value)}
               className={cn(
-                'relative px-5 py-2 text-[0.78rem] font-medium transition-colors rounded-t-xl',
+                'relative px-5 py-2 text-xs font-semibold transition-colors rounded-t-xl',
                 isActive
                   ? 'bg-gray-50/80 text-slate-800 z-10'
                   : 'bg-white/55 text-slate-400 hover:bg-white/75 hover:text-slate-600',
@@ -147,7 +142,7 @@ export function ImmunotherapiesPage() {
                   />
                 </>
               )}
-              {tab.label}
+              {tab.label} <span className="text-[0.65rem] font-normal opacity-60">({modalityCounts[tab.value]})</span>
             </button>
           )
         })}
@@ -161,7 +156,6 @@ export function ImmunotherapiesPage() {
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={filtered.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={setItemsPerPage}
