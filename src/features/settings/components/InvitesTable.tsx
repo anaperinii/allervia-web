@@ -1,5 +1,4 @@
 import { Clock, Mail, Send, Trash2, X } from 'lucide-react'
-import { cn } from '@/shared/lib/cn'
 import { Button, IconButton } from '@/shared/components'
 import { ROLE_BADGES } from '@/features/settings/constants/team-roles'
 import type { Invite } from '@/features/settings/stores/useTeamsStore'
@@ -40,7 +39,7 @@ export function InvitesTable({ invites, onResend, onDelete }: InvitesTableProps)
                 </div>
               </td>
               <td className="px-5 py-3">
-                <span className={cn('text-[0.65rem] font-semibold px-2 py-0.5 rounded-full', role.bg, role.color)}>
+                <span className="inline-block px-2 py-0.5 rounded-md bg-gray-200/70 text-[0.65rem] font-medium text-(--text-muted) border border-gray-200">
                   {role.label}
                 </span>
               </td>

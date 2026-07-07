@@ -10,6 +10,7 @@ import {
   TextInput,
 } from '@/shared/components'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
+import { PatientInitials } from '@/shared/components/glass-card'
 import { useUserStore } from '@/shared/stores/useUserStore'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
 
@@ -63,13 +64,6 @@ export function ProfilePage() {
     setEditing(false)
   }
 
-  const avatarInitials = watched.name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
-
   return (
     <SettingsLayout subtitle="Meu Perfil">
       <form onSubmit={(e) => e.preventDefault()}>
@@ -77,9 +71,7 @@ export function ProfilePage() {
             <div className="flex items-center justify-between gap-5">
               <div className="flex items-center gap-5 min-w-0">
                 <div className="relative shrink-0">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-br from-brand to-brand-dark text-2xl font-bold text-white">
-                    {avatarInitials}
-                  </div>
+                  <PatientInitials name={watched.name} size={80} />
                   {editing && (
                     <button
                       type="button"
@@ -119,7 +111,7 @@ export function ProfilePage() {
               </div>
             </div>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Pessoais</h2>
               </div>
@@ -145,7 +137,7 @@ export function ProfilePage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Profissionais</h2>
               </div>

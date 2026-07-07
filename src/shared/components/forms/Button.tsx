@@ -70,8 +70,8 @@ const STYLES: Record<ButtonTone, Record<ButtonVariant, string>> = {
   },
   neutral: {
     solid: 'bg-gray-700 text-white hover:bg-gray-800',
-    outline: 'border-[1.5px] border-(--border-custom) text-(--text-muted) hover:bg-gray-50',
-    ghost: 'text-(--text-muted) hover:bg-gray-50',
+    outline: 'border-[1.5px] border-(--border-custom) text-(--text-muted) hover:bg-gray-200 hover:text-(--text) hover:border-gray-300',
+    ghost: 'text-(--text-muted) hover:bg-gray-200 hover:text-(--text)',
   },
 }
 

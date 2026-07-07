@@ -16,7 +16,7 @@ export function PlansPage() {
   return (
     <SettingsLayout subtitle="Planos e Serviços">
       <div className="max-w-4xl mx-auto space-y-6">
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Seu plano atual</h2>
               </div>
@@ -73,8 +73,8 @@ export function PlansPage() {
                     <div
                       key={plan.id}
                       className={cn(
-                        'border rounded-xl overflow-hidden transition-all flex flex-col',
-                        isCurrent ? 'border-brand shadow-[0_8px_24px_rgba(20,184,166,0.1)]' : 'border-(--border-custom) hover:border-gray-300',
+                        'border rounded-xl overflow-hidden transition-all flex flex-col bg-white/55 backdrop-blur-xl',
+                        isCurrent ? 'border-brand shadow-[0_8px_24px_rgba(20,184,166,0.1)]' : 'border-(--border-custom) shadow-[0_4px_24px_rgba(0,0,0,0.06)] hover:border-gray-300',
                       )}
                     >
                       {isCurrent && (

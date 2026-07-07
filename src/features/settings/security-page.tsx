@@ -25,7 +25,7 @@ export function SecurityPage() {
   return (
     <SettingsLayout subtitle="Segurança e Privacidade">
       <div className="max-w-2xl mx-auto space-y-5">
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Autenticação</h2>
               </div>
@@ -50,7 +50,7 @@ export function SecurityPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center justify-between">
                 <h2 className="text-xs font-bold text-(--text)">Sessões ativas</h2>
                 <span className="text-[0.6rem] text-(--text-muted) bg-gray-100 px-2 py-0.5 rounded-full">{sessions.length} dispositivos</span>
@@ -80,7 +80,7 @@ export function SecurityPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Privacidade e LGPD</h2>
               </div>
