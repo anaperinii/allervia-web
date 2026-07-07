@@ -39,7 +39,7 @@ const SIZE_CLASS: Record<IconButtonSize, string> = {
 
 const TONE_CLASS: Record<IconButtonTone, string> = {
   brand: 'text-(--text-muted) hover:bg-teal-50 hover:text-brand',
-  danger: 'text-(--text-muted) hover:bg-red-50 hover:text-red-500',
+  danger: 'text-(--text-muted) hover:bg-[#A41517]/10 hover:text-[#A41517]',
   warning: 'text-(--text-muted) hover:bg-yellow-50 hover:text-yellow-700',
   success: 'text-(--text-muted) hover:bg-emerald-50 hover:text-emerald-700',
   neutral: 'text-(--text-muted) hover:bg-gray-50 hover:text-(--text)',

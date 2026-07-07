@@ -127,8 +127,8 @@ export function NotificationsPage() {
         />
       </div>
 
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
-        <div className="px-5 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center justify-between gap-3">
+      <div className="flex flex-1 min-h-0 flex-col">
+        <div className="relative z-10 -mb-px shrink-0 rounded-t-xl border border-b-0 border-(--border-custom) bg-gray-50/80 px-5 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <input
               type="checkbox"
@@ -139,7 +139,7 @@ export function NotificationsPage() {
             />
             <span className="text-xs text-(--text-muted)">{filtered.length} notificações</span>
             {selectedIds.size > 0 && (
-              <span className="text-[0.6rem] font-semibold text-brand bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full">
+              <span className="text-[0.6rem] font-semibold text-brand-dark bg-brand/25 border border-brand/20 px-2 py-0.5 rounded-md">
                 {selectedIds.size} selecionadas
               </span>
             )}
@@ -147,10 +147,10 @@ export function NotificationsPage() {
           <div className="flex items-center gap-2">
             {selectedIds.size > 0 && (
               <>
-                <Button variant="outline" size="sm" leftIcon={<MailOpen size={11} />} onClick={handleBatchRead}>
+                <Button variant="outline" size="sm" leftIcon={<MailOpen size={11} />} onClick={handleBatchRead} className="bg-gray-100! border-gray-300! text-gray-700! hover:bg-gray-200!">
                   Marcar como lidas
                 </Button>
-                <Button variant="outline" size="sm" leftIcon={<Mail size={11} />} onClick={handleBatchUnread}>
+                <Button variant="outline" size="sm" leftIcon={<Mail size={11} />} onClick={handleBatchUnread} className="bg-gray-100! border-gray-300! text-gray-700! hover:bg-gray-200!">
                   Marcar como não lidas
                 </Button>
                 <Button tone="danger" variant="outline" size="sm" leftIcon={<Trash2 size={11} />} onClick={handleBatchDelete}>
@@ -159,14 +159,14 @@ export function NotificationsPage() {
               </>
             )}
             {unreadCount > 0 && selectedIds.size === 0 && (
-              <Button variant="outline" size="sm" leftIcon={<CheckCheck size={12} />} onClick={markAllAsRead}>
+              <Button variant="outline" size="sm" leftIcon={<CheckCheck size={12} />} onClick={markAllAsRead} className="bg-gray-100! border-gray-300! text-gray-700! hover:bg-gray-200!">
                 Marcar todas como lidas
               </Button>
             )}
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto rounded-b-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
           {filtered.length === 0 ? (
             <NotificationsEmpty hasActiveFilters={hasActiveFilters} onClearFilters={clearFilters} />
           ) : (
