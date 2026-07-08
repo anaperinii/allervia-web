@@ -65,7 +65,7 @@ export function CompletionFollowupStep({ form }: CompletionFollowupStepProps) {
       />
 
       <div>
-        <div className="text-[0.65rem] font-bold text-(--text-muted) uppercase tracking-wider mb-2">Recomendações</div>
+        <div className="text-xs font-semibold text-(--text-muted) mb-2">Recomendações</div>
         <div className="grid grid-cols-1 gap-2">
           {RECOMMENDATIONS.map((rec) => {
             const Icon = rec.icon
@@ -106,7 +106,7 @@ export function CompletionFollowupStep({ form }: CompletionFollowupStepProps) {
                 <Pencil size={13} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[0.65rem] font-semibold text-brand uppercase tracking-wider mb-0.5">Recomendação personalizada</div>
+                <div className="text-xs font-semibold text-brand mb-0.5">Recomendação personalizada</div>
                 <div className="text-[0.7rem] text-(--text) leading-relaxed">{rec}</div>
               </div>
               <button
