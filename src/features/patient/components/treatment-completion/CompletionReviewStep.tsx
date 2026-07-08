@@ -2,6 +2,7 @@ import { AlertOctagon, Check, Lock } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { cn } from '@/shared/lib/cn'
 import { FieldLabel, TextArea } from '@/shared/components'
+import { GLASS_CARD_SHADOW } from '@/shared/components/glass-card'
 import type { CompletionForm } from '@/features/patient/schemas/completion'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
 
@@ -44,19 +45,19 @@ export function CompletionReviewStep({
         <div className="flex items-center gap-2">
           <div className="w-1 h-4 rounded-full bg-brand" />
           <h2 className="text-sm font-bold text-(--text)">Revisão e assinatura</h2>
-          <span className="inline-flex items-center gap-1 text-[0.55rem] font-semibold text-(--text-muted) bg-gray-100 border border-(--border-custom) rounded-full px-2 py-0.5 ml-auto">
-            <Lock size={9} />
-            imutável após confirmação
-          </span>
         </div>
         <p className="text-[0.65rem] text-(--text-muted) mt-1 leading-relaxed">
           Confira o resumo do que será gravado no prontuário e assine o desfecho.
         </p>
       </div>
 
-      <div className="border border-(--border-custom) rounded-xl bg-white overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-(--border-custom) bg-gray-50">
-          <div className="text-[0.55rem] font-bold text-(--text-muted) uppercase tracking-wider">Resumo a ser gravado no prontuário</div>
+      <div className="border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-(--border-custom) bg-gray-50 flex items-center justify-between gap-2">
+          <div className="text-xs font-semibold text-(--text-muted)">Resumo a ser gravado no prontuário</div>
+          <span className="inline-flex items-center gap-1 text-[0.55rem] font-semibold text-amber-700 bg-amber-100/70 border border-amber-200 rounded-md px-2 py-0.5 shrink-0">
+            <Lock size={9} />
+            imutável após confirmação
+          </span>
         </div>
         <dl className="divide-y divide-(--border-custom)">
           <Row label="Paciente" value={`${patient.name} · ${patient.cpf}`} />
@@ -83,9 +84,9 @@ export function CompletionReviewStep({
         />
       </FieldLabel>
 
-      <div className="border border-(--border-custom) rounded-xl bg-white p-4 flex items-center justify-between gap-3">
+      <div className="border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-4 flex items-center justify-between gap-3">
         <div>
-          <div className="text-[0.55rem] font-bold text-(--text-muted) uppercase tracking-wider">Médico responsável pela conclusão</div>
+          <div className="text-xs font-semibold text-(--text-muted)">Médico responsável pela conclusão</div>
           <div className="text-sm font-bold text-(--text) mt-0.5">{patient.responsibleDoctor}</div>
         </div>
         <div className="text-right">
@@ -100,7 +101,7 @@ export function CompletionReviewStep({
         onClick={() => setValue('confirmation', !confirmation, { shouldValidate: true })}
         className={cn(
           'flex w-full items-start gap-2.5 rounded-lg border p-3 text-left transition-all cursor-pointer',
-          confirmation ? 'border-brand bg-brand/5' : 'border-(--border-custom) hover:border-brand/40',
+          confirmation ? 'border-brand bg-brand/5' : 'border-(--border-custom) bg-gray-50 hover:border-brand/40',
           errors.confirmation && !confirmation && 'border-red-300 bg-red-50/40',
         )}
       >
@@ -112,9 +113,18 @@ export function CompletionReviewStep({
         </span>
       </button>
 
-      <div className="flex items-start gap-2 bg-amber-50/70 border border-amber-200 rounded-lg px-3 py-2.5">
-        <AlertOctagon size={14} className="text-amber-600 shrink-0 mt-0.5" />
-        <p className="text-[0.6rem] text-amber-800 leading-relaxed">
+      <div
+        className="flex items-start gap-2 rounded-2xl bg-white/25 backdrop-blur-xl p-3.5"
+        style={{
+          boxShadow: GLASS_CARD_SHADOW,
+          backdropFilter: 'blur(20px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+          backgroundImage:
+            'linear-gradient(105deg, rgba(245,158,11,0.18) 0%, rgba(252,211,77,0.10) 25%, rgba(254,243,199,0.04) 55%, transparent 80%)',
+        }}
+      >
+        <AlertOctagon size={16} className="text-amber-700 shrink-0 mt-0.5" />
+        <p className="text-[0.68rem] text-amber-800/90 leading-relaxed">
           Esta ação é <span className="font-bold">irreversível</span>. Após confirmar, o tratamento será marcado como concluído, as aplicações futuras canceladas e este registro tornará imutável no prontuário. Para reiniciar imunoterapia, será necessário criar um novo plano.
         </p>
       </div>
@@ -128,7 +138,7 @@ export function CompletionReviewStep({
 function Row({ label, value, valueClass, multiline }: { label: string; value: string; valueClass?: string; multiline?: boolean }) {
   return (
     <div className="px-4 py-2 flex items-start gap-3">
-      <dt className="text-[0.6rem] text-(--text-muted) w-40 shrink-0">{label}</dt>
+      <dt className="text-xs text-(--text-muted) w-40 shrink-0">{label}</dt>
       <dd className={cn('text-[0.7rem] font-semibold text-(--text) flex-1 min-w-0', multiline ? 'whitespace-pre-wrap leading-relaxed' : 'truncate', valueClass)}>
         {value}
       </dd>

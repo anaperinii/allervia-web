@@ -1,8 +1,6 @@
-import { useMemo, useState } from 'react'
-import { differenceInDays } from 'date-fns'
-import { cn } from '@/shared/lib/cn'
-import { parsePtDate, comparePtDateAsc, formatDurationFromDays } from '@/shared/lib/dates'
-import { isMaintenanceDose, getPhase, type ProtocolPhase } from '@/features/immunotherapy/constants/scit-protocol'
+import { useId, useMemo, useState } from 'react'
+import { comparePtDateAsc } from '@/shared/lib/dates'
+import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 interface TreatmentTimelineProps {
@@ -11,186 +9,208 @@ interface TreatmentTimelineProps {
   maintenanceStart: string | null
 }
 
-type DotKind = ProtocolPhase | 'reaction' | 'today'
-
-interface Dot {
-  kind: DotKind
-  date: Date
-  label: string
+interface Pt {
+  x: number
+  y: number
+  date: string
   dose: string
+  conc: string
+  days: number
+  reaction: boolean
+  color: string
 }
 
-interface KindStyle {
-  bg: string
-  ring: string
-  legendBg?: string
-  legendText?: string
-  legendBorder?: string
+const concOf = (a: Application) => (a.extractConcentration || a.dose.split(' - ')[0] || '').trim()
+const volOf = (a: Application) => (a.appliedVolume || a.dose.split(' - ')[1] || '').trim()
+
+function parseVolume(value: string): number {
+  const n = parseFloat(value.replace(/ml/i, '').replace(',', '.').trim())
+  return Number.isFinite(n) ? n : 0
 }
 
-const KIND_STYLES: Record<DotKind, KindStyle> = {
-  induction:   { bg: 'bg-teal-300',   ring: 'ring-teal-100',   legendBg: 'bg-teal-50',   legendText: 'text-teal-700',   legendBorder: 'border-teal-200' },
-  maintenance: { bg: 'bg-brand',      ring: 'ring-teal-200',   legendBg: 'bg-teal-100',  legendText: 'text-teal-800',   legendBorder: 'border-teal-300' },
-  reaction:    { bg: 'bg-orange-500', ring: 'ring-orange-200', legendBg: 'bg-orange-50', legendText: 'text-orange-700', legendBorder: 'border-orange-200' },
-  today:       { bg: 'bg-gray-400',   ring: 'ring-gray-200' },
+function concDenominator(value: string): number {
+  const parts = value.split(':')
+  if (parts.length < 2) return 0
+  const n = parseInt(parts[1].replace(/\D/g, ''), 10)
+  return Number.isFinite(n) ? n : 0
 }
 
-export function TreatmentTimeline({ applications, inductionStart, maintenanceStart }: TreatmentTimelineProps) {
+function smoothPath(pts: Pt[]): string {
+  if (pts.length < 2) return pts.length ? `M ${pts[0].x} ${pts[0].y}` : ''
+  let d = `M ${pts[0].x} ${pts[0].y}`
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i]
+    const p1 = pts[i]
+    const p2 = pts[i + 1]
+    const p3 = pts[i + 2] ?? p2
+    const cp1x = p1.x + (p2.x - p0.x) / 6
+    const cp1y = p1.y + (p2.y - p0.y) / 6
+    const cp2x = p2.x - (p3.x - p1.x) / 6
+    const cp2y = p2.y - (p3.y - p1.y) / 6
+    d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)} ${cp2x.toFixed(2)} ${cp2y.toFixed(2)} ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`
+  }
+  return d
+}
+
+const W = 960
+const H = 180
+const PX = 18
+const PT = 20
+const PB = 30
+
+export function TreatmentTimeline({ applications, inductionStart }: TreatmentTimelineProps) {
+  const gradientId = useId()
+  const fadeMaskId = useId()
+  const fadeGradId = useId()
   const [hovered, setHovered] = useState<number | null>(null)
 
-  const { dots, induction, maintenanceStartIdx } = useMemo(() => {
+  const { pts, path, area, stops, x0, xN, intervals, labelIdx } = useMemo(() => {
     const realized = applications
       .filter((application) => application.status === 'completed')
       .sort((a, b) => comparePtDateAsc(a.date, b.date))
 
-    const induction = realized.filter((application) => !isMaintenanceDose(application.dose))
-    const maintenanceStartIdx = realized.findIndex((a) => isMaintenanceDose(a.dose))
-
-    const dots: Dot[] = realized.map((application) => ({
-      kind: application.sideEffect === 'yes' ? 'reaction' : getPhase(application.dose, application.cycle.days),
-      date: parsePtDate(application.date),
-      label: application.date,
-      dose: application.dose,
-    }))
-
-    const today = new Date()
-    dots.push({
-      kind: 'today',
-      date: today,
-      label: 'Hoje',
-      dose: '',
+    const raw = realized.map((a) => {
+      const vol = parseVolume(volOf(a))
+      const denom = concDenominator(concOf(a))
+      const potency = denom > 0 ? vol / denom : vol
+      return { potency: potency > 0 ? potency : 1e-6, date: a.date, dose: a.dose, conc: concOf(a), days: a.cycle.days, reaction: a.sideEffect === 'yes' }
     })
 
-    return { dots, induction, maintenanceStartIdx }
+    const logs = raw.map((r) => Math.log10(r.potency))
+    const minY = Math.min(...logs)
+    const maxY = Math.max(...logs)
+    const spanY = maxY - minY || 1
+    const n = raw.length
+
+    const pts: Pt[] = raw.map((r, i) => ({
+      x: PX + (n > 1 ? i / (n - 1) : 0.5) * (W - 2 * PX),
+      y: PT + (1 - (Math.log10(r.potency) - minY) / spanY) * (H - PT - PB),
+      date: r.date,
+      dose: r.dose,
+      conc: r.conc,
+      days: r.days,
+      reaction: r.reaction,
+      color: getIntervalColor(r.days).dot,
+    }))
+
+    const path = smoothPath(pts)
+    const x0 = pts[0]?.x ?? PX
+    const xN = pts[n - 1]?.x ?? W - PX
+    const area = n > 1 ? `${path} L ${xN.toFixed(2)} ${H - PB} L ${x0.toFixed(2)} ${H - PB} Z` : ''
+    const denomX = xN - x0 || 1
+    const stops = pts.map((p) => ({ offset: ((p.x - x0) / denomX) * 100, color: p.color }))
+
+    const intervals = Array.from(new Set(realized.map((a) => a.cycle.days))).sort((a, b) => a - b)
+
+    // date label at each concentration change and, once on the target dose, at each interval change
+    const labelIdx: number[] = []
+    pts.forEach((p, i) => {
+      if (i === 0 || p.conc !== pts[i - 1].conc || p.days !== pts[i - 1].days) labelIdx.push(i)
+    })
+
+    return { pts, path, area, stops, x0, xN, intervals, labelIdx }
   }, [applications])
 
-  const realizedCount = dots.length - 1
-  const inductionPct = realizedCount ? Math.round((induction.length / realizedCount) * 100) : 0
-  const maintenancePct = 100 - inductionPct
-
-  const today = new Date()
-  const inductionStartDate = inductionStart && inductionStart !== '—' ? parsePtDate(inductionStart) : null
-  const maintenanceStartDate = maintenanceStart ? parsePtDate(maintenanceStart) : null
-  const inductionDurationLabel = inductionStartDate
-    ? formatDurationFromDays(differenceInDays(maintenanceStartDate ?? today, inductionStartDate))
-    : '—'
-  const maintenanceDurationLabel = maintenanceStartDate
-    ? formatDurationFromDays(differenceInDays(today, maintenanceStartDate))
-    : null
-
-  const denom = Math.max(dots.length - 1, 1)
-  const positionOf = (i: number) => (i / denom) * 100
-  const maintenanceLabelPct = maintenanceStartIdx >= 0 ? positionOf(maintenanceStartIdx) : null
-
   return (
-    <div className="border border-(--border-custom) rounded-xl bg-white p-5 space-y-4">
+    <div className="border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-5 space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-[0.7rem] font-bold text-(--text) uppercase tracking-wider">Linha do tempo do tratamento</div>
+          <div className="text-sm font-bold text-(--text)">Progressão da dose</div>
           <div className="text-[0.65rem] text-(--text-muted) mt-0.5">
-            {realizedCount} {realizedCount === 1 ? 'aplicação realizada' : 'aplicações realizadas'} · de {inductionStart} até hoje
+            Dose efetiva ao longo do tempo · {pts.length} {pts.length === 1 ? 'aplicação' : 'aplicações'} desde {inductionStart}
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <LegendBadge kind="induction" label={`Indução · ${inductionDurationLabel}`} />
-          {maintenanceDurationLabel && <LegendBadge kind="maintenance" label={`Manutenção · ${maintenanceDurationLabel}`} />}
-          <LegendBadge kind="reaction" label="Reação adversa" />
+          {intervals.map((days) => {
+            const color = getIntervalColor(days)
+            return (
+              <span key={days} className="inline-flex items-center gap-1.5 text-[0.55rem] font-semibold text-(--text-muted)">
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color.dot }} />
+                {days} dias
+              </span>
+            )
+          })}
         </div>
       </div>
 
-      <div className="relative">
-        <div className="relative h-10">
-          <div className="absolute inset-0 flex rounded-lg overflow-hidden">
-            {realizedCount > 0 && inductionPct > 0 ? (
-              <>
-                <div className="bg-teal-50" style={{ width: `${inductionPct}%` }} title="Fase de indução" />
-                <div className="bg-teal-200/80" style={{ width: `${maintenancePct}%` }} title="Fase de manutenção" />
-              </>
-            ) : (
-              <div className="bg-gray-50 w-full" />
-            )}
-          </div>
-          <div className="absolute top-1/2 left-3 right-3 h-0.5 -translate-y-1/2 bg-gray-300 rounded-full" />
-          <div className="absolute inset-y-0 left-3 right-3">
-            {dots.map((dot, i) => (
-              <TimelineDot
-                key={i}
-                dot={dot}
-                left={positionOf(i)}
-                index={i}
-                isHovered={hovered === i}
-                onHoverChange={setHovered}
-              />
+      {pts.length === 0 ? (
+        <div className="h-48 flex items-center justify-center text-[0.65rem] text-(--text-muted)">
+          Sem aplicações realizadas.
+        </div>
+      ) : (
+        <div className="relative">
+          <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 'auto' }} role="img" aria-label="Progressão da dose efetiva ao longo do tempo">
+            <defs>
+              <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1={x0} y1="0" x2={xN} y2="0">
+                {stops.map((s, i) => (
+                  <stop key={i} offset={`${s.offset}%`} stopColor={s.color} />
+                ))}
+              </linearGradient>
+              <linearGradient id={fadeGradId} gradientUnits="userSpaceOnUse" x1="0" y1={PT} x2="0" y2={H - PB}>
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+                <stop offset="55%" stopColor="#ffffff" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+              </linearGradient>
+              <mask id={fadeMaskId}>
+                <rect x="0" y="0" width={W} height={H} fill={`url(#${fadeGradId})`} />
+              </mask>
+            </defs>
+
+            {area && <path d={area} fill={`url(#${gradientId})`} fillOpacity={0.4} stroke="none" mask={`url(#${fadeMaskId})`} />}
+            {labelIdx.filter((i) => i > 0).map((i) => {
+              const bx = (pts[i - 1].x + pts[i].x) / 2
+              const by = (pts[i - 1].y + pts[i].y) / 2
+              return (
+                <line key={`bound-${i}`} x1={bx} y1={by} x2={bx} y2={H - PB} stroke="#94A3B8" strokeOpacity={0.5} strokeWidth={1} strokeDasharray="4 4" />
+              )
+            })}
+            <path d={path} fill="none" stroke={`url(#${gradientId})`} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+
+            {pts.map((p, i) => (
+              <g key={i}>
+                {p.reaction && <circle cx={p.x} cy={p.y} r={8} fill="none" stroke="#C46A3C" strokeWidth={2} />}
+                <circle cx={p.x} cy={p.y} r={hovered === i ? 6 : 4.5} fill={p.color} stroke="#ffffff" strokeWidth={1} />
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r={15}
+                  fill="transparent"
+                  className="cursor-pointer"
+                  onMouseEnter={() => setHovered(i)}
+                  onMouseLeave={() => setHovered(null)}
+                />
+              </g>
             ))}
-          </div>
-          {dots.length === 1 && (
-            <div className="absolute inset-0 flex items-center justify-center text-[0.65rem] text-(--text-muted)">
-              Sem aplicações realizadas anteriores.
+
+            {labelIdx.map((i) => (
+              <text
+                key={i}
+                x={pts[i].x}
+                y={H - 9}
+                textAnchor="middle"
+                className="fill-(--text-muted)"
+                style={{ fontSize: '9px', fontWeight: 600 }}
+              >
+                {pts[i].date.slice(0, 5)}
+              </text>
+            ))}
+          </svg>
+
+          {hovered !== null && (
+            <div
+              className="absolute z-10 -translate-x-1/2 -translate-y-full pointer-events-none"
+              style={{ left: `${(pts[hovered].x / W) * 100}%`, top: `${(pts[hovered].y / H) * 100 - 4}%` }}
+            >
+              <div className="rounded-lg bg-(--text) px-2.5 py-1.5 text-white shadow-lg whitespace-nowrap">
+                <div className="text-[0.6rem] font-bold">{pts[hovered].dose}</div>
+                <div className="text-[0.5rem] opacity-80 mt-0.5">
+                  {pts[hovered].date} · {pts[hovered].days} dias{pts[hovered].reaction ? ' · reação registrada' : ''}
+                </div>
+              </div>
             </div>
           )}
         </div>
-
-        <div className="relative h-3 mt-1 text-[0.55rem] font-semibold text-(--text-muted)">
-          <span className="absolute left-0">Início · {inductionStart}</span>
-          {maintenanceStart && maintenanceLabelPct != null && maintenanceLabelPct > 15 && maintenanceLabelPct < 85 && (
-            <span className="absolute -translate-x-1/2" style={{ left: `${maintenanceLabelPct}%` }}>
-              Manutenção · {maintenanceStart}
-            </span>
-          )}
-          <span className="absolute right-0">Hoje</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-interface TimelineDotProps {
-  dot: Dot
-  left: number
-  index: number
-  isHovered: boolean
-  onHoverChange: (index: number | null) => void
-}
-
-function TimelineDot({ dot, left, index, isHovered, onHoverChange }: TimelineDotProps) {
-  const styles = KIND_STYLES[dot.kind]
-  return (
-    <div
-      className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 animate-in fade-in-0 zoom-in-0 duration-500"
-      style={{ left: `${left}%`, animationDelay: `${Math.min(index * 35, 1800)}ms`, animationFillMode: 'backwards' }}
-      onMouseEnter={() => onHoverChange(index)}
-      onMouseLeave={() => onHoverChange(null)}
-    >
-      <button
-        type="button"
-        aria-label={dot.dose ? `${dot.label} · ${dot.dose}` : dot.label}
-        onFocus={() => onHoverChange(index)}
-        onBlur={() => onHoverChange(null)}
-        className={cn(
-          'h-3 w-3 rounded-full transition-all cursor-pointer ring-2 ring-white hover:ring-4 focus:ring-4 focus:outline-none block',
-          styles.bg,
-          isHovered && 'h-3.5 w-3.5',
-        )}
-      />
-      {isHovered && (
-        <div role="tooltip" className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10 whitespace-nowrap pointer-events-none">
-          <div className="text-[0.55rem] font-medium rounded-md px-2 py-1 shadow-lg bg-(--text) text-white">
-            <div className="font-semibold">{dot.label}</div>
-            {dot.dose && <div className="opacity-90">{dot.dose}</div>}
-          </div>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-l-transparent border-r-transparent border-t-(--text)" />
-        </div>
       )}
     </div>
-  )
-}
-
-function LegendBadge({ kind, label }: { kind: DotKind; label: string }) {
-  const s = KIND_STYLES[kind]
-  return (
-    <span className={cn('inline-flex items-center gap-1.5 text-[0.55rem] font-semibold rounded-full border px-2 py-0.5', s.legendBg, s.legendText, s.legendBorder)}>
-      <span className={cn('h-1.5 w-1.5 rounded-full', s.bg)} />
-      {label}
-    </span>
   )
 }

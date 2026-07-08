@@ -1,5 +1,10 @@
-import { AlertCircle, CalendarDays, Droplet, RotateCcw } from 'lucide-react'
+import { AlertCircle, CalendarDays, Droplet, TrendingUp } from 'lucide-react'
 import type { ComponentType } from 'react'
+
+const withSmallSymbol = (value: string) =>
+  value.split(/(%)/g).map((part, index) =>
+    part === '%' ? <span key={index} className="text-[0.6em] font-normal">%</span> : part,
+  )
 
 interface CompletionMetricsProps {
   totalApplications: number
@@ -28,7 +33,7 @@ export function CompletionMetrics({
     { key: 'apps', icon: Droplet, label: 'Aplicações totais', value: String(totalApplications) },
     {
       key: 'adherence',
-      icon: RotateCcw,
+      icon: TrendingUp,
       label: 'Aderência',
       value: `${adherencePct}%`,
       valueTag: rescheduledCount === 1 ? '1 reagendamento' : `${rescheduledCount} reagendamentos`,
@@ -49,22 +54,22 @@ export function CompletionMetrics({
         return (
           <div
             key={card.key}
-            className="border border-(--border-custom) rounded-xl bg-white p-4 flex items-start gap-3"
+            className="relative overflow-hidden border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-4 flex items-center gap-3"
+            style={{
+              backgroundImage:
+                'linear-gradient(105deg, rgba(108,158,165,0.28) 0%, rgba(155,193,196,0.16) 25%, rgba(234,241,241,0.07) 55%, transparent 80%)',
+            }}
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0 bg-teal-100/70">
-              <Icon size={16} className="text-brand" />
+            <Icon size={82} strokeWidth={1.75} className="pointer-events-none absolute -bottom-5 -left-9 text-brand/15" />
+            <div className="relative flex flex-1 items-baseline gap-2 min-w-0">
+              <span className="text-2xl font-semibold leading-none text-(--text) shrink-0">{withSmallSymbol(card.value)}</span>
+              <span className="text-[0.7rem] font-medium leading-tight text-(--text-muted)">{card.label}</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[0.65rem] font-medium text-(--text-muted)">{card.label}</div>
-              <div className="flex items-baseline gap-1.5">
-                <div className="text-base font-extrabold text-(--text) leading-tight">{card.value}</div>
-                {card.valueTag && (
-                  <span className="text-[0.55rem] font-semibold text-(--text-muted) bg-gray-100 border border-(--border-custom) rounded-full px-1.5 py-0.5">
-                    {card.valueTag}
-                  </span>
-                )}
-              </div>
-            </div>
+            {card.valueTag && (
+              <span className="relative shrink-0 text-[0.55rem] font-semibold text-(--text-muted) bg-gray-100 border border-(--border-custom) rounded-md px-1.5 py-0.5">
+                {card.valueTag}
+              </span>
+            )}
           </div>
         )
       })}
