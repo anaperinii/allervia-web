@@ -244,15 +244,25 @@ export function PatientEvolutionPage() {
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-8 pb-5">
       <div className="mb-8">
         <div className="mb-1 flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setShowCancelModal(true)}
-            className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
-          >
-            Imunoterapias
-          </button>
+          {preselectedId ? (
+            <Link
+              to="/patient/$patientId"
+              params={{ patientId: preselectedId }}
+              className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
+            >
+              Prontuário
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowCancelModal(true)}
+              className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
+            >
+              Imunoterapias
+            </button>
+          )}
           <span className="text-[0.7rem] text-(--text-muted)/50">/</span>
-          {selectedImmunotherapy && (
+          {(preselectedId || selectedImmunotherapy) && (
             <span
               className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted)"
               style={{
