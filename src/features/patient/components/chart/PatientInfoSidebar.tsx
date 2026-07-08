@@ -6,8 +6,6 @@ import {
   ChevronUp,
   History,
   Info,
-  Pencil,
-  SlidersHorizontal,
 } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/components'
@@ -99,7 +97,7 @@ export function PatientInfoSidebar({
         <div className="flex items-center gap-3">
           <PatientInitials name={patient.name} size={48} />
           <div className="min-w-0">
-            <h1 className="text-base font-extrabold text-(--text) leading-tight">{patient.name}</h1>
+            <h1 className="text-base font-bold text-(--text) leading-tight">{patient.name}</h1>
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               {patient.status === 'active' ? (
                 <StatusBadge tone="emerald" dot>Tratamento Ativo</StatusBadge>
@@ -192,7 +190,7 @@ export function PatientInfoSidebar({
               ))}
               {canEditPatient && (
                 <div className="pt-2 mt-1 border-t border-(--border-custom)">
-                  <Button variant="outline" size="sm" fullWidth leftIcon={<Pencil size={11} />} onClick={onEditPatient}>
+                  <Button variant="outline" size="sm" fullWidth onClick={onEditPatient}>
                     Editar dados pessoais
                   </Button>
                 </div>
@@ -240,7 +238,6 @@ export function PatientInfoSidebar({
                         <Button
                           variant="outline"
                           size="sm"
-                          leftIcon={<SlidersHorizontal size={11} />}
                           disabled={patient.status === 'inactive'}
                           onClick={onAdjustProtocol}
                           className="flex-1"
@@ -293,7 +290,7 @@ function StatusBadge({ tone, dot, children }: { tone: 'emerald' | 'yellow' | 'gr
   }
   const s = map[tone]
   return (
-    <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-semibold border', s.wrap)}>
+    <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.6rem] font-semibold border', s.wrap)}>
       {dot && <span className={cn('w-1.5 h-1.5 rounded-full', s.dot)} />}
       {children}
     </span>

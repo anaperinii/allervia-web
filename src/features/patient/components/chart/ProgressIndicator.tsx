@@ -15,7 +15,6 @@ const MAINTENANCE_INTERVALS = [
 ] as const
 
 interface ProgressIndicatorProps {
-  open: boolean
   patientApplications: Application[]
   isMaintenance: boolean
   currentInterval: number
@@ -24,7 +23,6 @@ interface ProgressIndicatorProps {
 }
 
 export function ProgressIndicator({
-  open,
   patientApplications,
   isMaintenance,
   currentInterval,
@@ -32,7 +30,7 @@ export function ProgressIndicator({
   progressPct,
 }: ProgressIndicatorProps) {
   return (
-    <div className={cn('overflow-hidden transition-all duration-300', open ? 'max-h-80 opacity-100 mb-3' : 'max-h-0 opacity-0')}>
+    <div>
       <InductionProgress currentStepIndex={currentStepIndex} progressPct={progressPct} />
       <MaintenanceTimeline patientApplications={patientApplications} isMaintenance={isMaintenance} currentInterval={currentInterval} />
     </div>

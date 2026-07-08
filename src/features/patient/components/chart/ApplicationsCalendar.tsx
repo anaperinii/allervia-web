@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { IconButton } from '@/shared/components'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
@@ -93,11 +93,11 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
                     const isNext = application.status === 'scheduled'
                     const hasReaction = application.sideEffect === 'yes'
                     const intervalColor = getIntervalColor(application.cycle.days)
-                    const accent = hasReaction ? '#EA580C' : intervalColor.dot
+                    const accent = intervalColor.dot
                     const style = {
-                      backgroundColor: hasReaction ? '#FFEDD5' : intervalColor.bg,
-                      color: hasReaction ? '#9A3412' : intervalColor.text,
-                      borderColor: accent,
+                      backgroundColor: intervalColor.bg + '66',
+                      color: intervalColor.text,
+                      borderColor: accent + '80',
                       ['--app-glow' as string]: accent,
                     } as React.CSSProperties
                     return (
@@ -107,7 +107,7 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
                         disabled={!isRealized}
                         onClick={() => isRealized && onSelect(application)}
                         className={cn(
-                          'w-full rounded px-1 py-0.5 text-[0.45rem] font-semibold truncate flex items-center gap-0.5 transition-all',
+                          'relative w-full rounded px-1 py-0.5 text-[0.45rem] font-semibold flex items-center gap-0.5 transition-all',
                           isNext ? 'cursor-default border-dashed border' :
                           isRealized ? 'cursor-pointer border hover:-translate-y-px hover:shadow-[0_2px_6px_-3px_var(--app-glow)]' :
                           'bg-gray-100 text-(--text-muted) border border-gray-200',
@@ -116,6 +116,11 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
                         title={hasReaction ? 'Reação adversa registrada' : undefined}
                       >
                         <span className="truncate">{application.dose}</span>
+                        {hasReaction && (
+                          <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-[#C46A3C] ring-1 ring-white shadow-sm">
+                            <AlertTriangle size={7} strokeWidth={2.75} className="text-white" />
+                          </span>
+                        )}
                       </button>
                     )
                   })}
