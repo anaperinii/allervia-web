@@ -255,6 +255,7 @@ export function PatientCompletionPage() {
         secondaryLabel="Sair sem salvar"
         onSecondary={() => {
           setShowCancelModal(false)
+          clearDraft(patient.id)
           navigate({ to: '/patient/$patientId', params: { patientId: patient.id } })
         }}
         cancelLabel="Salvar e sair"

@@ -93,9 +93,9 @@ export function PortabilityModal({ open, patient, onClose }: PortabilityModalPro
         </Button>
       }
     >
-      <div className="flex items-start gap-2 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2.5">
+      <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
         <Info size={14} className="text-brand shrink-0 mt-0.5" />
-        <p className="text-[0.65rem] text-teal-800 leading-relaxed">
+        <p className="text-[0.65rem] text-brand-dark leading-relaxed">
           Exportação estruturada de todos os dados em atendimento ao <span className="font-bold">Art. 18, V da LGPD</span> (Direito à portabilidade). A ação será registrada no log de auditoria.
         </p>
       </div>

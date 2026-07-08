@@ -1,5 +1,4 @@
 import { cn } from '@/shared/lib/cn'
-import type { Application } from '@/features/patient/stores/usePatientStore'
 
 const INDUCTION_STEPS = [
   { conc: '1:10.000', vols: ['0,1ml', '0,2ml', '0,4ml', '0,8ml'] },
@@ -8,45 +7,30 @@ const INDUCTION_STEPS = [
   { conc: '1:10', vols: ['0,1ml', '0,2ml', '0,4ml', '0,5ml'] },
 ] as const
 
-const MAINTENANCE_INTERVALS = [
-  { days: 14, label: '14 dias' },
-  { days: 21, label: '21 dias' },
-  { days: 28, label: '28 dias ★' },
-] as const
-
 interface ProgressIndicatorProps {
-  patientApplications: Application[]
-  isMaintenance: boolean
-  currentInterval: number
   currentStepIndex: number
   progressPct: number
 }
 
-export function ProgressIndicator({
-  patientApplications,
-  isMaintenance,
-  currentInterval,
-  currentStepIndex,
-  progressPct,
-}: ProgressIndicatorProps) {
-  return (
-    <div>
-      <InductionProgress currentStepIndex={currentStepIndex} progressPct={progressPct} />
-      <MaintenanceTimeline patientApplications={patientApplications} isMaintenance={isMaintenance} currentInterval={currentInterval} />
-    </div>
-  )
+export function ProgressIndicator({ currentStepIndex, progressPct }: ProgressIndicatorProps) {
+  return <InductionProgress currentStepIndex={currentStepIndex} progressPct={progressPct} />
 }
 
 function InductionProgress({ currentStepIndex, progressPct }: { currentStepIndex: number; progressPct: number }) {
   const safeIdx = currentStepIndex >= 0 ? currentStepIndex : 0
   return (
     <div className="bg-gray-50 rounded-lg px-4 py-3">
-      <div className="flex justify-between items-center mb-2.5">
-        <span className="text-[0.6rem] font-bold uppercase tracking-wider text-(--text-muted)">Progressão da indução</span>
-        <span className="text-[0.7rem] font-bold text-brand">{progressPct}%</span>
+      <div className="mb-4">
+        <div className="text-sm font-bold text-(--text)">Progressão da fase de indução</div>
+        <div className="text-[0.65rem] text-(--text-muted) mt-0.5">
+          Escalonamento da concentração e do volume até atingir a dose meta de manutenção
+        </div>
       </div>
-      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden mb-3">
-        <div className="h-full bg-linear-to-r from-brand to-brand-dark rounded-full transition-all duration-1000 ease-out" style={{ width: `${progressPct}%` }} />
+      <div className="flex items-center gap-2.5 mb-3">
+        <div className="h-1.5 flex-1 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-full bg-linear-to-r from-brand to-brand-dark rounded-full transition-all duration-1000 ease-out" style={{ width: `${progressPct}%` }} />
+        </div>
+        <span className="text-[0.7rem] font-bold text-brand shrink-0">{progressPct}%</span>
       </div>
       <div className="flex gap-0">
         {INDUCTION_STEPS.map((group, groupIndex) => {
@@ -56,7 +40,7 @@ function InductionProgress({ currentStepIndex, progressPct }: { currentStepIndex
           return (
             <div key={group.conc} className="flex items-center flex-1 min-w-0">
               <div className={cn('flex-1 rounded-md px-2 py-1.5 transition-all', blockFuture && 'opacity-30')}>
-                <div className={cn('text-[0.5rem] font-bold mb-1 truncate', blockActive ? 'text-brand' : 'text-(--text-muted)')}>{group.conc}</div>
+                <div className={cn('text-[0.6rem] font-bold mb-1 truncate', blockActive ? 'text-brand' : 'text-(--text-muted)')}>{group.conc}</div>
                 <div className="flex gap-0.5 flex-wrap">
                   {group.vols.map((volume, volumeIndex) => {
                     const stepIdx = startIdx + volumeIndex
@@ -67,7 +51,7 @@ function InductionProgress({ currentStepIndex, progressPct }: { currentStepIndex
                       <span
                         key={volumeIndex}
                         className={cn(
-                          'text-[0.45rem] px-1 py-px rounded font-semibold',
+                          'text-[0.55rem] px-1 py-px rounded font-semibold',
                           isCurrent ? 'bg-brand text-white outline outline-offset-1 outline-brand' :
                           isDone ? 'bg-slate-200 text-slate-500' :
                           'bg-slate-100 text-slate-400 opacity-40',
@@ -80,53 +64,6 @@ function InductionProgress({ currentStepIndex, progressPct }: { currentStepIndex
                 </div>
               </div>
               {groupIndex < INDUCTION_STEPS.length - 1 && <div className="w-px h-8 bg-gray-300 mx-1 shrink-0" />}
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function MaintenanceTimeline({ patientApplications, isMaintenance, currentInterval }: { patientApplications: Application[]; isMaintenance: boolean; currentInterval: number }) {
-  const maintenanceApplications = patientApplications.filter((application) => application.status === 'completed' && application.cycle.days >= 14)
-  const fillWidth = !isMaintenance
-    ? '0%'
-    : currentInterval >= 28
-    ? 'calc(100% - 48px)'
-    : currentInterval >= 21
-    ? 'calc(50%)'
-    : '0%'
-
-  return (
-    <div className="bg-gray-50 rounded-lg px-4 py-3 mt-2">
-      <div className="flex justify-between items-center mb-3">
-        <span className="text-[0.6rem] font-bold uppercase tracking-wider text-(--text-muted)">Progressão da manutenção</span>
-        <span className="text-[0.55rem] text-(--text-muted)">Meta · 28 dias (estável)</span>
-      </div>
-      <div className="flex items-start justify-between relative px-2">
-        <div className="absolute top-2.25 left-6 right-6 h-px bg-gray-300" />
-        <div className="absolute top-2.25 left-6 h-px bg-violet-400 transition-all duration-700" style={{ width: fillWidth }} />
-        {MAINTENANCE_INTERVALS.map((step) => {
-          const isActive = isMaintenance && currentInterval >= step.days
-          const firstApplication = maintenanceApplications.find((application) => application.cycle.days === step.days)
-          return (
-            <div key={step.days} className="flex flex-col items-center z-10">
-              <div className={cn(
-                'w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center transition-all',
-                isActive ? 'bg-violet-400 border-violet-400' : 'bg-white border-gray-300',
-              )}>
-                {isActive && <div className="w-2 h-2 rounded-full bg-white" />}
-              </div>
-              <div className="w-px h-3 bg-gray-300 mt-0.5" />
-              <div className={cn('text-center mt-1', !isActive && 'opacity-40')}>
-                <div className={cn('text-[0.55rem] font-bold', isActive ? 'text-violet-600' : 'text-(--text-muted)')}>
-                  {step.label}
-                </div>
-                <div className="text-[0.45rem] text-(--text-muted)">
-                  {firstApplication ? firstApplication.date : '—'}
-                </div>
-              </div>
             </div>
           )
         })}

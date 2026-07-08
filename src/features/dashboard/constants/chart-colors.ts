@@ -1,8 +1,8 @@
 export const CONCENTRATION_COLORS: Record<string, string> = {
-  '1:10.000': '#B6F2EC',
-  '1:1.000': '#2CD3C1',
-  '1:100': '#18C1CB',
-  '1:10': '#0E99A3',
+  '1:10.000': '#B9D4D7',
+  '1:1.000': '#9BC1C4',
+  '1:100': '#6C9EA5',
+  '1:10': '#4d7e85',
 }
 
 export const PHASE_KEYS = ['induction', 'maintenance'] as const
@@ -14,8 +14,8 @@ export const PHASE_LABELS: Record<PhaseKey, string> = {
 }
 
 export const PHASE_COLORS: Record<PhaseKey, string> = {
-  induction: '#18C1CB',
-  maintenance: '#22E58D',
+  induction: '#84C7BB',
+  maintenance: '#0D9488',
 }
 
 export const TREATMENT_STATUS_KEYS = ['active', 'interrupted', 'completed'] as const
@@ -28,22 +28,22 @@ export const TREATMENT_STATUS_LABELS: Record<TreatmentStatusKey, string> = {
 }
 
 export const TREATMENT_STATUS_COLORS: Record<TreatmentStatusKey, string> = {
-  active: '#2CD3C1',
-  interrupted: '#F4845F',
-  completed: '#22DD44',
+  active: '#14B8A6',
+  interrupted: '#0891B2',
+  completed: '#0F766E',
 }
 
-export const SEQUENTIAL_TYPE_COLORS = ['#0E99A3', '#18C1CB', '#2CD3C1', '#B6F2EC', '#3F98AF']
+export const SEQUENTIAL_TYPE_COLORS = ['#4d7e85', '#6C9EA5', '#9BC1C4', '#B9D4D7', '#234E58']
 
 export const VOLUME_KEYS = ['0,1ml', '0,2ml', '0,4ml', '0,5ml', '0,8ml'] as const
 export type VolumeKey = (typeof VOLUME_KEYS)[number]
 
 export const VOLUME_COLORS: Record<VolumeKey, string> = {
-  '0,1ml': '#B6F2EC',
-  '0,2ml': '#2CD3C1',
-  '0,4ml': '#18C1CB',
-  '0,5ml': '#A78BFA',
-  '0,8ml': '#0E99A3',
+  '0,1ml': '#C9DEDF',
+  '0,2ml': '#9BC1C4',
+  '0,4ml': '#6C9EA5',
+  '0,5ml': '#4d7e85',
+  '0,8ml': '#234E58',
 }
 
 export const DEFAULT_IMMUNOTHERAPY_TYPES = ['Gramíneas', 'Ácaros', 'Cão e Gato', 'Cândida', 'Herpes']

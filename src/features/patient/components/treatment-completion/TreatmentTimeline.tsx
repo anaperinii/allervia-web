@@ -7,6 +7,7 @@ interface TreatmentTimelineProps {
   applications: Application[]
   inductionStart: string
   maintenanceStart: string | null
+  flat?: boolean
 }
 
 interface Pt {
@@ -58,7 +59,7 @@ const PX = 18
 const PT = 20
 const PB = 30
 
-export function TreatmentTimeline({ applications, inductionStart }: TreatmentTimelineProps) {
+export function TreatmentTimeline({ applications, inductionStart, flat }: TreatmentTimelineProps) {
   const gradientId = useId()
   const fadeMaskId = useId()
   const fadeGradId = useId()
@@ -112,10 +113,10 @@ export function TreatmentTimeline({ applications, inductionStart }: TreatmentTim
   }, [applications])
 
   return (
-    <div className="border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-5 space-y-4">
+    <div className={flat ? 'bg-gray-50 rounded-lg p-4 space-y-4' : 'border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-5 space-y-4'}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-sm font-bold text-(--text)">Progressão da dose</div>
+          <div className="text-sm font-bold text-(--text)">Progressão longitudinal das doses</div>
           <div className="text-[0.65rem] text-(--text-muted) mt-0.5">
             Dose efetiva ao longo do tempo · {pts.length} {pts.length === 1 ? 'aplicação' : 'aplicações'} desde {inductionStart}
           </div>

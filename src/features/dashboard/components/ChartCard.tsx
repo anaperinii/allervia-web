@@ -36,7 +36,7 @@ export function ChartCard({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-xl bg-slate-100 p-4',
+        'group relative overflow-hidden rounded-xl bg-gray-50/70 backdrop-blur-xl p-4',
         fullWidth ? 'basis-full w-full' : 'flex-1 min-w-72',
       )}
       style={{
