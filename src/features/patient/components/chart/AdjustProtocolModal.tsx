@@ -98,9 +98,9 @@ export function AdjustProtocolModal({ open, patient, onClose, onConfirm }: Adjus
         </>
       }
     >
-      <div className="flex items-start gap-2 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2.5">
+      <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
         <Info size={14} className="text-brand shrink-0 mt-0.5" />
-        <p className="text-[0.65rem] text-teal-800 leading-relaxed">
+        <p className="text-[0.65rem] text-brand-dark leading-relaxed">
           Alterações no protocolo são <span className="font-bold">irreversíveis</span>. A progressão continuará a partir dos novos valores e o desvio será destacado no prontuário e nos relatórios clínicos.
         </p>
       </div>

@@ -23,6 +23,7 @@ import { ApplicationsMonthFilter } from '@/features/patient/components/chart/App
 import { ApplicationsTimeline } from '@/features/patient/components/chart/ApplicationsTimeline'
 import { ApplicationsCalendar } from '@/features/patient/components/chart/ApplicationsCalendar'
 import { ProgressIndicator, PROGRESS_INDUCTION_STEPS } from '@/features/patient/components/chart/ProgressIndicator'
+import { TreatmentTimeline } from '@/features/patient/components/treatment-completion/TreatmentTimeline'
 import { ApplicationDetailModal } from '@/features/patient/components/chart/ApplicationDetailModal'
 import { EditPatientModal } from '@/features/patient/components/chart/EditPatientModal'
 import { AdjustProtocolModal } from '@/features/patient/components/chart/AdjustProtocolModal'
@@ -313,10 +314,10 @@ export function PatientChartPage() {
               <SegmentedControl
                 value={viewMode}
                 onChange={setViewMode}
-                size="md"
+                size="sm"
                 options={[
-                  { value: 'timeline', label: 'Lista', icon: <List size={12} /> },
-                  { value: 'calendar', label: 'Calendário', icon: <CalendarDays size={12} /> },
+                  { value: 'timeline', label: 'Lista', icon: <List size={11} /> },
+                  { value: 'calendar', label: 'Calendário', icon: <CalendarDays size={11} /> },
                 ]}
                 aria-label="Modo de visualização das aplicações"
                 className="mb-1 bg-white"
@@ -366,13 +367,16 @@ export function PatientChartPage() {
                 )}
               </>
             ) : (
-              <div className="flex-1 overflow-y-auto px-5 py-4">
+              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
                 <ProgressIndicator
-                  patientApplications={patientApplications}
-                  isMaintenance={isMaintenance}
-                  currentInterval={currentInterval}
                   currentStepIndex={currentStepIndex}
                   progressPct={progressPct}
+                />
+                <TreatmentTimeline
+                  applications={patientApplications}
+                  inductionStart={inductionStart ?? '—'}
+                  maintenanceStart={maintenanceStart}
+                  flat
                 />
               </div>
             )}

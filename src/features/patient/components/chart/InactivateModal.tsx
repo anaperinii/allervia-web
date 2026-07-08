@@ -79,9 +79,9 @@ export function InactivateModal({ open, patient, onClose, onConfirm }: Inactivat
       title="Inativar imunoterapia"
       footer={<Button tone="brand" variant="solid" onClick={submit}>Inativar imunoterapia</Button>}
     >
-      <div className="flex items-start gap-2 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2.5">
+      <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
         <Info size={14} className="text-brand shrink-0 mt-0.5" />
-        <p className="text-[0.65rem] text-teal-800 leading-relaxed">
+        <p className="text-[0.65rem] text-brand-dark leading-relaxed">
           A inativação <span className="font-bold">pausa as aplicações</span> e registra o motivo no histórico clínico. O paciente poderá ser reativado a qualquer momento, com o médico definindo o ponto de retomada do protocolo.
         </p>
       </div>
