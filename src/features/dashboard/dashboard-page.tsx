@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Download, Archive } from 'lucide-react'
-import { cn } from '@/shared/lib/cn'
+import { Download } from 'lucide-react'
 import { Button, SegmentedControl, Select } from '@/shared/components'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
@@ -44,34 +43,28 @@ export function DashboardPage() {
           <SegmentedControl
             value={modality}
             onChange={setModality}
-            className="bg-white"
+            className="bg-[#F3F5F6]! border-[#CBD6D6]!"
             options={[
               { value: 'sub', label: 'Subcutânea' },
               { value: 'sbl', label: 'Sublingual' },
             ]}
             aria-label="Modalidade"
           />
-          <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="h-8 bg-white w-auto">
+          <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="h-8 bg-[#F3F5F6]! w-auto border-[#CBD6D6]!">
             <option value="all">Todos os tipos</option>
             {analytics.availableTypes.map((type) => (
               <option key={type} value={type}>{type}</option>
             ))}
           </Select>
-          <button
-            onClick={() => setShowArchived(!showArchived)}
-            className={cn(
-              'h-8 px-3 flex items-center gap-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer',
-              showArchived ? 'bg-teal-50 border-teal-200 text-teal-700' : 'border-(--border-custom) bg-white text-(--text-muted) hover:bg-gray-50',
-            )}
+          <Select
+            value={showArchived ? 'archived' : 'active'}
+            onChange={(e) => setShowArchived(e.target.value === 'archived')}
+            aria-label="Exibição dos gráficos"
+            className="h-8 bg-[#F3F5F6]! w-auto border-[#CBD6D6]!"
           >
-            <Archive size={13} />
-            {showArchived ? 'Voltar' : 'Arquivados'}
-            {archivedCharts.length > 0 && (
-              <span className={cn('px-1.5 py-0.5 rounded-full text-[0.55rem]', showArchived ? 'bg-teal-200 text-teal-800' : 'bg-gray-200 text-gray-600')}>
-                {archivedCharts.length}
-              </span>
-            )}
-          </button>
+            <option value="active">Gráficos ativos</option>
+            <option value="archived">Arquivados{archivedCharts.length > 0 ? ` (${archivedCharts.length})` : ''}</option>
+          </Select>
           <Button tone="brand" variant="solid" prominent leftIcon={<Download size={13} />} to="/export-report" className="px-3">
             Exportar Relatório
           </Button>

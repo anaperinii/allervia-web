@@ -54,7 +54,7 @@ export function StatusLineChart({ data, height = 192, showMonthSummary = false }
                 strokeWidth={2}
                 fill={`url(#status-gradient-${key})`}
                 fillOpacity={1}
-                dot={{ r: 3 }}
+                dot={{ r: 3, fill: TREATMENT_STATUS_COLORS[key], stroke: TREATMENT_STATUS_COLORS[key], strokeWidth: 0 }}
               />
             ))}
           </AreaChart>
