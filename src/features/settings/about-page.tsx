@@ -1,5 +1,5 @@
 import { Heart } from 'lucide-react'
-import { AllerviaLogo } from '@/features/landing-page/components/AllerviaLogo'
+import allerviaLockup from '@/assets/allervia-lockup-black.png'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 
 export function AboutPage() {
@@ -7,7 +7,7 @@ export function AboutPage() {
     <SettingsLayout subtitle="Sobre o Sistema">
       <div className="max-w-lg mx-auto text-center space-y-6 py-8">
         <div className="flex flex-col items-center gap-2">
-          <AllerviaLogo withWordmark size={48} color="#4d7e85" wordmarkColor="#234E58" />
+          <img src={allerviaLockup} alt="Allervia" className="h-12 w-auto" />
           <p className="text-xs text-(--text-muted)">Gestão de Protocolos de Imunoterapia Alérgica</p>
         </div>
 

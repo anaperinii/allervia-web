@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
-import { AllerviaLogo } from '@/features/landing-page/components/AllerviaLogo'
+import allerviaMarkWhite from '@/assets/allervia-mark-dark.png'
+import allerviaMarkBlack from '@/assets/allervia-mark-light.png'
+import allerviaWordmarkWhite from '@/assets/allervia-wordmark-white.png'
+import allerviaWordmarkBlack from '@/assets/allervia-wordmark-black.png'
 import { ThemeSwitch } from '@/features/landing-page/components/ThemeSwitch'
+import { useLandingTheme } from '@/features/landing-page/theme-context'
 import { cn } from '@/shared/lib/cn'
 import { Menu, X } from 'lucide-react'
 
@@ -44,8 +48,12 @@ export function Header({
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  const { theme } = useLandingTheme()
   const isTransparent = (hasHero && !pastHero) || isAuthPage
   const showShadow = !isTransparent && scrolled
+  const isLightBrand = !isTransparent && theme === 'light'
+  const markSrc = isLightBrand ? allerviaMarkBlack : allerviaMarkWhite
+  const wordmarkSrc = isLightBrand ? allerviaWordmarkBlack : allerviaWordmarkWhite
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -59,7 +67,6 @@ export function Header({
   const linkColor = isTransparent ? 'rgba(255,255,255,0.7)' : 'var(--ll-ink-muted)'
   const linkHoverColor = isTransparent ? '#ffffff' : 'var(--ll-ink)'
   const brandColor = isTransparent ? '#ffffff' : 'var(--ll-ink)'
-  const logoColor = isTransparent ? '#ffffff' : 'var(--ll-accent-strong)'
   const loginBorder = isTransparent ? '1.5px solid rgba(255,255,255,0.25)' : '1.5px solid var(--ll-border-strong)'
   const loginBg = isTransparent ? 'rgba(255,255,255,0.04)' : 'transparent'
 
@@ -85,13 +92,11 @@ export function Header({
       >
         <Link
           to="/"
-          className="relative flex items-center gap-2.5 no-underline"
+          className={cn('relative flex items-center gap-2.5 no-underline', isLightBrand && '-ml-1.5')}
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <AllerviaLogo size={28} color={logoColor} />
-          <span className="relative text-xl font-semibold tracking-[2px]" style={{ color: brandColor }}>
-            ALLERVIA
-          </span>
+          <img src={markSrc} alt="" className={cn('object-contain', isLightBrand ? 'h-10 w-10' : 'h-7 w-7')} />
+          <img src={wordmarkSrc} alt="Allervia" className="h-5 w-auto" />
         </Link>
 
         {showNavLinks && (
