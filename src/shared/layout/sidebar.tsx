@@ -11,7 +11,8 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-import { AllerviaLogo } from '@/features/landing-page/components/AllerviaLogo'
+import allerviaMark from '@/assets/allervia-mark-dark.png'
+import allerviaWordmark from '@/assets/allervia-wordmark-white.png'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { useSidebarStore } from '@/shared/layout/useSidebarStore'
 import { SidebarProfile } from '@/shared/layout/SidebarProfile'
@@ -116,18 +117,13 @@ export function Sidebar() {
       <Link
         to="/immunotherapies"
         className={cn(
-          'flex items-center no-underline transition-all duration-300',
+          'flex items-center no-underline transition-all duration-300 mt-2',
           isCollapsed ? 'justify-center h-17 px-0' : 'gap-2.5 h-17 px-5',
         )}
       >
-        <AllerviaLogo size={28} color="#B4D6D8" className="opacity-90 drop-shadow-[0_0_9px_rgba(155,193,196,0.4)]" />
+        <img src={allerviaMark} alt="Allervia" className="h-8 w-8 shrink-0 object-contain drop-shadow-[0_0_9px_rgba(155,193,196,0.4)]" />
         {!isCollapsed && (
-          <span
-            className="text-base font-semibold tracking-[2px]"
-            style={{ color: '#DCE1E5' }}
-          >
-            ALLERVIA
-          </span>
+          <img src={allerviaWordmark} alt="Allervia" className="h-4.5 w-auto" />
         )}
       </Link>
 

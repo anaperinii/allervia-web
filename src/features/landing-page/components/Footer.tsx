@@ -1,8 +1,16 @@
 import { Heart } from 'lucide-react'
-import { AllerviaLogo } from '@/features/landing-page/components/AllerviaLogo'
+import allerviaMarkWhite from '@/assets/allervia-mark-dark.png'
+import allerviaMarkBlack from '@/assets/allervia-mark-light.png'
+import allerviaWordmarkWhite from '@/assets/allervia-wordmark-white.png'
+import allerviaWordmarkBlack from '@/assets/allervia-wordmark-black.png'
+import { useLandingTheme } from '@/features/landing-page/theme-context'
 import { FOOTER_COLUMNS } from '@/features/landing-page/constants/footer-columns'
 
 export function Footer() {
+  const { theme } = useLandingTheme()
+  const isLight = theme === 'light'
+  const markSrc = isLight ? allerviaMarkBlack : allerviaMarkWhite
+  const wordmarkSrc = isLight ? allerviaWordmarkBlack : allerviaWordmarkWhite
   return (
     <footer
       className="border-t"
@@ -12,14 +20,12 @@ export function Footer() {
         color: 'var(--ll-ink)',
       }}
     >
-      <div className="pt-20 pb-10 px-[5%]">
+      <div className="pt-14 pb-8 px-[5%]">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-8 sm:gap-12 mb-12">
         <div>
-          <div className="mb-4">
-            <AllerviaLogo size={32} color="var(--ll-accent-strong)" />
-          </div>
-          <div className="text-[1.3rem] font-semibold tracking-[2px] mb-4" style={{ color: 'var(--ll-ink)' }}>
-            ALLERVIA
+          <div className="mb-4 flex items-center gap-2.5">
+            <img src={markSrc} alt="" className={isLight ? 'h-10 w-10 object-contain' : 'h-7 w-7 object-contain'} />
+            <img src={wordmarkSrc} alt="Allervia" className="h-5 w-auto" />
           </div>
           <p className="text-[0.875rem] leading-[1.7] max-w-72" style={{ color: 'var(--ll-ink-muted)' }}>
             Plataforma completa para gestão de protocolos de imunoterapia alérgica. Feito para clínicas, por engenheiros de software.
@@ -86,6 +92,7 @@ export function Footer() {
           overflow: 'hidden',
           textAlign: 'center',
           lineHeight: 0,
+          marginTop: '1.5rem',
         }}
       >
         <div
@@ -128,50 +135,24 @@ export function Footer() {
               'radial-gradient(72% 118% at 100% 100%, #000 0%, rgba(0,0,0,0.42) 30%, transparent 62%)',
           }}
         />
-        <span
+        <img
+          src={wordmarkSrc}
+          alt=""
           aria-hidden="true"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            zIndex: 2,
-            display: 'block',
-            textAlign: 'center',
-            fontSize: 'clamp(110px, 27vw, 520px)',
-            fontWeight: 500,
-            letterSpacing: '-0.04em',
-            lineHeight: 0.8,
-            whiteSpace: 'nowrap',
-            paddingTop: '0.08em',
-            marginBottom: '-0.16em',
-            color: 'var(--ll-bg-foot-mark)',
-          }}
-        >
-          Allervia
-        </span>
-        <span
           style={{
             position: 'relative',
             zIndex: 3,
             display: 'block',
-            fontSize: 'clamp(110px, 27vw, 520px)',
-            fontWeight: 500,
-            letterSpacing: '-0.04em',
-            lineHeight: 0.8,
-            whiteSpace: 'nowrap',
-            paddingTop: '0.08em',
-            marginBottom: '-0.16em',
-            color: 'var(--ll-ink)',
-            opacity: 0.09,
+            width: '100%',
+            transform: 'scale(1.12) translateY(12%)',
+            transformOrigin: 'center bottom',
+            opacity: isLight ? 0.12 : 0.1,
             WebkitMaskImage:
               'linear-gradient(to bottom, #000 0%, #000 30%, rgba(0,0,0,0.12) 100%)',
             maskImage:
               'linear-gradient(to bottom, #000 0%, #000 30%, rgba(0,0,0,0.12) 100%)',
           }}
-        >
-          Allervia
-        </span>
+        />
       </div>
     </footer>
   )
