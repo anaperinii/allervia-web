@@ -123,7 +123,7 @@ export function Sidebar() {
       >
         <img src={allerviaMark} alt="Allervia" className="h-8 w-8 shrink-0 object-contain drop-shadow-[0_0_9px_rgba(155,193,196,0.4)]" />
         {!isCollapsed && (
-          <img src={allerviaWordmark} alt="Allervia" className="h-4.5 w-auto" />
+          <img src={allerviaWordmark} alt="Allervia" className="h-4 w-auto" />
         )}
       </Link>
 

@@ -24,7 +24,7 @@ export function Footer() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-8 sm:gap-12 mb-12">
         <div>
           <div className="mb-4 flex items-center gap-2.5">
-            <img src={markSrc} alt="" className={isLight ? 'h-10 w-10 object-contain' : 'h-7 w-7 object-contain'} />
+            <img src={markSrc} alt="" className="h-10 w-10 object-contain" />
             <img src={wordmarkSrc} alt="Allervia" className="h-5 w-auto" />
           </div>
           <p className="text-[0.875rem] leading-[1.7] max-w-72" style={{ color: 'var(--ll-ink-muted)' }}>
@@ -136,7 +136,7 @@ export function Footer() {
           }}
         />
         <img
-          src={wordmarkSrc}
+          src={allerviaWordmarkWhite}
           alt=""
           aria-hidden="true"
           style={{
@@ -146,7 +146,8 @@ export function Footer() {
             width: '100%',
             transform: 'scale(1.12) translateY(12%)',
             transformOrigin: 'center bottom',
-            opacity: isLight ? 0.12 : 0.1,
+            filter: isLight ? 'brightness(0)' : 'none',
+            opacity: isLight ? 0.08 : 0.06,
             WebkitMaskImage:
               'linear-gradient(to bottom, #000 0%, #000 30%, rgba(0,0,0,0.12) 100%)',
             maskImage:
