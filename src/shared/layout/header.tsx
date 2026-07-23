@@ -92,11 +92,11 @@ export function Header({
       >
         <Link
           to="/"
-          className={cn('relative flex items-center gap-2.5 no-underline', isLightBrand && '-ml-1.5')}
+          className="relative flex items-center gap-2.5 no-underline"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <img src={markSrc} alt="" className={cn('object-contain', isLightBrand ? 'h-10 w-10' : 'h-7 w-7')} />
-          <img src={wordmarkSrc} alt="Allervia" className="h-5 w-auto" />
+          <img src={markSrc} alt="" className="h-9 w-9 object-contain" />
+          <img src={wordmarkSrc} alt="Allervia" className="h-4.5 w-auto" />
         </Link>
 
         {showNavLinks && (
