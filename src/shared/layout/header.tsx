@@ -30,7 +30,6 @@ export function Header({
 }: HeaderProps) {
   const showNavLinks = !isAuthPage && !hideNav
   const showThemeSwitch = hasHero && !hideThemeSwitch
-  const [scrolled, setScrolled] = useState(false)
   const [pastHero, setPastHero] = useState(() => {
     if (typeof window === 'undefined') return false
     return window.scrollY > window.innerHeight - 80
@@ -39,7 +38,6 @@ export function Header({
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
       setPastHero(window.scrollY > window.innerHeight - 80)
     }
     handleScroll()
@@ -49,7 +47,7 @@ export function Header({
 
   const { theme } = useLandingTheme()
   const isTransparent = (hasHero && !pastHero) || isAuthPage
-  const showShadow = !isTransparent && scrolled
+  const heroPill = hasHero && !pastHero
   const isLightBrand = !isTransparent && theme === 'light'
   const markSrc = isLightBrand ? allerviaMarkBlack : allerviaMarkWhite
 
@@ -62,7 +60,7 @@ export function Header({
     return () => { document.body.style.overflow = '' }
   }, [mobileMenuOpen])
 
-  const linkColor = isTransparent ? 'rgba(255,255,255,0.7)' : 'var(--ll-ink-muted)'
+  const linkColor = isTransparent ? 'rgba(255,255,255,0.72)' : 'var(--ll-ink-muted)'
   const linkHoverColor = isTransparent ? '#ffffff' : 'var(--ll-ink)'
   const brandColor = isTransparent ? '#ffffff' : 'var(--ll-ink)'
   const loginBorder = isTransparent ? '1.5px solid rgba(255,255,255,0.25)' : '1.5px solid var(--ll-border-strong)'
@@ -78,13 +76,16 @@ export function Header({
     <>
       <nav
         className={cn(
-          'fixed left-0 right-0 z-100 flex items-center justify-between px-[5%] h-17 transition-all duration-500 ease-out border-b',
-          isTransparent ? '' : 'backdrop-blur-xl',
+          'fixed z-100 flex items-center justify-between transition-all duration-900 ease-[cubic-bezier(0.22,1,0.36,1)] backdrop-blur-xl',
+          heroPill
+            ? 'left-0 right-0 mx-auto w-[min(1120px,92%)] h-14 px-6 rounded-2xl border'
+            : 'left-0 right-0 px-[5%] h-17 border-b',
         )}
         style={{
-          top: hasHero && !pastHero ? 'var(--ll-hero-frame-pad, 0px)' : 0,
-          background: isTransparent ? 'transparent' : 'var(--ll-header-scroll-bg)',
-          borderColor: showShadow ? 'var(--ll-border)' : 'transparent',
+          top: heroPill ? '36px' : 0,
+          background: heroPill ? 'rgba(8,22,26,0.72)' : 'var(--ll-header-scroll-bg)',
+          borderColor: heroPill ? 'rgba(255,255,255,0.1)' : 'var(--ll-border)',
+          boxShadow: heroPill ? '0 14px 42px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.08)' : undefined,
           animation: 'header-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both',
         }}
       >
@@ -98,12 +99,12 @@ export function Header({
         </Link>
 
         {showNavLinks && (
-          <ul className="hidden md:flex gap-8 list-none absolute left-1/2 -translate-x-1/2">
+          <ul className="group/nav hidden md:flex gap-8 list-none absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link) => (
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className="text-sm font-medium no-underline transition-colors duration-200"
+                  className="text-sm font-medium no-underline transition-all duration-300 group-hover/nav:blur-[1.5px] group-hover/nav:opacity-55 hover:blur-none! hover:opacity-100!"
                   style={{ color: linkColor }}
                   onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = linkColor }}
