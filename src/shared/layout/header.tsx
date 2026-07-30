@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import allerviaMarkWhite from '@/assets/allervia-mark-dark.png'
 import allerviaMarkBlack from '@/assets/allervia-mark-light.png'
-import allerviaWordmarkWhite from '@/assets/allervia-wordmark-white.png'
-import allerviaWordmarkBlack from '@/assets/allervia-wordmark-black.png'
+import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { ThemeSwitch } from '@/features/landing-page/components/ThemeSwitch'
 import { useLandingTheme } from '@/features/landing-page/theme-context'
 import { cn } from '@/shared/lib/cn'
@@ -53,7 +52,6 @@ export function Header({
   const showShadow = !isTransparent && scrolled
   const isLightBrand = !isTransparent && theme === 'light'
   const markSrc = isLightBrand ? allerviaMarkBlack : allerviaMarkWhite
-  const wordmarkSrc = isLightBrand ? allerviaWordmarkBlack : allerviaWordmarkWhite
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -95,8 +93,8 @@ export function Header({
           className="relative flex items-center gap-2.5 no-underline"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <img src={markSrc} alt="" className="h-9 w-9 object-contain" />
-          <img src={wordmarkSrc} alt="Allervia" className="h-4.5 w-auto" />
+          <img src={markSrc} alt="" className={cn('object-contain', isLightBrand ? 'h-8 w-8' : 'h-10 w-10')} />
+          <AllerviaWordmark className="text-xl" style={{ color: brandColor }} />
         </Link>
 
         {showNavLinks && (

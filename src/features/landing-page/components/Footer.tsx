@@ -1,8 +1,7 @@
 import { Heart } from 'lucide-react'
 import allerviaMarkWhite from '@/assets/allervia-mark-dark.png'
 import allerviaMarkBlack from '@/assets/allervia-mark-light.png'
-import allerviaWordmarkWhite from '@/assets/allervia-wordmark-white.png'
-import allerviaWordmarkBlack from '@/assets/allervia-wordmark-black.png'
+import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { useLandingTheme } from '@/features/landing-page/theme-context'
 import { FOOTER_COLUMNS } from '@/features/landing-page/constants/footer-columns'
 
@@ -10,7 +9,6 @@ export function Footer() {
   const { theme } = useLandingTheme()
   const isLight = theme === 'light'
   const markSrc = isLight ? allerviaMarkBlack : allerviaMarkWhite
-  const wordmarkSrc = isLight ? allerviaWordmarkBlack : allerviaWordmarkWhite
   return (
     <footer
       className="border-t"
@@ -24,8 +22,8 @@ export function Footer() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-8 sm:gap-12 mb-12">
         <div>
           <div className="mb-4 flex items-center gap-2.5">
-            <img src={markSrc} alt="" className="h-10 w-10 object-contain" />
-            <img src={wordmarkSrc} alt="Allervia" className="h-5 w-auto" />
+            <img src={markSrc} alt="" className={isLight ? 'h-9 w-9 object-contain' : 'h-11 w-11 object-contain'} />
+            <AllerviaWordmark className="text-2xl" style={{ color: 'var(--ll-ink)' }} />
           </div>
           <p className="text-[0.875rem] leading-[1.7] max-w-72" style={{ color: 'var(--ll-ink-muted)' }}>
             Plataforma completa para gestão de protocolos de imunoterapia alérgica. Feito para clínicas, por engenheiros de software.
@@ -135,25 +133,31 @@ export function Footer() {
               'radial-gradient(72% 118% at 100% 100%, #000 0%, rgba(0,0,0,0.42) 30%, transparent 62%)',
           }}
         />
-        <img
-          src={allerviaWordmarkWhite}
-          alt=""
+        <span
           aria-hidden="true"
           style={{
             position: 'relative',
             zIndex: 3,
             display: 'block',
-            width: '100%',
-            transform: 'scale(1.12) translateY(12%)',
-            transformOrigin: 'center bottom',
-            filter: isLight ? 'brightness(0)' : 'none',
+            textAlign: 'center',
+            fontSize: 'clamp(110px, 27vw, 520px)',
+            fontWeight: 600,
+            textTransform: 'lowercase',
+            letterSpacing: '-0.03em',
+            lineHeight: 0.8,
+            whiteSpace: 'nowrap',
+            color: 'var(--ll-ink)',
             opacity: isLight ? 0.08 : 0.06,
+            transform: 'translateY(10%)',
+            transformOrigin: 'center bottom',
             WebkitMaskImage:
               'linear-gradient(to bottom, #000 0%, #000 30%, rgba(0,0,0,0.12) 100%)',
             maskImage:
               'linear-gradient(to bottom, #000 0%, #000 30%, rgba(0,0,0,0.12) 100%)',
           }}
-        />
+        >
+          allervia
+        </span>
       </div>
     </footer>
   )

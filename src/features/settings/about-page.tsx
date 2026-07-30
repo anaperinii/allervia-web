@@ -1,6 +1,6 @@
 import { Heart } from 'lucide-react'
 import allerviaMark from '@/assets/allervia-mark-light.png'
-import allerviaWordmark from '@/assets/allervia-wordmark-black.png'
+import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 
 export function AboutPage() {
@@ -9,7 +9,7 @@ export function AboutPage() {
       <div className="max-w-lg mx-auto text-center space-y-6 py-8">
         <div className="flex flex-col items-center gap-2.5">
           <img src={allerviaMark} alt="" className="h-14 w-14 object-contain" />
-          <img src={allerviaWordmark} alt="Allervia" className="h-5 w-auto" />
+          <AllerviaWordmark className="text-3xl" style={{ color: 'var(--text)' }} />
           <p className="text-xs text-(--text-muted)">Gestão de Protocolos de Imunoterapia Alérgica</p>
         </div>
 
