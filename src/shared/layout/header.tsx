@@ -93,7 +93,7 @@ export function Header({
           className="relative flex items-center gap-2.5 no-underline"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <img src={markSrc} alt="" className={cn('object-contain', isLightBrand ? 'h-8 w-8' : 'h-10 w-10')} />
+          <img src={markSrc} alt="" className="h-8 w-8 object-contain" />
           <AllerviaWordmark className="text-xl" style={{ color: brandColor }} />
         </Link>
 

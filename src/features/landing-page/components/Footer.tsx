@@ -22,7 +22,7 @@ export function Footer() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-8 sm:gap-12 mb-12">
         <div>
           <div className="mb-4 flex items-center gap-2.5">
-            <img src={markSrc} alt="" className={isLight ? 'h-9 w-9 object-contain' : 'h-11 w-11 object-contain'} />
+            <img src={markSrc} alt="" className="h-9 w-9 object-contain" />
             <AllerviaWordmark className="text-2xl" style={{ color: 'var(--ll-ink)' }} />
           </div>
           <p className="text-[0.875rem] leading-[1.7] max-w-72" style={{ color: 'var(--ll-ink-muted)' }}>
@@ -143,7 +143,7 @@ export function Footer() {
             fontSize: 'clamp(110px, 27vw, 520px)',
             fontWeight: 600,
             textTransform: 'lowercase',
-            letterSpacing: '-0.03em',
+            letterSpacing: '-0.005em',
             lineHeight: 0.8,
             whiteSpace: 'nowrap',
             color: 'var(--ll-ink)',

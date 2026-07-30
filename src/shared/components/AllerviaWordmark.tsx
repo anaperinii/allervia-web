@@ -9,7 +9,7 @@ interface AllerviaWordmarkProps {
 /** Allervia wordmark set in Manrope, all lowercase, with a superscript "TM". */
 export function AllerviaWordmark({ className, style }: AllerviaWordmarkProps) {
   return (
-    <span className={cn('font-semibold lowercase leading-none whitespace-nowrap', className)} style={style}>
+    <span className={cn('font-semibold lowercase leading-none whitespace-nowrap tracking-[-0.005em]', className)} style={style}>
       allervia
       <sup
         className="uppercase font-medium"

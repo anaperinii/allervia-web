@@ -121,7 +121,7 @@ export function Sidebar() {
           isCollapsed ? 'justify-center h-17 px-0' : 'h-17 pl-3 pr-5',
         )}
       >
-        <img src={allerviaMark} alt="Allervia" className="h-11 w-11 shrink-0 object-contain drop-shadow-[0_0_9px_rgba(155,193,196,0.4)]" />
+        <img src={allerviaMark} alt="Allervia" className="h-11 w-11 shrink-0 object-contain" />
         {!isCollapsed && (
           <AllerviaWordmark className="absolute left-1/2 -translate-x-1/2 text-xl" style={{ color: '#DCE1E5' }} />
         )}
