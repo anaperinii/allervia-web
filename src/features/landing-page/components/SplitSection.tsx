@@ -20,14 +20,13 @@ export function SplitSection() {
           className="inline-block text-[0.75rem] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-5"
           style={{
             color: 'var(--ll-accent-strong)',
-            background: 'var(--ll-accent-bg-soft)',
             border: '1px solid var(--ll-accent-border-soft)',
           }}
         >
           Como funciona
         </span>
         <h2
-          className="text-[clamp(1.8rem,3.6vw,3rem)] font-light tracking-tight leading-[1.1]"
+          className="text-[clamp(1.8rem,3.6vw,3rem)] font-medium tracking-tight leading-[1.1]"
           style={{ color: 'var(--ll-ink)' }}
         >
           Quatro etapas. <span className="font-semibold">Um só ciclo.</span>
@@ -55,7 +54,7 @@ export function SplitSection() {
               style={{
                 color: TONES[index] ?? TONES[TONES.length - 1],
                 fontSize: '2.8rem',
-                fontWeight: 400,
+                fontWeight: 700,
                 letterSpacing: '-0.04em',
               }}
             >

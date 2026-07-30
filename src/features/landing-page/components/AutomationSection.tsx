@@ -37,17 +37,18 @@ function SphereIcon({ kind, dark, index }: { kind: IconKind; dark: boolean; inde
     : { g0: '#ffffff', g1: '#8dc0c7', g2: '#1d6b78', line: '#7db3bc', ring: '#4f95a1', hi: '#ffffff' }
   const { lines, nodes } = ICON_DATA[kind]
   return (
-    <svg
-      viewBox="0 0 48 48"
+    <span
+      aria-hidden="true"
       style={{
-        width: 54,
-        height: 54,
         display: 'block',
         marginBottom: 12,
-        animation: `float ${4.4 + (index % 2) * 0.9}s ease-in-out ${index * 0.55}s infinite`,
+        animation: `float-subtle ${4.8 + (index % 2) * 0.9}s ease-in-out ${index * 0.55}s infinite`,
       }}
-      aria-hidden="true"
     >
+      <svg
+        viewBox="0 0 48 48"
+        style={{ width: 54, height: 54, display: 'block', transform: index === 1 ? 'rotate(10deg)' : undefined }}
+      >
       <defs>
         <radialGradient id={id} cx="32%" cy="27%" r="84%">
           <stop offset="0%" stopColor={c.g0} stopOpacity="0.92" />
@@ -73,7 +74,8 @@ function SphereIcon({ kind, dark, index }: { kind: IconKind; dark: boolean; inde
           />
         </g>
       ))}
-    </svg>
+      </svg>
+    </span>
   )
 }
 
