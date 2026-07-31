@@ -29,24 +29,21 @@ type MarketingCTAProps = AsLink | AsAnchor
 const BASE = 'font-semibold cursor-pointer transition-all duration-250 no-underline'
 
 const SHAPE: Record<MarketingCTAShape, string> = {
-  pill: 'inline-block px-6 py-2.5 rounded-xl text-[0.9rem]',
-  block: 'block w-full py-3 rounded-xl text-center text-sm',
+  pill: 'inline-block px-6 py-2.5 rounded-lg text-[0.9rem]',
+  block: 'block w-full py-3 rounded-lg text-center text-sm',
 }
 
 const VARIANT_CLASS: Record<MarketingCTAVariant, string> = {
-  filled:
-    'border-none hover:brightness-95 hover:!shadow-[0_8px_24px_var(--ll-cta-halo-hover),inset_0_1px_0_rgba(255,255,255,0.55)]',
+  filled: 'border-none text-white hover:brightness-95',
   outline:
-    'border-[1.5px] bg-transparent hover:bg-[color:var(--ll-accent-bg-soft)] hover:shadow-[0_10px_24px_var(--ll-halo-accent)]',
+    'border-[1.5px] bg-transparent hover:bg-[color:var(--ll-accent-bg-soft)] hover:shadow-[0_6px_16px_var(--ll-halo-accent)]',
 }
 
 const VARIANT_STYLE: Record<MarketingCTAVariant, CSSProperties> = {
   filled: {
-    background:
-      'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), var(--ll-accent-fill)',
-    color: 'var(--ll-accent-ink)',
-    boxShadow:
-      '0 4px 20px var(--ll-cta-halo), inset 0 1px 0 rgba(255,255,255,0.4)',
+    background: 'linear-gradient(to bottom right, var(--color-brand), var(--color-brand-dark))',
+    color: '#ffffff',
+    boxShadow: '0 2px 12px rgba(108,158,165,0.3)',
   },
   outline: {
     borderColor: 'var(--ll-accent-border)',

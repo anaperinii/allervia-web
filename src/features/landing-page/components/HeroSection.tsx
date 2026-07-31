@@ -97,7 +97,7 @@ export function HeroSection() {
           }}
         />
 
-        <div className="relative z-10 mt-12 flex max-w-5xl flex-col items-center text-center">
+        <div className="relative z-10 mt-24 flex max-w-5xl flex-col items-center text-center">
           <h1 className="mb-6 text-[clamp(2rem,5vw,4rem)] font-light leading-[1.1] tracking-tight text-balance text-white">
             <span className="block" style={heroRiseStyle(0.2)}>
               Conduza, acompanhe e enxergue
@@ -129,13 +129,10 @@ export function HeroSection() {
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4" style={socialRiseStyle(1.4)}>
             <a
               href="/trial"
-              className="group inline-flex items-center gap-2 rounded-xl px-7 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 no-underline"
+              className="group inline-flex items-center gap-2 rounded-lg px-7 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 no-underline text-white"
               style={{
-                background:
-                  'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
-                color: '#06232a',
-                boxShadow:
-                  '0 12px 28px rgba(108,158,165,0.30), inset 0 1px 0 rgba(255,255,255,0.4)',
+                background: 'linear-gradient(to bottom right, #6C9EA5, #4d7e85)',
+                boxShadow: '0 2px 12px rgba(108,158,165,0.3)',
               }}
             >
               Começar agora
@@ -147,10 +144,10 @@ export function HeroSection() {
             </a>
             <a
               href="/login"
-              className="inline-flex items-center gap-2 rounded-xl px-7 py-3 text-sm font-medium backdrop-blur-xl transition-all hover:-translate-y-0.5 no-underline"
+              className="inline-flex items-center gap-2 rounded-lg px-7 py-3 text-sm font-medium transition-all hover:-translate-y-0.5 no-underline"
               style={{
-                background: 'rgba(8,25,29,0.85)',
-                border: '1px solid rgba(220,225,229,0.13)',
+                background: 'rgba(8,25,29,0.9)',
+                border: '1px solid rgba(220,225,229,0.16)',
                 color: '#DCE1E5',
               }}
             >
