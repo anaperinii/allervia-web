@@ -148,10 +148,12 @@ export function AutomationSection() {
 
         <div className="relative max-w-150">
           <span
-            className="inline-block whitespace-nowrap rounded-full text-[11.5px] font-semibold uppercase"
-            style={{ letterSpacing: '0.16em', color: t.badgeColor, border: `1px solid ${t.badgeBorder}`, padding: '7px 16px' }}
+            className="inline-flex items-center gap-2.5 whitespace-nowrap text-[11.5px] font-semibold uppercase"
+            style={{ letterSpacing: '0.16em', color: t.badgeColor }}
           >
+            <span style={{ opacity: 0.45 }}>[</span>
             Automação clínica
+            <span style={{ opacity: 0.45 }}>]</span>
           </span>
           <h2
             className="mt-6 text-3xl sm:text-4xl lg:text-[44px] font-medium text-balance"

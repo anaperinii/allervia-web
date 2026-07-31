@@ -11,8 +11,8 @@ interface SectionHeaderProps {
 }
 
 const EYEBROW_TONE: Record<'light' | 'dark', string> = {
-  light: 'text-[color:var(--ll-accent-strong)] border border-[color:var(--ll-accent-border-soft)]',
-  dark: 'text-white border border-white/25',
+  light: 'text-[color:var(--ll-accent-strong)]',
+  dark: 'text-white',
 }
 
 const TITLE_TONE: Record<'light' | 'dark', string> = {
@@ -38,8 +38,10 @@ export function SectionHeader({
   return (
     <div className={cn(centered && 'text-center mx-auto', centered && titleMaxWidth)}>
       {eyebrow && (
-        <span className={cn('inline-block text-[0.75rem] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4', EYEBROW_TONE[tone])}>
+        <span className={cn('inline-flex items-center gap-2.5 text-[0.75rem] font-bold tracking-[2px] uppercase mb-4', EYEBROW_TONE[tone])}>
+          <span className="opacity-45">[</span>
           {eyebrow}
+          <span className="opacity-45">]</span>
         </span>
       )}
       <h2

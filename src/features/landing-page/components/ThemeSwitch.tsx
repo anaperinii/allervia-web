@@ -24,7 +24,7 @@ export function ThemeSwitch({ overHero = false }: ThemeSwitchProps) {
       role="switch"
       aria-checked={!isDark}
       aria-label={isDark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
-      className="relative inline-flex h-8 w-[56px] shrink-0 items-center rounded-full cursor-pointer"
+      className="relative inline-flex h-8 w-14 shrink-0 items-center rounded-lg cursor-pointer"
       style={{
         background: trackBg,
         border: trackBorder,
@@ -33,7 +33,7 @@ export function ThemeSwitch({ overHero = false }: ThemeSwitchProps) {
     >
       <span
         aria-hidden="true"
-        className="absolute top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full ease-out"
+        className="absolute top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-md ease-out"
         style={{
           left: isDark ? '3px' : 'calc(100% - 27px)',
           background: knobBg,

@@ -46,8 +46,9 @@ export function Header({
   }, [])
 
   const { theme } = useLandingTheme()
-  const isTransparent = (hasHero && !pastHero) || isAuthPage
-  const heroPill = hasHero && !pastHero
+  const bareBar = hasHero && !showNavLinks
+  const heroPill = hasHero && !pastHero && showNavLinks
+  const isTransparent = heroPill || bareBar
   const isLightBrand = !isTransparent && theme === 'light'
   const markSrc = isLightBrand ? allerviaMarkBlack : allerviaMarkWhite
 
@@ -66,25 +67,24 @@ export function Header({
   const loginBorder = isTransparent ? '1.5px solid rgba(255,255,255,0.25)' : '1.5px solid var(--ll-border-strong)'
   const loginBg = isTransparent ? 'rgba(255,255,255,0.04)' : 'transparent'
 
-  const ctaBgGradient = 'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%)'
-  const ctaBaseColor = isTransparent ? '#6C9EA5' : 'var(--ll-accent-fill)'
-  const ctaInkColor = isTransparent ? '#06232a' : 'var(--ll-accent-ink)'
-  const ctaHaloColor = isTransparent ? 'rgba(108,158,165,0.30)' : 'var(--ll-cta-halo)'
-  const ctaHaloHoverColor = isTransparent ? 'rgba(108,158,165,0.45)' : 'var(--ll-cta-halo-hover)'
+  const ctaSolidBg = 'linear-gradient(to bottom right, var(--color-brand), var(--color-brand-dark))'
+  const ctaSolidShadow = '0 2px 12px rgba(108,158,165,0.3)'
 
   return (
     <>
       <nav
         className={cn(
-          'fixed z-100 flex items-center justify-between transition-all duration-900 ease-[cubic-bezier(0.22,1,0.36,1)] backdrop-blur-xl',
+          'fixed z-100 flex items-center justify-between transition-all duration-900 ease-[cubic-bezier(0.22,1,0.36,1)]',
           heroPill
-            ? 'left-0 right-0 mx-auto w-[min(1120px,92%)] h-14 px-6 rounded-2xl border'
-            : 'left-0 right-0 px-[5%] h-17 border-b',
+            ? 'left-0 right-0 mx-auto w-[min(1120px,92%)] h-14 px-6 rounded-2xl border backdrop-blur-xl'
+            : bareBar
+              ? 'left-0 right-0 px-[5%] h-17'
+              : 'left-0 right-0 px-[5%] h-17 border-b backdrop-blur-xl',
         )}
         style={{
           top: heroPill ? '36px' : 0,
-          background: heroPill ? 'rgba(8,22,26,0.72)' : 'var(--ll-header-scroll-bg)',
-          borderColor: heroPill ? 'rgba(255,255,255,0.1)' : 'var(--ll-border)',
+          background: heroPill ? 'rgba(8,22,26,0.72)' : bareBar ? 'transparent' : 'var(--ll-header-scroll-bg)',
+          borderColor: heroPill ? 'rgba(255,255,255,0.1)' : bareBar ? 'transparent' : 'var(--ll-border)',
           boxShadow: heroPill ? '0 14px 42px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.08)' : undefined,
           animation: 'header-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both',
         }}
@@ -119,7 +119,7 @@ export function Header({
         <div className="hidden md:flex gap-2.5 items-center">
           <Link
             to="/login"
-            className="px-5 py-1.5 rounded-xl text-[0.8rem] font-medium cursor-pointer transition-all duration-200 no-underline hover:shadow-[0_10px_24px_var(--ll-halo-accent)]"
+            className="px-5 py-2 rounded-lg text-[0.8rem] font-medium cursor-pointer transition-all duration-200 no-underline hover:shadow-[0_6px_16px_var(--ll-halo-accent)]"
             style={{
               border: loginBorder,
               color: brandColor,
@@ -134,24 +134,12 @@ export function Header({
               e.currentTarget.style.background = loginBg
             }}
           >
-            Log in
+            Entrar
           </Link>
           <Link
             to="/trial"
-            className="px-5 py-1.5 rounded-xl text-[0.8rem] font-semibold cursor-pointer no-underline hover:brightness-95"
-            style={{
-              background: `${ctaBgGradient}, ${ctaBaseColor}`,
-              color: ctaInkColor,
-              boxShadow: `0 6px 18px ${ctaHaloColor}, inset 0 1px 0 rgba(255,255,255,0.4)`,
-              transition:
-                'background 0.5s ease, color 0.5s ease, box-shadow 0.35s ease, filter 0.25s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = `0 14px 36px ${ctaHaloHoverColor}, inset 0 1px 0 rgba(255,255,255,0.55)`
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = `0 6px 18px ${ctaHaloColor}, inset 0 1px 0 rgba(255,255,255,0.4)`
-            }}
+            className="px-5 py-2 rounded-lg text-[0.8rem] font-semibold cursor-pointer no-underline text-white transition-[filter] duration-200 hover:brightness-95"
+            style={{ background: ctaSolidBg, boxShadow: ctaSolidShadow }}
           >
             Começar agora
           </Link>
@@ -209,23 +197,18 @@ export function Header({
           >
             <Link
               to="/login"
-              className="text-center px-4 py-2.5 rounded-xl text-sm font-semibold no-underline"
+              className="text-center px-4 py-2.5 rounded-lg text-sm font-semibold no-underline"
               style={{
                 border: '1.5px solid var(--ll-border-strong)',
                 color: 'var(--ll-ink)',
               }}
             >
-              Log in
+              Entrar
             </Link>
             <Link
               to="/trial"
-              className="text-center px-4 py-2.5 rounded-xl text-sm font-semibold no-underline"
-              style={{
-                background: `${ctaBgGradient}, ${ctaBaseColor}`,
-                color: ctaInkColor,
-                boxShadow: `0 6px 18px ${ctaHaloColor}`,
-                transition: 'background 0.5s ease, color 0.5s ease, box-shadow 0.5s ease',
-              }}
+              className="text-center px-4 py-2.5 rounded-lg text-sm font-semibold no-underline text-white"
+              style={{ background: ctaSolidBg, boxShadow: ctaSolidShadow }}
             >
               Começar agora
             </Link>

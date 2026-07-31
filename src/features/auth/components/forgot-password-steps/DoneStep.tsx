@@ -28,13 +28,13 @@ export function DoneStep() {
 
       <Link
         to="/login"
-        className="inline-flex w-full items-center justify-center rounded-xl py-3 text-sm font-semibold transition-all hover:brightness-95 hover:shadow-[0_14px_40px_rgba(108,158,165,0.45),inset_0_1px_0_rgba(255,255,255,0.55)]! no-underline cursor-pointer"
+        className="inline-flex w-full items-center justify-center rounded-lg py-3 text-sm font-semibold transition-[filter] duration-200 hover:brightness-95 no-underline cursor-pointer"
         style={{
           background:
-            'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), #6C9EA5',
-          color: '#06232a',
+            'linear-gradient(to bottom right, #6C9EA5, #4d7e85)',
+          color: '#ffffff',
           boxShadow:
-            '0 12px 28px rgba(108,158,165,0.30), inset 0 1px 0 rgba(255,255,255,0.4)',
+            '0 2px 12px rgba(108,158,165,0.3)',
         }}
       >
         Acessar minha conta
