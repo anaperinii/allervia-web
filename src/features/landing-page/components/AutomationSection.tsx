@@ -42,7 +42,8 @@ function SphereIcon({ kind, dark, index }: { kind: IconKind; dark: boolean; inde
       style={{
         display: 'block',
         marginBottom: 12,
-        animation: `float-subtle ${4.8 + (index % 2) * 0.9}s ease-in-out ${index * 0.55}s infinite`,
+        opacity: 0.68,
+        animation: `float-subtle ${6.4 + (index % 2) * 1.2}s ease-in-out ${index * 0.55}s infinite`,
       }}
     >
       <svg
