@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-import allerviaMark from '@/assets/allervia-mark-dark.png'
+import allerviaMark from '@/assets/allervia-mark-light.png'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { useSidebarStore } from '@/shared/layout/useSidebarStore'
@@ -54,21 +54,20 @@ function SidebarLink({ item, isActive, isCollapsed }: SidebarLinkProps) {
         isCollapsed ? 'h-10 w-10 justify-center mx-auto' : 'h-10 gap-3 px-3',
       )}
       style={{
-        background: isActive
-          ? 'linear-gradient(90deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 55%, rgba(255,255,255,0) 100%)'
-          : 'transparent',
-        color: isActive ? '#DCE1E5' : 'rgba(220,225,229,0.65)',
+        background: isActive ? 'rgba(18,51,58,0.82)' : 'transparent',
+        color: isActive ? '#ffffff' : 'rgba(18,51,58,0.6)',
+        boxShadow: isActive ? '0 2px 10px rgba(16,60,68,0.16)' : 'none',
       }}
       onMouseEnter={(e) => {
         if (!isActive) {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
-          e.currentTarget.style.color = '#DCE1E5'
+          e.currentTarget.style.background = 'rgba(37,126,140,0.07)'
+          e.currentTarget.style.color = '#12333a'
         }
       }}
       onMouseLeave={(e) => {
         if (!isActive) {
           e.currentTarget.style.background = 'transparent'
-          e.currentTarget.style.color = 'rgba(220,225,229,0.65)'
+          e.currentTarget.style.color = 'rgba(18,51,58,0.6)'
         }
       }}
     >
@@ -78,9 +77,9 @@ function SidebarLink({ item, isActive, isCollapsed }: SidebarLinkProps) {
         <span
           className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50"
           style={{
-            background: 'rgba(8,25,29,0.95)',
-            color: '#DCE1E5',
-            border: '1px solid rgba(220,225,229,0.12)',
+            background: '#12333a',
+            color: '#eef3f4',
+            border: '1px solid rgba(16,113,129,0.2)',
           }}
         >
           {item.label}
@@ -105,29 +104,47 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'relative z-10 m-2 flex flex-col shrink-0 rounded-xl transition-[width] duration-300 ease-out',
+        'relative z-10 h-full flex flex-col shrink-0 transition-[width] duration-300 ease-out',
         isCollapsed ? 'w-16' : 'w-52',
       )}
       style={{
         background:
-          'linear-gradient(180deg, #0e353d 0%, #08191d 100%)',
-        boxShadow: '0 6px 24px rgba(0,0,0,0.28)',
+          'radial-gradient(120% 90% at 22% 92%, rgba(155,193,196,0.55) 0%, rgba(155,193,196,0.28) 38%, rgba(205,220,222,0.96) 78%, #dfe7e8 100%)',
       }}
     >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[68%]"
+        style={{
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          background:
+            'linear-gradient(to top, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.22) 55%, rgba(255,255,255,0) 100%)',
+          maskImage: 'linear-gradient(to top, #000 0%, #000 45%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to top, #000 0%, #000 45%, transparent 100%)',
+        }}
+      />
+
       <Link
         to="/immunotherapies"
         className={cn(
-          'relative flex items-center no-underline transition-all duration-300 mt-2',
-          isCollapsed ? 'justify-center h-17 px-0' : 'h-17 pl-3 pr-5',
+          'relative flex items-center no-underline transition-all duration-300',
+          isCollapsed ? 'justify-center h-14 px-0' : 'h-14 pl-5 pr-5',
         )}
       >
-        <img src={allerviaMark} alt="Allervia" className="h-11 w-11 shrink-0 object-contain" />
+        <img src={allerviaMark} alt="Allervia" className="h-8 w-8 shrink-0 object-contain" />
         {!isCollapsed && (
-          <AllerviaWordmark className="absolute left-1/2 -translate-x-1/2 text-xl" style={{ color: '#DCE1E5' }} />
+          <AllerviaWordmark className="absolute left-1/2 -translate-x-[62%] text-lg" style={{ color: '#12333a' }} />
         )}
       </Link>
 
-      <nav className="flex-1 flex flex-col gap-1 mt-2 px-3 overflow-visible min-h-0">
+      <div
+        aria-hidden="true"
+        className="relative mx-3 h-px"
+        style={{ background: 'rgba(16,113,129,0.12)' }}
+      />
+
+      <nav className="relative flex-1 flex flex-col gap-1 mt-3 px-3 overflow-visible min-h-0">
         {ITEMS.map((item) => {
           const isActive =
             location.pathname === item.path ||
@@ -145,22 +162,8 @@ export function Sidebar() {
 
       <div
         className="relative p-3 pb-5"
-        style={{ borderTop: '1px solid rgba(220,225,229,0.06)' }}
+        style={{ borderTop: '1px solid rgba(16,113,129,0.12)' }}
       >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle, rgba(220,225,229,0.4) 1.1px, transparent 1.6px)',
-            backgroundSize: '14px 14px',
-            backgroundPosition: 'center bottom',
-            WebkitMaskImage:
-              'radial-gradient(130% 110% at 50% 100%, #000 0%, rgba(0,0,0,0.4) 35%, transparent 72%)',
-            maskImage:
-              'radial-gradient(130% 110% at 50% 100%, #000 0%, rgba(0,0,0,0.4) 35%, transparent 72%)',
-          }}
-        />
         <div className="relative">
           <SidebarProfile isCollapsed={isCollapsed} />
         </div>
@@ -172,14 +175,10 @@ export function Sidebar() {
         aria-label={isCollapsed ? 'Expandir menu' : 'Colapsar menu'}
         className="absolute top-20 right-0 translate-x-[55%] flex h-7 w-7 items-center justify-center rounded-full overflow-hidden transition-all duration-200 z-30 cursor-pointer hover:scale-110"
         style={{
-          background:
-            'radial-gradient(circle at 20% 22%, rgba(255,255,255,0.28) 0%, transparent 40%), radial-gradient(circle at 80% 18%, rgba(255,255,255,0.16) 0%, transparent 45%), radial-gradient(circle at 78% 82%, rgba(255,255,255,0.22) 0%, transparent 45%), radial-gradient(circle at 22% 80%, rgba(255,255,255,0.14) 0%, transparent 42%), rgba(255,255,255,0.03)',
-          color: '#EDF2F3',
-          border: '1px solid rgba(255,255,255,0.22)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          boxShadow:
-            'inset 0 0 14px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.20)',
+          background: '#ffffff',
+          color: '#12333a',
+          border: '1px solid rgba(16,113,129,0.18)',
+          boxShadow: '0 4px 12px rgba(16,60,68,0.16)',
         }}
       >
         {isCollapsed ? <ChevronRight size={14} strokeWidth={2.5} /> : <ChevronLeft size={14} strokeWidth={2.5} />}
