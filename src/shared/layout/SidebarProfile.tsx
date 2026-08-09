@@ -14,14 +14,10 @@ function getInitials(name: string): string {
 }
 
 const GLASS_AVATAR_STYLE: React.CSSProperties = {
-  background:
-    'radial-gradient(circle at 20% 22%, rgba(255,255,255,0.14) 0%, transparent 40%), radial-gradient(circle at 80% 18%, rgba(255,255,255,0.08) 0%, transparent 45%), radial-gradient(circle at 78% 82%, rgba(255,255,255,0.11) 0%, transparent 45%), radial-gradient(circle at 22% 80%, rgba(255,255,255,0.07) 0%, transparent 42%), rgba(255,255,255,0.02)',
-  color: 'rgba(255,255,255,0.8)',
-  border: '1px solid rgba(255,255,255,0.14)',
-  backdropFilter: 'blur(12px)',
-  WebkitBackdropFilter: 'blur(12px)',
-  boxShadow:
-    'inset 0 0 14px rgba(255,255,255,0.10), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.20)',
+  background: 'linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
+  color: '#ffffff',
+  border: '1px solid rgba(16,113,129,0.22)',
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(16,60,68,0.18)',
 }
 
 interface SidebarProfileProps {
@@ -79,9 +75,9 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
           'flex items-center rounded-xl transition-all duration-200 cursor-pointer w-full',
           isCollapsed ? 'h-10 w-10 justify-center mx-auto' : 'h-11 gap-2.5 px-2',
         )}
-        style={{ background: open ? 'rgba(255,255,255,0.10)' : 'transparent' }}
+        style={{ background: open ? 'rgba(37,126,140,0.12)' : 'transparent' }}
         onMouseEnter={(e) => {
-          if (!open) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+          if (!open) e.currentTarget.style.background = 'rgba(37,126,140,0.07)'
         }}
         onMouseLeave={(e) => {
           if (!open) e.currentTarget.style.background = 'transparent'
@@ -97,13 +93,13 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
           <div className="min-w-0 flex-1 text-left">
             <div
               className="text-[0.75rem] font-semibold truncate"
-              style={{ color: '#DCE1E5' }}
+              style={{ color: '#12333a' }}
             >
               {current.name}
             </div>
             <div
               className="text-[0.7rem] truncate"
-              style={{ color: 'rgba(220,225,229,0.55)' }}
+              style={{ color: 'rgba(18,51,58,0.6)' }}
             >
               {ROLE_LABELS[current.role]}
             </div>
@@ -115,11 +111,9 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
         <div
           className="absolute w-64 rounded-xl overflow-hidden z-50 bottom-full left-0 mb-2"
           style={{
-            background: 'rgba(255,255,255,0.68)',
-            backdropFilter: 'blur(20px) saturate(150%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(150%)',
-            border: '1px solid rgba(255,255,255,0.5)',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.6)',
+            background: '#ffffff',
+            border: '1px solid rgba(16,113,129,0.14)',
+            boxShadow: '0 10px 40px rgba(16,60,68,0.18)',
           }}
         >
           <div className="px-3 py-2.5 border-b border-slate-100">
