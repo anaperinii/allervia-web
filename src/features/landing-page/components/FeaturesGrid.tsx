@@ -19,6 +19,9 @@ const ART_SCRIM = {
   light: 'linear-gradient(180deg, rgba(255,255,255,0.52) 0%, rgba(255,255,255,0.30) 55%, rgba(108,158,165,0.14) 100%)',
 }
 
+const BADGE_TONES_DARK = ['#7fb0b6', '#6C9EA5', '#5b8f97', '#4d7e85', '#3f6f77', '#356169', '#2b6169']
+const BADGE_TONES_LIGHT = ['#6fa4ab', '#588a91', '#4a7f88', '#257E8C', '#22707c', '#1d6772', '#1a5c66']
+
 const ART_TINT = {
   dark: '#0d3b42',
   light: '#7fb2b6',
@@ -113,14 +116,13 @@ export function FeaturesGrid() {
               }}
             >
               <div
-                className="mb-5 flex h-12 w-12 items-center justify-center rounded-full border"
+                className="mb-5 flex h-12 w-12 items-center justify-center rounded-full"
                 style={{
-                  background:
-                    'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04) 46%, rgba(255,255,255,0) 56%), var(--ll-accent-bg-soft)',
-                  borderColor: 'var(--ll-accent-border-soft)',
+                  background: (darkTheme ? BADGE_TONES_DARK : BADGE_TONES_LIGHT)[index],
+                  color: '#ffffff',
                 }}
               >
-                <Icon size={22} style={{ color: 'var(--ll-accent-strong)' }} />
+                <Icon size={22} />
               </div>
               <h3 className="mb-2 text-base font-semibold" style={{ color: 'var(--ll-ink)' }}>
                 {feature.title}
