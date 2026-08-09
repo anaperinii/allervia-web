@@ -20,6 +20,17 @@ export function LandingPage() {
       <TabsSection />
       <CtaSection />
       <Footer />
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-50 h-16"
+        style={{
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          maskImage: 'linear-gradient(to top, #000 0%, rgba(0,0,0,0.55) 45%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to top, #000 0%, rgba(0,0,0,0.55) 45%, transparent 100%)',
+        }}
+      />
     </div>
   )
 }

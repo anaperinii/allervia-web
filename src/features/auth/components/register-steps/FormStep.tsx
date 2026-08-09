@@ -15,8 +15,8 @@ export function FormStep({ form, maskedEmail, onSubmit }: FormStepProps) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6" noValidate>
       <div className="flex flex-col items-center text-center gap-1.5">
-        <h1 className="font-extrabold text-2xl text-(--text)">Complete seu cadastro</h1>
-        <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
+        <h1 className="font-extrabold text-2xl text-[color:var(--ink)]">Complete seu cadastro</h1>
+        <p className="text-xs text-[color:var(--ink-soft)] leading-relaxed max-w-xs">
           Preencha os dados abaixo para finalizar a configuração da sua conta e começar a utilizar o Allervia.
         </p>
       </div>
@@ -34,7 +34,7 @@ export function FormStep({ form, maskedEmail, onSubmit }: FormStepProps) {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-xs font-semibold text-(--text-muted)">E-mail</label>
-            <span className="text-[0.6rem] text-brand">Definido pelo administrador</span>
+            <span className="text-[0.6rem] text-[color:var(--accent)]">Definido pelo administrador</span>
           </div>
           <TextInput
             type="email"
@@ -80,10 +80,10 @@ export function FormStep({ form, maskedEmail, onSubmit }: FormStepProps) {
         Criar conta
       </Button>
 
-      <p className="text-[0.55rem] text-(--text-muted) text-center leading-relaxed">
+      <p className="text-[0.55rem] text-[color:var(--ink-soft)] text-center leading-relaxed">
         Ao criar sua conta, você concorda com os{' '}
-        <a href="#" className="text-brand no-underline hover:underline">Termos de Uso</a> e a{' '}
-        <a href="#" className="text-brand no-underline hover:underline">Política de Privacidade</a> do Allervia.
+        <a href="#" className="text-[color:var(--accent)] no-underline hover:underline">Termos de Uso</a> e a{' '}
+        <a href="#" className="text-[color:var(--accent)] no-underline hover:underline">Política de Privacidade</a> do Allervia.
       </p>
     </form>
   )

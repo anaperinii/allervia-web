@@ -7,9 +7,10 @@ import { cn } from '@/shared/lib/cn'
 import { LandingThemeProvider, useLandingTheme } from '@/features/landing-page/theme-context'
 
 const publicRoutes = ['/', '/login', '/register', '/trial', '/forgot-password']
-const authRoutes = ['/login', '/register', '/forgot-password']
-const noHeaderRoutes: string[] = []
+const authRoutes = ['/login', '/register', '/forgot-password', '/trial']
+const noHeaderRoutes: string[] = ['/login', '/register', '/forgot-password', '/trial']
 const heroRoutes = ['/', '/trial', '/login', '/register', '/forgot-password']
+const noTransitionRoutes = ['/forgot-password', '/register']
 
 function PageTransition({ children }: { children: React.ReactNode }) {
   const [visible, setVisible] = useState(false)
@@ -35,20 +36,11 @@ interface PublicShellProps {
 
 function PublicShell({ hideHeader, isAuthRoute, hasHero, pathname }: PublicShellProps) {
   const { theme } = useLandingTheme()
-  const hideNav = pathname === '/trial'
-  const forceDark = isAuthRoute || pathname === '/trial'
-  const effectiveTheme = forceDark ? 'dark' : theme
+  const skipTransition = noTransitionRoutes.includes(pathname)
   return (
-    <div data-landing-theme={effectiveTheme} className="min-h-screen">
-      {!hideHeader && (
-        <Header
-          isAuthPage={isAuthRoute}
-          hasHero={hasHero}
-          hideNav={hideNav}
-          hideThemeSwitch={forceDark}
-        />
-      )}
-      {isAuthRoute ? (
+    <div data-landing-theme={theme} className="min-h-screen" style={{ background: 'var(--ll-bg)' }}>
+      {!hideHeader && <Header isAuthPage={isAuthRoute} hasHero={hasHero} />}
+      {skipTransition ? (
         <Outlet />
       ) : (
         <PageTransition key={pathname}>

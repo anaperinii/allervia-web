@@ -3,10 +3,10 @@ import { Reveal } from './Reveal'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
 import { TESTIMONIALS, type Testimonial } from '@/features/landing-page/constants/testimonials'
 
-function TestimonialCard({ quote, name, handle, initials }: Testimonial) {
+function TestimonialCard({ quote, name }: Testimonial) {
   return (
     <div
-      className="w-80 shrink-0 rounded-2xl p-6"
+      className="flex w-80 shrink-0 flex-col rounded-2xl p-6"
       style={{
         background: 'var(--ll-surface-grad-strong)',
         border: '1px solid var(--ll-border)',
@@ -16,25 +16,8 @@ function TestimonialCard({ quote, name, handle, initials }: Testimonial) {
       <blockquote className="text-[0.875rem] leading-[1.7] mb-5" style={{ color: 'var(--ll-ink)' }}>
         &ldquo;{quote}&rdquo;
       </blockquote>
-      <div className="flex items-center gap-3">
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-[0.75rem] font-bold"
-          style={{
-            background:
-              'linear-gradient(150deg, #9BC1C4, #6C9EA5 50%, #4d7e85)',
-            color: '#ffffff',
-          }}
-        >
-          {initials}
-        </div>
-        <div>
-          <div className="text-[0.85rem] font-semibold" style={{ color: 'var(--ll-ink)' }}>
-            {name}
-          </div>
-          <div className="text-[0.75rem]" style={{ color: 'var(--ll-ink-muted)' }}>
-            {handle}
-          </div>
-        </div>
+      <div className="mt-auto text-[0.85rem] font-semibold" style={{ color: 'var(--ll-accent-strong)' }}>
+        {name}
       </div>
     </div>
   )
@@ -42,6 +25,10 @@ function TestimonialCard({ quote, name, handle, initials }: Testimonial) {
 
 export function TestimonialsSection() {
   const marqueeItems = useMemo(() => [...TESTIMONIALS, ...TESTIMONIALS], [])
+  const backRowItems = useMemo(() => {
+    const shifted = [...TESTIMONIALS.slice(3), ...TESTIMONIALS.slice(0, 3)]
+    return [...shifted, ...shifted]
+  }, [])
 
   return (
     <section
@@ -68,7 +55,7 @@ export function TestimonialsSection() {
       </Reveal>
 
       <div
-        className="flex gap-6 hover:paused relative"
+        className="flex items-stretch gap-6 hover:paused relative"
         style={{
           animation: 'scroll-left 30s linear infinite',
           width: 'max-content',
@@ -78,6 +65,32 @@ export function TestimonialsSection() {
           <TestimonialCard key={`${testimonial.initials}-${index}`} {...testimonial} />
         ))}
       </div>
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 -bottom-24"
+        style={{ opacity: 0.6 }}
+      >
+        <div
+          className="flex items-stretch gap-6"
+          style={{ animation: 'scroll-left 46s linear infinite', width: 'max-content' }}
+        >
+          {backRowItems.map((testimonial, index) => (
+            <TestimonialCard key={`back-${testimonial.initials}-${index}`} {...testimonial} />
+          ))}
+        </div>
+      </div>
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-56"
+        style={{
+          backdropFilter: 'blur(7px)',
+          WebkitBackdropFilter: 'blur(7px)',
+          maskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.35) 45%, #000 90%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.35) 45%, #000 90%)',
+        }}
+      />
     </section>
   )
 }

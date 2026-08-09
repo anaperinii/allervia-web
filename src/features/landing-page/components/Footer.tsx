@@ -1,4 +1,5 @@
 import { Heart } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import allerviaMarkWhite from '@/assets/allervia-mark-dark.png'
 import allerviaMarkBlack from '@/assets/allervia-mark-light.png'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
@@ -11,20 +12,54 @@ export function Footer() {
   const markSrc = isLight ? allerviaMarkBlack : allerviaMarkWhite
   return (
     <footer
-      className="border-t"
+      className="relative border-t"
       style={{
-        background: 'var(--ll-bg-foot)',
         borderColor: 'var(--ll-border)',
         color: 'var(--ll-ink)',
       }}
-    >
-      <div className="pt-14 pb-8 px-[5%]">
+      >
+      <span
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 'clamp(-272px, -13.6vw, -88px)',
+          zIndex: 0,
+          display: 'block',
+          textAlign: 'center',
+          fontSize: 'clamp(110px, 27vw, 520px)',
+          fontWeight: 600,
+          textTransform: 'lowercase',
+          letterSpacing: '-0.005em',
+          lineHeight: 0.8,
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+          color: 'var(--ll-ink)',
+          opacity: isLight ? 0.05 : 0.035,
+        }}
+      >
+        allervia
+      </span>
+
+      <div
+        aria-hidden="true"
+        className="absolute inset-0"
+        style={{ zIndex: 1, background: 'var(--ll-bg-foot)' }}
+      />
+
+      <div className="relative z-[2] pt-14 pb-8 px-[5%]">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-8 sm:gap-12 mb-12">
         <div>
-          <div className="mb-4 flex items-center gap-2.5">
+          <Link
+            to="/"
+            aria-label="Voltar para a página inicial"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="mb-4 flex w-fit items-center gap-2.5 no-underline"
+          >
             <img src={markSrc} alt="" className="h-9 w-9 object-contain" />
             <AllerviaWordmark className="text-2xl" style={{ color: 'var(--ll-ink)' }} />
-          </div>
+          </Link>
           <p className="text-[0.875rem] leading-[1.7] max-w-72" style={{ color: 'var(--ll-ink-muted)' }}>
             Plataforma completa para gestão de protocolos de imunoterapia alérgica. Feito para clínicas, por engenheiros de software.
           </p>
@@ -83,82 +118,6 @@ export function Footer() {
       </div>
       </div>
 
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'relative',
-          overflow: 'hidden',
-          textAlign: 'center',
-          lineHeight: 0,
-          marginTop: '1.5rem',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            bottom: 0,
-            zIndex: 1,
-            width: '50%',
-            height: '115%',
-            pointerEvents: 'none',
-            backgroundImage:
-              'radial-gradient(circle, var(--ll-ink) 1.4px, transparent 1.9px)',
-            backgroundSize: '15px 15px',
-            backgroundPosition: 'left bottom',
-            opacity: 0.42,
-            WebkitMaskImage:
-              'radial-gradient(72% 118% at 0% 100%, #000 0%, rgba(0,0,0,0.42) 30%, transparent 62%)',
-            maskImage:
-              'radial-gradient(72% 118% at 0% 100%, #000 0%, rgba(0,0,0,0.42) 30%, transparent 62%)',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            right: 0,
-            bottom: 0,
-            zIndex: 1,
-            width: '50%',
-            height: '115%',
-            pointerEvents: 'none',
-            backgroundImage:
-              'radial-gradient(circle, var(--ll-ink) 1.4px, transparent 1.9px)',
-            backgroundSize: '15px 15px',
-            backgroundPosition: 'right bottom',
-            opacity: 0.42,
-            WebkitMaskImage:
-              'radial-gradient(72% 118% at 100% 100%, #000 0%, rgba(0,0,0,0.42) 30%, transparent 62%)',
-            maskImage:
-              'radial-gradient(72% 118% at 100% 100%, #000 0%, rgba(0,0,0,0.42) 30%, transparent 62%)',
-          }}
-        />
-        <span
-          aria-hidden="true"
-          style={{
-            position: 'relative',
-            zIndex: 3,
-            display: 'block',
-            textAlign: 'center',
-            fontSize: 'clamp(110px, 27vw, 520px)',
-            fontWeight: 600,
-            textTransform: 'lowercase',
-            letterSpacing: '-0.005em',
-            lineHeight: 0.8,
-            whiteSpace: 'nowrap',
-            color: 'var(--ll-ink)',
-            opacity: isLight ? 0.08 : 0.06,
-            transform: 'translateY(10%)',
-            transformOrigin: 'center bottom',
-            WebkitMaskImage:
-              'linear-gradient(to bottom, #000 0%, #000 30%, rgba(0,0,0,0.12) 100%)',
-            maskImage:
-              'linear-gradient(to bottom, #000 0%, #000 30%, rgba(0,0,0,0.12) 100%)',
-          }}
-        >
-          allervia
-        </span>
-      </div>
     </footer>
   )
 }

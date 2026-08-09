@@ -1,11 +1,18 @@
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Shield, Check, Clock, Mail } from 'lucide-react'
+import { ChevronLeft, Shield, Check, Clock, Mail } from 'lucide-react'
+import { Link, useRouter } from '@tanstack/react-router'
 import { Modal, Button, FieldLabel, TextInput, Select } from '@/shared/components'
-import { AllerviaAuthBackground } from '@/features/landing-page/components/AllerviaAuthBackground'
+import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
+import { AUTH_THEMES, AUTH_FIELD_CLASSES, authThemeVars } from '@/features/auth/components/AuthLayout'
+import { useLandingTheme } from '@/features/landing-page/theme-context'
+import { ThemeSwitch } from '@/features/landing-page/components/ThemeSwitch'
 import { trialSchema, type TrialForm } from '@/features/auth/schemas/trial'
 import { formatPhone } from '@/shared/lib/formatters'
+import { Aurora, AURORA_STOPS } from '@/shared/components/Aurora'
+import { HERO_PLATE } from '@/features/landing-page/components/HeroSection'
+import { cn } from '@/shared/lib/cn'
 
 const ROLE_OPTIONS = [
   { value: 'doctor', label: 'Médico(a)' },
@@ -27,8 +34,19 @@ const TRUST_BADGES = [
   { icon: Clock, label: 'Retorno em 1 dia útil' },
 ] as const
 
+const RAIL_SHADOW = '-30px 0 80px -40px rgba(0,0,0,0.45)'
+
 export function TrialPage() {
   const [showModal, setShowModal] = useState(false)
+  const router = useRouter()
+  const { theme } = useLandingTheme()
+  const darkTheme = theme === 'dark'
+  const t = darkTheme ? AUTH_THEMES.dark : AUTH_THEMES.light
+
+  const goBack = () => {
+    if (router.history.canGoBack()) router.history.back()
+    else router.navigate({ to: '/' })
+  }
 
   const {
     register,
@@ -48,67 +66,142 @@ export function TrialPage() {
 
   return (
     <>
-      <section
-        className="relative w-full min-h-screen"
-        style={{
-          background: 'var(--ll-bg)',
-          padding: 'var(--ll-hero-frame-pad)',
-          transition: 'padding 0.55s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.55s ease',
-        }}
-      >
+      <div
+        data-auth-shell=""
+        className="relative w-full overflow-hidden min-h-screen lg:h-screen p-3 sm:p-4"
+        style={{ ...authThemeVars(t), background: 'var(--ll-bg)' }}
+        >
         <div
-          className="relative overflow-hidden text-white"
+          aria-hidden="true"
+          className="absolute inset-3 sm:inset-4 rounded-3xl overflow-hidden"
+        >
+        <div aria-hidden="true" className="absolute inset-0" style={{ background: HERO_PLATE }} />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-[62%]"
           style={{
-            background: '#08191d',
-            borderRadius: 'var(--ll-hero-frame-radius)',
-            minHeight: 'calc(100vh - 2 * var(--ll-hero-frame-pad))',
-            transition:
-              'border-radius 0.55s cubic-bezier(0.22, 1, 0.36, 1), min-height 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+            zIndex: 0,
+            transform: 'scaleY(-1)',
+            filter: 'brightness(0.42) saturate(1.4)',
+            maskImage:
+              'radial-gradient(88% 155% at 50% 100%, transparent 0%, transparent 56%, rgba(0,0,0,0.6) 72%, #000 90%)',
+            WebkitMaskImage:
+              'radial-gradient(88% 155% at 50% 100%, transparent 0%, transparent 56%, rgba(0,0,0,0.6) 72%, #000 90%)',
           }}
         >
-          <AllerviaAuthBackground />
+          <Aurora colorStops={AURORA_STOPS.dark} amplitude={1.1} blend={0.6} speed={0.7} />
+        </div>
 
-          <div className="relative z-10 flex min-h-full items-center justify-center px-6 pt-32 pb-16">
-            <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] items-center gap-10 xl:gap-16 w-full max-w-6xl">
-              <div className="text-center lg:text-left text-white">
-                <h1 className="mb-6 text-[clamp(1.9rem,3.6vw,3.4rem)] font-light leading-[1.1] tracking-tight text-balance text-white">
-                  A plataforma <span className="font-semibold">100% dedicada</span>{' '}
-                  <span className="whitespace-nowrap">à gestão</span> de imunoterapias.
-                </h1>
-                <p className="max-w-xl mx-auto lg:mx-0 text-[clamp(0.95rem,1.4vw,1.15rem)] font-light leading-relaxed text-white/70">
-                  Cálculos automáticos. Histórico unificado. Rastreabilidade total.
-                  Transforme complexidade em clareza e recupere o tempo que você merece dedicar
-                  aos seus pacientes.
-                </p>
-              </div>
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            zIndex: 2,
+            backgroundImage: 'radial-gradient(rgba(220,225,229,0.06) 0.5px, transparent 0.5px)',
+            backgroundSize: '3px 3px',
+          }}
+        />
 
-              <form
-                onSubmit={onSubmit}
-                noValidate
-                className="allervia-dark-form rounded-2xl p-6 xl:p-8 w-full max-w-lg lg:mx-0 mx-auto [&_label]:text-white/80! [&_input]:bg-white/6! [&_input]:border-white/15! [&_input]:text-white! [&_input::placeholder]:text-white/40! [&_select]:bg-white/6! [&_select]:border-white/15! [&_select]:text-white! [&_select_option]:text-[#0f2027]! [&_select+svg]:text-white/50!"
-              style={{
-                background: 'rgba(8,25,29,0.40)',
-                backdropFilter: 'blur(28px) saturate(160%)',
-                WebkitBackdropFilter: 'blur(28px) saturate(160%)',
-                border: '1px solid rgba(255,255,255,0.14)',
-                boxShadow:
-                  '0 40px 100px -30px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.10)',
-                color: '#DCE1E5',
-              }}
-            >
-              <h2 className="text-lg font-semibold tracking-tight mb-1 text-white">
-                Solicite uma demonstração
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute"
+          style={{
+            zIndex: 2,
+            top: '78%',
+            left: '30%',
+            width: '60vmax',
+            height: '60vmax',
+            background: 'radial-gradient(circle, rgba(155,193,196,0.14), transparent 62%)',
+            transform: 'translate(-50%, -50%)',
+            animation: 'av-drift-2 22s ease-in-out infinite',
+          }}
+        />
+        </div>
+
+        <div className="relative z-10 h-full min-h-[calc(100vh-1.5rem)] lg:min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,42rem)] items-stretch overflow-hidden rounded-3xl">
+          <div className="flex flex-col px-6 py-6 sm:px-10 lg:pl-14 lg:pr-10">
+            <div className="auth-brand flex items-center justify-between gap-5">
+              <Link
+                to="/"
+                aria-label="Voltar para a página inicial"
+                className="flex items-center gap-3 no-underline"
+                >
+                <img src={AUTH_THEMES.light.mark} alt="" className="h-7 w-auto object-contain" />
+                <AllerviaWordmark className="text-xl" style={{ color: '#0E2E34' }} />
+              </Link>
+
+              <ThemeSwitch />
+            </div>
+
+            <div className="auth-art-copy flex-1 flex flex-col justify-end max-w-2xl pt-8 pb-[4vh]">
+              <h2
+                className="font-medium leading-[1.12] tracking-[-0.02em] text-balance"
+                style={{ fontSize: 'clamp(2rem, 3vw, 3.2rem)', color: '#ffffff' }}
+              >
+                A plataforma{' '}
+                <span
+                  className="font-semibold"
+                  style={{
+                    backgroundImage:
+                      'linear-gradient(115deg, #ffffff 0%, #ffffff 42%, #dff0f0 49%, #9BC1C4 51%, #dff0f0 53%, #ffffff 60%, #ffffff 100%)',
+                    backgroundSize: '300% 100%',
+                    backgroundPosition: '200% 0',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    color: 'transparent',
+                    animation: 'shimmer 10s linear infinite',
+                    willChange: 'background-position',
+                  }}
+                >
+                  100% dedicada
+                </span>{' '}
+                <span className="whitespace-nowrap">à gestão</span> de imunoterapias.
               </h2>
               <p
-                className="text-[0.7rem] mb-5 leading-relaxed"
-                style={{ color: 'rgba(255,255,255,0.65)' }}
+                className="mt-4 font-normal leading-relaxed max-w-[46ch]"
+                style={{ fontSize: 'clamp(1rem, 1.2vw, 1.2rem)', color: 'rgba(255,255,255,0.8)' }}
               >
+                Cálculos automáticos. Histórico unificado. Rastreabilidade total. Transforme
+                complexidade em clareza e recupere o tempo que você merece dedicar aos seus
+                pacientes.
+              </p>
+            </div>
+          </div>
+
+            <form
+              onSubmit={onSubmit}
+              noValidate
+              className={cn(
+                'auth-body w-full p-6 sm:px-10 lg:px-12 py-8',
+                'flex flex-col justify-center lg:h-full overflow-y-auto',
+                AUTH_FIELD_CLASSES,
+              )}
+              style={{ background: 'var(--ll-bg)', boxShadow: RAIL_SHADOW }}
+            >
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={goBack}
+                  aria-label="Voltar para a tela anterior"
+                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg cursor-pointer transition-all duration-200 hover:scale-110"
+                  style={{ background: 'transparent', border: '1px solid var(--bd)', color: 'var(--ink-soft)' }}
+                >
+                  <ChevronLeft size={15} strokeWidth={2.5} />
+                </button>
+                <h1
+                  className="text-[1.6rem] font-medium leading-[1.12] tracking-[-0.03em]"
+                  style={{ color: 'var(--ink)' }}
+                >
+                  Solicite uma demonstração
+                </h1>
+              </div>
+              <p className="mt-2 mb-4 text-[0.9rem] leading-snug" style={{ color: 'var(--ink-soft)' }}>
                 Preencha os dados abaixo e nossa equipe entrará em contato em até 1 dia útil para
-                agendar uma demonstração personalizada da plataforma.{' '}
-                <span className="font-semibold text-white">Sem compromisso</span>.
+                agendar uma demonstração personalizada da plataforma.
               </p>
 
-              <div className="grid grid-cols-2 gap-2.5 mb-2.5">
+              <div className="grid grid-cols-2 gap-2.5 mb-2">
                 <FieldLabel label="Nome" required error={errors.name?.message}>
                   <TextInput placeholder="Insira aqui" invalid={!!errors.name} maxLength={60} {...register('name')} />
                 </FieldLabel>
@@ -117,7 +210,7 @@ export function TrialPage() {
                 </FieldLabel>
               </div>
 
-              <div className="mb-2.5">
+              <div className="mb-2">
                 <FieldLabel label="E-mail profissional" required error={errors.email?.message}>
                   <TextInput
                     type="email"
@@ -130,7 +223,7 @@ export function TrialPage() {
                 </FieldLabel>
               </div>
 
-              <div className="mb-2.5">
+              <div className="mb-2">
                 <FieldLabel label="Telefone / WhatsApp" required error={errors.phone?.message}>
                   <Controller
                     control={control}
@@ -150,7 +243,7 @@ export function TrialPage() {
                 </FieldLabel>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5 mb-2.5">
+              <div className="grid grid-cols-2 gap-2.5 mb-2">
                 <FieldLabel label="Qual é a sua atuação?" required error={errors.role?.message}>
                   <Select invalid={!!errors.role} {...register('role')} defaultValue="">
                     <option value="" disabled>Selecionar</option>
@@ -169,7 +262,7 @@ export function TrialPage() {
                 </FieldLabel>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5 mb-4">
+              <div className="grid grid-cols-2 gap-2.5 mb-3">
                 <FieldLabel label="Especialidade da clínica" required error={errors.specialty?.message}>
                   <TextInput placeholder="Ex.: Alergia e Imunologia" invalid={!!errors.specialty} maxLength={80} {...register('specialty')} />
                 </FieldLabel>
@@ -185,42 +278,29 @@ export function TrialPage() {
                 </FieldLabel>
               </div>
 
+              <div className="pt-4 shrink-0">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex w-full items-center justify-center rounded-lg py-3 text-sm font-semibold text-white transition-[filter] duration-200 hover:brightness-95 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
-                style={{
-                  background: 'linear-gradient(to bottom right, #6C9EA5, #4d7e85)',
-                  boxShadow: '0 2px 12px rgba(108,158,165,0.3)',
-                }}
+                className="inline-flex w-full items-center justify-center rounded-lg h-10 text-sm font-semibold transition-[filter] duration-200 hover:brightness-110 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                style={{ background: 'var(--btn)', color: 'var(--btn-ink)', border: 'none' }}
               >
                 Solicitar demonstração
               </button>
 
-              <p
-                className="text-[0.6rem] text-center mt-3 leading-relaxed"
-                style={{ color: 'rgba(255,255,255,0.55)' }}
-              >
+              <p className="text-[0.62rem] text-center mt-4 leading-snug" style={{ color: 'var(--ink-soft)' }}>
                 Ao enviar, você concorda com os{' '}
-                <a
-                  href="#"
-                  className="no-underline hover:underline"
-                  style={{ color: '#9BC1C4' }}
-                >
+                <a href="#" className="no-underline hover:underline" style={{ color: 'var(--accent)' }}>
                   Termos de Uso
                 </a>{' '}
                 e a{' '}
-                <a
-                  href="#"
-                  className="no-underline hover:underline"
-                  style={{ color: '#9BC1C4' }}
-                >
+                <a href="#" className="no-underline hover:underline" style={{ color: 'var(--accent)' }}>
                   Política de Privacidade
                 </a>
                 .
               </p>
 
-              <hr className="my-4" style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.10)' }} />
+              <hr className="my-4" style={{ border: 'none', borderTop: '1px solid var(--bd)' }} />
 
               <div className="flex items-center justify-center gap-5">
                 {TRUST_BADGES.map((badge) => {
@@ -229,19 +309,18 @@ export function TrialPage() {
                     <span
                       key={badge.label}
                       className="flex items-center gap-1.5 text-[0.65rem] font-medium"
-                      style={{ color: 'rgba(255,255,255,0.65)' }}
+                      style={{ color: 'var(--ink-soft)' }}
                     >
-                      <Icon size={13} style={{ color: '#9BC1C4' }} />
+                      <Icon size={13} style={{ color: 'var(--accent)' }} />
                       {badge.label}
                     </span>
                   )
                 })}
               </div>
-              </form>
-            </div>
-          </div>
+              </div>
+            </form>
         </div>
-      </section>
+      </div>
 
       <Modal
         open={showModal}

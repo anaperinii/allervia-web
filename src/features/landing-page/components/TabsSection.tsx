@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ArrowRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
+import { CardSwap, Card } from '@/shared/components/CardSwap'
 import { Reveal } from './Reveal'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
 import { useLandingTheme } from '@/features/landing-page/theme-context'
@@ -9,25 +10,15 @@ import { PRODUCT_TABS, type TabId } from '@/features/landing-page/constants/tabs
 
 export function TabsSection() {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard')
-  const [visited, setVisited] = useState<Set<TabId>>(() => new Set(['dashboard']))
-  const [direction, setDirection] = useState<1 | -1>(1)
 
   const handleSelectTab = (id: TabId) => {
     if (id === activeTab) return
-    const newIndex = PRODUCT_TABS.findIndex((t) => t.id === id)
-    const currentIndex = PRODUCT_TABS.findIndex((t) => t.id === activeTab)
-    setDirection(newIndex > currentIndex ? 1 : -1)
     setActiveTab(id)
-    if (!visited.has(id)) {
-      setVisited((prev) => new Set(prev).add(id))
-    }
   }
 
   const activeIndex = PRODUCT_TABS.findIndex((t) => t.id === activeTab)
   const { theme } = useLandingTheme()
   const darkTheme = theme === 'dark'
-  const frameBg = darkTheme ? 'rgba(224,240,238,0.045)' : 'rgba(18,51,58,0.05)'
-  const frameBorder = darkTheme ? 'rgba(224,240,238,0.09)' : 'rgba(18,51,58,0.12)'
   const panelBorder = darkTheme ? 'rgba(224,240,238,0.1)' : 'rgba(18,51,58,0.16)'
   const panelBg = darkTheme ? '#101617' : '#eef2f3'
   const panelTabBorder = darkTheme ? 'rgba(224,240,238,0.07)' : 'rgba(18,51,58,0.1)'
@@ -59,7 +50,7 @@ export function TabsSection() {
           title="Projetado para o fluxo clínico real"
           description="Cada funcionalidade reflete as necessidades reais de clínicas de imunoterapia alérgica."
           align="center"
-          titleMaxWidth="max-w-150"
+          titleMaxWidth="max-w-4xl"
         />
       </Reveal>
 
@@ -143,9 +134,9 @@ export function TabsSection() {
                           onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--ll-accent-strong)' }}
                         >
                           {tab.linkLabel}
-                          <ArrowRight
+                          <ChevronRight
                             size={15}
-                            strokeWidth={2.25}
+                            strokeWidth={2.5}
                             className="transition-transform duration-200 group-hover:translate-x-1"
                           />
                         </Link>
@@ -158,83 +149,47 @@ export function TabsSection() {
           </ul>
         </Reveal>
 
-        {/* Right — reference-style glass panel (bleeds to the right & bottom) */}
-        <Reveal className="relative min-w-0 lg:-mr-[6vw] lg:-mb-24">
-          {/* translucent glass frame */}
-          <div
-            className="rounded-tl-3xl pt-4 pl-4"
-            style={{
-              border: `1px solid ${frameBorder}`,
-              borderRight: 'none',
-              borderBottom: 'none',
-              background: frameBg,
-              backdropFilter: 'blur(14px)',
-              WebkitBackdropFilter: 'blur(14px)',
-            }}
+        <Reveal className="relative min-w-0 flex justify-center lg:justify-end lg:pl-10 lg:-mr-[8vw] lg:mt-16 lg:-mb-28">
+          <CardSwap
+            width="min(100%, 44rem)"
+            height="clamp(18rem, 30vw, 28rem)"
+            cardDistance={54}
+            verticalDistance={62}
+            skewAmount={5}
+            active={activeIndex}
+            onCardClick={(idx) => handleSelectTab(PRODUCT_TABS[idx].id)}
+            className="mx-auto lg:mx-0"
           >
-            {/* dark panel */}
-            <div
-              className="relative overflow-hidden rounded-tl-2xl"
-              style={{
-                background: panelBg,
-                border: `1px solid ${panelBorder}`,
-                borderRight: 'none',
-                borderBottom: 'none',
-                boxShadow: darkTheme
-                  ? '0 -20px 80px -30px rgba(0,0,0,0.9)'
-                  : '0 -20px 80px -30px rgba(18,51,58,0.28)',
-              }}
-            >
-              {/* tab header */}
-              <div
-                className="flex items-center gap-6 sm:gap-8 px-6 sm:px-8 h-14 overflow-x-auto"
-                style={{ borderBottom: `1px solid ${panelTabBorder}` }}
+            {PRODUCT_TABS.map((tab) => (
+              <Card
+                key={tab.id}
+                className="cursor-pointer flex flex-col"
+                style={{
+                  background: panelBg,
+                  border: `1px solid ${panelBorder}`,
+                }}
               >
-                {PRODUCT_TABS.map((tab) => {
-                  const isActive = tab.id === activeTab
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => handleSelectTab(tab.id)}
-                      className="whitespace-nowrap text-[0.84rem] transition-colors duration-200 cursor-pointer"
-                      style={{ color: isActive ? tabActiveColor : tabIdleColor, fontWeight: isActive ? 600 : 500 }}
-                    >
-                      {tab.label}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* images */}
-              <div className="relative">
-                {PRODUCT_TABS.filter((tab) => visited.has(tab.id)).map((tab, stackIndex) => {
-                  const tabIndex = PRODUCT_TABS.findIndex((t) => t.id === tab.id)
-                  const isActive = activeTab === tab.id
-                  const offset = isActive ? '0px' : tabIndex < activeIndex ? '-24px' : '24px'
-                  return (
-                    <img
-                      key={tab.id}
-                      src={tab.image}
-                      alt={tab.label}
-                      loading="lazy"
-                      decoding="async"
-                      className={cn(
-                        'w-full lg:w-[128%] lg:max-w-none block',
-                        stackIndex === 0 ? 'relative' : 'absolute top-0 left-0',
-                        !isActive && 'pointer-events-none',
-                      )}
-                      style={{
-                        opacity: isActive ? 1 : 0,
-                        transform: `translateX(${offset})`,
-                        transition:
-                          'opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
-                      }}
-                    />
-                  )
-                })}
-              </div>
-            </div>
-          </div>
+                <div
+                  className="flex items-center h-10 shrink-0 px-4"
+                  style={{ borderBottom: `1px solid ${panelTabBorder}` }}
+                >
+                  <span
+                    className="text-[0.78rem] font-semibold"
+                    style={{ color: tab.id === activeTab ? tabActiveColor : tabIdleColor }}
+                  >
+                    {tab.label}
+                  </span>
+                </div>
+                <img
+                  src={tab.image}
+                  alt={tab.label}
+                  loading="lazy"
+                  decoding="async"
+                  className="flex-1 min-h-0 w-full object-cover object-top"
+                />
+              </Card>
+            ))}
+          </CardSwap>
         </Reveal>
       </div>
     </section>

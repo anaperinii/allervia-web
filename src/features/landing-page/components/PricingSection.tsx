@@ -39,12 +39,12 @@ export function PricingSection() {
           title="Planos para cada fase da sua clínica"
           description="Comece gratuitamente e escale conforme sua demanda cresce. Sem surpresas."
           align="center"
+          titleMaxWidth="max-w-4xl"
         />
       </Reveal>
 
       <div className="relative grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {PLANS.map((plan) => {
-          const Icon = plan.icon
           const highlighted = plan.id === HIGHLIGHTED_PLAN
           return (
             <Reveal
@@ -65,34 +65,23 @@ export function PricingSection() {
             >
               {highlighted && (
                 <div
-                  className="text-center py-2 text-[0.7rem] font-semibold uppercase tracking-[2px]"
+                  className="text-center py-2 text-[0.7rem] font-bold uppercase tracking-[2px]"
                   style={{
                     background:
-                      'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08) 44%, rgba(255,255,255,0) 56%), var(--ll-accent-fill)',
-                    color: 'var(--ll-accent-ink)',
+                      'linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.04) 44%, rgba(255,255,255,0) 56%), var(--ll-accent-bg-soft)',
+                    color: 'var(--ll-accent-strong)',
                   }}
                 >
                   Mais popular
                 </div>
               )}
               <div className="p-7 flex flex-col flex-1">
-                <div className="flex items-center gap-3 mb-5">
-                  <div
-                    className="flex h-11 w-11 items-center justify-center rounded-xl shrink-0 border"
-                    style={{
-                      background: 'var(--ll-accent-bg-soft)',
-                      borderColor: 'var(--ll-accent-border-soft)',
-                    }}
-                  >
-                    <Icon size={20} style={{ color: 'var(--ll-accent-strong)' }} />
+                <div className="mb-5">
+                  <div className="text-[1.2rem] font-semibold" style={{ color: 'var(--ll-ink)' }}>
+                    {plan.name}
                   </div>
-                  <div>
-                    <div className="text-base font-semibold" style={{ color: 'var(--ll-ink)' }}>
-                      {plan.name}
-                    </div>
-                    <div className="text-[0.7rem]" style={{ color: 'var(--ll-ink-muted)' }}>
-                      {plan.description}
-                    </div>
+                  <div className="text-[0.7rem]" style={{ color: 'var(--ll-ink-muted)' }}>
+                    {plan.description}
                   </div>
                 </div>
 

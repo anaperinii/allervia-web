@@ -46,7 +46,7 @@ export function SectionHeader({
       )}
       <h2
         className={cn(
-          'text-[clamp(1.4rem,2.8vw,2.4rem)] font-medium tracking-tight leading-[1.15]',
+          'text-[clamp(1.6rem,3.2vw,2.6rem)] font-medium tracking-tight leading-[1.15]',
           TITLE_TONE[tone],
           !centered && titleMaxWidth,
         )}

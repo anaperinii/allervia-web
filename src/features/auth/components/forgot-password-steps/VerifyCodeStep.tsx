@@ -1,4 +1,4 @@
-import { ChevronLeft, Clock, Mail } from 'lucide-react'
+import { ChevronLeft, Clock } from 'lucide-react'
 import { VerificationCodeInput } from '@/shared/components'
 import { useCountdown } from '@/shared/hooks/useCountdown'
 
@@ -21,25 +21,11 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
   return (
     <>
       <div className="flex flex-col items-center text-center gap-1.5">
-        <div
-          className="relative flex h-12 w-12 items-center justify-center rounded-full mb-2 overflow-hidden"
-          style={{
-            background:
-              'radial-gradient(circle at 20% 22%, rgba(255,255,255,0.28) 0%, transparent 40%), radial-gradient(circle at 80% 18%, rgba(255,255,255,0.16) 0%, transparent 45%), radial-gradient(circle at 78% 82%, rgba(255,255,255,0.22) 0%, transparent 45%), radial-gradient(circle at 22% 80%, rgba(255,255,255,0.14) 0%, transparent 42%), rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.22)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            boxShadow:
-              'inset 0 0 14px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.20)',
-          }}
-        >
-          <Mail size={22} style={{ color: '#9BC1C4' }} />
-        </div>
-        <h1 className="font-semibold text-2xl tracking-tight text-white">
+        <h1 className="font-semibold text-[1.75rem] tracking-tight text-[color:var(--ink)]">
           Verificação de identidade
         </h1>
-        <p className="text-xs leading-relaxed max-w-xs" style={{ color: 'rgba(255,255,255,0.65)' }}>
-          Enviamos um código para <span className="font-semibold text-white">{email}</span>.
+        <p className="text-[0.84rem] leading-relaxed max-w-sm" style={{ color: 'var(--ink-soft)' }}>
+          Enviamos um código para <span className="font-semibold text-[color:var(--ink)]">{email}</span>.
           <br />
           Insira-o abaixo para continuar.
         </p>
@@ -47,11 +33,11 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col items-center gap-1.5">
-          <label className="text-xs font-medium self-start" style={{ color: 'rgba(255,255,255,0.80)' }}>
+          <label className="text-xs font-medium self-start" style={{ color: 'var(--ink-soft)' }}>
             Código de verificação
           </label>
           <VerificationCodeInput value={code} onChange={onCodeChange} error={codeError} autoFocus />
-          {codeError && <span className="text-[0.65rem] text-red-400">{codeError}</span>}
+          {codeError && <span className="text-[0.65rem] text-[color:var(--err)]">{codeError}</span>}
         </div>
       </div>
 
@@ -59,13 +45,10 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
         <button
           onClick={onSubmit}
           disabled={isExpired}
-          className="inline-flex w-full items-center justify-center rounded-lg py-3 text-sm font-semibold transition-[filter] duration-200 hover:brightness-95 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+          className="inline-flex w-full items-center justify-center rounded-lg h-10 text-sm font-semibold transition-[filter] duration-200 hover:brightness-95 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
           style={{
-            background:
-              'linear-gradient(to bottom right, #6C9EA5, #4d7e85)',
-            color: '#ffffff',
-            boxShadow:
-              '0 2px 12px rgba(108,158,165,0.3)',
+            background: 'var(--btn)',
+            color: 'var(--btn-ink)',
           }}
         >
           Verificar código
@@ -74,7 +57,7 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
           <button
             onClick={onBack}
             className="flex items-center gap-1.5 text-xs font-medium bg-transparent border-none cursor-pointer transition-colors"
-            style={{ color: 'rgba(255,255,255,0.65)' }}
+            style={{ color: 'var(--ink-soft)' }}
           >
             <ChevronLeft size={13} />
             Voltar
@@ -82,7 +65,7 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
           <button
             onClick={onResend}
             className="text-xs font-medium hover:underline bg-transparent border-none cursor-pointer"
-            style={{ color: '#9BC1C4' }}
+            style={{ color: 'var(--accent)' }}
           >
             Reenviar código
           </button>
@@ -92,17 +75,19 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
       <div
         className="flex items-center gap-2 rounded-lg px-3.5 py-2.5"
         style={{
-          background: 'rgba(251, 191, 36, 0.08)',
-          border: '1px solid rgba(251, 191, 36, 0.28)',
+          background: 'var(--glass)',
+          border: '1px solid var(--glass-bd)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
         }}
       >
-        <Clock size={14} className="shrink-0" style={{ color: '#fbbf24' }} />
-        <p className="text-[0.65rem] leading-relaxed" style={{ color: 'rgba(253, 224, 130, 0.85)' }}>
+        <Clock size={14} className="shrink-0" style={{ color: 'var(--glass-ink)' }} />
+        <p className="text-[0.72rem] leading-relaxed" style={{ color: 'var(--glass-ink)' }}>
           {isExpired ? (
             <>O código expirou. Solicite um novo para continuar.</>
           ) : (
             <>
-              O código expira em <span className="font-semibold tabular-nums">{formatted}</span>. Verifique também sua pasta de spam caso não encontre o e-mail.
+              O código expira em <span className="font-bold tabular-nums">{formatted}</span>. Verifique também sua pasta de spam caso não encontre o e-mail.
             </>
           )}
         </p>
