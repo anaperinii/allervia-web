@@ -1,90 +1,18 @@
-import { useId } from 'react'
+import { Activity, RefreshCw, BrainCircuit, Workflow, type LucideIcon } from 'lucide-react'
 import { Reveal } from './Reveal'
 import { useLandingTheme } from '@/features/landing-page/theme-context'
 import glowDark from '@/assets/automation-glow-dark.png'
 import glowLight from '@/assets/automation-glow-light.png'
 
-type IconKind = 'track' | 'sync' | 'auto' | 'proto'
-
-interface IconShape {
-  lines: [number, number, number, number, number][]
-  nodes: [number, number, number][]
-}
-
-const ICON_DATA: Record<IconKind, IconShape> = {
-  track: {
-    lines: [[19, 27, 33, 13, 3.2], [19, 27, 36, 31, 3], [19, 27, 10, 14, 2.8], [19, 27, 24, 40, 2.6], [33, 13, 42, 21, 2.2], [36, 31, 42, 21, 2.2]],
-    nodes: [[19, 27, 7.4], [33, 13, 5], [36, 31, 4.4], [10, 14, 4], [24, 40, 3.4], [42, 21, 2.8]],
-  },
-  sync: {
-    lines: [[13, 15, 35, 15, 3.2], [13, 33, 35, 33, 3.2], [13, 15, 13, 33, 3.2], [35, 15, 35, 33, 3.2]],
-    nodes: [[13, 15, 6.2], [35, 15, 6.2], [13, 33, 6.2], [35, 33, 6.2]],
-  },
-  auto: {
-    lines: [[24, 24, 24, 9, 2.8], [24, 24, 38, 20, 3], [24, 24, 33, 38, 2.8], [24, 24, 11, 31, 3.1]],
-    nodes: [[24, 24, 8.2], [24, 9, 4.2], [38, 20, 4.6], [33, 38, 4.2], [11, 31, 4.8]],
-  },
-  proto: {
-    lines: [[11, 24, 25, 14, 3.2], [11, 24, 25, 34, 3.2], [25, 14, 39, 9, 2.4], [25, 14, 39, 24, 2.6], [25, 34, 39, 24, 2.6], [25, 34, 39, 39, 2.4]],
-    nodes: [[11, 24, 5.8], [25, 14, 5.2], [25, 34, 5.2], [39, 9, 3.6], [39, 24, 4.4], [39, 39, 3.6]],
-  },
-}
-
-function SphereIcon({ kind, dark, index }: { kind: IconKind; dark: boolean; index: number }) {
-  const id = useId()
-  const c = dark
-    ? { g0: '#dff2f2', g1: '#6fadb6', g2: '#1c5f6b', line: '#4d95a0', ring: '#a9d8db', hi: '#dff2f2' }
-    : { g0: '#ffffff', g1: '#8dc0c7', g2: '#1d6b78', line: '#7db3bc', ring: '#4f95a1', hi: '#ffffff' }
-  const { lines, nodes } = ICON_DATA[kind]
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        display: 'block',
-        marginBottom: 12,
-        animation: `float-subtle ${4.8 + (index % 2) * 0.9}s ease-in-out ${index * 0.55}s infinite`,
-      }}
-    >
-      <svg
-        viewBox="0 0 48 48"
-        style={{ width: 54, height: 54, display: 'block', transform: index === 1 ? 'rotate(10deg)' : undefined }}
-      >
-      <defs>
-        <radialGradient id={id} cx="32%" cy="27%" r="84%">
-          <stop offset="0%" stopColor={c.g0} stopOpacity="0.92" />
-          <stop offset="55%" stopColor={c.g1} stopOpacity="0.7" />
-          <stop offset="100%" stopColor={c.g2} stopOpacity="0.88" />
-        </radialGradient>
-      </defs>
-      {lines.map(([x1, y1, x2, y2, w], i) => (
-        <line key={`l-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={c.line} strokeWidth={w} strokeLinecap="round" opacity="0.5" />
-      ))}
-      {nodes.map(([cx, cy, r], i) => (
-        <g key={`n-${i}`}>
-          <circle cx={cx} cy={cy} r={r} fill={`url(#${id})`} />
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke={c.ring} strokeWidth="0.45" opacity="0.3" />
-          <ellipse
-            cx={cx - 0.3 * r}
-            cy={cy - 0.38 * r}
-            rx={0.3 * r}
-            ry={0.2 * r}
-            fill={c.hi}
-            opacity="0.5"
-            transform={`rotate(-32 ${cx} ${cy})`}
-          />
-        </g>
-      ))}
-      </svg>
-    </span>
-  )
-}
-
-const FEATURES: { kind: IconKind; title: string; description: string }[] = [
-  { kind: 'track', title: 'Rastreamento de Desempenho', description: 'Monitore adesão, intervalos e resultados sem precisar revisar registros manualmente.' },
-  { kind: 'sync', title: 'Sincronização em Tempo Real', description: 'Dados do paciente, fases do protocolo e status de aplicações sempre atualizados.' },
-  { kind: 'auto', title: 'Automação Inteligente', description: 'Cálculo automático de doses e progressão de protocolo baseado em regras clínicas validadas.' },
-  { kind: 'proto', title: 'Gestão de Protocolos', description: 'Organize e visualize protocolos de indução e manutenção como um blueprint clínico executável.' },
+const FEATURES: { icon: LucideIcon; title: string; description: string }[] = [
+  { icon: Activity, title: 'Rastreamento de Desempenho', description: 'Monitore adesão, intervalos e resultados sem precisar revisar registros manualmente.' },
+  { icon: RefreshCw, title: 'Sincronização em Tempo Real', description: 'Dados do paciente, fases do protocolo e status de aplicações sempre atualizados.' },
+  { icon: BrainCircuit, title: 'Automação Inteligente', description: 'Cálculo automático de doses e progressão de protocolo baseado em regras clínicas validadas.' },
+  { icon: Workflow, title: 'Gestão de Protocolos', description: 'Organize e visualize protocolos de indução e manutenção como um blueprint clínico executável.' },
 ]
+
+const BADGE_TONES_DARK = ['#7fb0b6', '#6C9EA5', '#4d7e85', '#2b6169']
+const BADGE_TONES_LIGHT = ['#6fa4ab', '#588a91', '#257E8C', '#1d6772']
 
 const MASK = 'linear-gradient(to left, #000 6%, transparent 84%), linear-gradient(to bottom, #000 40%, transparent 74%)'
 
@@ -174,7 +102,16 @@ export function AutomationSection() {
               className="rounded-2xl p-6.5 transition-transform duration-300 hover:-translate-y-1"
               style={{ background: t.featBg, border: `1px solid ${t.featBorder}` }}
             >
-              <SphereIcon kind={feature.kind} dark={dark} index={i} />
+              <span
+                aria-hidden="true"
+                className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-full"
+                style={{
+                  background: (dark ? BADGE_TONES_DARK : BADGE_TONES_LIGHT)[i],
+                  color: '#ffffff',
+                }}
+              >
+                <feature.icon size={20} strokeWidth={1.75} />
+              </span>
               <h3 className="text-[15.5px] font-semibold mb-2.25" style={{ color: t.featTitle }}>
                 {feature.title}
               </h3>

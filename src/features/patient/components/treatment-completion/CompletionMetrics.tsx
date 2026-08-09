@@ -16,7 +16,7 @@ interface CompletionMetricsProps {
 
 interface MetricCard {
   key: string
-  icon: ComponentType<{ size?: number; className?: string }>
+  icon: ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
   label: string
   value: string
   valueTag?: string

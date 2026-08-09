@@ -66,14 +66,14 @@ export function RegisterPage() {
     toast.success({
       icon: <Check size={14} />,
       title: 'Novo código enviado para o seu email',
-      position: 'top-center',
+      position: 'top-right',
       compact: true,
       autoDismissMs: 3000,
     })
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout animate={false}>
       <AuthStepTransition stepKey={step}>
         {step === 'welcome' && (
           <WelcomeStep

@@ -3,19 +3,30 @@ import { useLandingTheme } from '@/features/landing-page/theme-context'
 
 interface ThemeSwitchProps {
   overHero?: boolean
+  scheme?: 'auto' | 'dark'
 }
 
-export function ThemeSwitch({ overHero = false }: ThemeSwitchProps) {
+export function ThemeSwitch({ overHero = false, scheme = 'auto' }: ThemeSwitchProps) {
   const { theme, toggle } = useLandingTheme()
   const isDark = theme === 'dark'
+  const pinnedDark = scheme === 'dark'
 
-  const knobBg = overHero ? '#6C9EA5' : 'var(--ll-accent)'
-  const knobInk = overHero ? '#06232a' : 'var(--ll-accent-ink)'
-  const knobHalo = overHero ? 'rgba(108,158,165,0.30)' : 'var(--ll-halo-accent-strong)'
-  const trackBg = overHero ? 'rgba(255,255,255,0.04)' : 'transparent'
-  const trackBorder = overHero
+  const border = overHero
     ? '1.5px solid rgba(255,255,255,0.25)'
-    : '1.5px solid var(--ll-border-strong)'
+    : pinnedDark
+      ? '1.5px solid rgba(220,225,229,0.22)'
+      : '1.5px solid var(--ll-border-strong)'
+  const inkOn = overHero ? '#ffffff' : pinnedDark ? '#DCE1E5' : 'var(--ll-ink)'
+  const inkOff = overHero
+    ? 'rgba(255,255,255,0.45)'
+    : pinnedDark
+      ? '#4d7e85'
+      : 'var(--ll-ink-tertiary)'
+  const slotOn = overHero
+    ? 'rgba(255,255,255,0.14)'
+    : isDark || pinnedDark
+      ? 'rgba(220,225,229,0.12)'
+      : 'rgba(14,46,52,0.08)'
 
   return (
     <button
@@ -24,25 +35,32 @@ export function ThemeSwitch({ overHero = false }: ThemeSwitchProps) {
       role="switch"
       aria-checked={!isDark}
       aria-label={isDark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
-      className="relative inline-flex h-8 w-14 shrink-0 items-center rounded-lg cursor-pointer"
+      className="inline-flex h-[38px] shrink-0 items-center gap-1.5 rounded-lg px-2 cursor-pointer"
       style={{
-        background: trackBg,
-        border: trackBorder,
-        transition: 'background 0.5s ease, border-color 0.5s ease',
+        background: 'transparent',
+        border,
+        transition: 'border-color 0.5s ease',
       }}
     >
       <span
         aria-hidden="true"
-        className="absolute top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-md ease-out"
+        className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md transition-colors duration-200"
         style={{
-          left: isDark ? '3px' : 'calc(100% - 27px)',
-          background: knobBg,
-          color: knobInk,
-          boxShadow: `0 4px 14px ${knobHalo}, inset 0 1px 0 rgba(255,255,255,0.35)`,
-          transition: 'left 0.3s ease-out, background 0.5s ease, color 0.5s ease, box-shadow 0.5s ease',
+          background: isDark ? 'transparent' : slotOn,
+          color: isDark ? inkOff : inkOn,
         }}
       >
-        {isDark ? <Moon size={12} /> : <Sun size={12} />}
+        <Sun size={14} />
+      </span>
+      <span
+        aria-hidden="true"
+        className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md transition-colors duration-200"
+        style={{
+          background: isDark ? slotOn : 'transparent',
+          color: isDark ? inkOn : inkOff,
+        }}
+      >
+        <Moon size={14} />
       </span>
     </button>
   )

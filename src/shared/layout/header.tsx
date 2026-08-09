@@ -18,18 +18,11 @@ const navLinks = [
 interface HeaderProps {
   isAuthPage?: boolean
   hasHero?: boolean
-  hideNav?: boolean
-  hideThemeSwitch?: boolean
 }
 
-export function Header({
-  isAuthPage = false,
-  hasHero = false,
-  hideNav = false,
-  hideThemeSwitch = false,
-}: HeaderProps) {
-  const showNavLinks = !isAuthPage && !hideNav
-  const showThemeSwitch = hasHero && !hideThemeSwitch
+export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
+  const showNavLinks = !isAuthPage
+  const showThemeSwitch = hasHero
   const [pastHero, setPastHero] = useState(() => {
     if (typeof window === 'undefined') return false
     return window.scrollY > window.innerHeight - 80
@@ -47,10 +40,11 @@ export function Header({
 
   const { theme } = useLandingTheme()
   const bareBar = hasHero && !showNavLinks
-  const heroPill = hasHero && !pastHero && showNavLinks
-  const isTransparent = heroPill || bareBar
-  const isLightBrand = !isTransparent && theme === 'light'
-  const markSrc = isLightBrand ? allerviaMarkBlack : allerviaMarkWhite
+  const heroPill = hasHero && showNavLinks
+  const overHeroTop = heroPill && !pastHero
+  const isLightBrand = !overHeroTop && theme === 'light'
+  const onLightPlate = overHeroTop || isLightBrand
+  const markSrc = onLightPlate ? allerviaMarkBlack : allerviaMarkWhite
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -61,14 +55,21 @@ export function Header({
     return () => { document.body.style.overflow = '' }
   }, [mobileMenuOpen])
 
-  const linkColor = isTransparent ? 'rgba(255,255,255,0.72)' : 'var(--ll-ink-muted)'
-  const linkHoverColor = isTransparent ? '#ffffff' : 'var(--ll-ink)'
-  const brandColor = isTransparent ? '#ffffff' : 'var(--ll-ink)'
-  const loginBorder = isTransparent ? '1.5px solid rgba(255,255,255,0.25)' : '1.5px solid var(--ll-border-strong)'
-  const loginBg = isTransparent ? 'rgba(255,255,255,0.04)' : 'transparent'
+  const onDarkPlate = bareBar
+  const linkColor = onDarkPlate ? 'rgba(255,255,255,0.72)' : overHeroTop ? 'rgba(14,46,52,0.62)' : 'var(--ll-ink-muted)'
+  const linkHoverColor = onDarkPlate ? '#ffffff' : overHeroTop ? '#0E2E34' : 'var(--ll-ink)'
+  const brandColor = onDarkPlate ? '#ffffff' : overHeroTop ? '#0E2E34' : 'var(--ll-ink)'
+  const loginBorder = onDarkPlate
+    ? '1.5px solid rgba(255,255,255,0.25)'
+    : overHeroTop
+      ? '1.5px solid rgba(14,46,52,0.22)'
+      : '1.5px solid var(--ll-border-strong)'
+  const loginBg = onDarkPlate ? 'rgba(255,255,255,0.04)' : 'transparent'
+  const loginInk = onDarkPlate ? '#ffffff' : overHeroTop ? '#0E2E34' : 'var(--ll-ink-strong)'
 
   const ctaSolidBg = 'linear-gradient(to bottom right, var(--color-brand), var(--color-brand-dark))'
   const ctaSolidShadow = '0 2px 12px rgba(108,158,165,0.3)'
+  const ctaSolidBorder = '1.5px solid transparent'
 
   return (
     <>
@@ -76,16 +77,28 @@ export function Header({
         className={cn(
           'fixed z-100 flex items-center justify-between transition-all duration-900 ease-[cubic-bezier(0.22,1,0.36,1)]',
           heroPill
-            ? 'left-0 right-0 mx-auto w-[min(1120px,92%)] h-14 px-6 rounded-2xl border backdrop-blur-xl'
+            ? 'left-0 right-0 mx-auto w-[min(1120px,92%)] h-14 px-6 rounded-2xl border backdrop-blur-md'
             : bareBar
               ? 'left-0 right-0 px-[5%] h-17'
               : 'left-0 right-0 px-[5%] h-17 border-b backdrop-blur-xl',
         )}
         style={{
-          top: heroPill ? '36px' : 0,
-          background: heroPill ? 'rgba(8,22,26,0.72)' : bareBar ? 'transparent' : 'var(--ll-header-scroll-bg)',
-          borderColor: heroPill ? 'rgba(255,255,255,0.1)' : bareBar ? 'transparent' : 'var(--ll-border)',
-          boxShadow: heroPill ? '0 14px 42px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.08)' : undefined,
+          top: heroPill ? '22px' : 0,
+          background: heroPill
+            ? overHeroTop
+              ? 'rgba(255,255,255,0.34)'
+              : 'var(--ll-header-scroll-bg)'
+            : bareBar
+              ? 'transparent'
+              : 'var(--ll-header-scroll-bg)',
+          borderColor: heroPill
+            ? overHeroTop
+              ? 'rgba(14,46,52,0.10)'
+              : 'var(--ll-border)'
+            : bareBar
+              ? 'transparent'
+              : 'var(--ll-border)',
+          boxShadow: heroPill ? '0 10px 28px rgba(14,46,52,0.10), inset 0 1px 0 rgba(255,255,255,0.55)' : undefined,
           animation: 'header-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both',
         }}
       >
@@ -122,11 +135,11 @@ export function Header({
             className="px-5 py-2 rounded-lg text-[0.8rem] font-medium cursor-pointer transition-all duration-200 no-underline hover:shadow-[0_6px_16px_var(--ll-halo-accent)]"
             style={{
               border: loginBorder,
-              color: brandColor,
+              color: loginInk,
               background: loginBg,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = isTransparent
+              e.currentTarget.style.background = onDarkPlate
                 ? 'rgba(255,255,255,0.10)'
                 : 'var(--ll-accent-bg-soft)'
             }}
@@ -139,11 +152,13 @@ export function Header({
           <Link
             to="/trial"
             className="px-5 py-2 rounded-lg text-[0.8rem] font-semibold cursor-pointer no-underline text-white transition-[filter] duration-200 hover:brightness-95"
-            style={{ background: ctaSolidBg, boxShadow: ctaSolidShadow }}
+            style={{ background: ctaSolidBg, boxShadow: ctaSolidShadow, border: ctaSolidBorder }}
           >
             Começar agora
           </Link>
-          {showThemeSwitch && <ThemeSwitch overHero={isTransparent} />}
+          {showThemeSwitch && (
+            <ThemeSwitch overHero={onDarkPlate} scheme={overHeroTop ? 'dark' : 'auto'} />
+          )}
         </div>
 
         <button
@@ -151,8 +166,8 @@ export function Header({
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Menu"
           style={{
-            border: isTransparent ? '1px solid rgba(255,255,255,0.2)' : '1px solid var(--ll-border)',
-            background: isTransparent ? 'rgba(255,255,255,0.06)' : 'var(--ll-surface)',
+            border: onDarkPlate ? '1px solid rgba(255,255,255,0.2)' : '1px solid var(--ll-border)',
+            background: onDarkPlate ? 'rgba(255,255,255,0.06)' : 'var(--ll-surface)',
             color: brandColor,
           }}
         >
@@ -200,7 +215,7 @@ export function Header({
               className="text-center px-4 py-2.5 rounded-lg text-sm font-semibold no-underline"
               style={{
                 border: '1.5px solid var(--ll-border-strong)',
-                color: 'var(--ll-ink)',
+                color: 'var(--ll-ink-strong)',
               }}
             >
               Entrar
@@ -208,13 +223,13 @@ export function Header({
             <Link
               to="/trial"
               className="text-center px-4 py-2.5 rounded-lg text-sm font-semibold no-underline text-white"
-              style={{ background: ctaSolidBg, boxShadow: ctaSolidShadow }}
+              style={{ background: ctaSolidBg, boxShadow: ctaSolidShadow, border: ctaSolidBorder }}
             >
               Começar agora
             </Link>
             {showThemeSwitch && (
               <div className="flex justify-center pt-2">
-                <ThemeSwitch overHero={isTransparent} />
+                <ThemeSwitch />
               </div>
             )}
           </div>

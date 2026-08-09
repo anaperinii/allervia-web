@@ -63,7 +63,7 @@ export function ForgotPasswordPage() {
     toast.success({
       icon: <Check size={14} />,
       title: 'Novo código enviado para o seu email',
-      position: 'top-center',
+      position: 'top-right',
       compact: true,
       autoDismissMs: 3000,
     })
@@ -72,7 +72,7 @@ export function ForgotPasswordPage() {
   const submitReset = resetForm.handleSubmit(() => setStep('done'))
 
   return (
-    <AuthLayout>
+    <AuthLayout animate={false}>
       <AuthStepTransition stepKey={step}>
         {step === 'request' && <RequestEmailStep form={emailForm} onSubmit={submitEmail} />}
         {step === 'code' && (

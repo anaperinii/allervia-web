@@ -1,8 +1,33 @@
 import { Reveal } from './Reveal'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
 import { FEATURES } from '@/features/landing-page/constants/features'
+import { useLandingTheme } from '@/features/landing-page/theme-context'
+import featuresArt from '@/assets/features-art.jpg'
+
+const CARD_SPANS = [
+  'lg:col-span-2',
+  '',
+  'lg:col-span-2',
+  '',
+  '',
+  '',
+  'lg:col-span-2',
+]
+
+const ART_SCRIM = {
+  dark: 'linear-gradient(180deg, rgba(8,25,29,0.22) 0%, rgba(8,25,29,0.45) 100%)',
+  light: 'linear-gradient(180deg, rgba(255,255,255,0.52) 0%, rgba(255,255,255,0.30) 55%, rgba(108,158,165,0.14) 100%)',
+}
+
+const ART_TINT = {
+  dark: '#0d3b42',
+  light: '#7fb2b6',
+}
 
 export function FeaturesGrid() {
+  const { theme } = useLandingTheme()
+  const darkTheme = theme === 'dark'
+
   return (
     <section
       id="features"
@@ -41,16 +66,46 @@ export function FeaturesGrid() {
         />
       </Reveal>
 
-      <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:auto-rows-[13rem]">
+        <Reveal
+          className="relative hidden lg:block overflow-hidden rounded-2xl lg:col-start-3 lg:row-start-2 lg:row-span-2"
+          style={{ border: '1px solid var(--ll-border)', boxShadow: 'var(--ll-shadow-card)' }}
+          >
+          <img
+            src={featuresArt}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{
+              filter: darkTheme
+                ? 'invert(1) hue-rotate(180deg) brightness(0.92)'
+                : 'saturate(0.8) brightness(1.06) contrast(0.96)',
+            }}
+          />
+          <div
+            aria-hidden="true"
+            className="absolute inset-0"
+            style={{
+              background: darkTheme ? ART_TINT.dark : ART_TINT.light,
+              mixBlendMode: 'color',
+              opacity: darkTheme ? 0.9 : 0.4,
+            }}
+          />
+          <div
+            aria-hidden="true"
+            className="absolute inset-0"
+            style={{ background: darkTheme ? ART_SCRIM.dark : ART_SCRIM.light }}
+          />
+        </Reveal>
+
         {FEATURES.map((feature, index) => {
           const Icon = feature.icon
           return (
             <Reveal
               key={feature.title}
               delay={50 * (index + 1)}
-              className={`group relative overflow-hidden rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1 ${
-                feature.large ? 'sm:col-span-2' : ''
-              }`}
+              className={`group relative overflow-hidden rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1 ${CARD_SPANS[index] ?? ''}`}
               style={{
                 background: 'var(--ll-surface-grad)',
                 border: '1px solid var(--ll-border)',
@@ -58,7 +113,7 @@ export function FeaturesGrid() {
               }}
             >
               <div
-                className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border"
+                className="mb-5 flex h-12 w-12 items-center justify-center rounded-full border"
                 style={{
                   background:
                     'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04) 46%, rgba(255,255,255,0) 56%), var(--ll-accent-bg-soft)',
