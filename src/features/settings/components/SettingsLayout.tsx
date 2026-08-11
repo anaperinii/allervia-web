@@ -28,7 +28,7 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-8 pb-5">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
       <div className="mb-8 flex items-center justify-between gap-3">
         <div>
           {subtitle ? (

@@ -1,6 +1,6 @@
 import { createRootRoute, Outlet, useLocation } from '@tanstack/react-router'
 import { Header } from '@/shared/layout/header'
-import { Sidebar } from '@/shared/layout/sidebar'
+import { AppShell } from '@/shared/layout/AppShell'
 import { useState, useEffect } from 'react'
 import { ToastViewport } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
@@ -73,29 +73,14 @@ function RootComponent() {
   }
 
   return (
-    <div
-      className="flex h-screen overflow-hidden"
-      style={{
-        background: '#dfe7e8',
-      }}
-    >
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div
-          className="flex-1 flex flex-col overflow-hidden relative rounded-l-2xl"
-          style={{
-            background: '#f4f8f8',
-            boxShadow:
-              '-8px 0 20px -10px rgba(16,60,68,0.18), inset 1px 0 0 rgba(255,255,255,0.7)',
-          }}
-        >
+    <AppShell>
+      <div className="flex flex-1 flex-col min-h-0">
           <PageTransition key={location.pathname}>
             <Outlet />
           </PageTransition>
-        </div>
       </div>
       <ToastViewport />
-    </div>
+    </AppShell>
   )
 }
 

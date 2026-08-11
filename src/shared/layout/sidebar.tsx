@@ -71,7 +71,7 @@ function SidebarLink({ item, isActive, isCollapsed }: SidebarLinkProps) {
         }
       }}
     >
-      <Icon size={18} strokeWidth={1.8} className="shrink-0" />
+      <Icon size={16} strokeWidth={1.8} className="shrink-0" />
       {!isCollapsed && <span className="text-[0.8rem] font-medium whitespace-nowrap">{item.label}</span>}
       {isCollapsed && (
         <span

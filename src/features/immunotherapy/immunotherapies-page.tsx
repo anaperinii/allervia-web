@@ -83,10 +83,10 @@ export function ImmunotherapiesPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden px-5 pt-7 pb-5">
-      <div className="mb-7">
+    <div className="flex flex-1 flex-col min-h-0 overflow-visible">
+      <div className="mb-6">
         <div className="mb-8 flex items-center gap-3">
-          <h1 className="text-3xl font-medium text-(--text)">Imunoterapias</h1>
+          <h1 className="text-3xl font-medium text-(--text)">Imunoterapias Alérgicas</h1>
         </div>
         <ImmunotherapiesFilterBar
           searchTerm={searchTerm}
@@ -148,7 +148,7 @@ export function ImmunotherapiesPage() {
         })}
       </div>
 
-      <div className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-tr-xl rounded-b-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+      <div className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-tr-2xl rounded-b-2xl bg-white/25 backdrop-blur-xl border border-white/50 shadow-[0_22px_55px_-14px_rgba(16,50,60,0.28)]">
         <div className="flex-1 overflow-auto">
           <ImmunotherapiesTable items={paginated} onSelect={handleSelect} />
         </div>
