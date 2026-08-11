@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, ChevronLeft } from 'lucide-react'
 import { addDays, differenceInDays, format } from 'date-fns'
 import { Button, CancelWizardModal, toast, WizardStepsIndicator } from '@/shared/components'
 import { usePatientStore, derivePatientDates } from '@/features/patient/stores/usePatientStore'
@@ -248,7 +248,7 @@ export function PatientEvolutionPage() {
             <Link
               to="/patient/$patientId"
               params={{ patientId: preselectedId }}
-              className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
+              className="text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
             >
               Prontuário
             </Link>
@@ -256,7 +256,7 @@ export function PatientEvolutionPage() {
             <button
               type="button"
               onClick={() => setShowCancelModal(true)}
-              className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
+              className="text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
             >
               Imunoterapias
             </button>
@@ -264,7 +264,7 @@ export function PatientEvolutionPage() {
           <span className="text-[0.7rem] text-(--text-muted)/50">/</span>
           {(preselectedId || selectedImmunotherapy) && (
             <span
-              className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted)"
+              className="text-sm font-medium text-(--text-muted)"
               style={{
                 opacity: 0,
                 animation: 'slide-up-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards',

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CheckCircle, FileEdit } from 'lucide-react'
+import { CheckCircle, FileEdit, ChevronLeft } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
@@ -183,12 +183,12 @@ export function PatientCompletionPage() {
             <button
               type="button"
               onClick={() => setShowCancelModal(true)}
-              className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
+              className="text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
             >
               Prontuário
             </button>
             <span className="text-[0.7rem] text-(--text-muted)/50">/</span>
-            <span className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted)">Concluir Tratamento</span>
+            <span className="text-sm font-medium text-(--text-muted)">Concluir Tratamento</span>
           </div>
           <h1 className="text-3xl font-medium text-(--text)">{patient.name}</h1>
         </div>

@@ -7,6 +7,7 @@ import {
   CreditCard,
   HelpCircle,
   ArrowRight,
+  User,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
@@ -32,6 +33,7 @@ interface SettingsOption {
 }
 
 const settingsOptions: SettingsOption[] = [
+  { icon: User, label: 'Seu Perfil', description: 'Seus dados, cargo e preferências', route: '/profile' },
   { icon: Shield, label: 'Segurança e Privacidade', description: 'Autenticação, sessões e políticas de acesso', route: '/security' },
   { icon: Settings, label: 'Configurações Avançadas', description: 'Parâmetros técnicos e integrações', route: '/advanced-settings', requires: 'advanced_settings' },
   { icon: Monitor, label: 'Personalização e Acessibilidade', description: 'Temas, idioma, contraste e tamanho de fonte', route: '/personalization' },
