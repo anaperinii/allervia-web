@@ -12,7 +12,7 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
   return (
     <table className="w-full" aria-label="Lista de imunoterapias">
       <thead>
-        <tr className="border-b border-(--border-custom) bg-gray-50/80">
+        <tr className="border-b border-white/40 bg-white/20 backdrop-blur-md">
           <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider pl-5 pr-4 py-2.5">Nome</th>
           <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider pl-6 pr-4 py-2.5">Tipo</th>
           <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-4 py-2.5">Via de administração</th>
