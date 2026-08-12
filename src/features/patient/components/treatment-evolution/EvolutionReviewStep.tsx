@@ -1,6 +1,5 @@
 import { format, parse } from 'date-fns'
-import { cn } from '@/shared/lib/cn'
-import { GLASS_CARD_SHADOW, TickIcon } from '@/shared/components/glass-card'
+import { CalendarCheck } from 'lucide-react'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
 
 const REACTION_LABELS: Record<string, string> = {
@@ -18,6 +17,7 @@ interface ReviewStepProps {
 
 export function EvolutionReviewStep({ form, plannedNextDate, plannedNextInterval }: ReviewStepProps) {
   const preItems: { label: string; value: string }[] = [
+    ...(form.intervalReport ? [{ label: 'Relato do intervalo', value: form.intervalReport }] : []),
     { label: 'Efeito Colateral', value: form.sideEffect === 'yes' ? 'Sim' : 'Não' },
     { label: 'Necessidade de Medicação', value: form.medicationNeeded === 'yes' ? 'Sim' : 'Não' },
     ...(form.sideEffect === 'yes' ? [{ label: 'Efeitos Relatados', value: form.reportedEffects || '—' }] : []),
@@ -46,95 +46,78 @@ export function EvolutionReviewStep({ form, plannedNextDate, plannedNextInterval
   ]
 
   return (
-    <div className="space-y-3.5">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-bold text-(--text)">Revisão da evolução</h2>
-          <p className="text-[0.7rem] text-(--text-muted) mt-1">Confirme os dados antes de registrar a dose.</p>
-        </div>
-        {plannedNextDate && (
-          <div
-            className="flex items-center gap-3 rounded-2xl bg-white/25 px-4 py-2 backdrop-blur-xl shrink-0"
-            style={{
-              boxShadow: GLASS_CARD_SHADOW,
-              backdropFilter: 'blur(20px) saturate(150%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(150%)',
-              backgroundImage:
-                'linear-gradient(105deg, rgba(20,184,166,0.18) 0%, rgba(94,234,212,0.10) 25%, rgba(240,253,250,0.04) 55%, transparent 80%)',
-            }}
-          >
-            <TickIcon size={32} variant="aqua" />
-            <p className="text-[0.75rem] text-slate-600 leading-relaxed whitespace-nowrap">
-              Próxima dose agendada para <span className="font-bold text-slate-800">{plannedNextDate}</span>
-              {plannedNextInterval != null && (
-                <> (intervalo de <span className="font-bold text-slate-800">{plannedNextInterval} dias</span> a partir da aplicação).</>
-              )}
-            </p>
-          </div>
-        )}
+    <div className="mt-1 space-y-3">
+      <div className="grid grid-cols-1 gap-3">
+        <ReviewCard title="Pré-Aplicação" items={preItems} />
+        <ReviewCard title="Pós-Aplicação" items={postItems} />
       </div>
 
-      <Section title="Pré-Aplicação">
-        <Grid
-          items={preItems}
-          header={form.intervalReport ? { label: 'Relato do intervalo', value: form.intervalReport } : undefined}
-        />
-      </Section>
-
-      <Section title="Pós-Aplicação">
-        <Grid items={postItems} />
-      </Section>
-    </div>
-  )
-}
-
-interface SectionProps {
-  title: string
-  children: React.ReactNode
-}
-
-function Section({ title, children }: SectionProps) {
-  return (
-    <div>
-      <div className="relative inline-block rounded-t-xl border border-b-0 border-(--border-custom) bg-gray-50/80 px-4 py-2">
-        <span className="text-[0.82rem] font-bold text-(--text)">{title}</span>
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3"
+      {plannedNextDate && (
+        <div
+          className="relative flex items-center gap-3 overflow-hidden rounded-xl px-4 py-3"
           style={{
-            background:
-              'radial-gradient(circle at 100% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)',
+            background: 'linear-gradient(120deg, #fbfcfc, #f4f7f7)',
+            boxShadow: '0 6px 18px -6px rgba(16,60,68,0.18)',
           }}
-        />
-      </div>
-      <div className="-mt-px rounded-b-xl rounded-tr-xl border border-(--border-custom) bg-gray-50/80 p-4">{children}</div>
-    </div>
-  )
-}
-
-function Grid({
-  items,
-  header,
-}: {
-  items: { label: string; value: string }[]
-  header?: { label: string; value: string }
-}) {
-  return (
-    <div className="rounded-lg overflow-hidden border border-(--border-custom) bg-(--border-custom)">
-      {header && (
-        <div className="bg-white px-3.5 py-2.5">
-          <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{header.label}</div>
-          <div className="text-xs font-medium text-(--text) leading-relaxed">{header.value}</div>
+        >
+          <span
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+            style={{ background: '#10b981', boxShadow: '0 2px 8px rgba(16,185,129,0.35)' }}
+          >
+            <CalendarCheck size={16} strokeWidth={2} style={{ color: '#ffffff' }} />
+          </span>
+          <p className="text-[0.78rem] leading-relaxed text-slate-600">
+            Próxima dose agendada para <span className="font-bold text-slate-800">{plannedNextDate}</span>
+            {plannedNextInterval != null && (
+              <> (intervalo de <span className="font-bold text-slate-800">{plannedNextInterval} dias</span> a partir da aplicação).</>
+            )}
+          </p>
         </div>
       )}
-      <div className={cn('grid grid-cols-2 gap-px', header && 'mt-px')}>
-        {items.map((item) => (
-          <div key={item.label} className="bg-white px-3.5 py-2.5">
-            <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{item.label}</div>
-            <div className="text-xs font-medium text-(--text)">{item.value || '—'}</div>
-          </div>
-        ))}
+    </div>
+  )
+}
+
+interface ReviewCardProps {
+  title: string
+  items: { label: string; value: string }[]
+}
+
+function ReviewCard({ title, items }: ReviewCardProps) {
+  return (
+    <div
+      className="relative overflow-hidden rounded-xl px-3.5 pt-4 pb-4"
+      style={{
+        background: 'radial-gradient(120% 130% at 12% 10%, #f5f8f8 0%, #eff4f4 52%, #e9f0f0 100%)',
+        border: '1px solid rgba(16,113,129,0.14)',
+      }}
+    >
+      <div className="relative mb-3 flex items-center">
+        <span
+          aria-hidden="true"
+          className="absolute -left-3.5 h-5 w-0.75 rounded-r-full"
+          style={{ background: '#257E8C' }}
+        />
+        <div className="text-[0.8rem] font-bold text-(--text)">{title}</div>
       </div>
+      <ReviewGroup items={items} />
+    </div>
+  )
+}
+
+interface ReviewGroupProps {
+  items: { label: string; value: string }[]
+}
+
+function ReviewGroup({ items }: ReviewGroupProps) {
+  return (
+    <div className="grid grid-cols-3 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
+      {items.map((item) => (
+        <div key={item.label} className="bg-white px-3 py-2">
+          <div className="text-[0.7rem] font-semibold text-(--text-muted) mb-0.5">{item.label}</div>
+          <div className="text-[0.82rem] font-medium text-(--text)">{item.value || '—'}</div>
+        </div>
+      ))}
     </div>
   )
 }

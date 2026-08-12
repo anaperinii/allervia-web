@@ -29,8 +29,8 @@ export function WizardStepsIndicator({ labels, current, ariaLabel = 'Etapas' }: 
               </div>
               <span
                 className={cn(
-                  'text-[0.85rem] font-medium',
-                  active ? 'text-brand-dark' : done ? 'text-brand-dark opacity-50' : 'text-gray-500',
+                  'text-[0.85rem]',
+                  active ? 'font-semibold text-brand-dark' : done ? 'font-medium text-brand-dark opacity-50' : 'font-medium text-gray-500',
                 )}
               >
                 {label}

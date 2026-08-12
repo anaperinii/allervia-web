@@ -179,18 +179,15 @@ export function PatientCompletionPage() {
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="mb-1 flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setShowCancelModal(true)}
-              className="text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
-            >
-              Prontuário
-            </button>
-            <span className="text-[0.7rem] text-(--text-muted)/50">/</span>
-            <span className="text-sm font-medium text-(--text-muted)">Concluir Tratamento</span>
-          </div>
           <h1 className="text-3xl font-medium text-(--text)">{patient.name}</h1>
+          <button
+            type="button"
+            onClick={() => setShowCancelModal(true)}
+            className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
+          >
+            <ChevronLeft size={15} />
+            Prontuário
+          </button>
         </div>
         {draftSavedAt && (
           <span className="inline-flex items-center gap-1.5 text-[0.6rem] font-semibold text-brand-dark bg-brand/15 border border-brand/25 rounded-md px-2.5 py-1 shrink-0">
