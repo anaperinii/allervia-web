@@ -40,15 +40,15 @@ export function StatCards({ totalActive, inactiveCount, inductionCount, maintena
             key={stat.key}
             className="relative flex items-center overflow-hidden rounded-xl px-6 py-5 border backdrop-blur-xl"
             style={{
-              background: `linear-gradient(150deg, rgba(${stat.rgb},0.20), rgba(255,255,255,0.5) 70%)`,
-              borderColor: `rgba(${stat.rgb},0.35)`,
-              boxShadow: `0 10px 30px -14px rgba(16,60,68,0.16), inset 0 1px 0 rgba(255,255,255,0.6), 0 0 22px -10px rgba(${stat.rgb},0.5)`,
+              background: `linear-gradient(150deg, rgba(${stat.rgb},0.34), rgba(8,25,29,0.72) 72%), linear-gradient(160deg, #0e353d, #08191d)`,
+              borderColor: 'rgba(220,225,229,0.16)',
+              boxShadow: `0 12px 30px -14px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08), 0 0 24px -10px rgba(${stat.rgb},0.55)`,
             }}
           >
             <DottedSpot className="pointer-events-none absolute bottom-0 right-0" />
             <div className="relative flex flex-1 items-baseline gap-2 min-w-0">
-              <span className="text-3xl font-semibold leading-none" style={{ color: stat.accent }}>{values[stat.key]}</span>
-              <span className="text-[0.82rem] font-medium leading-tight" style={{ color: 'var(--text-muted)' }}>{stat.label}</span>
+              <span className="text-3xl font-semibold leading-none" style={{ color: '#F2F6F7' }}>{values[stat.key]}</span>
+              <span className="text-[0.82rem] font-medium leading-tight" style={{ color: '#9FBEC2' }}>{stat.label}</span>
             </div>
           </div>
         )
