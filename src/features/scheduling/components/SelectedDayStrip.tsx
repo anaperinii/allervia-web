@@ -60,7 +60,7 @@ export function SelectedDayStrip({
             <div
               key={application.id}
               onClick={() => onSelectApplication(application)}
-              className="group relative shrink-0 rounded-lg p-2.5 pl-4 min-w-45 cursor-pointer hover:brightness-95 hover:-translate-y-px backdrop-blur-sm transition-all"
+              className="group relative shrink-0 rounded-lg p-2.5 min-w-45 cursor-pointer hover:brightness-95 hover:-translate-y-px backdrop-blur-sm transition-all"
               style={{
                 backgroundColor: modalityColor.bg,
                 backgroundImage: modalityColor.grad,
@@ -68,11 +68,6 @@ export function SelectedDayStrip({
                 boxShadow: '0 2px 8px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
               }}
             >
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute left-1.5 top-2 bottom-2 w-[3px] rounded-full"
-                style={{ backgroundColor: modalityColor.border }}
-              />
               <div className="text-xs font-semibold">{getName(application.patientId)}</div>
               <div className="text-[0.65rem] opacity-75 mt-0.5">
                 {application.startTime} – {application.endTime}

@@ -8,9 +8,8 @@ export const APPLICATION_STATUS_DISPLAY: Record<Application['status'], { label: 
 }
 
 export function getApplicationEventColor(application: Application) {
-  const bg = 'rgba(249,250,251,0.8)'
-  const grad = (c: string) => `linear-gradient(105deg, ${c}30 0%, ${c}14 55%, transparent 80%)`
-  if (application.status === 'missed') return { bg, text: '#334155', border: '#94A3B8', grad: grad('#94A3B8') }
-  if (application.modality === 'sublingual') return { bg, text: '#1F6E75', border: '#3CA6AD', grad: grad('#3CA6AD') }
-  return { bg, text: '#234E58', border: '#4d7e85', grad: grad('#4d7e85') }
+  const grad = 'linear-gradient(105deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.07) 45%, transparent 75%)'
+  if (application.status === 'missed') return { bg: '#E2E5E9', text: '#5B6470', border: '#E2E5E9', grad }
+  if (application.modality === 'sublingual') return { bg: '#FACECF', text: '#B65458', border: '#FACECF', grad }
+  return { bg: '#C8F4E6', text: '#2A8F6E', border: '#C8F4E6', grad }
 }

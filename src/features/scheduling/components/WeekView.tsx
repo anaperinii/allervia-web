@@ -34,7 +34,7 @@ export function WeekView({
             onClick={() => onSelectDate(day)}
             className={cn(
               'border-r border-(--border-custom) last:border-r-0 p-2.5 cursor-pointer transition-colors flex flex-col min-h-0 relative',
-              today ? 'bg-brand/10 hover:bg-brand/16' : 'hover:bg-brand/10',
+              today ? 'bg-brand/8 hover:bg-brand/12' : 'hover:bg-brand/6',
               selected && !today && 'bg-brand/12',
             )}
           >
@@ -71,12 +71,7 @@ export function WeekView({
                       boxShadow: '0 1px 4px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.04)',
                     }}
                   >
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute left-1.5 top-1.5 bottom-1.5 w-[3px] rounded-full"
-                      style={{ backgroundColor: color.border }}
-                    />
-                    <div className="pl-2.5 space-y-0.5">
+                    <div className="space-y-0.5">
                       <div className="font-semibold truncate">{getName(application.patientId)}</div>
                       <div className="opacity-75">
                         {application.startTime} – {application.endTime}
