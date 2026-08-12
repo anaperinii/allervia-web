@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CheckCircle } from 'lucide-react'
-import { Button, CancelWizardModal, toast, WizardStepsIndicator } from '@/shared/components'
+import { CheckCircle, ChevronLeft } from 'lucide-react'
+import { Button, CancelWizardModal, toast, WizardStepRail } from '@/shared/components'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { INDUCTION_INTERVAL, INITIAL_DOSE } from '@/features/immunotherapy/constants/scit-protocol'
@@ -129,32 +129,36 @@ export function AddImmunotherapyPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
-      <div className="mb-8">
-        <div className="mb-1 flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setShowCancelModal(true)}
-            className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
-          >
-            Imunoterapias
-          </button>
-          <span className="text-[0.7rem] text-(--text-muted)/50">/</span>
-        </div>
-        <h1 className="text-3xl font-medium text-(--text)">Adicionar Imunoterapia</h1>
+      <div className="mb-4">
+        <h1 className="text-3xl font-medium text-(--text)">Adicionar Imunoterapia Alérgica</h1>
+        <button
+          type="button"
+          onClick={() => setShowCancelModal(true)}
+          className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
+        >
+          <ChevronLeft size={15} />
+          Imunoterapias
+        </button>
       </div>
 
       <div className="wizard-fields flex flex-1 min-h-0 flex-col overflow-hidden">
-        <WizardStepsIndicator
-          current={step - 1}
-          ariaLabel="Etapas do cadastro"
-          labels={STEP_LABELS}
-        />
-
         <form onSubmit={handleFormSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
-          <div className="flex-1 overflow-y-auto px-5 py-4">
-            {step === 1 && <PatientDataStep form={form} />}
-            {step === 2 && <ImmunotherapyDataStep form={form} />}
-            {step === 3 && <AddImmunotherapyReviewStep form={watch()} />}
+          <div className="flex flex-1 min-h-0 gap-0">
+            <div className={`flex flex-1 min-h-0 flex-col pl-1 pr-2 ${step === 3 ? 'justify-start pt-8 pb-4 overflow-y-auto' : 'justify-center pt-2 pb-16 overflow-y-auto'}`}>
+              {step === 1 && <PatientDataStep form={form} />}
+              {step === 2 && <ImmunotherapyDataStep form={form} />}
+              {step === 3 && <AddImmunotherapyReviewStep form={watch()} />}
+            </div>
+            <div className="hidden lg:block w-[27rem] shrink-0 py-4 pr-32">
+              <WizardStepRail
+                current={step - 1}
+                labels={STEP_LABELS}
+                descriptions={STEP_DESCRIPTIONS}
+                onSelect={(i) => {
+                  if (i < step - 1) setStep((i + 1) as 1 | 2 | 3)
+                }}
+              />
+            </div>
           </div>
 
           <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
@@ -180,3 +184,9 @@ export function AddImmunotherapyPage() {
     </div>
   )
 }
+
+const STEP_DESCRIPTIONS = [
+  'Identificação e dados do paciente',
+  'Protocolo, via e metas de tratamento',
+  'Confirme os dados antes de salvar',
+]

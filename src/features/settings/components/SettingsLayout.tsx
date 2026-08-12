@@ -1,8 +1,5 @@
-import { Link, useNavigate } from '@tanstack/react-router'
-import { LogOut } from 'lucide-react'
-import { useState } from 'react'
-import { Button, Modal } from '@/shared/components'
-import { useUserStore, ROLE_LABELS } from '@/shared/stores/useUserStore'
+import { Link } from '@tanstack/react-router'
+import { ChevronLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 interface SettingsLayoutProps {
@@ -12,37 +9,20 @@ interface SettingsLayoutProps {
 }
 
 export function SettingsLayout({ subtitle, headerActions, children }: SettingsLayoutProps) {
-  const navigate = useNavigate()
-  const current = useUserStore((s) => s.current)
-  const [showLogoutModal, setShowLogoutModal] = useState(false)
-  const initials = current.name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
-
-  const handleLogout = () => {
-    setShowLogoutModal(false)
-    navigate({ to: '/login' })
-  }
-
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
       <div className="mb-8 flex items-center justify-between gap-3">
         <div>
           {subtitle ? (
             <>
-              <div className="mb-1 flex items-center gap-1.5">
-                <Link
-                  to="/settings"
-                  className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
-                >
-                  Configurações
-                </Link>
-                <span className="text-[0.7rem] text-(--text-muted)/50">/</span>
-              </div>
               <h1 className="text-3xl font-medium text-(--text)">{subtitle}</h1>
+              <Link
+                to="/settings"
+                className="mt-1.5 inline-flex items-center gap-1.5 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
+              >
+                <ChevronLeft size={15} />
+                Configurações
+              </Link>
             </>
           ) : (
             <h1 className="text-3xl font-medium leading-none text-(--text)">Configurações</h1>
@@ -51,103 +31,11 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
         {headerActions && <div className="flex items-center gap-2">{headerActions}</div>}
       </div>
 
-      {!subtitle && (
-        <div
-          className="relative mb-8 flex items-center gap-6 overflow-hidden rounded-xl bg-white/45 px-8 py-6 shadow-[0_4px_24px_rgba(0,0,0,0.06)] backdrop-blur-xl"
-          style={{
-            backgroundImage:
-              'linear-gradient(105deg, rgba(108,158,165,0.28) 0%, rgba(155,193,196,0.16) 25%, rgba(234,241,241,0.07) 55%, transparent 80%)',
-          }}
-        >
-          <div className="relative h-18 w-18 shrink-0" style={{ width: '72px', height: '72px' }}>
-            <div
-              aria-hidden="true"
-              className="absolute"
-              style={{
-                width: '46px',
-                height: '46px',
-                top: '5px',
-                right: '3px',
-                borderRadius: '15px',
-                background: 'linear-gradient(150deg, #9BC1C4 0%, #6C9EA5 55%, #4d7e85 100%)',
-                transform: 'rotate(14deg)',
-                boxShadow: '0 10px 18px rgba(77,126,133,0.30)',
-              }}
-            />
-            <div
-              className="absolute flex items-center justify-center"
-              style={{
-                width: '56px',
-                height: '56px',
-                bottom: '5px',
-                left: '0',
-                borderRadius: '18px',
-                background:
-                  'linear-gradient(155deg, rgba(234,241,241,0.65) 0%, rgba(155,193,196,0.45) 100%)',
-                backdropFilter: 'blur(10px) saturate(140%)',
-                WebkitBackdropFilter: 'blur(10px) saturate(140%)',
-                border: '1.5px solid rgba(255,255,255,0.55)',
-                boxShadow:
-                  '0 12px 22px rgba(108,158,165,0.22), inset 0 1px 1px rgba(255,255,255,0.65)',
-              }}
-            >
-              <span
-                className="text-lg font-bold text-white"
-                style={{
-                  textShadow:
-                    '0 1px 2px rgba(77,126,133,0.45), 0 0 6px rgba(255,255,255,0.35)',
-                }}
-              >
-                {initials}
-              </span>
-            </div>
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-lg font-semibold text-(--text)">{current.name}</div>
-            <div className="text-[0.8rem] text-(--text-muted) mt-0.5">{ROLE_LABELS[current.role]}</div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              tone="danger"
-              variant="outline"
-              size="md"
-              leftIcon={<LogOut size={14} />}
-              onClick={() => setShowLogoutModal(true)}
-              className="px-4"
-            >
-              Encerrar sessão
-            </Button>
-            <Button tone="brand" variant="solid" prominent size="md" to="/profile" className="px-4">
-              Seu Perfil
-            </Button>
-          </div>
-        </div>
-      )}
-
       {subtitle ? (
         <div className="flex-1 min-h-0 overflow-y-auto">{children}</div>
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto p-2">{children}</div>
       )}
-
-      <Modal
-        open={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-        size="sm"
-        title="Encerrar sessão"
-        icon={<LogOut size={16} />}
-        tone="danger"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setShowLogoutModal(false)}>Cancelar</Button>
-            <Button tone="danger" variant="solid" onClick={handleLogout}>Encerrar sessão</Button>
-          </>
-        }
-      >
-        <p className="text-xs text-(--text-muted)">
-          Você será desconectado do Allervia e redirecionado para a tela de login. Continuar?
-        </p>
-      </Modal>
     </div>
   )
 }

@@ -23,5 +23,6 @@ export { useToastStore, toast } from './toasts/useToastStore'
 export type { ToastItem, ToastInput } from './toasts/useToastStore'
 
 export { WizardStepsIndicator } from './wizard/WizardStepsIndicator'
+export { WizardStepRail } from './wizard/WizardStepRail'
 
 export { TablePagination } from './tables/TablePagination'

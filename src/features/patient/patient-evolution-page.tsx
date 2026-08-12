@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, ChevronLeft } from 'lucide-react'
 import { addDays, differenceInDays, format } from 'date-fns'
-import { Button, CancelWizardModal, toast, WizardStepsIndicator } from '@/shared/components'
+import { Button, CancelWizardModal, toast, WizardStepRail } from '@/shared/components'
 import { usePatientStore, derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
@@ -243,37 +243,6 @@ export function PatientEvolutionPage() {
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
       <div className="mb-8">
-        <div className="mb-1 flex items-center gap-1.5">
-          {preselectedId ? (
-            <Link
-              to="/patient/$patientId"
-              params={{ patientId: preselectedId }}
-              className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
-            >
-              Prontuário
-            </Link>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowCancelModal(true)}
-              className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
-            >
-              Imunoterapias
-            </button>
-          )}
-          <span className="text-[0.7rem] text-(--text-muted)/50">/</span>
-          {(preselectedId || selectedImmunotherapy) && (
-            <span
-              className="text-[0.7rem] font-semibold uppercase tracking-wider text-(--text-muted)"
-              style={{
-                opacity: 0,
-                animation: 'slide-up-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards',
-              }}
-            >
-              Evolução do Paciente
-            </span>
-          )}
-        </div>
         <h1
           key={selectedImmunotherapy?.id ?? 'root'}
           className="text-3xl font-medium text-(--text)"
@@ -284,40 +253,70 @@ export function PatientEvolutionPage() {
         >
           {selectedImmunotherapy ? selectedImmunotherapy.name : 'Evolução do Paciente'}
         </h1>
+        {preselectedId ? (
+          <Link
+            to="/patient/$patientId"
+            params={{ patientId: preselectedId }}
+            className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
+          >
+            <ChevronLeft size={15} />
+            Prontuário
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowCancelModal(true)}
+            className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
+          >
+            <ChevronLeft size={15} />
+            Imunoterapias
+          </button>
+        )}
       </div>
 
       <div className="wizard-fields flex flex-1 min-h-0 flex-col overflow-hidden">
-        <WizardStepsIndicator
-          current={step}
-          ariaLabel="Etapas da evolução"
-          labels={['Paciente', 'Pré-Aplicação', 'Pós-Aplicação', 'Revisão dos Dados']}
-        />
-
         <form onSubmit={handleFormSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
-          <div className="flex-1 overflow-y-auto px-5 py-4">
-            {step === 0 && (
-              <SelectPatientStep
-                selected={selectedImmunotherapy}
-                patient={patientFromStore}
-                applicationsForPatient={applicationsForPatient}
-                lastApplication={lastApplication}
-                doseNumber={doseNumber}
-                nextDose={nextDose}
-                treatmentTime={treatmentTime}
-                immunotherapies={immunotherapies}
-                preselectedLocked={!!preselectedId && !!selectedImmunotherapy}
-                onSelect={handleSelect}
+          <div className="flex flex-1 min-h-0 gap-0">
+            <div className={`flex flex-1 min-h-0 flex-col pl-1 pr-2 ${step === 3 ? 'justify-start pt-0 pb-4 overflow-y-auto' : step === 0 ? 'justify-start pt-6 pb-4 overflow-y-auto' : 'justify-center pt-2 pb-16 overflow-y-auto'}`}>
+              {step === 0 && (
+                <SelectPatientStep
+                  selected={selectedImmunotherapy}
+                  patient={patientFromStore}
+                  applicationsForPatient={applicationsForPatient}
+                  lastApplication={lastApplication}
+                  doseNumber={doseNumber}
+                  nextDose={nextDose}
+                  treatmentTime={treatmentTime}
+                  immunotherapies={immunotherapies}
+                  preselectedLocked={!!preselectedId && !!selectedImmunotherapy}
+                  onSelect={handleSelect}
+                />
+              )}
+              {step === 1 && <PreApplicationStep form={form} />}
+              {step === 2 && <PostApplicationStep form={form} />}
+              {step === 3 && (
+                <EvolutionReviewStep
+                  form={formValues}
+                  plannedNextDate={plannedNext?.date ?? null}
+                  plannedNextInterval={plannedNext?.interval ?? null}
+                />
+              )}
+            </div>
+            <div className="hidden lg:block w-[27rem] shrink-0 py-4 pr-32">
+              <WizardStepRail
+                current={step}
+                labels={['Paciente', 'Pré-Aplicação', 'Pós-Aplicação', 'Revisão dos Dados']}
+                descriptions={[
+                  'Selecione a imunoterapia do paciente',
+                  'Dose, data e responsável',
+                  'Reações e observações',
+                  'Confirme antes de salvar',
+                ]}
+                onSelect={(i) => {
+                  if (i < step) setStep(i as 0 | 1 | 2 | 3)
+                }}
               />
-            )}
-            {step === 1 && <PreApplicationStep form={form} />}
-            {step === 2 && <PostApplicationStep form={form} />}
-            {step === 3 && (
-              <EvolutionReviewStep
-                form={formValues}
-                plannedNextDate={plannedNext?.date ?? null}
-                plannedNextInterval={plannedNext?.interval ?? null}
-              />
-            )}
+            </div>
           </div>
 
           <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
