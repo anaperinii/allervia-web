@@ -13,13 +13,15 @@ interface StatDefinition {
   key: 'active' | 'inactive' | 'induction' | 'maintenance'
   icon: LucideIcon
   label: string
+  rgb: string
+  accent: string
 }
 
 const STATS: StatDefinition[] = [
-  { key: 'active', icon: UserRound, label: 'Pacientes Ativos' },
-  { key: 'inactive', icon: UserX, label: 'Pacientes Inativos' },
-  { key: 'induction', icon: TrendingUp, label: 'Em Indução' },
-  { key: 'maintenance', icon: ShieldCheck, label: 'Em Manutenção' },
+  { key: 'active', icon: UserRound, label: 'Pacientes Ativos', rgb: '155,193,196', accent: '#257E8C' },
+  { key: 'inactive', icon: UserX, label: 'Pacientes Inativos', rgb: '108,158,165', accent: '#1d6772' },
+  { key: 'induction', icon: TrendingUp, label: 'Em Indução', rgb: '77,126,133', accent: '#12333a' },
+  { key: 'maintenance', icon: ShieldCheck, label: 'Em Manutenção', rgb: '29,103,114', accent: '#0e2e34' },
 ]
 
 export function StatCards({ totalActive, inactiveCount, inductionCount, maintenanceCount }: StatCardsProps) {
@@ -33,29 +35,20 @@ export function StatCards({ totalActive, inactiveCount, inductionCount, maintena
   return (
     <div className="grid grid-cols-4 gap-3">
       {STATS.map((stat) => {
-        const Icon = stat.icon
         return (
           <div
             key={stat.key}
             className="relative flex items-center overflow-hidden rounded-xl px-6 py-5 border backdrop-blur-xl"
             style={{
-              backgroundImage:
-                'linear-gradient(160deg, rgba(220,225,229,0.14), rgba(220,225,229,0.04)), linear-gradient(160deg, #0e353d 0%, #08191d 100%)',
-              borderColor: 'rgba(220,225,229,0.14)',
-              boxShadow:
-                '0 12px 30px -14px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 22px -8px rgba(108,158,165,0.3)',
+              background: `linear-gradient(150deg, rgba(${stat.rgb},0.20), rgba(255,255,255,0.5) 70%)`,
+              borderColor: `rgba(${stat.rgb},0.35)`,
+              boxShadow: `0 10px 30px -14px rgba(16,60,68,0.16), inset 0 1px 0 rgba(255,255,255,0.6), 0 0 22px -10px rgba(${stat.rgb},0.5)`,
             }}
           >
-            <Icon
-              size={96}
-              strokeWidth={1.75}
-              className="pointer-events-none absolute -bottom-6 -left-10"
-              style={{ color: '#9BC1C4', opacity: 0.16 }}
-            />
             <DottedSpot className="pointer-events-none absolute bottom-0 right-0" />
             <div className="relative flex flex-1 items-baseline gap-2 min-w-0">
-              <span className="text-3xl font-semibold leading-none" style={{ color: '#F2F6F7' }}>{values[stat.key]}</span>
-              <span className="text-[0.72rem] font-medium leading-tight" style={{ color: '#8FB4BA' }}>{stat.label}</span>
+              <span className="text-3xl font-semibold leading-none" style={{ color: stat.accent }}>{values[stat.key]}</span>
+              <span className="text-[0.82rem] font-medium leading-tight" style={{ color: 'var(--text-muted)' }}>{stat.label}</span>
             </div>
           </div>
         )

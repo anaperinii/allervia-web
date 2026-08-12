@@ -38,7 +38,7 @@ export function DashboardPage() {
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
       <div className="mb-8 flex items-center justify-between gap-3">
-        <h1 className="text-3xl font-medium text-(--text)">Dashboard</h1>
+        <h1 className="text-3xl font-medium text-(--text)">Painel de Métricas</h1>
         <div className="flex items-center gap-2">
           <SegmentedControl
             value={modality}

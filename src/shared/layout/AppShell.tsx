@@ -18,7 +18,7 @@ interface RailItem {
 const RAIL: RailItem[] = [
   { icon: Syringe, path: '/immunotherapies', label: 'Imunoterapias Alérgicas', match: ['/add-immunotherapy', '/patient'] },
   { icon: CalendarDays, path: '/appointments', label: 'Agendamentos' },
-  { icon: BarChart3, path: '/dashboard', label: 'Dashboard', match: ['/export-report'] },
+  { icon: BarChart3, path: '/dashboard', label: 'Painel de Métricas', match: ['/export-report'] },
   { icon: Bell, path: '/notifications', label: 'Notificações' },
   {
     icon: Settings,
