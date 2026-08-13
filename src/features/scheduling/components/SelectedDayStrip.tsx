@@ -69,10 +69,10 @@ export function SelectedDayStrip({
               }}
             >
               <div className="text-xs font-semibold">{getName(application.patientId)}</div>
-              <div className="text-[0.65rem] opacity-75 mt-0.5">
+              <div className="text-[0.65rem] opacity-90 mt-0.5">
                 {application.startTime} – {application.endTime}
               </div>
-              <div className="text-[0.6rem] font-medium opacity-75 mt-1.5">{application.dose}</div>
+              <div className="text-[0.6rem] font-medium opacity-90 mt-1.5">{application.dose}</div>
             </div>
           )
         })}

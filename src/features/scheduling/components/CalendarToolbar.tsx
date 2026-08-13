@@ -9,8 +9,8 @@ interface CalendarToolbarProps {
 }
 
 const LEGEND_ITEMS = [
-  { color: '#C8F4E6', label: 'Subcutânea' },
-  { color: '#FACECF', label: 'Sublingual' },
+  { color: '#DEF3B2', label: 'Subcutânea' },
+  { color: '#A5D4CE', label: 'Sublingual' },
   { color: '#E2E5E9', label: 'Ausente' },
 ]
 
