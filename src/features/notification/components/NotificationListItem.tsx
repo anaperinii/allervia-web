@@ -48,7 +48,7 @@ export function NotificationListItem({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-            <span className={cn('text-[0.55rem] font-semibold px-1.5 py-px rounded-full', display.bg, display.color)}>
+            <span className="text-[0.55rem] font-semibold px-1.5 py-px rounded-md bg-gray-100 text-gray-500 border border-gray-200">
               {display.label}
             </span>
             <time
@@ -58,7 +58,7 @@ export function NotificationListItem({
             >
               {relativeTime}
             </time>
-            {!notification.read && <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-label="Não lida" />}
+            {!notification.read && <span className="w-1.5 h-1.5 rounded-full bg-red-500" aria-label="Não lida" />}
           </div>
           <div className="text-xs font-semibold text-(--text)">{notification.title}</div>
           <div className={cn('text-[0.65rem] text-(--text-muted) mt-0.5 leading-relaxed', !expanded && 'line-clamp-2')}>

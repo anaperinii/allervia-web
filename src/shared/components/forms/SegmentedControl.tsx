@@ -5,7 +5,7 @@ export type SegmentedControlSize = 'xs' | 'sm' | 'md'
 
 export interface SegmentedControlOption<T extends string> {
   value: T
-  label: string
+  label: ReactNode
   icon?: ReactNode
 }
 
