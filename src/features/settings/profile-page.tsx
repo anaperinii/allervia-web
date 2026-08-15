@@ -10,7 +10,7 @@ import {
   TextInput,
 } from '@/shared/components'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
-import { PatientInitials } from '@/shared/components/glass-card'
+import userAvatar from '@/assets/user-avatar.jpg'
 import { useUserStore } from '@/shared/stores/useUserStore'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
 
@@ -71,7 +71,7 @@ export function ProfilePage() {
             <div className="flex items-center justify-between gap-5">
               <div className="flex items-center gap-5 min-w-0">
                 <div className="relative shrink-0">
-                  <PatientInitials name={watched.name} size={80} />
+                  <img src={userAvatar} alt="" className="h-20 w-20 rounded-full object-cover border border-(--border-custom)" />
                   {editing && (
                     <button
                       type="button"

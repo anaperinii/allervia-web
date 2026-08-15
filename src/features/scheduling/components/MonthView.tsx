@@ -13,6 +13,7 @@ interface MonthViewProps {
   onSelectDate: (date: Date) => void
   applicationsByDate: Map<string, Application[]>
   onSelectApplication: (application: Application) => void
+  onOpenDay: (date: Date, applications: Application[]) => void
 }
 
 export function MonthView({
@@ -22,6 +23,7 @@ export function MonthView({
   onSelectDate,
   applicationsByDate,
   onSelectApplication,
+  onOpenDay,
 }: MonthViewProps) {
   const { getName } = useImmunotherapyLookup()
 
@@ -46,7 +48,10 @@ export function MonthView({
           return (
             <div
               key={day.toISOString()}
-              onClick={() => onSelectDate(day)}
+              onClick={() => {
+                onSelectDate(day)
+                if (applications.length) onOpenDay(day, applications)
+              }}
               className={cn(
                 'border-r border-b border-(--border-custom) last:border-r-0 p-1.5 min-h-20 cursor-pointer transition-colors relative',
                 !isCurrentMonth && 'opacity-40 bg-gray-50',
@@ -79,7 +84,14 @@ export function MonthView({
                         'rounded px-1 py-0.5 text-[0.55rem] font-medium truncate backdrop-blur-md cursor-pointer hover:opacity-80 transition-opacity',
                         application.status === 'missed' && 'opacity-70',
                       )}
-                      style={{ backgroundColor: color.bg, backgroundImage: color.grad, color: color.text }}
+                      style={{
+                        backgroundColor: color.bg,
+                        backgroundImage:
+                          application.status === 'missed'
+                            ? `repeating-linear-gradient(45deg, rgba(100,116,139,0.22) 0 1.5px, transparent 1.5px 6px), ${color.grad}`
+                            : color.grad,
+                        color: color.text,
+                      }}
                     >
                       {application.startTime} · {getName(application.patientId)}
                     </div>

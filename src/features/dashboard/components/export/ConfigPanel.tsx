@@ -60,9 +60,7 @@ export function ExportConfigPanel(props: ExportConfigPanelProps) {
             { value: 'sbl', label: 'Sublingual' },
           ]}
           fullWidth
-          aria-label="Modalidade"
-          className="bg-white"
-        />
+          aria-label="Modalidade"        />
         <IconButton aria-label="Configurações avançadas">
           <Settings size={14} />
         </IconButton>

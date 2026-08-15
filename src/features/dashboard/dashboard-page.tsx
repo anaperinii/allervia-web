@@ -43,7 +43,6 @@ export function DashboardPage() {
           <SegmentedControl
             value={modality}
             onChange={setModality}
-            className="bg-[#F3F5F6]! border-[#CBD6D6]!"
             options={[
               { value: 'sub', label: 'Subcutânea' },
               { value: 'sbl', label: 'Sublingual' },
