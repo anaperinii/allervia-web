@@ -50,19 +50,14 @@ export function SettingsPage() {
             <Link
               key={option.label}
               to={option.route!}
-              className="group relative flex h-full flex-row items-center gap-3 overflow-hidden rounded-2xl border border-(--border-custom) px-4 py-4 transition-all duration-300 hover:-translate-y-1"
+              className="group relative flex h-full flex-row items-center gap-5 overflow-hidden rounded-2xl border border-(--border-custom) pl-6 pr-4 py-4 transition-all duration-300 hover:-translate-y-1"
               style={{
                 background: '#ffffff',
                 boxShadow: '0 8px 24px -14px rgba(16,60,68,0.18)',
               }}
             >
               <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `rgb(${CARD_TEAL})` }} />
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-brand transition-transform duration-300 group-hover:scale-105"
-                style={{ boxShadow: '0 2px 8px rgba(16,60,68,0.12)' }}
-              >
-                <Icon size={16} strokeWidth={2.2} />
-              </div>
+              <Icon size={18} strokeWidth={2.2} className="shrink-0 text-brand transition-transform duration-300 group-hover:scale-105" />
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold text-slate-800">{option.label}</div>
                 <div className="mt-0.5 text-[0.78rem] text-slate-500 truncate">{option.description}</div>

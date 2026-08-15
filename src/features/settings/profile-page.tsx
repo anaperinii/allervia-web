@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Camera, Save } from 'lucide-react'
+import { Camera, Check, Save, UserCog } from 'lucide-react'
 import {
   Button,
   FieldLabel,
@@ -9,9 +9,10 @@ import {
   ReadOnlyField,
   TextInput,
 } from '@/shared/components'
+import { cn } from '@/shared/lib/cn'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import userAvatar from '@/assets/user-avatar.jpg'
-import { useUserStore } from '@/shared/stores/useUserStore'
+import { useUserStore, PROFILES, ROLE_LABELS } from '@/shared/stores/useUserStore'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
 
 const formatBirthDate = (iso: string) => {
@@ -22,6 +23,7 @@ const formatBirthDate = (iso: string) => {
 export function ProfilePage() {
   const currentUser = useUserStore((s) => s.current)
   const updateCurrentProfile = useUserStore((s) => s.updateCurrentProfile)
+  const setProfile = useUserStore((s) => s.setProfile)
 
   const [editing, setEditing] = useState(false)
   const [showSaveModal, setShowSaveModal] = useState(false)
@@ -162,6 +164,39 @@ export function ProfilePage() {
                 </FieldLabel>
               </div>
           </section>
+
+            <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
+                <UserCog size={14} className="text-(--text-muted)" />
+                <h2 className="text-xs font-bold text-(--text)">Trocar de profissional</h2>
+              </div>
+              <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {PROFILES.map((profile) => {
+                  const active = profile.id === currentUser.id
+                  return (
+                    <button
+                      key={profile.id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setProfile(profile.id)}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg border p-3 text-left transition-all cursor-pointer',
+                        active ? 'border-brand bg-brand-50/40' : 'border-(--border-custom) hover:border-gray-300 hover:bg-gray-50/60',
+                      )}
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-bold text-brand">
+                        {profile.name.split(' ').filter((w) => !w.endsWith('.')).slice(0, 2).map((w) => w[0]).join('')}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-semibold text-(--text) truncate">{profile.name}</div>
+                        <div className="text-[0.65rem] text-(--text-muted) truncate">{ROLE_LABELS[profile.role]}</div>
+                      </div>
+                      {active && <Check size={15} className="shrink-0 text-brand" />}
+                    </button>
+                  )
+                })}
+              </div>
+            </section>
         </div>
       </form>
 

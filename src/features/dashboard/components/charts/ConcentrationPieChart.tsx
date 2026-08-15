@@ -17,6 +17,29 @@ interface ConcentrationPieChartProps {
 
 const FALLBACK_COLOR = '#94a3b8'
 
+interface SliceLabelProps {
+  cx?: number
+  cy?: number
+  midAngle?: number
+  innerRadius?: number
+  outerRadius?: number
+  value?: number
+}
+
+// place the count at the middle of each donut slice
+function renderSliceLabel({ cx, cy, midAngle, innerRadius, outerRadius, value }: SliceLabelProps) {
+  if (cx == null || cy == null || midAngle == null || innerRadius == null || outerRadius == null || !value) return null
+  const RAD = Math.PI / 180
+  const r = innerRadius + (outerRadius - innerRadius) / 2
+  const x = cx + r * Math.cos(-midAngle * RAD)
+  const y = cy + r * Math.sin(-midAngle * RAD)
+  return (
+    <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700} fill="#374151">
+      {value}
+    </text>
+  )
+}
+
 export function ConcentrationPieChart({
   data,
   height = 192,
@@ -29,7 +52,7 @@ export function ConcentrationPieChart({
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={data} cx="50%" cy="50%" innerRadius={innerRadius} outerRadius={outerRadius} paddingAngle={3} dataKey="value" stroke="none">
+            <Pie data={data} cx="50%" cy="50%" innerRadius={innerRadius} outerRadius={outerRadius} paddingAngle={3} dataKey="value" stroke="none" labelLine={false} label={renderSliceLabel}>
               {data.map((entry) => (
                 <Cell key={entry.name} fill={CONCENTRATION_COLORS[entry.name] || FALLBACK_COLOR} />
               ))}
