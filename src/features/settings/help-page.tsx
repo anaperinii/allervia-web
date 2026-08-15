@@ -17,13 +17,10 @@ export function HelpPage() {
 
   return (
     <SettingsLayout subtitle="Ajuda">
-      <div className="max-w-2xl mx-auto space-y-5">
-            <div className="grid grid-cols-3 gap-3">
-              {quickLinks.map((item, index) => {
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+            <div className="lg:col-span-2 grid grid-cols-3 gap-3">
+              {quickLinks.map((item) => {
                 const Icon = item.icon
-                const g = index === 0
-                  ? `${item.color}47 0%, ${item.color}29 25%, ${item.color}12 55%`
-                  : `${item.color}2b 0%, ${item.color}17 25%, ${item.color}0a 55%`
                 return (
                   <CardButton
                     key={item.label}
@@ -32,16 +29,13 @@ export function HelpPage() {
                     iconColor={item.color}
                     title={item.label}
                     description={item.desc}
-                    className="bg-white/55! backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]"
-                    style={{
-                      backgroundImage: `linear-gradient(105deg, ${g}, transparent 80%)`,
-                    }}
+                    className="bg-white! shadow-[0_4px_24px_rgba(0,0,0,0.06)]"
                   />
                 )
               })}
             </div>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+            <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Perguntas frequentes</h2>
               </div>
@@ -74,7 +68,7 @@ export function HelpPage() {
               </div>
             </section>
 
-        <div className="text-center text-[0.65rem] text-(--text-muted) py-2">
+        <div className="lg:col-span-2 text-center text-[0.65rem] text-(--text-muted) py-2">
           Allervia v2.0.0-beta · Precisa de ajuda? Entre em contato pelo chat.
         </div>
       </div>

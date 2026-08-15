@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
-import { IconButton } from '@/shared/components'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
 import { ExportConfigPanel, type ChartOption } from '@/features/dashboard/components/export/ConfigPanel'
@@ -50,16 +49,20 @@ export function ExportReportPage() {
   void fileName 
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
-            <ChevronLeft size={18} />
-          </IconButton>
-          <h1 className="text-lg font-bold text-(--text)">Exportar Relatório</h1>
-        </div>
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
+      <div className="mb-6">
+        <h1 className="text-3xl font-medium text-(--text)">Exportar Relatório</h1>
+        <button
+          type="button"
+          onClick={() => setShowCancelModal(true)}
+          className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
+        >
+          <ChevronLeft size={15} />
+          Painel de Métricas
+        </button>
+      </div>
 
-        <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden gap-4">
           <ExportConfigPanel
             modality={modality}
             onModalityChange={setModality}
@@ -101,7 +104,6 @@ export function ExportReportPage() {
             chartOptions={CHART_OPTIONS}
             analytics={analytics}
           />
-        </div>
       </div>
 
       <ConfirmExportModal

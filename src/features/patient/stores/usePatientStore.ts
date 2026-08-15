@@ -307,6 +307,9 @@ function buildSeedApplications(): Application[] {
     { id: 'test-subcutaneous', patientId: '1', date: t.date, month: t.month, year: t.year, startTime: '09:00', endTime: '09:30', status: 'scheduled', dose: '1:100 - 0,3ml', cycle: { number: 1, days: 7 }, modality: 'subcutaneous', administrator: r },
     { id: 'test-sublingual', patientId: '3', date: t.date, month: t.month, year: t.year, startTime: '10:00', endTime: '10:30', status: 'scheduled', dose: '1:100 - 0,4ml', cycle: { number: 1, days: 7 }, modality: 'sublingual', administrator: r },
     { id: 'test-missed', patientId: '2', date: t.date, month: t.month, year: t.year, startTime: '11:00', endTime: '11:30', status: 'missed', dose: '1:1.000 - 0,2ml', cycle: { number: 1, days: 7 }, modality: 'subcutaneous', administrator: r },
+    { id: 'test-sublingual-2', patientId: '1', date: t.date, month: t.month, year: t.year, startTime: '13:30', endTime: '14:00', status: 'scheduled', dose: '1:10 - 0,5ml', cycle: { number: 2, days: 14 }, modality: 'sublingual', administrator: r },
+    { id: 'test-sublingual-3', patientId: '2', date: t.date, month: t.month, year: t.year, startTime: '15:00', endTime: '15:30', status: 'scheduled', dose: '1:100 - 0,3ml', cycle: { number: 1, days: 7 }, modality: 'sublingual', administrator: r },
+    { id: 'test-sublingual-4', patientId: '3', date: t.date, month: t.month, year: t.year, startTime: '16:15', endTime: '16:45', status: 'scheduled', dose: '1:1.000 - 0,2ml', cycle: { number: 1, days: 7 }, modality: 'sublingual', administrator: r },
   ]
 
   return [...applyReactions(out), ...testApps]

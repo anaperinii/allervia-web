@@ -6,7 +6,7 @@ import type { ReadFilter } from '@/features/notification/components/Notification
 import { CheckCheck, Mail, MailOpen, Trash2 } from 'lucide-react'
 import { Button } from '@/shared/components'
 import { NotificationsHeader } from '@/features/notification/components/NotificationsHeader'
-import { NotificationFilterBar } from '@/features/notification/components/NotificationFilterBar'
+import { NotificationFilters } from '@/features/notification/components/NotificationFilterBar'
 import { NotificationListItem } from '@/features/notification/components/NotificationListItem'
 import { NotificationsEmpty } from '@/features/notification/components/NotificationsEmpty'
 import { parseIsoDate } from '@/shared/lib/dates'
@@ -106,12 +106,9 @@ export function NotificationsPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
-      <div className="mb-8">
-        <NotificationsHeader unreadCount={unreadCount} />
-      </div>
-
-      <div className="mb-4">
-        <NotificationFilterBar
+      <div className="mb-8 flex items-start justify-between gap-3">
+        <NotificationsHeader />
+        <NotificationFilters
           activeTab={activeTab}
           onTabChange={setActiveTab}
           tabCounts={tabCounts}

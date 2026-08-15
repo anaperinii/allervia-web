@@ -14,15 +14,8 @@ import { Link } from '@tanstack/react-router'
 import { useUserStore, ROLE_PERMISSIONS, type Permission } from '@/shared/stores/useUserStore'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 
-const ICON_BOX_SHADOW = '0 2px 6px rgba(20,184,166,0.18), inset 0 1px 0 rgba(255,255,255,0.9)'
-
-const GLASS_CARD_SHADOW = [
-  '0 10px 32px rgba(15,23,42,0.08)',
-  '0 2px 8px rgba(15,23,42,0.04)',
-  'inset 0 1.5px 0 rgba(255,255,255,0.95)',
-  'inset 0 -1.5px 3px rgba(15,23,42,0.04)',
-  'inset 0 0 0 1px rgba(255,255,255,0.55)',
-].join(', ')
+// single dark teal for the right-side gradient of each card
+const CARD_TEAL = '29,103,114'
 
 interface SettingsOption {
   icon: LucideIcon
@@ -50,25 +43,25 @@ export function SettingsPage() {
 
   return (
     <SettingsLayout>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3">
         {visibleOptions.map((option) => {
           const Icon = option.icon
           return (
             <Link
               key={option.label}
               to={option.route!}
-              className="group relative flex h-full flex-row items-center gap-3 overflow-hidden rounded-2xl bg-white/25 px-4 py-7 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/40"
+              className="group relative flex h-full flex-row items-center gap-3 overflow-hidden rounded-2xl border border-(--border-custom) px-4 py-4 transition-all duration-300 hover:-translate-y-1"
               style={{
-                boxShadow: GLASS_CARD_SHADOW,
-                backdropFilter: 'blur(20px) saturate(150%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+                background: '#ffffff',
+                boxShadow: '0 8px 24px -14px rgba(16,60,68,0.18)',
               }}
             >
+              <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `rgb(${CARD_TEAL})` }} />
               <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/80 text-brand transition-transform duration-300 group-hover:scale-105"
-                style={{ boxShadow: ICON_BOX_SHADOW }}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-brand transition-transform duration-300 group-hover:scale-105"
+                style={{ boxShadow: '0 2px 8px rgba(16,60,68,0.12)' }}
               >
-                <Icon size={20} strokeWidth={2.2} />
+                <Icon size={16} strokeWidth={2.2} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold text-slate-800">{option.label}</div>

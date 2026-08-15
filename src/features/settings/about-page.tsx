@@ -6,7 +6,7 @@ import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 export function AboutPage() {
   return (
     <SettingsLayout subtitle="Sobre o Sistema">
-      <div className="max-w-lg mx-auto text-center space-y-6 py-8">
+      <div className="flex flex-col gap-5">
         <div className="flex flex-col items-center gap-2.5">
           <img src={allerviaMark} alt="" className="h-14 w-14 object-contain" />
           <AllerviaWordmark className="text-3xl" style={{ color: 'var(--text)' }} />
@@ -50,7 +50,7 @@ export function AboutPage() {
           </div>
         </div>
 
-        <p className="text-[0.7rem] text-(--text-muted) flex items-center justify-center gap-1">
+        <p className="lg:col-span-2 text-[0.7rem] text-(--text-muted) flex items-center justify-center gap-1">
           Feito com <Heart size={12} className="text-red-400" /> para a alergologia brasileira
         </p>
       </div>

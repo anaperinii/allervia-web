@@ -5,7 +5,7 @@ export type SegmentedControlSize = 'xs' | 'sm' | 'md'
 
 export interface SegmentedControlOption<T extends string> {
   value: T
-  label: string
+  label: ReactNode
   icon?: ReactNode
 }
 
@@ -45,7 +45,7 @@ export function SegmentedControl<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        'flex rounded-lg border border-(--border-custom) overflow-hidden',
+        'flex items-stretch gap-0.5 rounded-lg border border-[#CBD6D6] bg-[#F3F5F6] p-1',
         SIZE_CLASS[size],
         fullWidth && 'w-full',
         className,
@@ -60,12 +60,12 @@ export function SegmentedControl<T extends string>({
             aria-selected={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
+              'rounded-md font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer',
               ITEM_PADDING[size],
               fullWidth && 'flex-1',
               active
-                ? 'bg-linear-to-br from-brand to-brand-dark text-white'
-                : 'text-(--text-muted) hover:bg-gray-50'
+                ? 'bg-brand/80 text-white shadow-sm font-semibold'
+                : 'text-(--text-muted) hover:text-(--text)'
             )}
           >
             {opt.icon}

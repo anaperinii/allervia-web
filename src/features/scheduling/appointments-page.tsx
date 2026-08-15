@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { CheckCircle, Plus } from 'lucide-react'
-import { Button, SegmentedControl, Select, Toast } from '@/shared/components'
+import { CheckCircle, Plus, Search } from 'lucide-react'
+import { Button, Modal, SegmentedControl, Select, TextInput, Toast } from '@/shared/components'
+import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
+import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { useHasPermission, useDoctorFilter } from '@/shared/stores/useUserStore'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
@@ -13,7 +15,6 @@ import { useCalendarNav } from '@/features/scheduling/hooks/useCalendarNav'
 import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolbar'
 import { WeekView } from '@/features/scheduling/components/WeekView'
 import { MonthView } from '@/features/scheduling/components/MonthView'
-import { SelectedDayStrip } from '@/features/scheduling/components/SelectedDayStrip'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
 import { NewAppointmentModal } from '@/features/scheduling/components/NewAppointmentModal'
 import type { NewAppointmentForm } from '@/features/scheduling/schemas/new-appointment'
@@ -48,14 +49,25 @@ export function AppointmentsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
+  const [patientSearch, setPatientSearch] = useState('')
+  const [dayModal, setDayModal] = useState<{ date: Date; apps: Application[] } | null>(null)
+  const { getName } = useImmunotherapyLookup()
 
   const applications = useMemo(() => {
-    if (!doctorFilter) return allApplications
-    const ownedIds = new Set(
-      immunotherapies.filter((immunotherapy) => immunotherapy.responsibleDoctor === doctorFilter).map((immunotherapy) => immunotherapy.id),
-    )
-    return allApplications.filter((application) => ownedIds.has(application.patientId))
-  }, [allApplications, immunotherapies, doctorFilter])
+    let list = allApplications
+    if (doctorFilter) {
+      const ownedIds = new Set(
+        immunotherapies.filter((immunotherapy) => immunotherapy.responsibleDoctor === doctorFilter).map((immunotherapy) => immunotherapy.id),
+      )
+      list = list.filter((application) => ownedIds.has(application.patientId))
+    }
+    const term = patientSearch.trim().toLowerCase()
+    if (term) {
+      const nameById = new Map(immunotherapies.map((immunotherapy) => [immunotherapy.id, immunotherapy.name.toLowerCase()]))
+      list = list.filter((application) => (nameById.get(application.patientId) ?? '').includes(term))
+    }
+    return list
+  }, [allApplications, immunotherapies, doctorFilter, patientSearch])
 
   const scheduled = useMemo(
     () => applications.filter((application) => application.status === 'scheduled' || application.status === 'missed'),
@@ -72,10 +84,6 @@ export function AppointmentsPage() {
     return map
   }, [scheduled])
 
-  const selectedDayApplications = useMemo(
-    () => applicationsByDate.get(format(calendar.selectedDate, 'dd/MM/yyyy')) ?? [],
-    [applicationsByDate, calendar.selectedDate],
-  )
 
   const openPatient = (patientId: string) => {
     setSelectedApplication(null)
@@ -113,6 +121,9 @@ export function AppointmentsPage() {
       <div className="mb-8 flex items-center justify-between gap-3">
         <h1 className="text-3xl font-medium text-(--text)">Agendamentos</h1>
         <div className="flex items-center gap-3">
+          <Button tone="brand" variant="solid" size="md" onClick={calendar.goToToday} className="bg-[linear-gradient(150deg,#257E8C,#12333a)]! border-[#12333a]! text-white! text-[0.7rem]!">
+            Hoje
+          </Button>
           <Select
             aria-label="Filtrar por mês"
             value={calendar.currentDate.getMonth()}
@@ -137,7 +148,6 @@ export function AppointmentsPage() {
             value={calendar.viewMode}
             onChange={calendar.setViewMode}
             size="md"
-            className="bg-[#F3F5F6]! border-[#CBD6D6]!"
             options={[
               { value: 'week', label: 'Semana' },
               { value: 'month', label: 'Mês' },
@@ -160,16 +170,25 @@ export function AppointmentsPage() {
         </div>
       </div>
 
-      <div className="relative z-10 -mb-px">
+      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <CalendarToolbar
           monthLabel={calendar.monthLabel}
           onPrev={calendar.goToPrev}
           onNext={calendar.goToNext}
           onToday={calendar.goToToday}
+          rightContent={
+            <div className="relative w-[26rem]">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
+              <TextInput
+                aria-label="Pesquisar paciente"
+                placeholder="Pesquisar paciente"
+                value={patientSearch}
+                onChange={(e) => setPatientSearch(e.target.value)}
+                className="h-8 pl-8 bg-[#F3F5F6]! border-[#CBD6D6]!"
+              />
+            </div>
+          }
         />
-      </div>
-
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-b-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <div className="flex-1 overflow-auto">
           {calendar.viewMode === 'week' ? (
             <WeekView
@@ -187,17 +206,52 @@ export function AppointmentsPage() {
               onSelectDate={calendar.setSelectedDate}
               applicationsByDate={applicationsByDate}
               onSelectApplication={setSelectedApplication}
+              onOpenDay={(date, apps) => setDayModal({ date, apps })}
             />
           )}
         </div>
-
-        <SelectedDayStrip
-          selectedDate={calendar.selectedDate}
-          applications={selectedDayApplications}
-          googleConnected={googleCalendarConnected}
-          onSelectApplication={setSelectedApplication}
-        />
       </div>
+
+      <Modal
+        open={!!dayModal}
+        onClose={() => setDayModal(null)}
+        size="sm"
+        title={
+          dayModal
+            ? (() => {
+                const s = format(dayModal.date, "EEEE, dd 'de' MMMM", { locale: ptBR })
+                return s.charAt(0).toUpperCase() + s.slice(1)
+              })()
+            : ''
+        }
+      >
+        <div className="space-y-2">
+          {dayModal?.apps.map((app) => {
+            const c = getApplicationEventColor(app)
+            return (
+              <button
+                key={app.id}
+                type="button"
+                onClick={() => { setSelectedApplication(app); setDayModal(null) }}
+                className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:brightness-95 cursor-pointer ${app.status === 'missed' ? 'opacity-60' : ''}`}
+                style={{
+                  backgroundColor: c.bg,
+                  backgroundImage:
+                    app.status === 'missed'
+                      ? `repeating-linear-gradient(45deg, rgba(100,116,139,0.22) 0 1.5px, transparent 1.5px 6px), ${c.grad}`
+                      : c.grad,
+                  color: c.text,
+                }}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold">{app.startTime} – {app.endTime}</div>
+                  <div className="text-[0.7rem] font-medium opacity-90 truncate">{getName(app.patientId)} · {app.dose}</div>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </Modal>
 
       <ApplicationDetailsModal
         application={selectedApplication}

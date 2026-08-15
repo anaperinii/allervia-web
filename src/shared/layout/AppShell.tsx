@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
-import { Syringe, CalendarDays, BarChart3, Bell, Settings, LogOut, User } from 'lucide-react'
+import { Syringe, CalendarDays, BarChart3, Bell, Settings, LogOut } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import allerviaMark from '@/assets/allervia-mark-light.png'
+import userAvatar from '@/assets/user-avatar.jpg'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { useNotificationsStore } from '@/features/notification/stores/useNotificationsStore'
 import { useUserStore } from '@/shared/stores/useUserStore'
@@ -18,7 +19,7 @@ interface RailItem {
 const RAIL: RailItem[] = [
   { icon: Syringe, path: '/immunotherapies', label: 'Imunoterapias Alérgicas', match: ['/add-immunotherapy', '/patient'] },
   { icon: CalendarDays, path: '/appointments', label: 'Agendamentos' },
-  { icon: BarChart3, path: '/dashboard', label: 'Dashboard', match: ['/export-report'] },
+  { icon: BarChart3, path: '/dashboard', label: 'Painel de Métricas', match: ['/export-report'] },
   { icon: Bell, path: '/notifications', label: 'Notificações' },
   {
     icon: Settings,
@@ -61,10 +62,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="text-[0.68rem] font-medium" style={{ color: '#8b93a9' }}>{userInstitution}</span>
           </div>
           <div
-            className="flex h-9 w-9 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-105"
-            style={{ background: 'linear-gradient(140deg,#9BC1C4,#4d7e85)', boxShadow: '0 4px 12px rgba(16,50,60,0.16)' }}
+            className="h-9 w-9 overflow-hidden rounded-full transition-transform duration-200 group-hover:scale-105"
+            style={{ border: '1.5px solid rgba(125,135,159,0.5)' }}
           >
-            <User size={17} strokeWidth={2} style={{ color: '#ffffff' }} />
+            <img src={userAvatar} alt="" className="h-full w-full object-cover" />
           </div>
         </Link>
       </div>

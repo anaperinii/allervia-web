@@ -34,21 +34,28 @@ export function WeekView({
             onClick={() => onSelectDate(day)}
             className={cn(
               'border-r border-(--border-custom) last:border-r-0 p-2.5 cursor-pointer transition-colors flex flex-col min-h-0 relative',
-              today ? 'bg-brand/10 hover:bg-brand/16' : 'hover:bg-brand/10',
-              selected && !today && 'bg-brand/12',
+              today || selected ? 'bg-[#1d6772]/14' : 'hover:bg-brand/6',
             )}
           >
             {today && (
-              <div className="absolute top-0 left-0 right-0 h-0.75 bg-brand rounded-b-sm" />
+              <div className="absolute top-0 left-0 right-0 h-0.75 rounded-b-sm z-10" style={{ background: '#1d6772' }} />
             )}
-            <div className="text-center mb-2">
-              <div className="text-[0.6rem] font-semibold text-(--text-muted) uppercase">
+            <div
+              className="-mx-2.5 -mt-2.5 px-2.5 pt-2.5 pb-2 mb-2 text-center border-b border-(--border-custom)"
+              style={{ background: today || selected ? 'transparent' : '#f9fafb' }}
+            >
+              <div className="text-[0.6rem] font-semibold text-slate-600 uppercase">
                 {format(day, 'EEE', { locale: ptBR })}
               </div>
-              <div className={cn('text-lg font-bold mt-0.5', today ? 'text-brand' : 'text-(--text)')}>
+              <div
+                className={cn(
+                  'mx-auto mt-1 flex h-7 w-7 items-center justify-center rounded-full text-base font-bold',
+                  today || selected ? 'text-white' : 'text-(--text)',
+                )}
+                style={today || selected ? { background: '#1d6772' } : undefined}
+              >
                 {format(day, 'd')}
               </div>
-              <div className={cn('w-1.5 h-1.5 rounded-full mx-auto mt-0.5', today ? 'bg-brand' : 'bg-transparent')} />
             </div>
             <div className="flex-1 space-y-1 overflow-y-auto">
               {applications.map((application) => {
@@ -66,22 +73,20 @@ export function WeekView({
                     )}
                     style={{
                       backgroundColor: color.bg,
-                      backgroundImage: color.grad,
+                      backgroundImage:
+                        application.status === 'missed'
+                          ? `repeating-linear-gradient(45deg, rgba(100,116,139,0.22) 0 1.5px, transparent 1.5px 6px), ${color.grad}`
+                          : color.grad,
                       color: color.text,
                       boxShadow: '0 1px 4px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.04)',
                     }}
                   >
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute left-1.5 top-1.5 bottom-1.5 w-[3px] rounded-full"
-                      style={{ backgroundColor: color.border }}
-                    />
-                    <div className="pl-2.5 space-y-0.5">
-                      <div className="font-semibold truncate">{getName(application.patientId)}</div>
-                      <div className="opacity-75">
+                    <div className="space-y-0.5">
+                      <div className="text-[0.72rem] font-bold">
                         {application.startTime} – {application.endTime}
                       </div>
-                      <div className="opacity-75 truncate">{application.dose}</div>
+                      <div className="font-semibold opacity-90 truncate">{getName(application.patientId)}</div>
+                      <div className="font-medium opacity-90 truncate">{application.dose}</div>
                     </div>
                   </div>
                 )

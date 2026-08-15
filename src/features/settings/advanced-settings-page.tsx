@@ -127,7 +127,7 @@ export function AdvancedSettingsPage() {
 
   return (
     <SettingsLayout subtitle="Configurações Avançadas">
-      <div className="max-w-2xl mx-auto space-y-5">
+      <div className="flex flex-col gap-5">
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Notificações</h2>

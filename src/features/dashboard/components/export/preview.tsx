@@ -42,7 +42,7 @@ export function ExportPreview({
         : `${interval} · ${yearFilter}`
 
   return (
-    <div className="flex-1 overflow-y-auto p-5 bg-gray-50/50">
+    <div className="flex-1 overflow-y-auto p-5 bg-gray-50/50 rounded-2xl border border-(--border-custom)">
       <div className="bg-white rounded-xl border border-(--border-custom) shadow-sm max-w-2xl mx-auto">
         <div className="px-6 py-5 border-b border-(--border-custom)">
           <div className="flex items-center justify-between">

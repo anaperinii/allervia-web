@@ -60,8 +60,7 @@ export function ExportConfigPanel(props: ExportConfigPanelProps) {
             { value: 'sbl', label: 'Sublingual' },
           ]}
           fullWidth
-          aria-label="Modalidade"
-        />
+          aria-label="Modalidade"        />
         <IconButton aria-label="Configurações avançadas">
           <Settings size={14} />
         </IconButton>
@@ -79,6 +78,7 @@ export function ExportConfigPanel(props: ExportConfigPanelProps) {
             options={FORMAT_OPTIONS}
             fullWidth
             aria-label="Formato do arquivo"
+            className="bg-white"
           />
         </FieldLabel>
 
