@@ -67,8 +67,8 @@ export function ProfilePage() {
   return (
     <SettingsLayout subtitle="Meu Perfil">
       <form onSubmit={(e) => e.preventDefault()}>
-        <div className="max-w-2xl mx-auto space-y-6">
-            <div className="flex items-center justify-between gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <div className="flex items-center justify-between gap-5 lg:col-span-2">
               <div className="flex items-center gap-5 min-w-0">
                 <div className="relative shrink-0">
                   <img src={userAvatar} alt="" className="h-20 w-20 rounded-full object-cover border border-(--border-custom)" />

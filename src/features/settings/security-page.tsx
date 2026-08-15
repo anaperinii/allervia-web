@@ -24,8 +24,8 @@ export function SecurityPage() {
 
   return (
     <SettingsLayout subtitle="Segurança e Privacidade">
-      <div className="max-w-2xl mx-auto space-y-5">
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+            <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Autenticação</h2>
               </div>
