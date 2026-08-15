@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { cn } from '@/shared/lib/cn'
-import { TextArea } from '@/shared/components'
+import { SegmentedControl, TextArea } from '@/shared/components'
 import type {
   ReportFileFormat,
   ReportSectionId,
@@ -62,7 +62,7 @@ export function ReportConfigPanel({
   patientStatus,
 }: ReportConfigPanelProps) {
   return (
-    <div className="w-72 shrink-0 border-r border-(--border-custom) p-5 overflow-y-auto space-y-5">
+    <div className="w-[22rem] shrink-0 border-r border-(--border-custom) px-5 pt-0 pb-5 overflow-y-auto space-y-5">
       <div className="bg-gray-50 rounded-lg p-3 space-y-2">
         <div className="text-[0.6rem] font-bold text-(--text-muted) uppercase tracking-wider">Resumo</div>
         <div className="text-[0.65rem] text-(--text-muted) space-y-1">
@@ -79,28 +79,17 @@ export function ReportConfigPanel({
 
       <div>
         <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Formato</span>
-        <div className="flex gap-2" role="radiogroup" aria-label="Formato do relatório">
-          {REPORT_FORMATS.map((format) => {
+        <SegmentedControl
+          value={fileFormat}
+          onChange={setFileFormat}
+          options={REPORT_FORMATS.map((format) => {
             const Icon = format.icon
-            const selected = fileFormat === format.id
-            return (
-              <button
-                key={format.id}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                onClick={() => setFileFormat(format.id)}
-                className={cn(
-                  'flex-1 h-9 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
-                  selected ? 'border-brand bg-brand-50 text-brand-dark' : 'border-(--border-custom) text-(--text-muted) hover:border-brand/50',
-                )}
-              >
-                <Icon size={13} />
-                {format.label}
-              </button>
-            )
+            return { value: format.id, label: format.label, icon: <Icon size={13} /> }
           })}
-        </div>
+          fullWidth
+          aria-label="Formato do relatório"
+          className="bg-white"
+        />
       </div>
 
       <div>
@@ -116,10 +105,10 @@ export function ReportConfigPanel({
                 onClick={() => toggleSection(section.id)}
                 className={cn(
                   'flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer',
-                  selected ? 'border-brand bg-brand-50/50' : 'border-(--border-custom) hover:border-brand/50',
+                  selected ? 'border-brand bg-brand-50/50' : 'border-gray-400 hover:border-gray-500',
                 )}
               >
-                <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0', selected ? 'bg-brand border-brand' : 'border-gray-300')}>
+                <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0', selected ? 'bg-brand border-brand' : 'border-gray-400')}>
                   {selected && <Check size={10} className="text-white" />}
                 </div>
                 <span className="text-[0.7rem] font-medium text-(--text)">{section.label}</span>
@@ -193,10 +182,10 @@ function ConsentCheckbox({
       onClick={onChange}
       className={cn(
         'flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer',
-        checked ? 'border-brand bg-brand/5' : 'border-(--border-custom) hover:border-brand/40',
+        checked ? 'border-brand bg-brand/5' : 'border-gray-400 hover:border-gray-500',
       )}
     >
-      <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0 mt-px', checked ? 'bg-brand border-brand' : 'border-gray-300')}>
+      <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0 mt-px', checked ? 'bg-brand border-brand' : 'border-gray-400')}>
         {checked && <Check size={10} className="text-white" />}
       </div>
       <div>

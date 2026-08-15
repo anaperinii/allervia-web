@@ -17,13 +17,13 @@ export function ToggleCard({ label, description, selected, onToggle }: ToggleCar
       onClick={onToggle}
       className={cn(
         'flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer',
-        selected ? 'border-brand bg-brand/5' : 'border-(--border-custom) hover:border-brand/40',
+        selected ? 'border-brand bg-brand/5' : 'border-gray-400 hover:border-gray-500',
       )}
     >
       <div
         className={cn(
           'flex h-4.5 w-4.5 items-center justify-center rounded border transition-all shrink-0',
-          selected ? 'bg-brand border-brand' : 'border-gray-300',
+          selected ? 'bg-brand border-brand' : 'border-gray-400',
         )}
       >
         {selected && <Check size={10} className="text-white" />}
