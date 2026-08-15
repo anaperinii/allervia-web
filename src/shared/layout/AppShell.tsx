@@ -71,7 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* body: rail + page content */}
-      <div className="relative z-10 flex flex-1 min-h-0 gap-4 px-6 pb-4">
+      <div className="relative z-10 flex flex-1 min-h-0 gap-2 px-6 pb-4">
         {/* rail */}
         <div className="relative z-50 flex shrink-0 flex-col items-center justify-between w-14 pb-1">
           <div className="flex flex-col gap-3">
