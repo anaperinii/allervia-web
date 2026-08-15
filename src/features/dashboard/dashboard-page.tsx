@@ -115,17 +115,6 @@ export function DashboardPage() {
             </ChartCard>
           )}
 
-          {isVisible('volume') && (
-            <ChartCard
-              id="volume"
-              title="Volume vs Concentração"
-              archived={archivedCharts.includes('volume')}
-              onToggleArchive={toggleArchive}
-            >
-              <VolumeStackedBarChart data={analytics.volumeData} />
-            </ChartCard>
-          )}
-
           {isVisible('type') && (
             <ChartCard
               id="type"
@@ -134,6 +123,17 @@ export function DashboardPage() {
               onToggleArchive={toggleArchive}
             >
               <TypesProgressBars data={analytics.typeData} />
+            </ChartCard>
+          )}
+
+          {isVisible('volume') && (
+            <ChartCard
+              id="volume"
+              title="Volume vs Concentração"
+              archived={archivedCharts.includes('volume')}
+              onToggleArchive={toggleArchive}
+            >
+              <VolumeStackedBarChart data={analytics.volumeData} />
             </ChartCard>
           )}
         </div>
