@@ -1,11 +1,11 @@
-import { INTERVAL_COLORS } from '@/features/immunotherapy/constants/interval-colors'
-
-// concentration ratios reuse the interval tag colors, respectively (7 / 14 / 21 / 28 days)
+// concentration ratios walk the calendar green scale, from the lime used for
+// Subcutânea (#B7E06A) to the teal used for Sublingual (#74C3B9) and beyond:
+// most diluted = lightest lime, most concentrated = deepest teal.
 export const CONCENTRATION_COLORS: Record<string, string> = {
-  '1:10.000': INTERVAL_COLORS[7].bg,
-  '1:1.000': INTERVAL_COLORS[14].bg,
-  '1:100': INTERVAL_COLORS[21].bg,
-  '1:10': INTERVAL_COLORS[28].bg,
+  '1:10.000': '#B7E06A',
+  '1:1.000': '#8FD285',
+  '1:100': '#74C3B9',
+  '1:10': '#3E8E86',
 }
 
 export const PHASE_KEYS = ['induction', 'maintenance'] as const
@@ -45,10 +45,10 @@ export type VolumeKey = (typeof VOLUME_KEYS)[number]
 // light tint for the smallest volume, progressively stronger toward the largest.
 // Explicit hex ramps per concentration (0,1ml lightest -> 0,8ml strongest).
 export const CONCENTRATION_VOLUME_COLORS: Record<string, Record<VolumeKey, string>> = {
-  '1:10.000': { '0,1ml': '#CDB4EC', '0,2ml': '#B98FE0', '0,4ml': '#A776D5', '0,5ml': '#9059C7', '0,8ml': '#6E3EB0' },
-  '1:1.000': { '0,1ml': '#EEB4B9', '0,2ml': '#E59199', '0,4ml': '#D9707A', '0,5ml': '#C74E5A', '0,8ml': '#A6353F' },
-  '1:100': { '0,1ml': '#D3EBB0', '0,2ml': '#BADF89', '0,4ml': '#A0CE68', '0,5ml': '#84B546', '0,8ml': '#63912F' },
-  '1:10': { '0,1ml': '#B7EAE7', '0,2ml': '#93DEDA', '0,4ml': '#6BCCC7', '0,5ml': '#45ACA7', '0,8ml': '#278A86' },
+  '1:10.000': { '0,1ml': '#E2F2C4', '0,2ml': '#CFE99E', '0,4ml': '#B7E06A', '0,5ml': '#9BC94D', '0,8ml': '#7BA634' },
+  '1:1.000': { '0,1ml': '#D5EDD0', '0,2ml': '#BCE3B4', '0,4ml': '#8FD285', '0,5ml': '#6FB865', '0,8ml': '#52944A' },
+  '1:100': { '0,1ml': '#CCE9E4', '0,2ml': '#A6D9D1', '0,4ml': '#74C3B9', '0,5ml': '#4FA99E', '0,8ml': '#37877D' },
+  '1:10': { '0,1ml': '#B5D6D2', '0,2ml': '#8CBEB8', '0,4ml': '#64A69F', '0,5ml': '#3E8E86', '0,8ml': '#2A6B65' },
 }
 
 // neutral ramp for the volume-intensity legend (hue-independent)
