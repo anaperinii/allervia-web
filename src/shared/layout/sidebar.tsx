@@ -1,15 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import {
-  Syringe,
-  CalendarDays,
-  BarChart3,
-  Bell,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import allerviaMark from '@/assets/allervia-mark-light.png'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
@@ -17,20 +7,24 @@ import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { useSidebarStore } from '@/shared/layout/useSidebarStore'
 import { SidebarProfile } from '@/shared/layout/SidebarProfile'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBell, faCalendarDays, faChartColumn, faChevronLeft, faChevronRight, faGear, faSyringe } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+
 interface SidebarItem {
-  icon: LucideIcon
+  icon: IconDefinition
   label: string
   path: string
   matchPaths?: string[]
 }
 
 const ITEMS: SidebarItem[] = [
-  { icon: Syringe, label: 'Imunoterapias', path: '/immunotherapies', matchPaths: ['/add-immunotherapy'] },
-  { icon: CalendarDays, label: 'Agendamentos', path: '/appointments' },
-  { icon: BarChart3, label: 'Dashboard', path: '/dashboard', matchPaths: ['/export-report'] },
-  { icon: Bell, label: 'Notificações', path: '/notifications' },
+  { icon: faSyringe, label: 'Imunoterapias', path: '/immunotherapies', matchPaths: ['/add-immunotherapy'] },
+  { icon: faCalendarDays, label: 'Agendamentos', path: '/appointments' },
+  { icon: faChartColumn, label: 'Dashboard', path: '/dashboard', matchPaths: ['/export-report'] },
+  { icon: faBell, label: 'Notificações', path: '/notifications' },
   {
-    icon: Settings,
+    icon: faGear,
     label: 'Configurações',
     path: '/settings',
     matchPaths: ['/security', '/teams', '/help', '/advanced-settings', '/personalization', '/about', '/plans', '/profile'],
@@ -71,7 +65,7 @@ function SidebarLink({ item, isActive, isCollapsed }: SidebarLinkProps) {
         }
       }}
     >
-      <Icon size={16} strokeWidth={1.8} className="shrink-0" />
+      <FontAwesomeIcon icon={Icon} className="shrink-0" style={{ fontSize: 16 }} />
       {!isCollapsed && <span className="text-[0.8rem] font-medium whitespace-nowrap">{item.label}</span>}
       {isCollapsed && (
         <span
@@ -181,7 +175,7 @@ export function Sidebar() {
           boxShadow: '0 4px 12px rgba(16,60,68,0.16)',
         }}
       >
-        {isCollapsed ? <ChevronRight size={14} strokeWidth={2.5} /> : <ChevronLeft size={14} strokeWidth={2.5} />}
+        {isCollapsed ? <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 14 }} /> : <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 14 }} />}
       </button>
     </aside>
   )

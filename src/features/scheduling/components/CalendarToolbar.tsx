@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
 interface CalendarToolbarProps {
   monthLabel: string
@@ -28,7 +29,7 @@ export function CalendarToolbar({
             aria-label="Período anterior"
             className="flex items-center justify-center text-(--text) hover:text-brand transition-colors"
           >
-            <ChevronLeft size={20} strokeWidth={2.2} />
+            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 20 }} />
           </button>
           <span className="text-base font-semibold text-(--text) min-w-32 text-center capitalize">
             {monthLabel}
@@ -38,7 +39,7 @@ export function CalendarToolbar({
             aria-label="Próximo período"
             className="flex items-center justify-center text-(--text) hover:text-brand transition-colors"
           >
-            <ChevronRight size={20} strokeWidth={2.2} />
+            <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 20 }} />
           </button>
         </div>
 

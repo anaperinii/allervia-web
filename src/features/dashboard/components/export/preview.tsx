@@ -1,4 +1,3 @@
-import { EyeOff } from 'lucide-react'
 import type { ChartOption } from './ConfigPanel'
 import { ConcentrationPieChart } from '@/features/dashboard/components/charts/ConcentrationPieChart'
 import { PhasesBarChart } from '@/features/dashboard/components/charts/PhasesBarChart'
@@ -6,6 +5,9 @@ import { StatusLineChart } from '@/features/dashboard/components/charts/StatusLi
 import { TypesProgressBars } from '@/features/dashboard/components/charts/TypesProgressBars'
 import { VolumeStackedBarChart } from '@/features/dashboard/components/charts/VolumeStackedBarChart'
 import type { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 
 type Analytics = ReturnType<typeof useDashboardAnalytics>
 
@@ -56,7 +58,7 @@ export function ExportPreview({
               <div>Modalidade: {modality === 'sub' ? 'Subcutânea' : 'Sublingual'}</div>
               {anonymize && (
                 <div className="flex items-center gap-1 text-brand font-semibold mt-0.5 justify-end">
-                  <EyeOff size={10} />
+                  <FontAwesomeIcon icon={faEyeSlash} style={{ fontSize: 10 }} />
                   Dados anonimizados
                 </div>
               )}

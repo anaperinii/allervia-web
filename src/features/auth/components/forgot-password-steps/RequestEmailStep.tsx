@@ -1,8 +1,10 @@
 import { Link } from '@tanstack/react-router'
-import { ChevronLeft } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { FieldLabel, TextInput } from '@/shared/components'
 import type { ForgotPasswordEmailForm } from '@/features/auth/schemas/forgot-password'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 
 interface RequestEmailStepProps {
   form: UseFormReturn<ForgotPasswordEmailForm>
@@ -49,7 +51,7 @@ export function RequestEmailStep({ form, onSubmit }: RequestEmailStepProps) {
         className="flex items-center justify-start gap-1.5 text-xs font-medium no-underline transition-colors"
         style={{ color: 'var(--ink-soft)' }}
       >
-        <ChevronLeft size={13} />
+        <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 13 }} />
         Voltar
       </Link>
     </form>

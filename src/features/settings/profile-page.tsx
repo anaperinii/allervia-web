@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Camera, Check, Save, UserCog } from 'lucide-react'
 import {
   Button,
   FieldLabel,
@@ -14,6 +13,9 @@ import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import userAvatar from '@/assets/user-avatar.jpg'
 import { useUserStore, PROFILES, ROLE_LABELS } from '@/shared/stores/useUserStore'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCamera, faCheck, faFloppyDisk, faUserGear } from '@fortawesome/free-solid-svg-icons'
 
 const formatBirthDate = (iso: string) => {
   const [year, month, day] = iso.split('-')
@@ -80,7 +82,7 @@ export function ProfilePage() {
                       aria-label="Alterar foto"
                       className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-white border border-(--border-custom) shadow-sm hover:bg-brand-50 transition-all cursor-pointer"
                     >
-                      <Camera size={13} className="text-brand" />
+                      <FontAwesomeIcon icon={faCamera} className="text-brand" style={{ fontSize: 13 }} />
                     </button>
                   )}
                 </div>
@@ -102,7 +104,7 @@ export function ProfilePage() {
                       tone="brand"
                       variant="solid"
                       prominent
-                      leftIcon={<Save size={13} />}
+                      leftIcon={<FontAwesomeIcon icon={faFloppyDisk} style={{ fontSize: 13 }} />}
                       onClick={handleSubmit(() => setShowSaveModal(true))}
                       className="px-3"
                     >
@@ -167,7 +169,7 @@ export function ProfilePage() {
 
             <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
-                <UserCog size={14} className="text-(--text-muted)" />
+                <FontAwesomeIcon icon={faUserGear} className="text-(--text-muted)" style={{ fontSize: 14 }} />
                 <h2 className="text-xs font-bold text-(--text)">Trocar de profissional</h2>
               </div>
               <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -191,7 +193,7 @@ export function ProfilePage() {
                         <div className="text-xs font-semibold text-(--text) truncate">{profile.name}</div>
                         <div className="text-[0.65rem] text-(--text-muted) truncate">{ROLE_LABELS[profile.role]}</div>
                       </div>
-                      {active && <Check size={15} className="shrink-0 text-brand" />}
+                      {active && <FontAwesomeIcon icon={faCheck} className="shrink-0 text-brand" style={{ fontSize: 15 }} />}
                     </button>
                   )
                 })}
@@ -205,7 +207,7 @@ export function ProfilePage() {
         onClose={() => setShowSaveModal(false)}
         size="sm"
         title="Salvar alterações"
-        icon={<Save size={16} />}
+        icon={<FontAwesomeIcon icon={faFloppyDisk} style={{ fontSize: 16 }} />}
         footer={
           <>
             <Button variant="outline" onClick={() => setShowSaveModal(false)}>Cancelar</Button>

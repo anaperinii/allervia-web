@@ -1,6 +1,8 @@
-import { Clock, Mail } from 'lucide-react'
 import { Button, VerificationCodeInput } from '@/shared/components'
 import { useCountdown } from '@/shared/hooks/useCountdown'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faClock, faEnvelope } from '@fortawesome/free-solid-svg-icons'
 
 const CODE_TTL_SECONDS = 10 * 60
 
@@ -21,7 +23,7 @@ export function VerifyStep({ code, onCodeChange, codeError, maskedEmail, resendK
     <>
       <div className="flex flex-col items-center text-center gap-1.5">
         <div className="flex h-12 w-12 items-center justify-center rounded-full mb-1 bg-[var(--field)] border border-[color:var(--field-bd)]">
-          <Mail size={22} className="text-[color:var(--accent)]" />
+          <FontAwesomeIcon icon={faEnvelope} className="text-[color:var(--accent)]" style={{ fontSize: 22 }} />
         </div>
         <h1 className="font-extrabold text-2xl text-[color:var(--ink)]">Verifique sua conta</h1>
         <p className="text-xs text-[color:var(--ink-soft)] leading-relaxed max-w-xs">
@@ -56,7 +58,7 @@ export function VerifyStep({ code, onCodeChange, codeError, maskedEmail, resendK
           WebkitBackdropFilter: 'blur(8px)',
         }}
       >
-        <Clock size={14} className="shrink-0" style={{ color: 'var(--glass-ink)' }} />
+        <FontAwesomeIcon icon={faClock} className="shrink-0" style={{ fontSize: 14, color: 'var(--glass-ink)' }} />
         <p className="text-[0.72rem] leading-relaxed" style={{ color: 'var(--glass-ink)' }}>
           {isExpired ? (
             <>O código expirou. Solicite um novo para continuar.</>

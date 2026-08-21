@@ -1,10 +1,12 @@
-import { FileText, FileSpreadsheet, FileDown, Settings } from 'lucide-react'
 import { Button, FieldLabel, IconButton, SegmentedControl, TextInput, Select, ToggleCard } from '@/shared/components'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFileArrowDown, faFileExcel, faFileLines, faGear } from '@fortawesome/free-solid-svg-icons'
+
 const FORMAT_OPTIONS = [
-  { value: 'pdf', label: 'PDF', icon: <FileText size={13} /> },
-  { value: 'excel', label: 'Excel', icon: <FileSpreadsheet size={13} /> },
-  { value: 'csv', label: 'CSV', icon: <FileDown size={13} /> },
+  { value: 'pdf', label: 'PDF', icon: <FontAwesomeIcon icon={faFileLines} style={{ fontSize: 13 }} /> },
+  { value: 'excel', label: 'Excel', icon: <FontAwesomeIcon icon={faFileExcel} style={{ fontSize: 13 }} /> },
+  { value: 'csv', label: 'CSV', icon: <FontAwesomeIcon icon={faFileArrowDown} style={{ fontSize: 13 }} /> },
 ]
 
 const INTERVALS = ['Este Mês', 'Este Trimestre', 'Este Semestre', 'Este Ano', 'Personalizado'] as const
@@ -62,7 +64,7 @@ export function ExportConfigPanel(props: ExportConfigPanelProps) {
           fullWidth
           aria-label="Modalidade"        />
         <IconButton aria-label="Configurações avançadas">
-          <Settings size={14} />
+          <FontAwesomeIcon icon={faGear} style={{ fontSize: 14 }} />
         </IconButton>
       </div>
 

@@ -1,6 +1,8 @@
-import { X } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
 
 type Size = 'sm' | 'md' | 'lg'
 const SIZE_CLASS: Record<Size, string> = {
@@ -126,7 +128,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
               className="text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
               aria-label="Fechar"
             >
-              <X size={16} />
+              <FontAwesomeIcon icon={faXmark} style={{ fontSize: 16 }} />
             </button>
           </div>
         )}

@@ -1,6 +1,8 @@
-import { CheckCircle, ArrowRight } from 'lucide-react'
 import { Button } from '@/shared/components'
 import type { RegisterForm } from '@/features/auth/schemas/register'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowRight, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
 
 interface DoneStepProps {
   data: RegisterForm
@@ -12,7 +14,7 @@ export function DoneStep({ data, maskedEmail }: DoneStepProps) {
     <>
       <div className="flex flex-col items-center text-center gap-2">
         <div className="flex h-14 w-14 items-center justify-center rounded-full mb-1 bg-[var(--field)] border border-[color:var(--field-bd)]">
-          <CheckCircle size={26} className="text-[color:var(--accent)]" />
+          <FontAwesomeIcon icon={faCircleCheck} className="text-[color:var(--accent)]" style={{ fontSize: 26 }} />
         </div>
         <h1 className="font-extrabold text-2xl text-[color:var(--ink)]">Conta ativada com sucesso!</h1>
         <p className="text-xs text-[color:var(--ink-soft)] leading-relaxed max-w-xs">
@@ -40,7 +42,7 @@ export function DoneStep({ data, maskedEmail }: DoneStepProps) {
         </div>
       </div>
 
-      <Button tone="brand" variant="solid" prominent fullWidth size="lg" to="/login" rightIcon={<ArrowRight size={14} />}>
+      <Button tone="brand" variant="solid" prominent fullWidth size="lg" to="/login" rightIcon={<FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 14 }} />}>
         Acessar o Allervia
       </Button>
     </>

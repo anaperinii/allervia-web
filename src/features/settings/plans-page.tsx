@@ -1,15 +1,17 @@
-import { Building, Calendar, Check, CreditCard, Receipt } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/components'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { PLANS, MAX_PLAN_FEATURES, type PlanId } from '@/shared/constants/plans'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBuilding, faCalendar, faCheck, faCreditCard, faReceipt } from '@fortawesome/free-solid-svg-icons'
+
 const CURRENT_PLAN_ID: PlanId = 'professional'
 
 const billingSummary = [
-  { icon: CreditCard, label: 'Método de pagamento', value: 'Visa •••• 4242' },
-  { icon: Calendar, label: 'Próxima cobrança', value: '01/05/2026' },
-  { icon: Receipt, label: 'Último pagamento', value: '01/04/2026 — R$ 197,00' },
+  { icon: faCreditCard, label: 'Método de pagamento', value: 'Visa •••• 4242' },
+  { icon: faCalendar, label: 'Próxima cobrança', value: '01/05/2026' },
+  { icon: faReceipt, label: 'Último pagamento', value: '01/04/2026 — R$ 197,00' },
 ]
 
 export function PlansPage() {
@@ -24,7 +26,7 @@ export function PlansPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/10 shrink-0">
-                      <Building size={18} className="text-brand" />
+                      <FontAwesomeIcon icon={faBuilding} className="text-brand" style={{ fontSize: 18 }} />
                     </div>
                     <div>
                       <div className="text-sm font-bold text-(--text)">Professional</div>
@@ -43,7 +45,7 @@ export function PlansPage() {
                     return (
                       <div key={item.label} className="bg-gray-50 rounded-lg p-3">
                         <div className="flex items-center gap-1.5 mb-1">
-                          <Icon size={11} className="text-(--text-muted)" />
+                          <FontAwesomeIcon icon={Icon} className="text-(--text-muted)" style={{ fontSize: 11 }} />
                           <span className="text-[0.6rem] text-(--text-muted)">{item.label}</span>
                         </div>
                         <div className="text-xs font-medium text-(--text)">{item.value}</div>
@@ -85,7 +87,7 @@ export function PlansPage() {
                       <div className="p-5 flex flex-col flex-1">
                         <div className="flex items-center gap-2.5 mb-3">
                           <div className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0 bg-brand/10">
-                            <Icon size={16} className="text-brand" />
+                            <FontAwesomeIcon icon={Icon} className="text-brand" style={{ fontSize: 16 }} />
                           </div>
                           <div>
                             <div className="text-sm font-bold text-(--text)">{plan.name}</div>
@@ -101,7 +103,7 @@ export function PlansPage() {
                         <div className="space-y-2 flex-1">
                           {plan.features.map((feature) => (
                             <div key={feature} className="flex items-center gap-2 text-xs text-(--text-muted)">
-                              <Check size={12} className="text-brand shrink-0" />
+                              <FontAwesomeIcon icon={faCheck} className="text-brand shrink-0" style={{ fontSize: 12 }} />
                               {feature}
                             </div>
                           ))}

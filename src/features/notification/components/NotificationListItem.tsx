@@ -1,11 +1,13 @@
 import { Link } from '@tanstack/react-router'
-import { ChevronDown, ChevronRight, ChevronUp, Mail, MailOpen } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/cn'
 import { IconButton } from '@/shared/components'
 import { NOTIFICATION_TYPE_DISPLAY } from '@/features/notification/constants/notification-display'
 import type { Notification } from '@/features/notification/stores/useNotificationsStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronDown, faChevronRight, faChevronUp, faEnvelope, faEnvelopeOpen } from '@fortawesome/free-solid-svg-icons'
 
 interface NotificationListItemProps {
   notification: Notification
@@ -80,7 +82,7 @@ export function NotificationListItem({
                     className="inline-flex items-center gap-1 text-[0.7rem] font-semibold text-brand hover:underline no-underline mt-2"
                   >
                     {notification.actionLabel || 'Ver detalhes'}
-                    <ChevronRight size={12} />
+                    <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />
                   </Link>
                 )}
               </div>
@@ -94,7 +96,7 @@ export function NotificationListItem({
             aria-label={notification.read ? 'Marcar como não lida' : 'Marcar como lida'}
             onClick={() => (notification.read ? onMarkUnread(notification.id) : onMarkRead(notification.id))}
           >
-            {notification.read ? <Mail size={13} /> : <MailOpen size={13} />}
+            {notification.read ? <FontAwesomeIcon icon={faEnvelope} style={{ fontSize: 13 }} /> : <FontAwesomeIcon icon={faEnvelopeOpen} style={{ fontSize: 13 }} />}
           </IconButton>
           <IconButton
             size="sm"
@@ -102,7 +104,7 @@ export function NotificationListItem({
             aria-expanded={expanded}
             onClick={() => onToggleExpand(notification.id)}
           >
-            {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            {expanded ? <FontAwesomeIcon icon={faChevronUp} style={{ fontSize: 13 }} /> : <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 13 }} />}
           </IconButton>
         </div>
       </div>

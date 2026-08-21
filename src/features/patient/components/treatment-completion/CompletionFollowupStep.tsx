@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { Check, Eye, Pencil, Pill, Plus, Sprout, X } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { cn } from '@/shared/lib/cn'
 import { Button, FieldLabel, TextArea, TextInput } from '@/shared/components'
 import type { CompletionForm } from '@/features/patient/schemas/completion'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faEye, faPencil, faPills, faPlus, faSeedling, faXmark } from '@fortawesome/free-solid-svg-icons'
+
 interface RecommendationItem {
   key: keyof Pick<CompletionForm, 'recommendRetesting' | 'maintainRescueMed' | 'environmentalControl'>
-  icon: typeof Eye
+  icon: typeof faEye
   title: string
   hint: string
 }
@@ -15,19 +17,19 @@ interface RecommendationItem {
 const RECOMMENDATIONS: RecommendationItem[] = [
   {
     key: 'recommendRetesting',
-    icon: Eye,
+    icon: faEye,
     title: 'Recomendar retestagem alérgica',
     hint: 'Skin prick test ou IgE específica para documentar mudança imunológica.',
   },
   {
     key: 'maintainRescueMed',
-    icon: Pill,
+    icon: faPills,
     title: 'Manter medicação de resgate prescrita',
     hint: 'Anti-histamínico oral e corticoide nasal SOS.',
   },
   {
     key: 'environmentalControl',
-    icon: Sprout,
+    icon: faSeedling,
     title: 'Manter orientações de controle ambiental',
     hint: 'Encapamento de colchão e travesseiro, controle de ácaros, evicção de gatilhos.',
   },
@@ -84,14 +86,14 @@ export function CompletionFollowupStep({ form }: CompletionFollowupStepProps) {
                 )}
               >
                 <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg shrink-0', checked ? 'bg-brand text-white' : 'bg-gray-100 text-(--text-muted)')}>
-                  <Icon size={14} />
+                  <FontAwesomeIcon icon={Icon} style={{ fontSize: 14 }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[0.75rem] font-semibold text-(--text)">{rec.title}</div>
                   <div className="text-[0.6rem] text-(--text-muted) mt-0.5 leading-relaxed">{rec.hint}</div>
                 </div>
                 <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0 mt-1', checked ? 'bg-brand border-brand' : 'border-gray-300')}>
-                  {checked && <Check size={10} className="text-white" />}
+                  {checked && <FontAwesomeIcon icon={faCheck} className="text-white" style={{ fontSize: 10 }} />}
                 </div>
               </button>
             )
@@ -103,7 +105,7 @@ export function CompletionFollowupStep({ form }: CompletionFollowupStepProps) {
               className="flex items-start gap-3 rounded-lg border border-brand bg-brand/5 p-3 animate-in fade-in-0 slide-in-from-top-1 duration-200"
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0 bg-brand text-white">
-                <Pencil size={13} />
+                <FontAwesomeIcon icon={faPencil} style={{ fontSize: 13 }} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-semibold text-brand mb-0.5">Recomendação personalizada</div>
@@ -115,7 +117,7 @@ export function CompletionFollowupStep({ form }: CompletionFollowupStepProps) {
                 aria-label="Remover recomendação"
                 className="flex h-5 w-5 items-center justify-center rounded text-(--text-muted) hover:bg-gray-100 hover:text-(--text) transition-colors shrink-0 cursor-pointer"
               >
-                <X size={12} />
+                <FontAwesomeIcon icon={faXmark} style={{ fontSize: 12 }} />
               </button>
             </div>
           ))}
@@ -136,7 +138,7 @@ export function CompletionFollowupStep({ form }: CompletionFollowupStepProps) {
             <Button
               type="button"
               variant="outline"
-              leftIcon={<Plus size={12} />}
+              leftIcon={<FontAwesomeIcon icon={faPlus} style={{ fontSize: 12 }} />}
               onClick={addCustomRecommendation}
               disabled={!newRecommendation.trim()}
             >

@@ -1,6 +1,8 @@
 import { cn } from '@/shared/lib/cn'
-import { ChevronDown } from 'lucide-react'
 import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, ReactNode } from 'react'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons'
 
 interface FieldLabelProps {
   label: string
@@ -56,7 +58,7 @@ export function Select({ invalid, className, children, ...rest }: SelectProps) {
       <select {...rest} aria-invalid={invalid || undefined} className={cn(FIELD_BASE, 'h-9 appearance-none cursor-pointer pr-8', invalid ? FIELD_INVALID : FIELD_VALID, className)}>
         {children}
       </select>
-      <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
+      <FontAwesomeIcon icon={faChevronDown} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" style={{ fontSize: 12 }} />
     </div>
   )
 }

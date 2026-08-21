@@ -1,8 +1,10 @@
-import { Contrast, Eye, Layout, MousePointer, Type } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Switch } from '@/shared/components'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { useSettingsStore, type Density, type Theme } from '@/features/settings/stores/useSettingsStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowPointer, faCircleHalfStroke, faEye, faFont, faTableColumns } from '@fortawesome/free-solid-svg-icons'
 
 const THEME_OPTIONS: { id: Theme; label: string; preview: string }[] = [
   { id: 'light', label: 'Claro', preview: 'bg-white border-2' },
@@ -33,13 +35,13 @@ export function PersonalizationPage() {
   const setFocusIndicators = useSettingsStore((s) => s.setFocusIndicators)
 
   const visualToggles = [
-    { label: 'Alto contraste', desc: 'Aumenta o contraste entre texto e fundo', icon: Contrast, value: highContrast, set: setHighContrast },
-    { label: 'Texto ampliado', desc: 'Aumenta o tamanho base da fonte em 20%', icon: Eye, value: largeText, set: setLargeText },
+    { label: 'Alto contraste', desc: 'Aumenta o contraste entre texto e fundo', icon: faCircleHalfStroke, value: highContrast, set: setHighContrast },
+    { label: 'Texto ampliado', desc: 'Aumenta o tamanho base da fonte em 20%', icon: faEye, value: largeText, set: setLargeText },
   ] as const
 
   const motionToggles = [
-    { label: 'Reduzir animações', desc: 'Minimiza transições e efeitos de movimento', icon: MousePointer, value: reducedMotion, set: setReducedMotion },
-    { label: 'Indicadores de foco visíveis', desc: 'Destaca o elemento selecionado ao navegar por teclado', icon: Eye, value: focusIndicators, set: setFocusIndicators },
+    { label: 'Reduzir animações', desc: 'Minimiza transições e efeitos de movimento', icon: faArrowPointer, value: reducedMotion, set: setReducedMotion },
+    { label: 'Indicadores de foco visíveis', desc: 'Destaca o elemento selecionado ao navegar por teclado', icon: faEye, value: focusIndicators, set: setFocusIndicators },
   ] as const
 
   return (
@@ -76,7 +78,7 @@ export function PersonalizationPage() {
 
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
-                <Layout size={14} className="text-(--text-muted)" />
+                <FontAwesomeIcon icon={faTableColumns} className="text-(--text-muted)" style={{ fontSize: 14 }} />
                 <h2 className="text-xs font-bold text-(--text)">Densidade da interface</h2>
               </div>
               <div className="p-4">
@@ -106,7 +108,7 @@ export function PersonalizationPage() {
 
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
-                <Type size={14} className="text-(--text-muted)" />
+                <FontAwesomeIcon icon={faFont} className="text-(--text-muted)" style={{ fontSize: 14 }} />
                 <h2 className="text-xs font-bold text-(--text)">Tamanho da fonte</h2>
               </div>
               <div className="p-4">
@@ -141,7 +143,7 @@ export function PersonalizationPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                          <item.icon size={14} className="text-brand" />
+                          <FontAwesomeIcon icon={item.icon} className="text-brand" style={{ fontSize: 14 }} />
                         </div>
                         <div>
                           <div className="text-xs font-semibold text-(--text)">{item.label}</div>
@@ -166,7 +168,7 @@ export function PersonalizationPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                          <item.icon size={14} className="text-brand" />
+                          <FontAwesomeIcon icon={item.icon} className="text-brand" style={{ fontSize: 14 }} />
                         </div>
                         <div>
                           <div className="text-xs font-semibold text-(--text)">{item.label}</div>

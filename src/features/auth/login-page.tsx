@@ -2,9 +2,11 @@ import { useState, type CSSProperties } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Eye, EyeOff } from 'lucide-react'
 import { AuthLayout } from '@/features/auth/components/AuthLayout'
 import { loginSchema, type LoginForm } from '@/features/auth/schemas/login'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 
 const fieldStyle: CSSProperties = {
   width: '100%',
@@ -92,7 +94,7 @@ export function LoginPage() {
               className="absolute right-2 inline-flex items-center justify-center w-7.5 h-7.5 cursor-pointer bg-transparent border-none"
               style={{ color: 'var(--ink-faint)' }}
             >
-              {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
+              {showPw ? <FontAwesomeIcon icon={faEyeSlash} style={{ fontSize: 17 }} /> : <FontAwesomeIcon icon={faEye} style={{ fontSize: 17 }} />}
             </button>
           </span>
           {errors.password?.message && (

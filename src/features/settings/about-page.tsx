@@ -1,7 +1,9 @@
-import { Heart } from 'lucide-react'
 import allerviaMark from '@/assets/allervia-mark-light.png'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHeart } from '@fortawesome/free-solid-svg-icons'
 
 export function AboutPage() {
   return (
@@ -51,7 +53,7 @@ export function AboutPage() {
         </div>
 
         <p className="lg:col-span-2 text-[0.7rem] text-(--text-muted) flex items-center justify-center gap-1">
-          Feito com <Heart size={12} className="text-red-400" /> para a alergologia brasileira
+          Feito com <FontAwesomeIcon icon={faHeart} className="text-red-400" style={{ fontSize: 12 }} /> para a alergologia brasileira
         </p>
       </div>
     </SettingsLayout>

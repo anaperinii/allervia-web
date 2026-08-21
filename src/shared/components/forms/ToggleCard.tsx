@@ -1,5 +1,7 @@
-import { Check } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck } from '@fortawesome/free-solid-svg-icons'
 
 interface ToggleCardProps {
   label: string
@@ -26,7 +28,7 @@ export function ToggleCard({ label, description, selected, onToggle }: ToggleCar
           selected ? 'bg-brand border-brand' : 'border-gray-400',
         )}
       >
-        {selected && <Check size={10} className="text-white" />}
+        {selected && <FontAwesomeIcon icon={faCheck} className="text-white" style={{ fontSize: 10 }} />}
       </div>
       <div className="min-w-0">
         <span className="text-[0.7rem] font-medium text-(--text) block">{label}</span>

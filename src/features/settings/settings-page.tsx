@@ -1,24 +1,16 @@
-import {
-  Shield,
-  Settings,
-  Monitor,
-  Info,
-  Users,
-  CreditCard,
-  HelpCircle,
-  ArrowRight,
-  User,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { useUserStore, ROLE_PERMISSIONS, type Permission } from '@/shared/stores/useUserStore'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowRight, faCircleInfo, faCircleQuestion, faCreditCard, faDesktop, faGear, faShield, faUser, faUsers } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 // single dark teal for the right-side gradient of each card
 const CARD_TEAL = '29,103,114'
 
 interface SettingsOption {
-  icon: LucideIcon
+  icon: IconDefinition
   label: string
   description: string
   route?: string
@@ -26,14 +18,14 @@ interface SettingsOption {
 }
 
 const settingsOptions: SettingsOption[] = [
-  { icon: User, label: 'Seu Perfil', description: 'Seus dados, cargo e preferências', route: '/profile' },
-  { icon: Shield, label: 'Segurança e Privacidade', description: 'Autenticação, sessões e políticas de acesso', route: '/security' },
-  { icon: Settings, label: 'Configurações Avançadas', description: 'Parâmetros técnicos e integrações', route: '/advanced-settings', requires: 'advanced_settings' },
-  { icon: Monitor, label: 'Personalização e Acessibilidade', description: 'Temas, idioma, contraste e tamanho de fonte', route: '/personalization' },
-  { icon: Info, label: 'Sobre o Sistema', description: 'Versão, licença e informações técnicas', route: '/about' },
-  { icon: Users, label: 'Gerenciar Equipes e Convites', description: 'Membros, permissões e convites pendentes', route: '/teams', requires: 'manage_team' },
-  { icon: CreditCard, label: 'Planos e Serviços', description: 'Assinatura, faturamento e limites', route: '/plans', requires: 'manage_team' },
-  { icon: HelpCircle, label: 'Ajuda', description: 'Central de ajuda, documentação e suporte', route: '/help' },
+  { icon: faUser, label: 'Seu Perfil', description: 'Seus dados, cargo e preferências', route: '/profile' },
+  { icon: faShield, label: 'Segurança e Privacidade', description: 'Autenticação, sessões e políticas de acesso', route: '/security' },
+  { icon: faGear, label: 'Configurações Avançadas', description: 'Parâmetros técnicos e integrações', route: '/advanced-settings', requires: 'advanced_settings' },
+  { icon: faDesktop, label: 'Personalização e Acessibilidade', description: 'Temas, idioma, contraste e tamanho de fonte', route: '/personalization' },
+  { icon: faCircleInfo, label: 'Sobre o Sistema', description: 'Versão, licença e informações técnicas', route: '/about' },
+  { icon: faUsers, label: 'Gerenciar Equipes e Convites', description: 'Membros, permissões e convites pendentes', route: '/teams', requires: 'manage_team' },
+  { icon: faCreditCard, label: 'Planos e Serviços', description: 'Assinatura, faturamento e limites', route: '/plans', requires: 'manage_team' },
+  { icon: faCircleQuestion, label: 'Ajuda', description: 'Central de ajuda, documentação e suporte', route: '/help' },
 ]
 
 export function SettingsPage() {
@@ -57,14 +49,15 @@ export function SettingsPage() {
               }}
             >
               <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `rgb(${CARD_TEAL})` }} />
-              <Icon size={18} strokeWidth={2.2} className="shrink-0 text-brand transition-transform duration-300 group-hover:scale-105" />
+              <FontAwesomeIcon icon={Icon} className="shrink-0 text-brand transition-transform duration-300 group-hover:scale-105" style={{ fontSize: 18 }} />
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold text-slate-800">{option.label}</div>
                 <div className="mt-0.5 text-[0.78rem] text-slate-500 truncate">{option.description}</div>
               </div>
-              <ArrowRight
-                size={16}
+              <FontAwesomeIcon
+                icon={faArrowRight}
                 className="shrink-0 text-slate-300 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-brand"
+                style={{ fontSize: 16 }}
               />
             </Link>
           )

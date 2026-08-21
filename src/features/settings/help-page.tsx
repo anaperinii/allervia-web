@@ -1,15 +1,17 @@
 import { useState } from 'react'
-import { Book, ChevronDown, Mail, MessageCircle } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { CardButton } from '@/features/settings/components/CardButton'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { CONTACT_SUPPORT_EMAIL } from '@/shared/constants/contact'
 import { FAQS } from '@/features/settings/constants/faqs'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBook, faChevronDown, faComment, faEnvelope } from '@fortawesome/free-solid-svg-icons'
+
 const quickLinks = [
-  { icon: Book, label: 'Documentação', desc: 'Guias e tutoriais', color: '#6C9EA5' },
-  { icon: MessageCircle, label: 'Chat de suporte', desc: 'Fale com a equipe', color: '#6366F1' },
-  { icon: Mail, label: 'E-mail', desc: CONTACT_SUPPORT_EMAIL, color: '#F4845F' },
+  { icon: faBook, label: 'Documentação', desc: 'Guias e tutoriais', color: '#6C9EA5' },
+  { icon: faComment, label: 'Chat de suporte', desc: 'Fale com a equipe', color: '#6366F1' },
+  { icon: faEnvelope, label: 'E-mail', desc: CONTACT_SUPPORT_EMAIL, color: '#F4845F' },
 ]
 
 export function HelpPage() {
@@ -25,7 +27,7 @@ export function HelpPage() {
                   <CardButton
                     key={item.label}
                     orientation="vertical"
-                    icon={<Icon size={16} />}
+                    icon={<FontAwesomeIcon icon={Icon} style={{ fontSize: 16 }} />}
                     iconColor={item.color}
                     title={item.label}
                     description={item.desc}
@@ -53,7 +55,7 @@ export function HelpPage() {
                         className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-200/60 transition-colors cursor-pointer"
                       >
                         <span className="text-xs font-medium text-(--text) pr-4">{faq.question}</span>
-                        <ChevronDown size={14} className={cn('text-(--text-muted) shrink-0 transition-transform', expanded && 'rotate-180')} />
+                        <FontAwesomeIcon icon={faChevronDown} className={cn('text-(--text-muted) shrink-0 transition-transform', expanded && 'rotate-180')} style={{ fontSize: 14 }} />
                       </button>
                       <div
                         id={panelId}

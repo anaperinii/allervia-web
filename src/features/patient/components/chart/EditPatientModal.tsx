@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ChevronLeft } from 'lucide-react'
 import { Button, ConfirmDiscardModal, FieldLabel, Modal, ReadOnlyField, Select, TextInput } from '@/shared/components'
 import { PROFILES } from '@/shared/stores/useUserStore'
 import { editPatientSchema, type EditPatientForm } from '@/features/patient/schemas/edit-patient'
 import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 
 const DOCTORS = PROFILES.filter((p) => p.role === 'doctor')
 
@@ -94,7 +96,7 @@ export function EditPatientModal({ open, patient, onClose, onSave }: EditPatient
             </>
           ) : (
             <>
-              <Button variant="outline" leftIcon={<ChevronLeft size={13} />} onClick={() => setStep('form')}>
+              <Button variant="outline" leftIcon={<FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 13 }} />} onClick={() => setStep('form')}>
                 Voltar
               </Button>
               <Button tone="brand" variant="solid" onClick={submit}>Confirmar e salvar</Button>

@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Check } from 'lucide-react'
 import { AuthLayout } from '@/features/auth/components/AuthLayout'
 import { AuthStepTransition } from '@/features/auth/components/AuthStepTransition'
 import { registerSchema, type RegisterForm } from '@/features/auth/schemas/register'
@@ -11,6 +10,9 @@ import { VerifyStep } from '@/features/auth/components/register-steps/VerifyStep
 import { DoneStep } from '@/features/auth/components/register-steps/DoneStep'
 import { toast } from '@/shared/components'
 import { maskWithPrefix } from '@/shared/lib/mask'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck } from '@fortawesome/free-solid-svg-icons'
 
 type Step = 'welcome' | 'form' | 'verify' | 'done'
 
@@ -64,7 +66,7 @@ export function RegisterPage() {
     setCodeError(null)
     setResendKey((k) => k + 1)
     toast.success({
-      icon: <Check size={14} />,
+      icon: <FontAwesomeIcon icon={faCheck} style={{ fontSize: 14 }} />,
       title: 'Novo código enviado para o seu email',
       position: 'top-right',
       compact: true,

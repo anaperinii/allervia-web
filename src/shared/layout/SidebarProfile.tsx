@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Check, LogOut, UserCog } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { useUserStore, PROFILES, ROLE_LABELS } from '@/shared/stores/useUserStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faRightFromBracket, faUserGear } from '@fortawesome/free-solid-svg-icons'
 
 function getInitials(name: string): string {
   return name
@@ -150,7 +152,7 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
                       {ROLE_LABELS[profile.role]}
                     </div>
                   </div>
-                  {isActive && <Check size={14} className="shrink-0 text-brand" />}
+                  {isActive && <FontAwesomeIcon icon={faCheck} className="shrink-0 text-brand" style={{ fontSize: 14 }} />}
                 </button>
               )
             })}
@@ -161,7 +163,7 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
               onClick={handleOpenProfilePage}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-slate-600 hover:bg-teal-900/10 transition-colors cursor-pointer"
             >
-              <UserCog size={14} className="text-slate-600" />
+              <FontAwesomeIcon icon={faUserGear} className="text-slate-600" style={{ fontSize: 14 }} />
               <span className="text-xs font-medium">Meu perfil</span>
             </button>
             <button
@@ -169,7 +171,7 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
               onClick={handleLogout}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-red-600 hover:bg-red-900/10 transition-colors cursor-pointer"
             >
-              <LogOut size={14} />
+              <FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 14 }} />
               <span className="text-xs font-medium">Sair</span>
             </button>
           </div>

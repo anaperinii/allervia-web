@@ -1,6 +1,8 @@
-import { ChevronLeft, Clock } from 'lucide-react'
 import { VerificationCodeInput } from '@/shared/components'
 import { useCountdown } from '@/shared/hooks/useCountdown'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faClock } from '@fortawesome/free-solid-svg-icons'
 
 const CODE_TTL_SECONDS = 10 * 60
 
@@ -59,7 +61,7 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
             className="flex items-center gap-1.5 text-xs font-medium bg-transparent border-none cursor-pointer transition-colors"
             style={{ color: 'var(--ink-soft)' }}
           >
-            <ChevronLeft size={13} />
+            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 13 }} />
             Voltar
           </button>
           <button
@@ -81,7 +83,7 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
           WebkitBackdropFilter: 'blur(8px)',
         }}
       >
-        <Clock size={14} className="shrink-0" style={{ color: 'var(--glass-ink)' }} />
+        <FontAwesomeIcon icon={faClock} className="shrink-0" style={{ fontSize: 14, color: 'var(--glass-ink)' }} />
         <p className="text-[0.72rem] leading-relaxed" style={{ color: 'var(--glass-ink)' }}>
           {isExpired ? (
             <>O código expirou. Solicite um novo para continuar.</>

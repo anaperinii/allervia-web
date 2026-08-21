@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Info, Search } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { TextInput } from '@/shared/components'
 import { PatientInitials } from '@/shared/components/glass-card'
 import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleInfo, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 
 interface NextDoseSummary {
   date: string
@@ -87,7 +89,7 @@ export function SelectPatientStep({
       <h2 className="text-sm font-bold text-(--text)">Selecionar Paciente</h2>
       <div className="relative">
         <label htmlFor={inputId} className="sr-only">Buscar paciente</label>
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted)" />
+        <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted)" style={{ fontSize: 14 }} />
         <TextInput
           id={inputId}
           placeholder="Buscar paciente por nome"
@@ -173,7 +175,7 @@ export function SelectPatientStep({
 
       {selected && selected.status === 'inactive' && (
         <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 rounded-lg px-3.5 py-3 mt-3">
-          <Info size={14} className="text-red-500 shrink-0" />
+          <FontAwesomeIcon icon={faCircleInfo} className="text-red-500 shrink-0" style={{ fontSize: 14 }} />
           <p className="text-xs text-red-700">
             Este paciente está <span className="font-semibold">inativo</span>. Não é possível registrar uma evolução para pacientes inativos.
           </p>

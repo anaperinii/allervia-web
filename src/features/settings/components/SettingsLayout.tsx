@@ -1,6 +1,8 @@
 import { Link } from '@tanstack/react-router'
-import { ChevronLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 
 interface SettingsLayoutProps {
   subtitle?: string
@@ -20,7 +22,7 @@ export function SettingsLayout({ subtitle, headerActions, children }: SettingsLa
                 to="/settings"
                 className="mt-1.5 inline-flex items-center gap-1.5 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
               >
-                <ChevronLeft size={15} />
+                <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
                 Configurações
               </Link>
             </>

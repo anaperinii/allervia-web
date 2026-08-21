@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { addDays, differenceInDays, format } from 'date-fns'
-import { CalendarDays, List, Power, PowerOff, Save } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { SegmentedControl, Toast } from '@/shared/components'
 import { sendReminder } from '@/shared/lib/whatsapp'
@@ -27,6 +26,8 @@ import { TreatmentTimeline } from '@/features/patient/components/treatment-compl
 import { ApplicationDetailModal } from '@/features/patient/components/chart/ApplicationDetailModal'
 import { EditPatientModal } from '@/features/patient/components/chart/EditPatientModal'
 import { AdjustProtocolModal } from '@/features/patient/components/chart/AdjustProtocolModal'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCalendarDays, faFloppyDisk, faList, faPowerOff } from '@fortawesome/free-solid-svg-icons'
 import { AdjustHistoryModal } from '@/features/patient/components/chart/AdjustHistoryModal'
 import { InactivateModal } from '@/features/patient/components/chart/InactivateModal'
 import { InactivationHistoryModal } from '@/features/patient/components/chart/InactivationHistoryModal'
@@ -316,8 +317,8 @@ export function PatientChartPage() {
                 onChange={setViewMode}
                 size="sm"
                 options={[
-                  { value: 'timeline', label: 'Lista', icon: <List size={11} /> },
-                  { value: 'calendar', label: 'Calendário', icon: <CalendarDays size={11} /> },
+                  { value: 'timeline', label: 'Lista', icon: <FontAwesomeIcon icon={faList} style={{ fontSize: 11 }} /> },
+                  { value: 'calendar', label: 'Calendário', icon: <FontAwesomeIcon icon={faCalendarDays} style={{ fontSize: 11 }} /> },
                 ]}
                 aria-label="Modo de visualização das aplicações"
                 className="mb-1 bg-white"
@@ -458,7 +459,7 @@ export function PatientChartPage() {
         open={showAdjustToast}
         onClose={() => setShowAdjustToast(false)}
         variant="success"
-        icon={<Save size={16} />}
+        icon={<FontAwesomeIcon icon={faFloppyDisk} style={{ fontSize: 16 }} />}
         title="Protocolo ajustado com sucesso!"
         description="A alteração foi registrada no histórico clínico e marcará as próximas aplicações como desvio de protocolo."
       />
@@ -466,7 +467,7 @@ export function PatientChartPage() {
         open={showInactivateToast}
         onClose={() => setShowInactivateToast(false)}
         variant="warning"
-        icon={<PowerOff size={16} />}
+        icon={<FontAwesomeIcon icon={faPowerOff} style={{ fontSize: 16 }} />}
         title="Imunoterapia inativada"
         description='As aplicações foram pausadas. Use "Reativar paciente" quando ele estiver apto a continuar o protocolo.'
       />
@@ -474,7 +475,7 @@ export function PatientChartPage() {
         open={showReactivateToast}
         onClose={() => setShowReactivateToast(false)}
         variant="success"
-        icon={<Power size={16} />}
+        icon={<FontAwesomeIcon icon={faPowerOff} style={{ fontSize: 16 }} />}
         title="Paciente reativado"
         description="O paciente está ativo novamente e pode continuar o protocolo a partir do ponto definido."
       />

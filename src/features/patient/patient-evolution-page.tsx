@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CheckCircle, ChevronLeft } from 'lucide-react'
 import { addDays, differenceInDays, format } from 'date-fns'
 import { Button, CancelWizardModal, toast, WizardStepRail } from '@/shared/components'
 import { usePatientStore, derivePatientDates } from '@/features/patient/stores/usePatientStore'
@@ -24,6 +23,9 @@ import { SelectPatientStep } from '@/features/patient/components/treatment-evolu
 import { PreApplicationStep } from '@/features/patient/components/treatment-evolution/PreApplicationStep'
 import { PostApplicationStep } from '@/features/patient/components/treatment-evolution/PostApplicationStep'
 import { EvolutionReviewStep } from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
 
 export function PatientEvolutionPage() {
   const navigate = useNavigate()
@@ -209,7 +211,7 @@ export function PatientEvolutionPage() {
     })
 
     toast.success({
-      icon: <CheckCircle size={16} />,
+      icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
       title: 'Evolução registrada com sucesso!',
       description: (
         <>
@@ -259,7 +261,7 @@ export function PatientEvolutionPage() {
             params={{ patientId: preselectedId }}
             className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
           >
-            <ChevronLeft size={15} />
+            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
             Prontuário
           </Link>
         ) : (
@@ -268,7 +270,7 @@ export function PatientEvolutionPage() {
             onClick={() => setShowCancelModal(true)}
             className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
           >
-            <ChevronLeft size={15} />
+            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
             Imunoterapias
           </button>
         )}

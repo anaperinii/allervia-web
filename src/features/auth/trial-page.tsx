@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ChevronLeft, Shield, Check, Clock, Mail } from 'lucide-react'
 import { Link, useRouter } from '@tanstack/react-router'
 import { Modal, Button, FieldLabel, TextInput, Select } from '@/shared/components'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
@@ -13,6 +12,9 @@ import { formatPhone } from '@/shared/lib/formatters'
 import { Aurora, AURORA_STOPS } from '@/shared/components/Aurora'
 import { HERO_PLATE } from '@/features/landing-page/components/HeroSection'
 import { cn } from '@/shared/lib/cn'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faChevronLeft, faClock, faEnvelope, faShield } from '@fortawesome/free-solid-svg-icons'
 
 const ROLE_OPTIONS = [
   { value: 'doctor', label: 'Médico(a)' },
@@ -29,9 +31,9 @@ const SOLUTION_OPTIONS = [
 ] as const
 
 const TRUST_BADGES = [
-  { icon: Shield, label: 'Dados seguros' },
-  { icon: Check, label: 'Sem compromisso' },
-  { icon: Clock, label: 'Retorno em 1 dia útil' },
+  { icon: faShield, label: 'Dados seguros' },
+  { icon: faCheck, label: 'Sem compromisso' },
+  { icon: faClock, label: 'Retorno em 1 dia útil' },
 ] as const
 
 const RAIL_SHADOW = '-30px 0 80px -40px rgba(0,0,0,0.45)'
@@ -187,7 +189,7 @@ export function TrialPage() {
                   className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg cursor-pointer transition-all duration-200 hover:scale-110"
                   style={{ background: 'transparent', border: '1px solid var(--bd)', color: 'var(--ink-soft)' }}
                 >
-                  <ChevronLeft size={15} strokeWidth={2.5} />
+                  <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
                 </button>
                 <h1
                   className="text-[1.6rem] font-medium leading-[1.12] tracking-[-0.03em]"
@@ -311,7 +313,7 @@ export function TrialPage() {
                       className="flex items-center gap-1.5 text-[0.65rem] font-medium"
                       style={{ color: 'var(--ink-soft)' }}
                     >
-                      <Icon size={13} style={{ color: 'var(--accent)' }} />
+                      <FontAwesomeIcon icon={Icon} style={{ fontSize: 13, color: 'var(--accent)' }} />
                       {badge.label}
                     </span>
                   )
@@ -331,7 +333,7 @@ export function TrialPage() {
         <div className="text-center space-y-4">
           <div className="flex justify-center">
             <div className="h-14 w-14 rounded-full bg-emerald-100 flex items-center justify-center">
-              <Mail size={24} className="text-emerald-600" />
+              <FontAwesomeIcon icon={faEnvelope} className="text-emerald-600" style={{ fontSize: 24 }} />
             </div>
           </div>
           <h3 className="text-lg font-bold text-(--text)">Solicitação enviada com sucesso!</h3>

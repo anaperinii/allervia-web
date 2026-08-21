@@ -1,10 +1,4 @@
-import {
-  Check,
-  FileDown,
-  FileSpreadsheet,
-  FileText,
-} from 'lucide-react'
-import type { ComponentType } from 'react'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { cn } from '@/shared/lib/cn'
 import { SegmentedControl, TextArea } from '@/shared/components'
 import type {
@@ -12,10 +6,13 @@ import type {
   ReportSectionId,
 } from '@/features/patient/exporters/types'
 
-const REPORT_FORMATS: { id: ReportFileFormat; label: string; icon: ComponentType<{ size?: number }> }[] = [
-  { id: 'pdf', label: 'PDF', icon: FileText },
-  { id: 'excel', label: 'Excel', icon: FileSpreadsheet },
-  { id: 'csv', label: 'CSV', icon: FileDown },
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faFileArrowDown, faFileExcel, faFileLines } from '@fortawesome/free-solid-svg-icons'
+
+const REPORT_FORMATS: { id: ReportFileFormat; label: string; icon: IconDefinition }[] = [
+  { id: 'pdf', label: 'PDF', icon: faFileLines },
+  { id: 'excel', label: 'Excel', icon: faFileExcel },
+  { id: 'csv', label: 'CSV', icon: faFileArrowDown },
 ]
 
 const REPORT_SECTIONS: { id: ReportSectionId; label: string }[] = [
@@ -84,7 +81,7 @@ export function ReportConfigPanel({
           onChange={setFileFormat}
           options={REPORT_FORMATS.map((format) => {
             const Icon = format.icon
-            return { value: format.id, label: format.label, icon: <Icon size={13} /> }
+            return { value: format.id, label: format.label, icon: <FontAwesomeIcon icon={Icon} style={{ fontSize: 13 }} /> }
           })}
           fullWidth
           aria-label="Formato do relatório"
@@ -109,7 +106,7 @@ export function ReportConfigPanel({
                 )}
               >
                 <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0', selected ? 'bg-brand border-brand' : 'border-gray-400')}>
-                  {selected && <Check size={10} className="text-white" />}
+                  {selected && <FontAwesomeIcon icon={faCheck} className="text-white" style={{ fontSize: 10 }} />}
                 </div>
                 <span className="text-[0.7rem] font-medium text-(--text)">{section.label}</span>
               </button>
@@ -186,7 +183,7 @@ function ConsentCheckbox({
       )}
     >
       <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0 mt-px', checked ? 'bg-brand border-brand' : 'border-gray-400')}>
-        {checked && <Check size={10} className="text-white" />}
+        {checked && <FontAwesomeIcon icon={faCheck} className="text-white" style={{ fontSize: 10 }} />}
       </div>
       <div>
         <span className="text-[0.7rem] font-medium text-(--text) block">{title}</span>

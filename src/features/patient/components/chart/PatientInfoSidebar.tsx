@@ -1,17 +1,13 @@
 import { useState } from 'react'
 import { PatientInitials } from '@/shared/components/glass-card'
-import {
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
-  History,
-  Info,
-} from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/components'
 import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
 import { PatientActionsMenu } from '@/features/patient/components/chart/PatientActionsMenu'
 import type { Inactivation, Patient } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronDown, faChevronUp, faCircleInfo, faClockRotateLeft, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 
 interface PatientInfoSidebarProps {
   patient: Patient
@@ -115,7 +111,7 @@ export function PatientInfoSidebar({
           <div className="mt-2.5 bg-gray-50 border border-(--border-custom) rounded-lg px-3 py-2">
             <div className="flex items-center justify-between mb-0.5">
               <div className="text-[0.6rem] font-semibold text-(--text-muted) flex items-center gap-1">
-                <Info size={9} />
+                <FontAwesomeIcon icon={faCircleInfo} style={{ fontSize: 9 }} />
                 Motivo da inativação
               </div>
               <span className="text-[0.55rem] text-(--text-muted)">{activeInactivation.startDate}</span>
@@ -181,7 +177,7 @@ export function PatientInfoSidebar({
             className="flex w-full items-center justify-between px-3.5 py-2.5 text-xs font-bold text-(--text) hover:bg-gray-50 transition-colors cursor-pointer"
           >
             Dados Pessoais
-            {showPersonal ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {showPersonal ? <FontAwesomeIcon icon={faChevronUp} style={{ fontSize: 14 }} /> : <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 14 }} />}
           </button>
           <div id={personalId} className={cn('overflow-hidden transition-all duration-300', showPersonal ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0')}>
             <div className="px-3.5 pb-3 space-y-2">
@@ -213,13 +209,13 @@ export function PatientInfoSidebar({
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" title="Protocolo ajustado" />
               )}
             </span>
-            {showImmuno ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {showImmuno ? <FontAwesomeIcon icon={faChevronUp} style={{ fontSize: 14 }} /> : <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 14 }} />}
           </button>
           <div id={immunoId} className={cn('overflow-hidden transition-all duration-300', showImmuno ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0')}>
             <div className="px-3.5 pb-3 space-y-2">
               {(patient.protocolAdjustments?.length ?? 0) > 0 && (
                 <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-md px-2 py-1 text-[0.6rem] text-amber-700 font-semibold">
-                  <AlertTriangle size={10} />
+                  <FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 10 }} />
                   Protocolo ajustado · {patient.protocolAdjustments!.length} {patient.protocolAdjustments!.length === 1 ? 'alteração' : 'alterações'}
                 </div>
               )}
@@ -249,7 +245,7 @@ export function PatientInfoSidebar({
                         <Button
                           variant="outline"
                           size="sm"
-                          leftIcon={<History size={11} />}
+                          leftIcon={<FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 11 }} />}
                           onClick={onShowAdjustHistory}
                           className={cn(!canAdjustProtocol && 'flex-1')}
                         >
@@ -259,7 +255,7 @@ export function PatientInfoSidebar({
                     </div>
                   )}
                   {inactivationCount > 0 && (
-                    <Button variant="outline" size="sm" fullWidth leftIcon={<History size={10} />} onClick={onShowInactivationHistory}>
+                    <Button variant="outline" size="sm" fullWidth leftIcon={<FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 10 }} />} onClick={onShowInactivationHistory}>
                       Histórico de inativações ({inactivationCount})
                     </Button>
                   )}

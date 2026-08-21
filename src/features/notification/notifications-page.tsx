@@ -3,13 +3,15 @@ import { isAfter, isBefore, startOfDay, endOfDay } from 'date-fns'
 import { useNotificationsStore, TYPE_TO_CATEGORY } from '@/features/notification/stores/useNotificationsStore'
 import type { NotificationTabKey } from '@/features/notification/constants/notification-display'
 import type { ReadFilter } from '@/features/notification/components/NotificationFilterBar'
-import { CheckCheck, Mail, MailOpen, Trash2 } from 'lucide-react'
 import { Button } from '@/shared/components'
 import { NotificationsHeader } from '@/features/notification/components/NotificationsHeader'
 import { NotificationFilters } from '@/features/notification/components/NotificationFilterBar'
 import { NotificationListItem } from '@/features/notification/components/NotificationListItem'
 import { NotificationsEmpty } from '@/features/notification/components/NotificationsEmpty'
 import { parseIsoDate } from '@/shared/lib/dates'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheckDouble, faEnvelope, faEnvelopeOpen, faTrash } from '@fortawesome/free-solid-svg-icons'
 
 export function NotificationsPage() {
   const { notifications, markAsRead, markAsUnread, markAllAsRead, markSelectedAsRead, markSelectedAsUnread, deleteSelected } =
@@ -144,19 +146,19 @@ export function NotificationsPage() {
           <div className="flex items-center gap-2">
             {selectedIds.size > 0 && (
               <>
-                <Button variant="outline" size="sm" leftIcon={<MailOpen size={11} />} onClick={handleBatchRead} className="bg-gray-100! border-gray-300! text-gray-700! hover:bg-gray-200!">
+                <Button variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faEnvelopeOpen} style={{ fontSize: 11 }} />} onClick={handleBatchRead} className="bg-gray-100! border-gray-300! text-gray-700! hover:bg-gray-200!">
                   Marcar como lidas
                 </Button>
-                <Button variant="outline" size="sm" leftIcon={<Mail size={11} />} onClick={handleBatchUnread} className="bg-gray-100! border-gray-300! text-gray-700! hover:bg-gray-200!">
+                <Button variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faEnvelope} style={{ fontSize: 11 }} />} onClick={handleBatchUnread} className="bg-gray-100! border-gray-300! text-gray-700! hover:bg-gray-200!">
                   Marcar como não lidas
                 </Button>
-                <Button tone="danger" variant="outline" size="sm" leftIcon={<Trash2 size={11} />} onClick={handleBatchDelete}>
+                <Button tone="danger" variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faTrash} style={{ fontSize: 11 }} />} onClick={handleBatchDelete}>
                   Excluir
                 </Button>
               </>
             )}
             {unreadCount > 0 && selectedIds.size === 0 && (
-              <Button variant="outline" size="sm" leftIcon={<CheckCheck size={12} />} onClick={markAllAsRead} className="bg-gray-100! border-gray-300! text-gray-700! hover:bg-gray-200!">
+              <Button variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faCheckDouble} style={{ fontSize: 12 }} />} onClick={markAllAsRead} className="bg-gray-100! border-gray-300! text-gray-700! hover:bg-gray-200!">
                 Marcar todas como lidas
               </Button>
             )}

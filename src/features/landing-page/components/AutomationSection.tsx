@@ -1,14 +1,17 @@
-import { Activity, RefreshCw, BrainCircuit, Workflow, type LucideIcon } from 'lucide-react'
 import { Reveal } from './Reveal'
 import { useLandingTheme } from '@/features/landing-page/theme-context'
 import glowDark from '@/assets/automation-glow-dark.png'
 import glowLight from '@/assets/automation-glow-light.png'
 
-const FEATURES: { icon: LucideIcon; title: string; description: string }[] = [
-  { icon: Activity, title: 'Rastreamento de Desempenho', description: 'Monitore adesão, intervalos e resultados sem precisar revisar registros manualmente.' },
-  { icon: RefreshCw, title: 'Sincronização em Tempo Real', description: 'Dados do paciente, fases do protocolo e status de aplicações sempre atualizados.' },
-  { icon: BrainCircuit, title: 'Automação Inteligente', description: 'Cálculo automático de doses e progressão de protocolo baseado em regras clínicas validadas.' },
-  { icon: Workflow, title: 'Gestão de Protocolos', description: 'Organize e visualize protocolos de indução e manutenção como um blueprint clínico executável.' },
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowsRotate, faBrain, faDiagramProject, faHeartPulse } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+
+const FEATURES: { icon: IconDefinition; title: string; description: string }[] = [
+  { icon: faHeartPulse, title: 'Rastreamento de Desempenho', description: 'Monitore adesão, intervalos e resultados sem precisar revisar registros manualmente.' },
+  { icon: faArrowsRotate, title: 'Sincronização em Tempo Real', description: 'Dados do paciente, fases do protocolo e status de aplicações sempre atualizados.' },
+  { icon: faBrain, title: 'Automação Inteligente', description: 'Cálculo automático de doses e progressão de protocolo baseado em regras clínicas validadas.' },
+  { icon: faDiagramProject, title: 'Gestão de Protocolos', description: 'Organize e visualize protocolos de indução e manutenção como um blueprint clínico executável.' },
 ]
 
 const BADGE_TONES_DARK = ['#7fb0b6', '#6C9EA5', '#4d7e85', '#2b6169']
@@ -110,7 +113,7 @@ export function AutomationSection() {
                   color: '#ffffff',
                 }}
               >
-                <feature.icon size={20} strokeWidth={1.75} />
+                <FontAwesomeIcon icon={feature.icon} style={{ fontSize: 16 }} />
               </span>
               <h3 className="text-[15.5px] font-semibold mb-2.25" style={{ color: t.featTitle }}>
                 {feature.title}

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Download } from 'lucide-react'
 import { Button, SegmentedControl, Select } from '@/shared/components'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
@@ -11,6 +10,9 @@ import { PhasesBarChart } from '@/features/dashboard/components/charts/PhasesBar
 import { StatusLineChart } from '@/features/dashboard/components/charts/StatusLineChart'
 import { TypesProgressBars } from '@/features/dashboard/components/charts/TypesProgressBars'
 import { VolumeStackedBarChart } from '@/features/dashboard/components/charts/VolumeStackedBarChart'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faDownload } from '@fortawesome/free-solid-svg-icons'
 
 export function DashboardPage() {
   const navigate = useNavigate()
@@ -64,7 +66,7 @@ export function DashboardPage() {
             <option value="active">Gráficos ativos</option>
             <option value="archived">Arquivados{archivedCharts.length > 0 ? ` (${archivedCharts.length})` : ''}</option>
           </Select>
-          <Button tone="brand" variant="solid" prominent leftIcon={<Download size={13} />} to="/export-report" className="px-3">
+          <Button tone="brand" variant="solid" prominent leftIcon={<FontAwesomeIcon icon={faDownload} style={{ fontSize: 13 }} />} to="/export-report" className="px-3">
             Exportar Relatório
           </Button>
         </div>

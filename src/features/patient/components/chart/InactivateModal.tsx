@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Info } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Button, ConfirmDiscardModal, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
@@ -13,6 +12,9 @@ import {
 } from '@/features/patient/schemas/inactivate'
 import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import type { Inactivation, InactivationCategory, Patient } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
 interface InactivateModalProps {
   open: boolean
@@ -80,7 +82,7 @@ export function InactivateModal({ open, patient, onClose, onConfirm }: Inactivat
       footer={<Button tone="brand" variant="solid" onClick={submit}>Inativar imunoterapia</Button>}
     >
       <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
-        <Info size={14} className="text-brand shrink-0 mt-0.5" />
+        <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
         <p className="text-[0.65rem] text-brand-dark leading-relaxed">
           A inativação <span className="font-bold">pausa as aplicações</span> e registra o motivo no histórico clínico. O paciente poderá ser reativado a qualquer momento, com o médico definindo o ponto de retomada do protocolo.
         </p>
