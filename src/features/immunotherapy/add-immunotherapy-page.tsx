@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CheckCircle, ChevronLeft } from 'lucide-react'
 import { Button, CancelWizardModal, toast, WizardStepRail } from '@/shared/components'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
@@ -20,6 +19,9 @@ import {
 import { PatientDataStep } from '@/features/immunotherapy/components/add-steps/PatientDataStep'
 import { ImmunotherapyDataStep } from '@/features/immunotherapy/components/add-steps/ImmunotherapyDataStep'
 import { AddImmunotherapyReviewStep } from '@/features/immunotherapy/components/add-steps/AddImmunotherapyReviewStep'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
 
 const STEP_LABELS = ['Dados do Paciente', 'Dados da Imunoterapia', 'Revisão dos Dados']
 
@@ -98,7 +100,7 @@ export function AddImmunotherapyPage() {
     scheduleApplication(firstApp)
 
     toast.success({
-      icon: <CheckCircle size={16} />,
+      icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
       title: 'Registro salvo com sucesso!',
       description: (
         <>
@@ -136,7 +138,7 @@ export function AddImmunotherapyPage() {
           onClick={() => setShowCancelModal(true)}
           className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
         >
-          <ChevronLeft size={15} />
+          <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
           Imunoterapias
         </button>
       </div>

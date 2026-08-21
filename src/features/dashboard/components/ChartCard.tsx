@@ -1,6 +1,8 @@
-import { Pin, PinOff } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import type { ReactNode } from 'react'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faThumbtack, faThumbtackSlash } from '@fortawesome/free-solid-svg-icons'
 
 interface ChartCardProps {
   id: string
@@ -55,7 +57,7 @@ export function ChartCard({
             title={archived ? 'Desarquivar (Fixar)' : 'Arquivar (Ocultar)'}
             className="opacity-0 group-hover:opacity-100 p-1 text-(--text-muted) hover:bg-teal-50 hover:text-teal-600 rounded transition-all cursor-pointer"
           >
-            {archived ? <Pin size={12} /> : <PinOff size={12} />}
+            {archived ? <FontAwesomeIcon icon={faThumbtack} style={{ fontSize: 12 }} /> : <FontAwesomeIcon icon={faThumbtackSlash} style={{ fontSize: 12 }} />}
           </button>
         </div>
       </div>

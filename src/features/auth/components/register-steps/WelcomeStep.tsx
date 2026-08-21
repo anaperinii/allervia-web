@@ -1,5 +1,7 @@
-import { Smile, ArrowRight } from 'lucide-react'
 import { Button } from '@/shared/components'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowRight, faFaceSmile } from '@fortawesome/free-solid-svg-icons'
 
 interface WelcomeStepProps {
   maskedEmail: string
@@ -13,7 +15,7 @@ export function WelcomeStep({ maskedEmail, inviterName, organizationName, onCont
     <>
       <div className="flex flex-col items-center text-center gap-2">
         <div className="flex h-12 w-12 items-center justify-center rounded-full mb-1 bg-[var(--field)] border border-[color:var(--field-bd)]">
-          <Smile size={22} className="text-[color:var(--accent)]" />
+          <FontAwesomeIcon icon={faFaceSmile} className="text-[color:var(--accent)]" style={{ fontSize: 22 }} />
         </div>
         <h1 className="font-extrabold text-2xl text-[color:var(--ink)]">É um prazer ter você aqui</h1>
         <p className="text-xs text-[color:var(--ink-soft)] leading-relaxed max-w-xs">
@@ -41,7 +43,7 @@ export function WelcomeStep({ maskedEmail, inviterName, organizationName, onCont
         </div>
       </div>
 
-      <Button tone="brand" variant="solid" prominent fullWidth size="lg" rightIcon={<ArrowRight size={14} />} onClick={onContinue}>
+      <Button tone="brand" variant="solid" prominent fullWidth size="lg" rightIcon={<FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 14 }} />} onClick={onContinue}>
         Completar meu cadastro
       </Button>
     </>

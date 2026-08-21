@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Calendar, ChevronDown, ChevronUp } from 'lucide-react'
 import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
 import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCalendar, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
 
 interface SelectedDayStripProps {
   selectedDate: Date
@@ -29,14 +31,14 @@ export function SelectedDayStrip({
       <div className="flex items-center justify-between mb-2">
         <div className="text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider">
           {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
-          <span className="ml-1.5 text-[0.55rem] font-medium normal-case lowercase">
+          <span className="ml-1.5 text-[0.55rem] font-medium lowercase">
             ({applications.length})
           </span>
         </div>
         <div className="flex items-center gap-2">
           {googleConnected && (
             <span className="text-[0.5rem] text-(--text-muted) flex items-center gap-1">
-              <Calendar size={9} />
+              <FontAwesomeIcon icon={faCalendar} style={{ fontSize: 9 }} />
               Sincronizado com Google Agenda
             </span>
           )}
@@ -46,7 +48,7 @@ export function SelectedDayStrip({
             aria-label={collapsed ? 'Expandir' : 'Minimizar'}
             className="text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
           >
-            {collapsed ? <ChevronDown size={16} strokeWidth={2.5} /> : <ChevronUp size={16} strokeWidth={2.5} />}
+            {collapsed ? <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 16 }} /> : <FontAwesomeIcon icon={faChevronUp} style={{ fontSize: 16 }} />}
           </button>
         </div>
       </div>

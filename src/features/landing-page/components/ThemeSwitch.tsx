@@ -1,5 +1,7 @@
-import { Moon, Sun } from 'lucide-react'
 import { useLandingTheme } from '@/features/landing-page/theme-context'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMoon, faSun } from '@fortawesome/free-solid-svg-icons'
 
 interface ThemeSwitchProps {
   overHero?: boolean
@@ -50,7 +52,7 @@ export function ThemeSwitch({ overHero = false, scheme = 'auto' }: ThemeSwitchPr
           color: isDark ? inkOff : inkOn,
         }}
       >
-        <Sun size={14} />
+        <FontAwesomeIcon icon={faSun} style={{ fontSize: 14 }} />
       </span>
       <span
         aria-hidden="true"
@@ -60,7 +62,7 @@ export function ThemeSwitch({ overHero = false, scheme = 'auto' }: ThemeSwitchPr
           color: isDark ? inkOn : inkOff,
         }}
       >
-        <Moon size={14} />
+        <FontAwesomeIcon icon={faMoon} style={{ fontSize: 14 }} />
       </span>
     </button>
   )

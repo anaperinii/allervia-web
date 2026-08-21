@@ -1,7 +1,9 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { IconButton } from '@/shared/components'
 import { useScrollIndicators } from '@/shared/hooks/useScrollIndicators'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
 interface MonthOption {
   key: string
@@ -26,7 +28,7 @@ export function ApplicationsMonthFilter({ months, activeKey, onChange }: Applica
           onClick={() => scrollBy('left')}
           className="border border-(--border-custom) shadow-sm rounded-md"
         >
-          <ChevronLeft size={12} />
+          <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 12 }} />
         </IconButton>
       )}
       <div ref={ref} className="flex gap-1.5 overflow-x-auto pb-0.5 scroll-smooth flex-1 min-w-0" style={{ scrollbarWidth: 'none' }}>
@@ -44,7 +46,7 @@ export function ApplicationsMonthFilter({ months, activeKey, onChange }: Applica
           onClick={() => scrollBy('right')}
           className="border border-(--border-custom) shadow-sm rounded-md"
         >
-          <ChevronRight size={12} />
+          <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />
         </IconButton>
       )}
     </div>

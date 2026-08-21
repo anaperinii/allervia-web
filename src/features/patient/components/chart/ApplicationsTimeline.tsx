@@ -1,11 +1,13 @@
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { MessageSquare, Pencil } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { IconButton } from '@/shared/components'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 import { parsePtDate } from '@/shared/lib/dates'
 import type { Application } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMessage, faPencil } from '@fortawesome/free-solid-svg-icons'
 
 interface ApplicationsTimelineProps {
   applicationsByMonth: Record<string, Application[]>
@@ -103,7 +105,7 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditSche
                         aria-label="Editar dados previstos"
                         onClick={(e) => { e.stopPropagation(); onEditScheduled?.(application) }}
                       >
-                        <Pencil size={13} />
+                        <FontAwesomeIcon icon={faPencil} style={{ fontSize: 13 }} />
                       </IconButton>
                       <IconButton
                         size="sm"
@@ -111,7 +113,7 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditSche
                         aria-label="Enviar lembrete ao paciente"
                         onClick={(e) => { e.stopPropagation(); onSendReminder?.(application) }}
                       >
-                        <MessageSquare size={13} />
+                        <FontAwesomeIcon icon={faMessage} style={{ fontSize: 13 }} />
                       </IconButton>
                     </div>
                   )}

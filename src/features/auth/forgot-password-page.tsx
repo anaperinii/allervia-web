@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Check } from 'lucide-react'
 import { AuthLayout } from '@/features/auth/components/AuthLayout'
 import { AuthStepTransition } from '@/features/auth/components/AuthStepTransition'
 import {
@@ -15,6 +14,9 @@ import { VerifyCodeStep } from '@/features/auth/components/forgot-password-steps
 import { NewPasswordStep } from '@/features/auth/components/forgot-password-steps/NewPasswordStep'
 import { DoneStep } from '@/features/auth/components/forgot-password-steps/DoneStep'
 import { toast } from '@/shared/components'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck } from '@fortawesome/free-solid-svg-icons'
 
 type Step = 'request' | 'code' | 'reset' | 'done'
 
@@ -61,7 +63,7 @@ export function ForgotPasswordPage() {
     setCodeError(null)
     setResendKey((k) => k + 1)
     toast.success({
-      icon: <Check size={14} />,
+      icon: <FontAwesomeIcon icon={faCheck} style={{ fontSize: 14 }} />,
       title: 'Novo código enviado para o seu email',
       position: 'top-right',
       compact: true,

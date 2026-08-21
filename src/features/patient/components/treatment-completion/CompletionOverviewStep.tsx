@@ -1,9 +1,11 @@
-import { Trophy } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { DottedSpot } from '@/features/patient/components/DottedSpot'
 import { CompletionMetrics } from '@/features/patient/components/treatment-completion/CompletionMetrics'
 import { TreatmentTimeline } from '@/features/patient/components/treatment-completion/TreatmentTimeline'
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTrophy } from '@fortawesome/free-solid-svg-icons'
 
 interface CompletionOverviewStepProps {
   patient: Patient
@@ -71,7 +73,7 @@ export function CompletionOverviewStep({
               'inset 0 0 14px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.20)',
           }}
         >
-          <Trophy size={22} style={{ color: '#9BC1C4' }} />
+          <FontAwesomeIcon icon={faTrophy} style={{ fontSize: 22, color: '#9BC1C4' }} />
         </div>
         <div className="relative min-w-0">
           <div className="text-sm font-semibold" style={{ color: '#F2F6F7' }}>Encerramento do protocolo de imunoterapia</div>

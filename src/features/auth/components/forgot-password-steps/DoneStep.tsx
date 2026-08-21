@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import { ShieldCheck } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faShieldHalved } from '@fortawesome/free-solid-svg-icons'
 
 export function DoneStep() {
   return (
@@ -30,7 +31,7 @@ export function DoneStep() {
           border: '1px solid var(--bd)',
         }}
       >
-        <ShieldCheck size={14} className="shrink-0" style={{ color: 'var(--accent)' }} />
+        <FontAwesomeIcon icon={faShieldHalved} className="shrink-0" style={{ fontSize: 14, color: 'var(--accent)' }} />
         <p className="text-[0.6rem] leading-relaxed" style={{ color: 'var(--ink-faint)' }}>
           Caso não tenha solicitado esta alteração, entre em contato imediatamente com nosso
           suporte pelo e-mail seguranca@allervia.com.br.

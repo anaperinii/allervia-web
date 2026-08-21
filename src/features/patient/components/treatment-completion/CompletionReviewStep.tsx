@@ -1,10 +1,12 @@
-import { AlertOctagon, Check, Lock } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { cn } from '@/shared/lib/cn'
 import { FieldLabel, TextArea } from '@/shared/components'
 import { GLASS_CARD_SHADOW } from '@/shared/components/glass-card'
 import type { CompletionForm } from '@/features/patient/schemas/completion'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faLock, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 
 interface CompletionReviewStepProps {
   form: UseFormReturn<CompletionForm>
@@ -55,7 +57,7 @@ export function CompletionReviewStep({
         <div className="px-4 py-2.5 border-b border-(--border-custom) bg-gray-50 flex items-center justify-between gap-2">
           <div className="text-xs font-semibold text-(--text-muted)">Resumo a ser gravado no prontuário</div>
           <span className="inline-flex items-center gap-1 text-[0.55rem] font-semibold text-amber-700 bg-amber-100/70 border border-amber-200 rounded-md px-2 py-0.5 shrink-0">
-            <Lock size={9} />
+            <FontAwesomeIcon icon={faLock} style={{ fontSize: 9 }} />
             imutável após confirmação
           </span>
         </div>
@@ -106,7 +108,7 @@ export function CompletionReviewStep({
         )}
       >
         <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0 mt-0.5', confirmation ? 'bg-brand border-brand' : 'border-gray-300')}>
-          {confirmation && <Check size={10} className="text-white" />}
+          {confirmation && <FontAwesomeIcon icon={faCheck} className="text-white" style={{ fontSize: 10 }} />}
         </div>
         <span className="text-[0.7rem] text-(--text) leading-relaxed">
           Confirmo que <span className="font-bold">{patient.name}</span> atingiu o objetivo terapêutico e o tratamento será concluído com desfecho de sucesso.
@@ -123,7 +125,7 @@ export function CompletionReviewStep({
             'linear-gradient(105deg, rgba(245,158,11,0.18) 0%, rgba(252,211,77,0.10) 25%, rgba(254,243,199,0.04) 55%, transparent 80%)',
         }}
       >
-        <AlertOctagon size={16} className="text-amber-700 shrink-0 mt-0.5" />
+        <FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-700 shrink-0 mt-0.5" style={{ fontSize: 16 }} />
         <p className="text-[0.68rem] text-amber-800/90 leading-relaxed">
           Esta ação é <span className="font-bold">irreversível</span>. Após confirmar, o tratamento será marcado como concluído, as aplicações futuras canceladas e este registro tornará imutável no prontuário. Para reiniciar imunoterapia, será necessário criar um novo plano.
         </p>

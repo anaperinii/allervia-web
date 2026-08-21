@@ -1,5 +1,7 @@
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import { IconButton, Select } from '@/shared/components'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faAnglesLeft, faAnglesRight, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
 interface TablePaginationProps {
   currentPage: number
@@ -12,10 +14,10 @@ interface TablePaginationProps {
 
 export function TablePagination({ currentPage, totalPages, totalItems, itemsPerPage, onPageChange, onItemsPerPageChange }: TablePaginationProps) {
   const controls = [
-    { icon: ChevronsLeft, label: 'Primeira página', action: () => onPageChange(1), disabled: currentPage === 1 },
-    { icon: ChevronLeft, label: 'Página anterior', action: () => onPageChange(currentPage - 1), disabled: currentPage === 1 },
-    { icon: ChevronRight, label: 'Próxima página', action: () => onPageChange(currentPage + 1), disabled: currentPage === totalPages },
-    { icon: ChevronsRight, label: 'Última página', action: () => onPageChange(totalPages), disabled: currentPage === totalPages },
+    { icon: faAnglesLeft, label: 'Primeira página', action: () => onPageChange(1), disabled: currentPage === 1 },
+    { icon: faChevronLeft, label: 'Página anterior', action: () => onPageChange(currentPage - 1), disabled: currentPage === 1 },
+    { icon: faChevronRight, label: 'Próxima página', action: () => onPageChange(currentPage + 1), disabled: currentPage === totalPages },
+    { icon: faAnglesRight, label: 'Última página', action: () => onPageChange(totalPages), disabled: currentPage === totalPages },
   ]
 
   return (
@@ -52,7 +54,7 @@ export function TablePagination({ currentPage, totalPages, totalItems, itemsPerP
               disabled={disabled}
               className="border border-(--border-custom)"
             >
-              <Icon size={12} />
+              <FontAwesomeIcon icon={Icon} style={{ fontSize: 12 }} />
             </IconButton>
           ))}
         </div>

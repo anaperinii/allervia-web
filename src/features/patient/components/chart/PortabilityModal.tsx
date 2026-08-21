@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Check, CheckSquare, Download, FileJson, FileSpreadsheet, Info } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Button, ConfirmDiscardModal, Modal, SegmentedControl, TextArea } from '@/shared/components'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
@@ -8,6 +7,9 @@ import { useUserStore } from '@/shared/stores/useUserStore'
 import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import { exportLgpd, type LgpdFileFormat } from '@/features/patient/exporters'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faCircleInfo, faDownload, faFileCode, faFileExcel, faSquareCheck } from '@fortawesome/free-solid-svg-icons'
 
 interface PortabilityModalProps {
   open: boolean
@@ -85,7 +87,7 @@ export function PortabilityModal({ open, patient, onClose }: PortabilityModalPro
         <Button
           tone="brand"
           variant="solid"
-          leftIcon={<Download size={13} />}
+          leftIcon={<FontAwesomeIcon icon={faDownload} style={{ fontSize: 13 }} />}
           disabled={exportDisabled}
           onClick={handleExport}
         >
@@ -94,7 +96,7 @@ export function PortabilityModal({ open, patient, onClose }: PortabilityModalPro
       }
     >
       <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
-        <Info size={14} className="text-brand shrink-0 mt-0.5" />
+        <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
         <p className="text-[0.65rem] text-brand-dark leading-relaxed">
           Exportação estruturada de todos os dados em atendimento ao <span className="font-bold">Art. 18, V da LGPD</span> (Direito à portabilidade). A ação será registrada no log de auditoria.
         </p>
@@ -107,8 +109,8 @@ export function PortabilityModal({ open, patient, onClose }: PortabilityModalPro
           onChange={setLgpdFormat}
           fullWidth
           options={[
-            { value: 'json', label: 'JSON', icon: <FileJson size={13} /> },
-            { value: 'csv', label: 'CSV', icon: <FileSpreadsheet size={13} /> },
+            { value: 'json', label: 'JSON', icon: <FontAwesomeIcon icon={faFileCode} style={{ fontSize: 13 }} /> },
+            { value: 'csv', label: 'CSV', icon: <FontAwesomeIcon icon={faFileExcel} style={{ fontSize: 13 }} /> },
           ]}
           aria-label="Formato do pacote LGPD"
         />
@@ -123,7 +125,7 @@ export function PortabilityModal({ open, patient, onClose }: PortabilityModalPro
               className="flex items-center justify-between gap-1.5 text-[0.65rem] text-(--text) bg-teal-50/50 border border-teal-100 rounded px-2 py-1"
             >
               <span className="flex items-center gap-1.5 min-w-0">
-                <CheckSquare size={10} className="text-brand shrink-0" />
+                <FontAwesomeIcon icon={faSquareCheck} className="text-brand shrink-0" style={{ fontSize: 10 }} />
                 <span className="truncate">{item.label}</span>
               </span>
               <span className="text-(--text-muted) font-semibold shrink-0">{item.count}</span>
@@ -154,7 +156,7 @@ export function PortabilityModal({ open, patient, onClose }: PortabilityModalPro
         )}
       >
         <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0 mt-px', consented ? 'bg-brand border-brand' : 'border-gray-300')}>
-          {consented && <Check size={10} className="text-white" />}
+          {consented && <FontAwesomeIcon icon={faCheck} className="text-white" style={{ fontSize: 10 }} />}
         </div>
         <div>
           <span className="text-[0.7rem] font-medium text-(--text) block">Declaro ciência dos termos LGPD</span>

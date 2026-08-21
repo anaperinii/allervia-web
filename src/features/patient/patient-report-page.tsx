@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ChevronLeft, Download, Printer, ShieldCheck } from 'lucide-react'
 import { Button, Modal } from '@/shared/components'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
@@ -20,6 +19,9 @@ import {
 import { maskCpf, maskName, maskPhone } from '@/shared/lib/mask'
 import { ReportClinicalPreview } from '@/features/patient/components/report/ReportClinicalPreview'
 import { ReportConfigPanel } from '@/features/patient/components/report/ReportConfigPanel'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faDownload, faPrint, faShieldHalved } from '@fortawesome/free-solid-svg-icons'
 
 const DEFAULT_SECTIONS: ReportSectionId[] = ['personal', 'immunotherapy', 'applications', 'progress']
 
@@ -122,7 +124,7 @@ export function PatientReportPage() {
             params={{ patientId: patient.id }}
             className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
           >
-            <ChevronLeft size={15} />
+            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
             Prontuário
           </Link>
         </div>
@@ -130,7 +132,7 @@ export function PatientReportPage() {
           <Button
             variant="outline"
             size="sm"
-            leftIcon={<Printer size={13} />}
+            leftIcon={<FontAwesomeIcon icon={faPrint} style={{ fontSize: 13 }} />}
             disabled={exportDisabled}
             onClick={() => exportPdf(buildExportData())}
           >
@@ -140,7 +142,7 @@ export function PatientReportPage() {
             tone="brand"
             variant="solid"
             size="sm"
-            leftIcon={<Download size={13} />}
+            leftIcon={<FontAwesomeIcon icon={faDownload} style={{ fontSize: 13 }} />}
             disabled={exportDisabled}
             onClick={() => setShowExportModal(true)}
           >
@@ -195,7 +197,7 @@ export function PatientReportPage() {
       >
         <div className="flex justify-center">
           <div className="h-11 w-11 rounded-full bg-brand/10 flex items-center justify-center">
-            <ShieldCheck size={20} className="text-brand" />
+            <FontAwesomeIcon icon={faShieldHalved} className="text-brand" style={{ fontSize: 20 }} />
           </div>
         </div>
         <p className="text-[0.7rem] text-(--text-muted) text-center leading-relaxed">

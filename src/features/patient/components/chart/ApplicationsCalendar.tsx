@@ -1,11 +1,13 @@
 import { useMemo } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { IconButton } from '@/shared/components'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 import type { Application } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faChevronRight, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 
 interface ApplicationsCalendarProps {
   month: number
@@ -45,11 +47,11 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
     <div className="flex-1 overflow-y-auto px-5 py-4">
       <div className="flex items-center justify-between mb-4">
         <IconButton aria-label="Mês anterior" size="sm" onClick={goPrev} className="border border-(--border-custom)">
-          <ChevronLeft size={14} />
+          <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 14 }} />
         </IconButton>
         <span className="text-xs font-bold text-(--text)">{monthLabel}</span>
         <IconButton aria-label="Próximo mês" size="sm" onClick={goNext} className="border border-(--border-custom)">
-          <ChevronRight size={14} />
+          <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 14 }} />
         </IconButton>
       </div>
 
@@ -118,7 +120,7 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
                         <span className="truncate">{application.dose}</span>
                         {hasReaction && (
                           <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-[#C46A3C] ring-1 ring-white shadow-sm">
-                            <AlertTriangle size={7} strokeWidth={2.75} className="text-white" />
+                            <FontAwesomeIcon icon={faTriangleExclamation} className="text-white" style={{ fontSize: 7 }} />
                           </span>
                         )}
                       </button>

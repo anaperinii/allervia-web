@@ -1,5 +1,6 @@
-import { AlertCircle, CalendarDays, Droplet, TrendingUp } from 'lucide-react'
-import type { ComponentType } from 'react'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowTrendUp, faCalendarDays, faCircleExclamation, faDroplet } from '@fortawesome/free-solid-svg-icons'
 
 const withSmallSymbol = (value: string) =>
   value.split(/(%)/g).map((part, index) =>
@@ -16,7 +17,7 @@ interface CompletionMetricsProps {
 
 interface MetricCard {
   key: string
-  icon: ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
+  icon: IconDefinition
   label: string
   value: string
   valueTag?: string
@@ -30,18 +31,18 @@ export function CompletionMetrics({
   totalDurationLabel,
 }: CompletionMetricsProps) {
   const cards: MetricCard[] = [
-    { key: 'apps', icon: Droplet, label: 'Aplicações totais', value: String(totalApplications) },
+    { key: 'apps', icon: faDroplet, label: 'Aplicações totais', value: String(totalApplications) },
     {
       key: 'adherence',
-      icon: TrendingUp,
+      icon: faArrowTrendUp,
       label: 'Aderência',
       value: `${adherencePct}%`,
       valueTag: rescheduledCount === 1 ? '1 reagendamento' : `${rescheduledCount} reagendamentos`,
     },
-    { key: 'adverse', icon: AlertCircle, label: 'Reações adversas', value: String(adverseEventsCount) },
+    { key: 'adverse', icon: faCircleExclamation, label: 'Reações adversas', value: String(adverseEventsCount) },
     {
       key: 'duration',
-      icon: CalendarDays,
+      icon: faCalendarDays,
       label: 'Duração total',
       value: totalDurationLabel,
     },
@@ -60,7 +61,7 @@ export function CompletionMetrics({
                 'linear-gradient(105deg, rgba(108,158,165,0.28) 0%, rgba(155,193,196,0.16) 25%, rgba(234,241,241,0.07) 55%, transparent 80%)',
             }}
           >
-            <Icon size={82} strokeWidth={1.75} className="pointer-events-none absolute -bottom-5 -left-9 text-brand/15" />
+            <FontAwesomeIcon icon={Icon} className="pointer-events-none absolute -bottom-5 -left-9 text-brand/15" style={{ fontSize: 82 }} />
             <div className="relative flex flex-1 items-baseline gap-2 min-w-0">
               <span className="text-2xl font-semibold leading-none text-(--text) shrink-0">{withSmallSymbol(card.value)}</span>
               <span className="text-[0.7rem] font-medium leading-tight text-(--text-muted)">{card.label}</span>

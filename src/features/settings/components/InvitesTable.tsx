@@ -1,7 +1,9 @@
-import { Clock, Mail, Send, Trash2, X } from 'lucide-react'
 import { Button, IconButton } from '@/shared/components'
 import { ROLE_BADGES } from '@/features/settings/constants/team-roles'
 import type { Invite } from '@/features/settings/stores/useTeamsStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faClock, faEnvelope, faPaperPlane, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 
 interface InvitesTableProps {
   invites: Invite[]
@@ -33,7 +35,7 @@ export function InvitesTable({ invites, onResend, onDelete }: InvitesTableProps)
               <td className="px-5 py-3">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-(--text-muted) shrink-0">
-                    <Mail size={14} />
+                    <FontAwesomeIcon icon={faEnvelope} style={{ fontSize: 14 }} />
                   </div>
                   <span className="text-xs font-medium text-(--text)">{invite.email}</span>
                 </div>
@@ -47,12 +49,12 @@ export function InvitesTable({ invites, onResend, onDelete }: InvitesTableProps)
               <td className="px-5 py-3">
                 {invite.status === 'pending' ? (
                   <span className="text-[0.65rem] font-medium text-amber-600 flex items-center gap-1">
-                    <Clock size={11} />
+                    <FontAwesomeIcon icon={faClock} style={{ fontSize: 11 }} />
                     Pendente
                   </span>
                 ) : (
                   <span className="text-[0.65rem] font-medium text-(--text-muted) flex items-center gap-1">
-                    <X size={11} />
+                    <FontAwesomeIcon icon={faXmark} style={{ fontSize: 11 }} />
                     Expirado
                   </span>
                 )}
@@ -60,12 +62,12 @@ export function InvitesTable({ invites, onResend, onDelete }: InvitesTableProps)
               <td className="px-5 py-3">
                 <div className="flex items-center justify-end gap-1">
                   {invite.status === 'pending' && (
-                    <Button variant="outline" size="sm" leftIcon={<Send size={10} />} onClick={() => onResend(invite)}>
+                    <Button variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faPaperPlane} style={{ fontSize: 10 }} />} onClick={() => onResend(invite)}>
                       Reenviar
                     </Button>
                   )}
                   <IconButton size="sm" tone="danger" aria-label="Excluir convite" onClick={() => onDelete(invite)}>
-                    <Trash2 size={12} />
+                    <FontAwesomeIcon icon={faTrash} style={{ fontSize: 12 }} />
                   </IconButton>
                 </div>
               </td>

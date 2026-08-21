@@ -1,6 +1,7 @@
-import { ShieldCheck, TrendingUp, UserRound, UserX } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import { DottedSpot } from '@/features/patient/components/DottedSpot'
+
+import { faArrowTrendUp, faShieldHalved, faUser, faUserXmark } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 interface StatCardsProps {
   totalActive: number
@@ -11,17 +12,17 @@ interface StatCardsProps {
 
 interface StatDefinition {
   key: 'active' | 'inactive' | 'induction' | 'maintenance'
-  icon: LucideIcon
+  icon: IconDefinition
   label: string
   rgb: string
   accent: string
 }
 
 const STATS: StatDefinition[] = [
-  { key: 'active', icon: UserRound, label: 'Pacientes Ativos', rgb: '155,193,196', accent: '#257E8C' },
-  { key: 'inactive', icon: UserX, label: 'Pacientes Inativos', rgb: '108,158,165', accent: '#1d6772' },
-  { key: 'induction', icon: TrendingUp, label: 'Em Indução', rgb: '77,126,133', accent: '#12333a' },
-  { key: 'maintenance', icon: ShieldCheck, label: 'Em Manutenção', rgb: '29,103,114', accent: '#0e2e34' },
+  { key: 'active', icon: faUser, label: 'Pacientes Ativos', rgb: '155,193,196', accent: '#257E8C' },
+  { key: 'inactive', icon: faUserXmark, label: 'Pacientes Inativos', rgb: '108,158,165', accent: '#1d6772' },
+  { key: 'induction', icon: faArrowTrendUp, label: 'Em Indução', rgb: '77,126,133', accent: '#12333a' },
+  { key: 'maintenance', icon: faShieldHalved, label: 'Em Manutenção', rgb: '29,103,114', accent: '#0e2e34' },
 ]
 
 export function StatCards({ totalActive, inactiveCount, inductionCount, maintenanceCount }: StatCardsProps) {

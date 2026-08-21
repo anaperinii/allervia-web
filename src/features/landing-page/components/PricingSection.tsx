@@ -1,9 +1,11 @@
-import { Check } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { MarketingCTA } from './MarketingCta'
 import { Reveal } from './Reveal'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
 import { PLANS, MAX_PLAN_FEATURES, type PlanId } from '@/shared/constants/plans'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck } from '@fortawesome/free-solid-svg-icons'
 
 const HIGHLIGHTED_PLAN: PlanId = 'professional'
 const CTA_LABELS: Record<PlanId, string> = {
@@ -103,7 +105,7 @@ export function PricingSection() {
                         className="flex h-5 w-5 items-center justify-center rounded-full shrink-0 mt-px"
                         style={{ background: 'var(--ll-accent-bg-soft)' }}
                       >
-                        <Check size={11} style={{ color: 'var(--ll-accent-strong)' }} />
+                        <FontAwesomeIcon icon={faCheck} style={{ fontSize: 11, color: 'var(--ll-accent-strong)' }} />
                       </div>
                       <span className="text-[0.85rem] leading-[1.5]" style={{ color: 'var(--ll-ink-muted)' }}>
                         {feature}

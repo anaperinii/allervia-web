@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { CheckCircle, Plus, Search } from 'lucide-react'
 import { Button, Modal, SegmentedControl, Select, TextInput, Toast } from '@/shared/components'
 import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
 import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
@@ -18,6 +17,9 @@ import { MonthView } from '@/features/scheduling/components/MonthView'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
 import { NewAppointmentModal } from '@/features/scheduling/components/NewAppointmentModal'
 import type { NewAppointmentForm } from '@/features/scheduling/schemas/new-appointment'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
 
 const MONTH_OPTIONS = [
   { value: 0, label: 'Janeiro' },
@@ -160,7 +162,7 @@ export function AppointmentsPage() {
               variant="solid"
               prominent
               size="md"
-              leftIcon={<Plus size={13} />}
+              leftIcon={<FontAwesomeIcon icon={faPlus} style={{ fontSize: 13 }} />}
               onClick={() => setShowAddModal(true)}
               className="px-3"
             >
@@ -178,7 +180,7 @@ export function AppointmentsPage() {
           onToday={calendar.goToToday}
           rightContent={
             <div className="relative w-[26rem]">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
+              <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" style={{ fontSize: 14 }} />
               <TextInput
                 aria-label="Pesquisar paciente"
                 placeholder="Pesquisar paciente"
@@ -271,7 +273,7 @@ export function AppointmentsPage() {
         open={showToast}
         onClose={() => setShowToast(false)}
         variant="success"
-        icon={<CheckCircle size={16} />}
+        icon={<FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />}
         title="Agendamento criado com sucesso!"
         description={
           googleCalendarConnected

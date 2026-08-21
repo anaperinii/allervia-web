@@ -1,7 +1,9 @@
 import type { CSSProperties } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ChevronRight } from 'lucide-react'
 import { Aurora, AURORA_STOPS } from '@/shared/components/Aurora'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
 const heroRiseStyle = (delay: number): CSSProperties => ({
   opacity: 0,
@@ -136,10 +138,10 @@ export function HeroSection() {
               }}
             >
               Começar agora
-              <ChevronRight
-                size={16}
-                strokeWidth={2.5}
+              <FontAwesomeIcon
+                icon={faChevronRight}
                 className="transition-transform duration-200 group-hover:translate-x-0.5"
+                style={{ fontSize: 16 }}
               />
             </Link>
           </div>

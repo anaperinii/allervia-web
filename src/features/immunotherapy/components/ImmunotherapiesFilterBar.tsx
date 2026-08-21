@@ -1,5 +1,7 @@
-import { Search } from 'lucide-react'
 import { Button, Select, TextInput } from '@/shared/components'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 
 interface ImmunotherapiesFilterBarProps {
   searchTerm: string
@@ -34,7 +36,7 @@ export function ImmunotherapiesFilterBar({
     <div className="flex flex-wrap items-center gap-3">
       <div className="relative flex-1 min-w-45">
         <label htmlFor="immunotherapy-search" className="sr-only">Pesquisar paciente</label>
-        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) z-10" />
+        <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) z-10" style={{ fontSize: 14 }} />
         <TextInput
           id="immunotherapy-search"
           placeholder="Pesquisar paciente"

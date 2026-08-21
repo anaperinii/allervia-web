@@ -1,10 +1,12 @@
-import { Heart } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import allerviaMarkWhite from '@/assets/allervia-mark-dark.png'
 import allerviaMarkBlack from '@/assets/allervia-mark-light.png'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { useLandingTheme } from '@/features/landing-page/theme-context'
 import { FOOTER_COLUMNS } from '@/features/landing-page/constants/footer-columns'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHeart } from '@fortawesome/free-solid-svg-icons'
 
 export function Footer() {
   const { theme } = useLandingTheme()
@@ -113,7 +115,7 @@ export function Footer() {
           &copy; {new Date().getFullYear()} Allervia. Todos os direitos reservados.
         </p>
         <p className="text-[0.8rem] inline-flex items-center gap-1" style={{ color: 'var(--ll-ink-muted)' }}>
-          Feito com <Heart size={13} className="fill-current" style={{ color: 'var(--ll-accent)' }} /> para a alergologia brasileira
+          Feito com <FontAwesomeIcon icon={faHeart} className="fill-current" style={{ fontSize: 13, color: 'var(--ll-accent)' }} /> para a alergologia brasileira
         </p>
       </div>
       </div>

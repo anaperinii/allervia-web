@@ -1,5 +1,7 @@
-import { CheckCircle } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleCheck } from '@fortawesome/free-solid-svg-icons'
 
 interface PasswordRule {
   label: string
@@ -46,9 +48,9 @@ export function PasswordRequirements({ password, className }: PasswordRequiremen
                       }
                 }
               >
-                <CheckCircle
-                  size={8}
-                  style={{ color: met ? 'var(--ok, #34d399)' : 'var(--ink-faint, rgba(255,255,255,0.30))' }}
+                <FontAwesomeIcon
+                  icon={faCircleCheck}
+                  style={{ fontSize: 8, color: met ? 'var(--ok, #34d399)' : 'var(--ink-faint, rgba(255,255,255,0.30))' }}
                 />
               </div>
               <span

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Lock, Search } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { Button, Select, TextInput } from '@/shared/components'
@@ -11,6 +10,9 @@ import { InvitesTable } from '@/features/settings/components/InvitesTable'
 import { InviteMemberModal } from '@/features/settings/components/InviteMemberModal'
 import { TeamConfirmModal, type TeamConfirmState } from '@/features/settings/components/TeamConfirmModal'
 import { TablePagination } from '@/shared/components'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faLock, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 
 type StatusFilter = TeamMember['status'] | 'all'
 type RoleFilter = TeamRole | 'all'
@@ -74,7 +76,7 @@ export function TeamsPage() {
       <SettingsLayout subtitle="Equipes e Convites">
         <div className="flex flex-1 flex-col items-center justify-center p-10 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 mb-4">
-            <Lock size={22} className="text-(--text-muted)" />
+            <FontAwesomeIcon icon={faLock} className="text-(--text-muted)" style={{ fontSize: 22 }} />
           </div>
           <h2 className="text-base font-bold text-(--text) mb-1.5">Acesso restrito</h2>
           <p className="text-xs text-(--text-muted) max-w-sm leading-relaxed mb-5">
@@ -92,7 +94,7 @@ export function TeamsPage() {
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-45">
           <label htmlFor="team-search" className="sr-only">Pesquisar usuário</label>
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) z-10" />
+          <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) z-10" style={{ fontSize: 14 }} />
           <TextInput
             id="team-search"
             placeholder="Pesquisar usuário"

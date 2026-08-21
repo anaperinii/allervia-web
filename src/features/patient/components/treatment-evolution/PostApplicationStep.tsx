@@ -1,5 +1,4 @@
 import { Controller, type UseFormReturn } from 'react-hook-form'
-import { Info } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { FieldLabel, Select, TextArea, TextInput } from '@/shared/components'
 import { GLASS_CARD_SHADOW } from '@/shared/components/glass-card'
@@ -8,6 +7,9 @@ import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/const
 import { APPLICATION_ADMINISTRATORS } from '@/shared/stores/useUserStore'
 import { addMinutesToTime } from '@/shared/lib/dates'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
 const REACTION_OPTIONS = [
   { value: 'reduce_dose', label: 'Reduzir dose', desc: 'Retornar ao volume anterior' },
@@ -197,7 +199,7 @@ export function PostApplicationStep({ form }: PostApplicationStepProps) {
             }}
           >
             <div className="flex items-start gap-2">
-              <Info size={16} className="text-amber-700 shrink-0 mt-0.5" />
+              <FontAwesomeIcon icon={faCircleInfo} className="text-amber-700 shrink-0 mt-0.5" style={{ fontSize: 16 }} />
               <div className="leading-relaxed">
                 <div className="text-[0.78rem] font-bold text-amber-800">Reação adversa com uso de medicação registrada</div>
                 <div className="text-[0.68rem] text-amber-800/80 mt-0.5">Selecione a conduta a ser aplicada no protocolo antes de concluir a evolução. A escolha fica vinculada a esta aplicação no histórico clínico.</div>

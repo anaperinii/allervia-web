@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react'
-import { X } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import type { ReactNode } from 'react'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
 
 export type ToastVariant = 'success' | 'warning' | 'info' | 'danger'
 export type ToastPosition = 'top-right' | 'top-center'
@@ -151,7 +153,7 @@ export function Toast({
             className="h-6 w-6 flex items-center justify-center rounded-md transition-all shrink-0 hover:bg-white/10"
             style={{ color: 'rgba(220,225,229,0.6)' }}
           >
-            <X size={14} />
+            <FontAwesomeIcon icon={faXmark} style={{ fontSize: 14 }} />
           </button>
         </div>
       )}

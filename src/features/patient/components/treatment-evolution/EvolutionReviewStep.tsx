@@ -1,6 +1,8 @@
 import { format, parse } from 'date-fns'
-import { CalendarCheck } from 'lucide-react'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCalendarCheck } from '@fortawesome/free-solid-svg-icons'
 
 const REACTION_LABELS: Record<string, string> = {
   reduce_dose: 'Reduzir dose',
@@ -64,7 +66,7 @@ export function EvolutionReviewStep({ form, plannedNextDate, plannedNextInterval
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
             style={{ background: '#10b981', boxShadow: '0 2px 8px rgba(16,185,129,0.35)' }}
           >
-            <CalendarCheck size={16} strokeWidth={2} style={{ color: '#ffffff' }} />
+            <FontAwesomeIcon icon={faCalendarCheck} style={{ fontSize: 16, color: '#ffffff' }} />
           </span>
           <p className="text-[0.78rem] leading-relaxed text-slate-600">
             Próxima dose agendada para <span className="font-bold text-slate-800">{plannedNextDate}</span>

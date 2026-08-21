@@ -1,7 +1,5 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
-import { Syringe, CalendarDays, BarChart3, Bell, Settings, LogOut } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import allerviaMark from '@/assets/allervia-mark-light.png'
 import userAvatar from '@/assets/user-avatar.jpg'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
@@ -9,20 +7,24 @@ import { useNotificationsStore } from '@/features/notification/stores/useNotific
 import { useUserStore } from '@/shared/stores/useUserStore'
 import { Button, Modal } from '@/shared/components'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBell, faCalendarDays, faChartColumn, faGear, faRightFromBracket, faSyringe } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+
 interface RailItem {
-  icon: LucideIcon
+  icon: IconDefinition
   path: string
   label: string
   match?: string[]
 }
 
 const RAIL: RailItem[] = [
-  { icon: Syringe, path: '/immunotherapies', label: 'Imunoterapias Alérgicas', match: ['/add-immunotherapy', '/patient'] },
-  { icon: CalendarDays, path: '/appointments', label: 'Agendamentos' },
-  { icon: BarChart3, path: '/dashboard', label: 'Painel de Métricas', match: ['/export-report'] },
-  { icon: Bell, path: '/notifications', label: 'Notificações' },
+  { icon: faSyringe, path: '/immunotherapies', label: 'Imunoterapias Alérgicas', match: ['/add-immunotherapy', '/patient'] },
+  { icon: faCalendarDays, path: '/appointments', label: 'Agendamentos' },
+  { icon: faChartColumn, path: '/dashboard', label: 'Painel de Métricas', match: ['/export-report'] },
+  { icon: faBell, path: '/notifications', label: 'Notificações' },
   {
-    icon: Settings,
+    icon: faGear,
     path: '/settings',
     label: 'Configurações',
     match: ['/security', '/teams', '/help', '/advanced-settings', '/personalization', '/about', '/plans', '/profile'],
@@ -71,7 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* body: rail + page content */}
-      <div className="relative z-10 flex flex-1 min-h-0 gap-2 px-6 pb-4">
+      <div className="relative z-10 flex flex-1 min-h-0 gap-4 px-6 pb-4">
         {/* rail */}
         <div className="relative z-50 flex shrink-0 flex-col items-center justify-between w-14 pb-1">
           <div className="flex flex-col gap-3">
@@ -90,7 +92,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       : { background: 'rgba(255,255,255,0.6)', boxShadow: '0 4px 12px rgba(16,50,60,0.08)' }
                   }
                 >
-                  <Ic size={18} strokeWidth={1.9} style={{ color: active ? '#ffffff' : '#7d879f' }} />
+                  <FontAwesomeIcon icon={Ic} style={{ fontSize: 15, color: active ? '#ffffff' : '#7d879f' }} />
                   {r.path === '/notifications' && hasUnread && (
                     <span
                       aria-hidden="true"
@@ -115,7 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="group relative flex h-11 w-11 items-center justify-center rounded-full cursor-pointer transition-transform duration-200 hover:scale-105"
             style={{ background: 'rgba(255,255,255,0.6)', boxShadow: '0 4px 12px rgba(16,50,60,0.08)' }}
           >
-            <LogOut size={18} strokeWidth={1.9} style={{ color: '#7d879f' }} />
+            <FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 15, color: '#7d879f' }} />
             <span
               className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50"
               style={{ background: '#12333a', color: '#eef3f4', boxShadow: '0 4px 12px rgba(16,50,60,0.2)' }}
@@ -134,7 +136,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         onClose={() => setShowLogout(false)}
         size="sm"
         title="Encerrar sessão"
-        icon={<LogOut size={16} />}
+        icon={<FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 16 }} />}
         tone="danger"
         footer={
           <>

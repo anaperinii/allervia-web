@@ -1,4 +1,3 @@
-import { EyeOff } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -9,6 +8,9 @@ import {
 import { derivePatientDates, type Application, type Patient } from '@/features/patient/stores/usePatientStore'
 import type { ReportFileFormat, ReportSectionId } from '@/features/patient/exporters/types'
 import { maskCpf, maskName, maskPhone } from '@/shared/lib/mask'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 
 interface ReportClinicalPreviewProps {
   patient: Patient
@@ -45,7 +47,7 @@ export function ReportClinicalPreview({
             <div>Formato: {fileFormat.toUpperCase()}</div>
             {anonymized && (
               <div className="flex items-center gap-1 text-brand font-semibold mt-0.5 justify-end">
-                <EyeOff size={10} />
+                <FontAwesomeIcon icon={faEyeSlash} style={{ fontSize: 10 }} />
                 Dados anonimizados
               </div>
             )}

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Calendar } from 'lucide-react'
 import { Modal, Button, Select, TextInput } from '@/shared/components'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { PROTOCOL_DOSES, PROTOCOL_INTERVAL_PRESETS } from '@/features/immunotherapy/constants/scit-protocol'
@@ -10,6 +9,9 @@ import {
   NEW_APPOINTMENT_DEFAULTS,
   type NewAppointmentForm,
 } from '@/features/scheduling/schemas/new-appointment'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCalendar } from '@fortawesome/free-solid-svg-icons'
 
 interface NewAppointmentModalProps {
   open: boolean
@@ -84,7 +86,7 @@ export function NewAppointmentModal({ open, googleConnected, onClose, onSubmit }
     >
       {googleConnected && (
         <div className="flex items-center gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2">
-          <Calendar size={13} className="text-brand shrink-0" />
+          <FontAwesomeIcon icon={faCalendar} className="text-brand shrink-0" style={{ fontSize: 13 }} />
           <p className="text-[0.6rem] text-brand leading-relaxed">
             Este agendamento será sincronizado automaticamente com o Google Agenda.
           </p>

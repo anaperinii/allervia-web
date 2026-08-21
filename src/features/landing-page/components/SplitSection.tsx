@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { ChevronRight } from 'lucide-react'
 import { Reveal } from './Reveal'
 import { CardSwap, Card } from '@/shared/components/CardSwap'
 import { useLandingTheme } from '@/features/landing-page/theme-context'
 import { SPLIT_FEATURES } from '@/features/landing-page/constants/split-features'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
 const CARD_TONES_LIGHT = ['155,193,196', '108,158,165', '37,126,140', '20,74,86']
 const CARD_TONES_DARK = ['155,193,196', '108,158,165', '74,163,175', '96,168,178']
@@ -116,7 +118,7 @@ export function SplitSection() {
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--ll-accent-bg-soft)' }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
             >
-              <ChevronRight size={14} strokeWidth={2.5} />
+              <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 14 }} />
             </button>
           </div>
         </Reveal>

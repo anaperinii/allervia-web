@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CheckCircle, FileEdit, ChevronLeft } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
@@ -25,6 +24,9 @@ import { CompletionOverviewStep } from '@/features/patient/components/treatment-
 import { CompletionFollowupStep } from '@/features/patient/components/treatment-completion/CompletionFollowupStep'
 import { CompletionReviewStep } from '@/features/patient/components/treatment-completion/CompletionReviewStep'
 import { useCompletionDraftsStore } from '@/features/patient/stores/useCompletionDraftsStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faCircleCheck, faFilePen } from '@fortawesome/free-solid-svg-icons'
 
 const STEP_LABELS = ['Visão geral', 'Plano pós-alta', 'Revisão'] as const
 
@@ -160,7 +162,7 @@ export function PatientCompletionPage() {
     })
 
     toast.success({
-      icon: <CheckCircle size={16} />,
+      icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
       title: 'Tratamento concluído',
       description: 'O protocolo foi encerrado com desfecho de sucesso e o registro está disponível no prontuário.',
       autoDismissMs: 8000,
@@ -185,13 +187,13 @@ export function PatientCompletionPage() {
             onClick={() => setShowCancelModal(true)}
             className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
           >
-            <ChevronLeft size={15} />
+            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
             Prontuário
           </button>
         </div>
         {draftSavedAt && (
           <span className="inline-flex items-center gap-1.5 text-[0.6rem] font-semibold text-brand-dark bg-brand/15 border border-brand/25 rounded-md px-2.5 py-1 shrink-0">
-            <FileEdit size={11} className="text-brand" />
+            <FontAwesomeIcon icon={faFilePen} className="text-brand" style={{ fontSize: 11 }} />
             Rascunho salvo · {draftSavedAt}
           </span>
         )}
@@ -261,7 +263,7 @@ export function PatientCompletionPage() {
         onConfirm={() => {
           persistDraft()
           toast.success({
-            icon: <FileEdit size={16} />,
+            icon: <FontAwesomeIcon icon={faFilePen} style={{ fontSize: 16 }} />,
             title: 'Rascunho salvo',
             description: 'Você pode retomar a conclusão de onde parou.',
             autoDismissMs: 4000,

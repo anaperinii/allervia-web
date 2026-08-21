@@ -1,7 +1,9 @@
-import { X } from 'lucide-react'
 import { Button, SegmentedControl, Select, TextInput } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
 import { NOTIFICATION_TABS, type NotificationTabKey } from '@/features/notification/constants/notification-display'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
 
 export type ReadFilter = 'all' | 'read' | 'unread'
 
@@ -125,7 +127,7 @@ export function NotificationFilters({
           className={cn('h-8 bg-[#F3F5F6]! text-[0.7rem]', dateRangeError ? 'border-red-400!' : 'border-[#CBD6D6]!')}
         />
         {hasActiveFilters && (
-          <Button tone="danger" variant="outline" size="sm" leftIcon={<X size={11} />} onClick={onClearFilters}>
+          <Button tone="danger" variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faXmark} style={{ fontSize: 11 }} />} onClick={onClearFilters}>
             Limpar
           </Button>
         )}

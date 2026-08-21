@@ -1,5 +1,7 @@
-import { BellOff } from 'lucide-react'
 import { Button } from '@/shared/components'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBellSlash } from '@fortawesome/free-solid-svg-icons'
 
 interface NotificationsEmptyProps {
   hasActiveFilters: boolean
@@ -9,7 +11,7 @@ interface NotificationsEmptyProps {
 export function NotificationsEmpty({ hasActiveFilters, onClearFilters }: NotificationsEmptyProps) {
   return (
     <div className="flex flex-col items-center justify-center py-20">
-      <BellOff size={32} className="text-gray-300 mb-3" />
+      <FontAwesomeIcon icon={faBellSlash} className="text-gray-300 mb-3" style={{ fontSize: 32 }} />
       {hasActiveFilters ? (
         <>
           <span className="text-xs text-(--text-muted)">Nenhuma notificação corresponde aos filtros</span>

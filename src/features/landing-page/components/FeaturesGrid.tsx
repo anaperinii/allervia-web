@@ -3,6 +3,7 @@ import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
 import { FEATURES } from '@/features/landing-page/constants/features'
 import { useLandingTheme } from '@/features/landing-page/theme-context'
 import featuresArt from '@/assets/features-art.jpg'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const CARD_SPANS = [
   'lg:col-span-2',
@@ -122,7 +123,7 @@ export function FeaturesGrid() {
                   color: '#ffffff',
                 }}
               >
-                <Icon size={22} />
+                <FontAwesomeIcon icon={Icon} style={{ fontSize: 17 }} />
               </div>
               <h3 className="mb-2 text-base font-semibold" style={{ color: 'var(--ll-ink)' }}>
                 {feature.title}

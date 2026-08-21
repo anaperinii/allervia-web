@@ -6,7 +6,8 @@ import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { ThemeSwitch } from '@/features/landing-page/components/ThemeSwitch'
 import { useLandingTheme } from '@/features/landing-page/theme-context'
 import { cn } from '@/shared/lib/cn'
-import { Menu, X } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons'
 
 const navLinks = [
   { label: 'Funcionalidades', href: '#features' },
@@ -171,7 +172,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
             color: brandColor,
           }}
         >
-          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          {mobileMenuOpen ? <FontAwesomeIcon icon={faXmark} style={{ fontSize: 20 }} /> : <FontAwesomeIcon icon={faBars} style={{ fontSize: 20 }} />}
         </button>
       </nav>
 

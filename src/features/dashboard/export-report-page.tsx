@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ChevronLeft } from 'lucide-react'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
 import { ExportConfigPanel, type ChartOption } from '@/features/dashboard/components/export/ConfigPanel'
 import { ExportPreview } from '@/features/dashboard/components/export/preview'
 import { ConfirmExportModal } from '@/features/dashboard/components/export/ConfirmExportModal'
 import { CancelExportModal } from '@/features/dashboard/components/export/CancelExportModal'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 
 const CHART_OPTIONS: readonly ChartOption[] = [
   { id: 'concentration', label: 'Ciclos de Tratamento por Concentração' },
@@ -57,7 +59,7 @@ export function ExportReportPage() {
           onClick={() => setShowCancelModal(true)}
           className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
         >
-          <ChevronLeft size={15} />
+          <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
           Painel de Métricas
         </button>
       </div>

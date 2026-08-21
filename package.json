@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@fontsource/manrope": "^5.2.8",
+    "@fortawesome/fontawesome-svg-core": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
+    "@fortawesome/react-fontawesome": "^3.5.0",
     "@hookform/resolvers": "^5.2.2",
     "@hugeicons/core-free-icons": "^4.1.1",
     "@hugeicons/react": "^1.1.6",
@@ -23,7 +26,6 @@
     "date-fns": "^4.1.0",
     "gsap": "^3.15.0",
     "jspdf": "^4.2.1",
-    "lucide-react": "^1.8.0",
     "ogl": "^1.0.11",
     "react": "^19.2.4",
     "react-day-picker": "^9.14.0",
