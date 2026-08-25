@@ -55,7 +55,7 @@ export function CompletionMetrics({
         return (
           <div
             key={card.key}
-            className="relative overflow-hidden border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-4 flex items-center gap-3"
+            className="relative overflow-hidden border border-(--border-custom) rounded-3xl bg-[#F6F8F8] p-4 flex items-center gap-3"
             style={{
               backgroundImage:
                 'linear-gradient(105deg, rgba(108,158,165,0.28) 0%, rgba(155,193,196,0.16) 25%, rgba(234,241,241,0.07) 55%, transparent 80%)',

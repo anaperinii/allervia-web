@@ -32,17 +32,19 @@ type IconButtonAsLink = SharedProps & {
 type IconButtonProps = IconButtonAsAction | IconButtonAsLink
 
 const SIZE_CLASS: Record<IconButtonSize, string> = {
-  sm: 'h-7 w-7',
-  md: 'h-8 w-8',
-  lg: 'h-9 w-9',
+  sm: 'h-8 w-8',
+  md: 'h-9 w-9',
+  lg: 'h-10 w-10',
 }
 
+// Same resting white circle as the toolbar's CircleButton; the tone only shows
+// up on hover so rows of icon buttons stay quiet.
 const TONE_CLASS: Record<IconButtonTone, string> = {
-  brand: 'text-(--text-muted) hover:bg-teal-50 hover:text-brand',
-  danger: 'text-(--text-muted) hover:bg-[#A41517]/10 hover:text-[#A41517]',
-  warning: 'text-(--text-muted) hover:bg-yellow-50 hover:text-yellow-700',
-  success: 'text-(--text-muted) hover:bg-emerald-50 hover:text-emerald-700',
-  neutral: 'text-(--text-muted) hover:bg-gray-50 hover:text-(--text)',
+  brand: 'border border-[#DDE6E6] bg-white text-[#4A6469] hover:text-[#12333a] hover:border-[#12333a]/35',
+  danger: 'border border-[#DDE6E6] bg-white text-[#4A6469] hover:text-[#A41517] hover:border-[#A41517]/45',
+  warning: 'border border-[#DDE6E6] bg-white text-[#4A6469] hover:text-[#8a5c08] hover:border-[#B4780A]/45',
+  success: 'border border-[#DDE6E6] bg-white text-[#4A6469] hover:text-[#1d6772] hover:border-[#257E8C]/45',
+  neutral: 'border border-[#DDE6E6] bg-white text-[#4A6469] hover:text-[#12333a] hover:border-[#4A6469]/35',
 }
 
 function resolveTone(legacy: IconButtonLegacyVariant | undefined, explicit: IconButtonTone | undefined): IconButtonTone {
@@ -57,7 +59,7 @@ export function IconButton(props: IconButtonProps) {
   const { tone, variant, size = 'md', className, children, disabled, 'aria-label': ariaLabel } = props
   const resolved = resolveTone(variant, tone)
   const cls = cn(
-    'flex items-center justify-center rounded-lg transition-all cursor-pointer',
+    'flex items-center justify-center rounded-full shrink-0 transition-all duration-200 cursor-pointer hover:scale-105',
     SIZE_CLASS[size],
     TONE_CLASS[resolved],
     disabled && 'opacity-50 cursor-not-allowed pointer-events-none',

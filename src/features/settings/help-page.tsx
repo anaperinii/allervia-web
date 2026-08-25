@@ -31,13 +31,13 @@ export function HelpPage() {
                     iconColor={item.color}
                     title={item.label}
                     description={item.desc}
-                    className="bg-white! shadow-[0_4px_24px_rgba(0,0,0,0.06)]"
+                    className="bg-white!"
                   />
                 )
               })}
             </div>
 
-            <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+            <section className="lg:col-span-2 border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Perguntas frequentes</h2>
               </div>

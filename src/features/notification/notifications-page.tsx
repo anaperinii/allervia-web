@@ -165,7 +165,7 @@ export function NotificationsPage() {
           </div>
         </div>
 
-        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto rounded-b-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto rounded-b-xl bg-white">
           {filtered.length === 0 ? (
             <NotificationsEmpty hasActiveFilters={hasActiveFilters} onClearFilters={clearFilters} />
           ) : (

@@ -93,10 +93,10 @@ export function ReportClinicalPreview({
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-(--border-custom)">
-                      <th className="text-left text-[0.6rem] font-semibold text-(--text-muted) uppercase pb-2">Data</th>
-                      <th className="text-left text-[0.6rem] font-semibold text-(--text-muted) uppercase pb-2">Dose</th>
-                      <th className="text-left text-[0.6rem] font-semibold text-(--text-muted) uppercase pb-2">Intervalo</th>
-                      <th className="text-left text-[0.6rem] font-semibold text-(--text-muted) uppercase pb-2">Reação</th>
+                      <th className="text-left text-[0.68rem] font-semibold text-[#12333a] pb-2">Data</th>
+                      <th className="text-left text-[0.68rem] font-semibold text-[#12333a] pb-2">Dose</th>
+                      <th className="text-left text-[0.68rem] font-semibold text-[#12333a] pb-2">Intervalo</th>
+                      <th className="text-left text-[0.68rem] font-semibold text-[#12333a] pb-2">Reação</th>
                     </tr>
                   </thead>
                   <tbody>

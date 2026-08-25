@@ -326,7 +326,7 @@ export function PatientChartPage() {
             )}
           </div>
 
-          <div className="flex-1 flex flex-col rounded-tr-xl rounded-b-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden min-h-0 min-w-0">
+          <div className="flex-1 flex flex-col rounded-tr-xl rounded-b-xl bg-white overflow-hidden min-h-0 min-w-0">
             {activeTab === 'applications' ? (
               <>
                 <div className="px-5 py-3 border-b border-(--border-custom) min-w-0">

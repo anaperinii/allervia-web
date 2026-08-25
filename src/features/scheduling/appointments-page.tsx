@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Button, Modal, SegmentedControl, Select, TextInput, Toast } from '@/shared/components'
+import { Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
 import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
 import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { useHasPermission, useDoctorFilter } from '@/shared/stores/useUserStore'
@@ -20,6 +20,7 @@ import type { NewAppointmentForm } from '@/features/scheduling/schemas/new-appoi
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader, Pill, SelectPill } from '@/shared/components/showcase'
 
 const MONTH_OPTIONS = [
   { value: 0, label: 'Janeiro' },
@@ -120,73 +121,57 @@ export function AppointmentsPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-1">
-      <div className="mb-8 flex items-center justify-between gap-3">
-        <h1 className="text-3xl font-medium text-(--text)">Agendamentos</h1>
-        <div className="flex items-center gap-3">
-          <Button tone="brand" variant="solid" size="md" onClick={calendar.goToToday} className="bg-[linear-gradient(150deg,#257E8C,#12333a)]! border-[#12333a]! text-white! text-[0.7rem]!">
-            Hoje
-          </Button>
-          <Select
-            aria-label="Filtrar por mês"
-            value={calendar.currentDate.getMonth()}
-            onChange={(e) => calendar.setMonth(Number(e.target.value))}
-            className="h-8 bg-[#F3F5F6]! w-auto border-[#CBD6D6]!"
-          >
-            {MONTH_OPTIONS.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </Select>
-          <Select
-            aria-label="Filtrar por ano"
-            value={calendar.currentDate.getFullYear()}
-            onChange={(e) => calendar.setYear(Number(e.target.value))}
-            className="h-8 bg-[#F3F5F6]! w-auto border-[#CBD6D6]!"
-          >
-            {YEAR_OPTIONS.map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </Select>
-          <SegmentedControl
-            value={calendar.viewMode}
-            onChange={calendar.setViewMode}
-            size="md"
-            options={[
-              { value: 'week', label: 'Semana' },
-              { value: 'month', label: 'Mês' },
-            ]}
-            aria-label="Modo de visualização"
-          />
-          {canNewAppointment && (
-            <Button
-              tone="brand"
-              variant="solid"
-              prominent
+      <PageHeader
+        breadcrumb={['Allervia', 'Agenda Clínica']}
+        title="Agendamentos"
+        actions={
+          <>
+            <Pill onClick={calendar.goToToday}>Hoje</Pill>
+            <SelectPill
+              aria-label="Filtrar por mês"
+              value={String(calendar.currentDate.getMonth())}
+              onChange={(value) => calendar.setMonth(Number(value))}
+              options={MONTH_OPTIONS.map((m) => ({ value: String(m.value), label: m.label }))}
+            />
+            <SelectPill
+              aria-label="Filtrar por ano"
+              value={String(calendar.currentDate.getFullYear())}
+              onChange={(value) => calendar.setYear(Number(value))}
+              options={YEAR_OPTIONS.map((y) => ({ value: String(y), label: String(y) }))}
+            />
+            <SegmentedControl
+              value={calendar.viewMode}
+              onChange={calendar.setViewMode}
               size="md"
-              leftIcon={<FontAwesomeIcon icon={faPlus} style={{ fontSize: 13 }} />}
-              onClick={() => setShowAddModal(true)}
-              className="px-3"
-            >
-              Novo Agendamento
-            </Button>
-          )}
-        </div>
-      </div>
+              options={[
+                { value: 'week', label: 'Semana' },
+                { value: 'month', label: 'Mês' },
+              ]}
+              aria-label="Modo de visualização"
+            />
+            {canNewAppointment && (
+              <Pill icon={faPlus} onClick={() => setShowAddModal(true)}>
+                Novo Agendamento
+              </Pill>
+            )}
+          </>
+        }
+      />
 
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-3xl border border-(--border-custom) bg-[#F6F8F8]">
         <CalendarToolbar
           monthLabel={calendar.monthLabel}
           onPrev={calendar.goToPrev}
           onNext={calendar.goToNext}
-          onToday={calendar.goToToday}
           rightContent={
-            <div className="relative w-[26rem]">
+            <div className="relative w-104">
               <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" style={{ fontSize: 14 }} />
               <TextInput
                 aria-label="Pesquisar paciente"
                 placeholder="Pesquisar paciente"
                 value={patientSearch}
                 onChange={(e) => setPatientSearch(e.target.value)}
-                className="h-8 pl-8 bg-[#F3F5F6]! border-[#CBD6D6]!"
+                className="h-9 pl-8"
               />
             </div>
           }
@@ -221,7 +206,7 @@ export function AppointmentsPage() {
         title={
           dayModal
             ? (() => {
-                const s = format(dayModal.date, "EEEE, dd 'de' MMMM", { locale: ptBR })
+                const s = format(dayModal.date,"EEEE, dd 'de' MMMM", { locale: ptBR })
                 return s.charAt(0).toUpperCase() + s.slice(1)
               })()
             : ''

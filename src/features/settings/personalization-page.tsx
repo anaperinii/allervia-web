@@ -47,7 +47,7 @@ export function PersonalizationPage() {
   return (
     <SettingsLayout subtitle="Personalização e Acessibilidade">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+            <section className="lg:col-span-2 border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Tema</h2>
               </div>
@@ -76,7 +76,7 @@ export function PersonalizationPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
                 <FontAwesomeIcon icon={faTableColumns} className="text-(--text-muted)" style={{ fontSize: 14 }} />
                 <h2 className="text-xs font-bold text-(--text)">Densidade da interface</h2>
@@ -106,7 +106,7 @@ export function PersonalizationPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
                 <FontAwesomeIcon icon={faFont} className="text-(--text-muted)" style={{ fontSize: 14 }} />
                 <h2 className="text-xs font-bold text-(--text)">Tamanho da fonte</h2>
@@ -132,7 +132,7 @@ export function PersonalizationPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Acessibilidade visual</h2>
               </div>
@@ -157,7 +157,7 @@ export function PersonalizationPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Movimento e navegação</h2>
               </div>

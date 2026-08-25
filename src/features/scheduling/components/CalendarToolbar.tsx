@@ -29,7 +29,7 @@ export function CalendarToolbar({
             aria-label="Período anterior"
             className="flex items-center justify-center text-(--text) hover:text-brand transition-colors"
           >
-            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 20 }} />
+            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 16 }} />
           </button>
           <span className="text-base font-semibold text-(--text) min-w-32 text-center capitalize">
             {monthLabel}
@@ -39,7 +39,7 @@ export function CalendarToolbar({
             aria-label="Próximo período"
             className="flex items-center justify-center text-(--text) hover:text-brand transition-colors"
           >
-            <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 20 }} />
+            <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 16 }} />
           </button>
         </div>
 

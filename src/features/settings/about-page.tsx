@@ -15,7 +15,7 @@ export function AboutPage() {
           <p className="text-xs text-(--text-muted)">Gestão de Protocolos de Imunoterapia Alérgica</p>
         </div>
 
-        <div className="border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-4 text-left space-y-2.5">
+        <div className="border border-(--border-custom) rounded-3xl bg-[#F6F8F8] p-4 text-left space-y-2.5">
           {[
             ['Versão', '2.0.0-beta'],
             ['Build', '2026.04.10'],
@@ -32,14 +32,14 @@ export function AboutPage() {
           ))}
         </div>
 
-        <div className="border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-4 text-left">
+        <div className="border border-(--border-custom) rounded-3xl bg-[#F6F8F8] p-4 text-left">
           <h3 className="text-xs font-bold text-(--text) mb-2">Licença</h3>
           <p className="text-[0.7rem] text-(--text-muted) leading-relaxed">
             Software proprietário desenvolvido como Projeto Integrador do curso de Bacharelado em Engenharia de Software da Universidade Evangélica de Goiás (UniEVANGÉLICA). Todos os direitos reservados.
           </p>
         </div>
 
-        <div className="border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-4 text-left">
+        <div className="border border-(--border-custom) rounded-3xl bg-[#F6F8F8] p-4 text-left">
           <h3 className="text-xs font-bold text-(--text) mb-2">Equipe de Desenvolvimento</h3>
           <div className="space-y-1.5">
             {['Ana Luisa Lima Perini', 'Daniella Nogueira e Silva', 'Esther Carolina Batista Lima', 'Victória Gomes Garcia'].map((name) => (

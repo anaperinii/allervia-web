@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Button, Modal } from '@/shared/components'
@@ -21,7 +21,8 @@ import { ReportClinicalPreview } from '@/features/patient/components/report/Repo
 import { ReportConfigPanel } from '@/features/patient/components/report/ReportConfigPanel'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faDownload, faPrint, faShieldHalved } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faPrint, faShieldHalved } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader, Pill } from '@/shared/components/showcase'
 
 const DEFAULT_SECTIONS: ReportSectionId[] = ['personal', 'immunotherapy', 'applications', 'progress']
 
@@ -116,40 +117,31 @@ export function PatientReportPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
-      <div className="mb-6 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-medium text-(--text)">Emitir Relatório</h1>
-          <Link
-            to="/patient/$patientId"
-            params={{ patientId: patient.id }}
-            className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
-          >
-            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
-            Prontuário
-          </Link>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<FontAwesomeIcon icon={faPrint} style={{ fontSize: 13 }} />}
-            disabled={exportDisabled}
-            onClick={() => exportPdf(buildExportData())}
-          >
-            Imprimir
-          </Button>
-          <Button
-            tone="brand"
-            variant="solid"
-            size="sm"
-            leftIcon={<FontAwesomeIcon icon={faDownload} style={{ fontSize: 13 }} />}
-            disabled={exportDisabled}
-            onClick={() => setShowExportModal(true)}
-          >
-            Exportar {fileFormat.toUpperCase()}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        breadcrumb={['Prontuário', patient.name]}
+        title="Emitir Relatório"
+        actions={
+          <>
+            <Pill
+              icon={faPrint}
+              onClick={() => !exportDisabled && exportPdf(buildExportData())}
+              disabled={exportDisabled}
+              className={exportDisabled ? 'opacity-50 cursor-not-allowed' : undefined}
+            >
+              Imprimir
+            </Pill>
+            <Pill
+              icon={faDownload}
+              active
+              onClick={() => !exportDisabled && setShowExportModal(true)}
+              disabled={exportDisabled}
+              className={exportDisabled ? 'opacity-50 cursor-not-allowed' : undefined}
+            >
+              Exportar {fileFormat.toUpperCase()}
+            </Pill>
+          </>
+        }
+      />
 
       <div className="flex flex-1 min-h-0 overflow-hidden gap-4">
         <ReportConfigPanel

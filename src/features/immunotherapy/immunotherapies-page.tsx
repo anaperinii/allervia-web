@@ -6,17 +6,10 @@ import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTy
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import { useDoctorFilter, useHasPermission } from '@/shared/stores/useUserStore'
-import { ImmunotherapiesFilterBar } from '@/features/immunotherapy/components/ImmunotherapiesFilterBar'
+import { ImmunotherapiesFilterBar, MODALITY_OPTIONS, type ModalityTab } from '@/features/immunotherapy/components/ImmunotherapiesFilterBar'
 import { ImmunotherapiesTable } from '@/features/immunotherapy/components/ImmunotherapiesTable'
-import { cn } from '@/shared/lib/cn'
-
-type ModalityTab = 'all' | 'subcutaneous' | 'sublingual'
-
-const MODALITY_TABS: { value: ModalityTab; label: string }[] = [
-  { value: 'all', label: 'Todas' },
-  { value: 'subcutaneous', label: 'Subcutânea' },
-  { value: 'sublingual', label: 'Sublingual' },
-]
+import { PageHeader, Pill, SHOWCASE } from '@/shared/components/showcase'
+import { SegmentedControl } from '@/shared/components'
 
 export function ImmunotherapiesPage() {
   const navigate = useNavigate()
@@ -84,71 +77,60 @@ export function ImmunotherapiesPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-visible">
-      <div className="mb-6">
-        <div className="mb-8 flex items-center gap-3">
-          <h1 className="text-3xl font-medium text-(--text)">Imunoterapias Alérgicas</h1>
-        </div>
-        <ImmunotherapiesFilterBar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          typeFilter={typeFilter}
-          setTypeFilter={setTypeFilter}
-          intervalFilter={intervalFilter}
-          setIntervalFilter={setIntervalFilter}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          types={types}
-          intervals={intervals}
-          canAddImmunotherapy={canAddImmunotherapy}
-          canEvolve={canEvolve}
+      <PageHeader
+        breadcrumb={['Allervia', 'Imunoterapias']}
+        title="Imunoterapias Alérgicas"
+        actions={
+          <ImmunotherapiesFilterBar
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            typeFilter={typeFilter}
+            setTypeFilter={setTypeFilter}
+            intervalFilter={intervalFilter}
+            setIntervalFilter={setIntervalFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            types={types}
+            intervals={intervals}
+          />
+        }
+      />
+
+      {/* Modality switch — took over from the folder tabs above the table. */}
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <SegmentedControl
+          value={modalityTab}
+          onChange={setModalityTab}
+          aria-label="Modalidade"
+          options={MODALITY_OPTIONS.map((option) => ({
+            value: option.value,
+            label: (
+              <>
+                {option.label}
+                <span className="text-[0.65rem] font-normal opacity-60">({modalityCounts[option.value]})</span>
+              </>
+            ),
+          }))}
         />
+
+        <div className="flex items-center gap-2 shrink-0">
+          {canAddImmunotherapy && (
+            <Pill active onClick={() => navigate({ to: '/add-immunotherapy' })}>
+              Adicionar Imunoterapia
+            </Pill>
+          )}
+          {canEvolve && (
+            <Pill active onClick={() => navigate({ to: '/patient-evolution' })}>
+              Evoluir Paciente
+            </Pill>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-end gap-1">
-        {MODALITY_TABS.map((tab, idx) => {
-          const isActive = modalityTab === tab.value
-          const isFirst = idx === 0
-          return (
-            <button
-              key={tab.value}
-              type="button"
-              onClick={() => setModalityTab(tab.value)}
-              className={cn(
-                'relative px-5 py-2 text-xs font-semibold transition-colors rounded-t-xl',
-                isActive
-                  ? 'bg-gray-50/80 text-slate-800 z-10'
-                  : 'bg-white/55 text-slate-400 hover:bg-white/75 hover:text-slate-600',
-              )}
-            >
-              {isActive && (
-                <>
-                  {!isFirst && (
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute -left-3 bottom-0 h-3 w-3"
-                      style={{
-                        background:
-                          'radial-gradient(circle at 0% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)',
-                      }}
-                    />
-                  )}
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3"
-                    style={{
-                      background:
-                        'radial-gradient(circle at 100% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)',
-                    }}
-                  />
-                </>
-              )}
-              {tab.label} <span className="text-[0.65rem] font-normal opacity-60">({modalityCounts[tab.value]})</span>
-            </button>
-          )
-        })}
-      </div>
-
-      <div className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-tr-2xl rounded-b-2xl bg-white/25 backdrop-blur-xl border border-white/50 shadow-[0_22px_55px_-14px_rgba(16,50,60,0.28)]">
+      <div
+        className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-3xl"
+        style={{ background: SHOWCASE.card, border: `1px solid ${SHOWCASE.line}` }}
+      >
         <div className="flex-1 overflow-auto">
           <ImmunotherapiesTable items={paginated} onSelect={handleSelect} />
         </div>

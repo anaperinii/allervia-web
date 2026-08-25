@@ -22,6 +22,7 @@ import { AddImmunotherapyReviewStep } from '@/features/immunotherapy/components/
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader, Pill } from '@/shared/components/showcase'
 
 const STEP_LABELS = ['Dados do Paciente', 'Dados da Imunoterapia', 'Revisão dos Dados']
 
@@ -131,17 +132,15 @@ export function AddImmunotherapyPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
-      <div className="mb-4">
-        <h1 className="text-3xl font-medium text-(--text)">Adicionar Imunoterapia Alérgica</h1>
-        <button
-          type="button"
-          onClick={() => setShowCancelModal(true)}
-          className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
-        >
-          <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
-          Imunoterapias
-        </button>
-      </div>
+      <PageHeader
+        breadcrumb={['Allervia', 'Imunoterapias']}
+        title="Adicionar Imunoterapia Alérgica"
+        actions={
+          <Pill icon={faChevronLeft} onClick={() => setShowCancelModal(true)}>
+            Voltar
+          </Pill>
+        }
+      />
 
       <div className="wizard-fields flex flex-1 min-h-0 flex-col overflow-hidden">
         <form onSubmit={handleFormSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
