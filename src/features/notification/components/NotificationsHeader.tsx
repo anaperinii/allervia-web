@@ -1,7 +1,6 @@
-export function NotificationsHeader() {
-  return (
-    <div className="flex items-center gap-3">
-      <h1 className="text-3xl font-medium text-(--text)">Central de Notificações</h1>
-    </div>
-  )
+import type { ReactNode } from 'react'
+import { PageHeader } from '@/shared/components/showcase'
+
+export function NotificationsHeader({ actions }: { actions?: ReactNode }) {
+  return <PageHeader breadcrumb={['Allervia', 'Notificações']} title="Central de Notificações" actions={actions} />
 }

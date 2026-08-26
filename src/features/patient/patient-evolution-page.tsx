@@ -25,7 +25,8 @@ import { PostApplicationStep } from '@/features/patient/components/treatment-evo
 import { EvolutionReviewStep } from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
+import { faCircleCheck } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader } from '@/shared/components/showcase'
 
 export function PatientEvolutionPage() {
   const navigate = useNavigate()
@@ -244,37 +245,19 @@ export function PatientEvolutionPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
-      <div className="mb-8">
-        <h1
-          key={selectedImmunotherapy?.id ?? 'root'}
-          className="text-3xl font-medium text-(--text)"
-          style={{
-            opacity: 0,
-            animation: 'slide-up-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
-          }}
-        >
-          {selectedImmunotherapy ? selectedImmunotherapy.name : 'Evolução do Paciente'}
-        </h1>
-        {preselectedId ? (
-          <Link
-            to="/patient/$patientId"
-            params={{ patientId: preselectedId }}
-            className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
-          >
-            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
-            Prontuário
-          </Link>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowCancelModal(true)}
-            className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
-          >
-            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
-            Imunoterapias
-          </button>
-        )}
-      </div>
+      <PageHeader
+        key={selectedImmunotherapy?.id ?? 'root'}
+        breadcrumb={[
+          preselectedId
+            ? {
+                label: 'Prontuário',
+                onClick: () => navigate({ to: '/patient/$patientId', params: { patientId: preselectedId } }),
+              }
+            : { label: 'Imunoterapias', onClick: () => setShowCancelModal(true) },
+          'Evolução',
+        ]}
+        title={selectedImmunotherapy ? selectedImmunotherapy.name : 'Evolução do Paciente'}
+      />
 
       <div className="wizard-fields flex flex-1 min-h-0 flex-col overflow-hidden">
         <form onSubmit={handleFormSubmit} noValidate className="flex flex-1 min-h-0 flex-col">

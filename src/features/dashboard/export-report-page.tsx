@@ -7,8 +7,7 @@ import { ExportPreview } from '@/features/dashboard/components/export/preview'
 import { ConfirmExportModal } from '@/features/dashboard/components/export/ConfirmExportModal'
 import { CancelExportModal } from '@/features/dashboard/components/export/CancelExportModal'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader } from '@/shared/components/showcase'
 
 const CHART_OPTIONS: readonly ChartOption[] = [
   { id: 'concentration', label: 'Ciclos de Tratamento por Concentração' },
@@ -52,17 +51,10 @@ export function ExportReportPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
-      <div className="mb-6">
-        <h1 className="text-3xl font-medium text-(--text)">Exportar Relatório</h1>
-        <button
-          type="button"
-          onClick={() => setShowCancelModal(true)}
-          className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
-        >
-          <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
-          Painel de Métricas
-        </button>
-      </div>
+      <PageHeader
+        breadcrumb={[{ label: 'Painel de Métricas', onClick: () => setShowCancelModal(true) }]}
+        title="Exportar Relatório"
+      />
 
       <div className="flex flex-1 min-h-0 overflow-hidden gap-4">
           <ExportConfigPanel

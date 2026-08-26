@@ -26,7 +26,8 @@ import { CompletionReviewStep } from '@/features/patient/components/treatment-co
 import { useCompletionDraftsStore } from '@/features/patient/stores/useCompletionDraftsStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faCircleCheck, faFilePen } from '@fortawesome/free-solid-svg-icons'
+import { faCircleCheck, faFilePen } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader, SHOWCASE } from '@/shared/components/showcase'
 
 const STEP_LABELS = ['Visão geral', 'Plano pós-alta', 'Revisão'] as const
 
@@ -179,25 +180,21 @@ export function PatientCompletionPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-3xl font-medium text-(--text)">{patient.name}</h1>
-          <button
-            type="button"
-            onClick={() => setShowCancelModal(true)}
-            className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
-          >
-            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
-            Prontuário
-          </button>
-        </div>
-        {draftSavedAt && (
-          <span className="inline-flex items-center gap-1.5 text-[0.6rem] font-semibold text-brand-dark bg-brand/15 border border-brand/25 rounded-md px-2.5 py-1 shrink-0">
-            <FontAwesomeIcon icon={faFilePen} className="text-brand" style={{ fontSize: 11 }} />
-            Rascunho salvo · {draftSavedAt}
-          </span>
-        )}
-      </div>
+      <PageHeader
+        breadcrumb={[{ label: 'Prontuário', onClick: () => setShowCancelModal(true) }, 'Conclusão de Tratamento']}
+        title={patient.name}
+        actions={
+          draftSavedAt && (
+            <span
+              className="inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[0.7rem] font-semibold"
+              style={{ background: SHOWCASE.white, color: SHOWCASE.inkSoft, border: `1px solid ${SHOWCASE.line}` }}
+            >
+              <FontAwesomeIcon icon={faFilePen} style={{ fontSize: 11 }} />
+              Rascunho salvo · {draftSavedAt}
+            </span>
+          )
+        }
+      />
 
       <WizardStepsIndicator
         current={step}

@@ -20,15 +20,15 @@ interface SegmentedControlProps<T extends string> {
 }
 
 const SIZE_CLASS: Record<SegmentedControlSize, string> = {
-  xs: 'h-6 text-[0.55rem]',
-  sm: 'h-7 text-[0.65rem]',
-  md: 'h-8 text-xs',
+  xs: 'h-7 text-[0.6rem]',
+  sm: 'h-8 text-[0.7rem]',
+  md: 'h-9 text-[0.78rem]',
 }
 
 const ITEM_PADDING: Record<SegmentedControlSize, string> = {
-  xs: 'px-2',
-  sm: 'px-2.5',
-  md: 'px-3',
+  xs: 'px-2.5',
+  sm: 'px-3',
+  md: 'px-4',
 }
 
 export function SegmentedControl<T extends string>({
@@ -45,9 +45,10 @@ export function SegmentedControl<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        'flex items-stretch gap-0.5 rounded-lg border border-[#CBD6D6] bg-[#F3F5F6] p-1',
+        // inline-flex so the track hugs its options instead of filling a block parent
+        'inline-flex w-max items-stretch gap-0.5 rounded-full border border-[#DDE6E6] bg-white p-0.5',
         SIZE_CLASS[size],
-        fullWidth && 'w-full',
+        fullWidth && 'flex w-full',
         className,
       )}
     >
@@ -60,12 +61,10 @@ export function SegmentedControl<T extends string>({
             aria-selected={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'rounded-md font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer',
+              'rounded-full font-medium transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap',
               ITEM_PADDING[size],
               fullWidth && 'flex-1',
-              active
-                ? 'bg-brand/80 text-white shadow-sm font-semibold'
-                : 'text-(--text-muted) hover:text-(--text)'
+              active ? 'bg-[#12333a] text-white' : 'text-[#4A6469] hover:text-[#12333a]'
             )}
           >
             {opt.icon}

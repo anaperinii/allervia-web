@@ -88,7 +88,7 @@ export function PatientInfoSidebar({
     inactivationCount > 0
 
   return (
-    <div className="flex w-[360px] shrink-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
+    <div className="flex w-[360px] shrink-0 flex-col rounded-xl bg-white overflow-hidden">
       <div className="border-b border-(--border-custom) px-5 py-4">
         <div className="flex items-center gap-3">
           <PatientInitials name={patient.name} size={48} />

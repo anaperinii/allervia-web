@@ -34,44 +34,49 @@ type ButtonAsLink = SharedProps & {
 type ButtonProps = ButtonAsAction | ButtonAsLink
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
-  sm: 'h-7 px-3 text-[0.65rem]',
-  md: 'h-8 px-4 text-xs',
-  lg: 'h-10 px-5 text-sm',
+  sm: 'h-8 px-3.5 text-[0.7rem]',
+  md: 'h-9 px-4 text-[0.78rem]',
+  lg: 'h-11 px-5 text-[0.85rem]',
 }
 
 const PROMINENT_SHADOW: Record<ButtonTone, string> = {
-  brand: 'shadow-[0_2px_12px_rgba(108,158,165,0.3)]',
-  danger: 'shadow-[0_2px_12px_rgba(220,38,38,0.3)]',
-  warning: 'shadow-[0_2px_12px_rgba(234,179,8,0.3)]',
-  success: 'shadow-[0_2px_12px_rgba(52,211,153,0.3)]',
-  neutral: 'shadow-[0_2px_12px_rgba(0,0,0,0.1)]',
+  brand: 'shadow-[0_2px_10px_rgba(18,51,58,0.22)]',
+  danger: 'shadow-[0_2px_10px_rgba(164,21,23,0.22)]',
+  warning: 'shadow-[0_2px_10px_rgba(180,120,10,0.22)]',
+  success: 'shadow-[0_2px_10px_rgba(37,126,140,0.22)]',
+  neutral: 'shadow-[0_2px_10px_rgba(18,51,58,0.14)]',
 }
+
+// Pill language: flat fills, no gradients. `outline` is the resting white pill
+// from the toolbar, `solid` is the same pill filled with its tone.
+const OUTLINE_BASE = 'border border-[#DDE6E6] bg-white'
 
 const STYLES: Record<ButtonTone, Record<ButtonVariant, string>> = {
   brand: {
-    solid: 'bg-linear-to-br from-brand to-brand-dark text-white before:content-[""] before:absolute before:inset-0 before:bg-linear-to-br before:from-brand-dark before:to-brand-dark before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 before:pointer-events-none',
-    outline: 'border-[1.5px] border-brand text-brand hover:bg-brand/15 hover:border-brand-dark hover:text-brand-dark',
-    ghost: 'text-brand hover:bg-brand/15',
+    solid: 'bg-[#12333a] text-white hover:bg-[#0c2429]',
+    outline: `${OUTLINE_BASE} text-[#12333a] hover:border-[#12333a]/35`,
+    ghost: 'text-[#12333a] hover:bg-[#12333a]/8',
   },
   danger: {
-    solid: 'bg-red-600 text-white hover:bg-red-700',
-    outline: 'border-[1.5px] border-[#A41517]/35 text-[#A41517] hover:bg-[#A41517]/10 hover:border-[#A41517]/55',
+    solid: 'bg-[#A41517] text-white hover:bg-[#8a1114]',
+    // Destructive actions carry the red border at rest, not only on hover.
+    outline: 'border border-[#A41517]/40 bg-white text-[#A41517] hover:border-[#A41517]/70 hover:bg-[#A41517]/6',
     ghost: 'text-[#A41517] hover:bg-[#A41517]/10',
   },
   warning: {
-    solid: 'bg-linear-to-br from-yellow-500 to-amber-500 text-white before:content-[""] before:absolute before:inset-0 before:bg-linear-to-br before:from-yellow-600 before:to-amber-600 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 before:pointer-events-none',
-    outline: 'border-[1.5px] border-yellow-300 text-yellow-700 hover:bg-yellow-50 hover:border-yellow-400',
-    ghost: 'text-yellow-700 hover:bg-yellow-50',
+    solid: 'bg-[#B4780A] text-white hover:bg-[#97640a]',
+    outline: `${OUTLINE_BASE} text-[#8a5c08] hover:border-[#B4780A]/45`,
+    ghost: 'text-[#8a5c08] hover:bg-[#B4780A]/10',
   },
   success: {
-    solid: 'bg-linear-to-br from-emerald-400 to-emerald-500 text-white before:content-[""] before:absolute before:inset-0 before:bg-linear-to-br before:from-emerald-500 before:to-emerald-600 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 before:pointer-events-none',
-    outline: 'border-[1.5px] border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400',
-    ghost: 'text-emerald-700 hover:bg-emerald-50',
+    solid: 'bg-[#257E8C] text-white hover:bg-[#1d6772]',
+    outline: `${OUTLINE_BASE} text-[#1d6772] hover:border-[#257E8C]/45`,
+    ghost: 'text-[#1d6772] hover:bg-[#257E8C]/10',
   },
   neutral: {
-    solid: 'bg-gray-700 text-white hover:bg-gray-800',
-    outline: 'border-[1.5px] border-(--border-custom) text-(--text-muted) hover:bg-gray-200 hover:text-(--text) hover:border-gray-300',
-    ghost: 'text-(--text-muted) hover:bg-gray-200 hover:text-(--text)',
+    solid: 'bg-[#4A6469] text-white hover:bg-[#3a5155]',
+    outline: `${OUTLINE_BASE} text-[#4A6469] hover:border-[#4A6469]/35`,
+    ghost: 'text-[#4A6469] hover:bg-[#4A6469]/10',
   },
 }
 
@@ -115,7 +120,7 @@ export function Button(props: ButtonProps) {
   } = props
   const resolved = resolveLegacy(variant, tone)
   const cls = cn(
-    'relative isolate overflow-hidden rounded-lg flex items-center justify-center gap-1.5 font-semibold transition-all cursor-pointer whitespace-nowrap',
+    'relative isolate rounded-full flex items-center justify-center gap-2 font-medium transition-all duration-200 cursor-pointer whitespace-nowrap',
     SIZE_CLASS[size],
     STYLES[resolved.tone][resolved.variant],
     prominent && resolved.variant === 'solid' && PROMINENT_SHADOW[resolved.tone],

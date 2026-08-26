@@ -52,13 +52,26 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   invalid?: boolean
   children: ReactNode
 }
+// Selects wear the toolbar pill instead of the boxed field so they match the
+// SelectPill used in page headers.
+const SELECT_BASE =
+  'w-full h-9 appearance-none cursor-pointer rounded-full border bg-white pl-4 pr-9 text-[0.78rem] font-medium text-[#4A6469] transition-all focus:outline-none focus:border-[#12333a]/40'
+
 export function Select({ invalid, className, children, ...rest }: SelectProps) {
   return (
     <div className="relative">
-      <select {...rest} aria-invalid={invalid || undefined} className={cn(FIELD_BASE, 'h-9 appearance-none cursor-pointer pr-8', invalid ? FIELD_INVALID : FIELD_VALID, className)}>
+      <select
+        {...rest}
+        aria-invalid={invalid || undefined}
+        className={cn(SELECT_BASE, invalid ? FIELD_INVALID : 'border-[#DDE6E6]', className)}
+      >
         {children}
       </select>
-      <FontAwesomeIcon icon={faChevronDown} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" style={{ fontSize: 12 }} />
+      <FontAwesomeIcon
+        icon={faChevronDown}
+        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#4A6469] pointer-events-none"
+        style={{ fontSize: 11 }}
+      />
     </div>
   )
 }

@@ -1,8 +1,5 @@
-import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader } from '@/shared/components/showcase'
 
 interface SettingsLayoutProps {
   subtitle?: string
@@ -13,25 +10,11 @@ interface SettingsLayoutProps {
 export function SettingsLayout({ subtitle, headerActions, children }: SettingsLayoutProps) {
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
-      <div className="mb-8 flex items-center justify-between gap-3">
-        <div>
-          {subtitle ? (
-            <>
-              <h1 className="text-3xl font-medium text-(--text)">{subtitle}</h1>
-              <Link
-                to="/settings"
-                className="mt-1.5 inline-flex items-center gap-1.5 text-sm font-medium text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer no-underline"
-              >
-                <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 15 }} />
-                Configurações
-              </Link>
-            </>
-          ) : (
-            <h1 className="text-3xl font-medium leading-none text-(--text)">Configurações</h1>
-          )}
-        </div>
-        {headerActions && <div className="flex items-center gap-2">{headerActions}</div>}
-      </div>
+      <PageHeader
+        breadcrumb={subtitle ? ['Allervia', 'Configurações'] : ['Allervia']}
+        title={subtitle ?? 'Configurações'}
+        actions={headerActions}
+      />
 
       {subtitle ? (
         <div className="flex-1 min-h-0 overflow-y-auto">{children}</div>

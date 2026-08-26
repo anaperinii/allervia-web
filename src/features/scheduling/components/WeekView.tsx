@@ -44,17 +44,20 @@ export function WeekView({
               className="-mx-2.5 -mt-2.5 px-2.5 pt-2.5 pb-2 mb-2 text-center border-b border-(--border-custom)"
               style={{ background: today || selected ? 'transparent' : '#f9fafb' }}
             >
-              <div className="text-[0.6rem] font-semibold text-slate-600 uppercase">
-                {format(day, 'EEE', { locale: ptBR })}
-              </div>
-              <div
-                className={cn(
-                  'mx-auto mt-1 flex h-7 w-7 items-center justify-center rounded-full text-base font-bold',
-                  today || selected ? 'text-white' : 'text-(--text)',
-                )}
-                style={today || selected ? { background: '#1d6772' } : undefined}
-              >
-                {format(day, 'd')}
+              {/* Weekday and day number share one line. */}
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-[0.7rem] font-semibold text-slate-600 uppercase">
+                  {format(day, 'EEE', { locale: ptBR })}
+                </span>
+                <span
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-full text-[1.05rem] font-bold',
+                    today || selected ? 'text-white' : 'text-(--text)',
+                  )}
+                  style={today || selected ? { background: '#1d6772' } : undefined}
+                >
+                  {format(day, 'dd')}
+                </span>
               </div>
             </div>
             <div className="flex-1 space-y-1 overflow-y-auto">

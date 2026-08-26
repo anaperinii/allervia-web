@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { formatDistanceToNow } from 'date-fns'
+import { format, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/cn'
 import { IconButton } from '@/shared/components'
@@ -29,7 +29,10 @@ export function NotificationListItem({
   onMarkUnread,
 }: NotificationListItemProps) {
   const display = NOTIFICATION_TYPE_DISPLAY[notification.type]
-  const relativeTime = formatDistanceToNow(notification.timestamp, { locale: ptBR, addSuffix: true })
+  // Same-day notifications only need the clock; older ones need the date.
+  const receivedAt = isToday(notification.timestamp)
+    ? format(notification.timestamp, 'HH:mm', { locale: ptBR })
+    : format(notification.timestamp, 'dd/MM/yyyy', { locale: ptBR })
 
   return (
     <div
@@ -45,25 +48,25 @@ export function NotificationListItem({
           checked={selected}
           onChange={() => onToggleSelect(notification.id)}
           aria-label={`Selecionar notificação: ${notification.title}`}
-          className="w-3.5 h-3.5 rounded border-gray-300 mt-1 cursor-pointer accent-brand shrink-0"
+          className="w-3.5 h-3.5 rounded border-gray-300 mt-1 cursor-pointer accent-[#257E8C] shrink-0"
         />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-            <span className="text-[0.55rem] font-semibold px-1.5 py-px rounded-md bg-gray-100 text-gray-500 border border-gray-200">
+            <span className="text-[0.62rem] font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 border border-gray-200">
               {display.label}
             </span>
             <time
               dateTime={notification.timestamp.toISOString()}
               title={notification.timestamp.toLocaleString('pt-BR')}
-              className="text-[0.6rem] text-(--text-muted)"
+              className="text-[0.68rem] text-(--text-muted)"
             >
-              {relativeTime}
+              {receivedAt}
             </time>
             {!notification.read && <span className="w-1.5 h-1.5 rounded-full bg-red-500" aria-label="Não lida" />}
           </div>
-          <div className="text-xs font-semibold text-(--text)">{notification.title}</div>
-          <div className={cn('text-[0.65rem] text-(--text-muted) mt-0.5 leading-relaxed', !expanded && 'line-clamp-2')}>
+          <div className="text-[0.85rem] font-semibold text-(--text)">{notification.title}</div>
+          <div className={cn('text-[0.78rem] text-(--text-muted) mt-1 leading-relaxed', !expanded && 'line-clamp-2')}>
             {notification.message}
           </div>
 
@@ -75,7 +78,7 @@ export function NotificationListItem({
               )}
             >
               <div className="mt-2 pt-2 border-t border-(--border-custom)">
-                <p className="text-[0.65rem] text-(--text-muted) leading-relaxed">{notification.details}</p>
+                <p className="text-[0.78rem] text-(--text-muted) leading-relaxed">{notification.details}</p>
                 {notification.actionUrl && (
                   <Link
                     to={notification.actionUrl}

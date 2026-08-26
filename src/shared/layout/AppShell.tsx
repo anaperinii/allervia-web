@@ -1,15 +1,23 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
+import {
+  faArrowLeft,
+  faBell,
+  faCalendarDays,
+  faChartColumn,
+  faGear,
+  faRightFromBracket,
+  faSyringe,
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import allerviaMark from '@/assets/allervia-mark-light.png'
 import userAvatar from '@/assets/user-avatar.jpg'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
+import { Button, Modal } from '@/shared/components'
+import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
 import { useNotificationsStore } from '@/features/notification/stores/useNotificationsStore'
 import { useUserStore } from '@/shared/stores/useUserStore'
-import { Button, Modal } from '@/shared/components'
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBell, faCalendarDays, faChartColumn, faGear, faRightFromBracket, faSyringe } from '@fortawesome/free-solid-svg-icons'
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 interface RailItem {
   icon: IconDefinition
@@ -18,11 +26,11 @@ interface RailItem {
   match?: string[]
 }
 
+/** The four destinations that make up the rail's centre block. */
 const RAIL: RailItem[] = [
-  { icon: faSyringe, path: '/immunotherapies', label: 'Imunoterapias Alérgicas', match: ['/add-immunotherapy', '/patient'] },
+  { icon: faSyringe, path: '/immunotherapies', label: 'Imunoterapias', match: ['/add-immunotherapy', '/patient'] },
   { icon: faCalendarDays, path: '/appointments', label: 'Agendamentos' },
   { icon: faChartColumn, path: '/dashboard', label: 'Painel de Métricas', match: ['/export-report'] },
-  { icon: faBell, path: '/notifications', label: 'Notificações' },
   {
     icon: faGear,
     path: '/settings',
@@ -31,104 +39,145 @@ const RAIL: RailItem[] = [
   },
 ]
 
+function greeting(hour: number) {
+  if (hour < 12) return 'Bom dia'
+  if (hour < 18) return 'Boa tarde'
+  return 'Boa noite'
+}
+
+/** Circular rail link with the hover label that slides out to its right. */
+function RailLink({ item, active }: { item: RailItem; active: boolean }) {
+  return (
+    <Link
+      to={item.path}
+      aria-label={item.label}
+      className="group relative flex h-12 w-12 items-center justify-center rounded-full no-underline transition-transform duration-200 hover:scale-105"
+      style={{
+        // Brand gradient — the mark's teal falling into the deep teal.
+        background: active ? 'linear-gradient(150deg, #257E8C, #12333a)' : SHOWCASE.white,
+        color: active ? SHOWCASE.white : SHOWCASE.inkSoft,
+        border: active ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
+        boxShadow: active ? '0 6px 16px rgba(16,60,68,0.28)' : undefined,
+      }}
+    >
+      <FontAwesomeIcon icon={item.icon} style={{ fontSize: 13 }} />
+      <span
+        className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50"
+        style={{ background: SHOWCASE.ink, color: '#eef3f4' }}
+      >
+        {item.label}
+      </span>
+    </Link>
+  )
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const path = location.pathname
   const hasUnread = useNotificationsStore((s) => s.notifications.some((n) => !n.read))
+  const unreadCount = useNotificationsStore((s) => s.notifications.filter((n) => !n.read).length)
   const userName = useUserStore((s) => s.current.name)
-  const userInstitution = useUserStore((s) => s.current.institution)
   const [showLogout, setShowLogout] = useState(false)
 
-  const isActive = (r: RailItem) =>
-    path === r.path || path.startsWith(r.path + '/') || (r.match?.some((m) => path.startsWith(m)) ?? false)
+  const isActive = (item: RailItem) =>
+    path === item.path || path.startsWith(item.path + '/') || (item.match?.some((m) => path.startsWith(m)) ?? false)
 
   return (
-    <div className="relative flex h-screen w-full flex-col overflow-hidden" style={{ background: '#eef1f2' }}>
-      {/* teal glows top (system palette) */}
-      <div aria-hidden="true" className="pointer-events-none absolute" style={{ top: -160, left: 100, width: 900, height: 420, background: 'radial-gradient(closest-side, rgba(108,158,165,0.42), rgba(108,158,165,0))', filter: 'blur(50px)' }} />
-      <div aria-hidden="true" className="pointer-events-none absolute" style={{ top: -120, left: 520, width: 700, height: 380, background: 'radial-gradient(closest-side, rgba(155,193,196,0.40), rgba(155,193,196,0))', filter: 'blur(55px)' }} />
-      <div aria-hidden="true" className="pointer-events-none absolute" style={{ top: -60, left: 40, width: 520, height: 300, background: 'radial-gradient(closest-side, rgba(37,126,140,0.28), rgba(37,126,140,0))', filter: 'blur(60px)' }} />
+    <div className="h-screen w-full overflow-hidden" style={{ background: SHOWCASE.canvas }}>
+      <div className="flex h-full w-full flex-col overflow-hidden px-8 py-6">
+        {/* top bar */}
+        <div className="flex items-center gap-4 mb-8 shrink-0">
+          {/* flex-1 here and on the right group leaves the nav centred between them */}
+          <div className="flex flex-1 items-center">
+            {/* ml-1.5 centres the 36px mark over the 48px rail column below it */}
+            <Link to="/immunotherapies" className="ml-1.5 flex items-center no-underline shrink-0">
+              <img src={allerviaMark} alt="Allervia" className="h-9 w-9 object-contain" />
+              {/* gap lives on the wordmark so only the text sits further right */}
+              <AllerviaWordmark className="ml-6 text-lg" style={{ color: SHOWCASE.ink }} />
+            </Link>
+          </div>
 
-      {/* header chrome */}
-      <div className="relative z-10 flex items-center justify-between px-6 pt-5 mb-5">
-        <Link to="/immunotherapies" className="flex items-center gap-4 no-underline">
-          <div className="flex w-14 shrink-0 justify-center">
-            <img src={allerviaMark} alt="Allervia" className="h-8 w-8 object-contain" />
-          </div>
-          <AllerviaWordmark className="text-lg" style={{ color: '#12333a' }} />
-        </Link>
-        <Link to="/profile" aria-label="Perfil" className="flex items-center gap-3 no-underline group">
-          <div className="flex flex-col items-end leading-tight">
-            <span className="text-[0.82rem] font-bold" style={{ color: '#12333a' }}>{userName}</span>
-            <span className="text-[0.68rem] font-medium" style={{ color: '#8b93a9' }}>{userInstitution}</span>
-          </div>
-          <div
-            className="h-9 w-9 overflow-hidden rounded-full transition-transform duration-200 group-hover:scale-105"
-            style={{ border: '1.5px solid rgba(125,135,159,0.5)' }}
-          >
-            <img src={userAvatar} alt="" className="h-full w-full object-cover" />
-          </div>
-        </Link>
-      </div>
-
-      {/* body: rail + page content */}
-      <div className="relative z-10 flex flex-1 min-h-0 gap-4 px-6 pb-4">
-        {/* rail */}
-        <div className="relative z-50 flex shrink-0 flex-col items-center justify-between w-14 pb-1">
-          <div className="flex flex-col gap-3">
-            {RAIL.map((r) => {
-              const Ic = r.icon
-              const active = isActive(r)
-              return (
-                <Link
-                  key={r.path}
-                  to={r.path}
-                  aria-label={r.label}
-                  className="group relative flex h-11 w-11 items-center justify-center rounded-full transition-transform duration-200 hover:scale-105 no-underline"
-                  style={
-                    active
-                      ? { background: 'linear-gradient(150deg,#257E8C,#12333a)', boxShadow: '0 6px 16px rgba(16,60,68,0.30)' }
-                      : { background: 'rgba(255,255,255,0.6)', boxShadow: '0 4px 12px rgba(16,50,60,0.08)' }
-                  }
+          <div className="flex flex-1 items-center gap-3 shrink-0 justify-end">
+            <span className="relative inline-flex">
+              <CircleButton
+                icon={faBell}
+                size={40}
+                iconSize={13}
+                aria-label="Notificações"
+                onClick={() => navigate({ to: '/notifications' })}
+              />
+              {hasUnread && (
+                <span
+                  aria-hidden="true"
+                  className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.55rem] font-bold"
+                  style={{ background: SHOWCASE.danger, color: '#FFFFFF' }}
                 >
-                  <FontAwesomeIcon icon={Ic} style={{ fontSize: 15, color: active ? '#ffffff' : '#7d879f' }} />
-                  {r.path === '/notifications' && hasUnread && (
-                    <span
-                      aria-hidden="true"
-                      className="absolute top-0.5 right-1 h-2 w-2 rounded-full"
-                      style={{ background: '#e0453c', boxShadow: '0 0 0 2px #eef1f2' }}
-                    />
-                  )}
-                  <span
-                    className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50"
-                    style={{ background: '#12333a', color: '#eef3f4', boxShadow: '0 4px 12px rgba(16,50,60,0.2)' }}
-                  >
-                    {r.label}
-                  </span>
-                </Link>
-              )
-            })}
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowLogout(true)}
-            aria-label="Sair"
-            className="group relative flex h-11 w-11 items-center justify-center rounded-full cursor-pointer transition-transform duration-200 hover:scale-105"
-            style={{ background: 'rgba(255,255,255,0.6)', boxShadow: '0 4px 12px rgba(16,50,60,0.08)' }}
-          >
-            <FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 15, color: '#7d879f' }} />
-            <span
-              className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50"
-              style={{ background: '#12333a', color: '#eef3f4', boxShadow: '0 4px 12px rgba(16,50,60,0.2)' }}
-            >
-              Sair
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </span>
-          </button>
+            <Link to="/profile" aria-label="Perfil" className="flex items-center no-underline">
+              <img
+                src={userAvatar}
+                alt={userName}
+                title={userName}
+                className="relative z-10 h-10 w-10 rounded-full object-cover"
+                style={{ border: `2px solid ${SHOWCASE.white}` }}
+              />
+              {/* -ml-10 tucks the pill's left edge exactly under the 40px avatar,
+                  so the two read as one piece; pl-12 clears the text past it. */}
+              <span
+                className="-ml-10 flex h-10 flex-col justify-center whitespace-nowrap rounded-full pl-12 pr-5 backdrop-blur-md"
+                style={{
+                  background: 'rgba(255,255,255,0.45)',
+                  border: '1px solid rgba(255,255,255,0.65)',
+                  color: SHOWCASE.ink,
+                }}
+              >
+                <span className="text-[0.62rem] font-medium leading-tight" style={{ color: SHOWCASE.inkSoft }}>
+                  {greeting(new Date().getHours())}
+                </span>
+                <span className="text-[0.72rem] font-semibold leading-tight">{userName}</span>
+              </span>
+            </Link>
+          </div>
         </div>
 
-        {/* content */}
-        <div className="relative flex flex-1 min-h-0">{children}</div>
+        {/* rail + page */}
+        <div className="flex flex-1 gap-5 min-h-0">
+          {/* z-50 keeps the hover labels above the page content to its right */}
+          <div className="relative z-50 flex w-12 shrink-0 flex-col items-center">
+            <CircleButton
+              icon={faArrowLeft}
+              size={48}
+              iconSize={13}
+              onClick={() => window.history.back()}
+              aria-label="Voltar"
+              title="Voltar"
+            />
+
+            <div className="mt-8 flex flex-col gap-1">
+              {RAIL.map((item) => (
+                <RailLink key={item.path} item={item} active={isActive(item)} />
+              ))}
+            </div>
+
+            <div className="mt-auto pt-8">
+              <CircleButton
+                icon={faRightFromBracket}
+                size={48}
+                iconSize={13}
+                onClick={() => setShowLogout(true)}
+                aria-label="Sair"
+                title="Sair"
+              />
+            </div>
+          </div>
+
+          {/* No bottom padding: page content runs down to the rail's Sair button. */}
+          <main className="flex flex-1 min-w-0 flex-col overflow-y-auto">{children}</main>
+        </div>
       </div>
 
       <Modal
@@ -140,13 +189,24 @@ export function AppShell({ children }: { children: ReactNode }) {
         tone="danger"
         footer={
           <>
-            <Button variant="outline" onClick={() => setShowLogout(false)}>Cancelar</Button>
-            <Button tone="danger" variant="solid" onClick={() => { setShowLogout(false); navigate({ to: '/login' }) }}>Encerrar sessão</Button>
+            <Button variant="outline" onClick={() => setShowLogout(false)}>
+              Cancelar
+            </Button>
+            <Button
+              tone="danger"
+              variant="solid"
+              onClick={() => {
+                setShowLogout(false)
+                navigate({ to: '/login' })
+              }}
+            >
+              Encerrar sessão
+            </Button>
           </>
         }
       >
-        <p className="text-xs text-(--text-muted)">
-          Você será desconectado do Allervia e redirecionado para a tela de login. Continuar?
+        <p className="text-sm" style={{ color: SHOWCASE.inkSoft }}>
+          Tem certeza que deseja encerrar a sessão?
         </p>
       </Modal>
     </div>

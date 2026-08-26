@@ -100,14 +100,14 @@ export function TeamsPage() {
             placeholder="Pesquisar usuário"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-8 pl-8 bg-[#F3F5F6]! border-[#CBD6D6]!"
+            className="h-9 pl-8"
           />
         </div>
         <Select
           aria-label="Filtrar por status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="h-8 bg-[#F3F5F6]! w-auto border-[#CBD6D6]!"
+          className="h-9 w-auto"
         >
           <option value="active">Ativos</option>
           <option value="inactive">Inativos</option>
@@ -117,7 +117,7 @@ export function TeamsPage() {
           aria-label="Filtrar por perfil"
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
-          className="h-8 bg-[#F3F5F6]! w-auto border-[#CBD6D6]!"
+          className="h-9 w-auto"
         >
           <option value="all">Todos os perfis</option>
           <option value="admin">Administrador</option>
@@ -179,7 +179,7 @@ export function TeamsPage() {
       </div>
 
       {tab === 'members' ? (
-        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-[#F6F8F8]">
           <div className="flex-1 overflow-auto">
             <MembersTable
               members={paginatedMembers}
@@ -200,7 +200,7 @@ export function TeamsPage() {
           />
         </div>
       ) : (
-        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-[#F6F8F8]">
           <div className="flex-1 overflow-auto">
             <InvitesTable
               invites={invites}

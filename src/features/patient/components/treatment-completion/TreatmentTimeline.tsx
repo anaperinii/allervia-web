@@ -113,7 +113,7 @@ export function TreatmentTimeline({ applications, inductionStart, flat }: Treatm
   }, [applications])
 
   return (
-    <div className={flat ? 'bg-gray-50 rounded-lg p-4 space-y-4' : 'border border-(--border-custom) rounded-xl bg-white/55 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-5 space-y-4'}>
+    <div className={flat ? 'bg-gray-50 rounded-lg p-4 space-y-4' : 'border border-(--border-custom) rounded-3xl bg-[#F6F8F8] p-5 space-y-4'}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-sm font-bold text-(--text)">Progressão longitudinal das doses</div>

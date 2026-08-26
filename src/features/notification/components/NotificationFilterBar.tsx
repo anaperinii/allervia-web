@@ -15,7 +15,11 @@ interface NotificationTabsProps {
 
 export function NotificationFilterBar({ activeTab, onTabChange, tabCounts }: NotificationTabsProps) {
   return (
-    <div role="tablist" aria-label="Categoria" className="flex h-7 w-max rounded-lg border-[#CBD6D6]! bg-[#F3F5F6]! overflow-hidden">
+    <div
+      role="tablist"
+      aria-label="Categoria"
+      className="flex h-9 w-max items-stretch gap-0.5 rounded-full border border-[#DDE6E6] bg-white p-0.5"
+    >
       {NOTIFICATION_TABS.map((tab) => {
         const active = activeTab === tab.key
         return (
@@ -25,13 +29,18 @@ export function NotificationFilterBar({ activeTab, onTabChange, tabCounts }: Not
             aria-selected={active}
             onClick={() => onTabChange(tab.key)}
             className={cn(
-              'px-3 text-[0.65rem] font-semibold transition-all flex items-center gap-1',
-              active ? 'bg-linear-to-br from-brand to-brand-dark text-white' : 'text-(--text-muted) hover:bg-teal-50/60',
+              'rounded-full px-4 text-[0.7rem] font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer whitespace-nowrap',
+              active ? 'bg-[#12333a] text-white' : 'text-[#4A6469] hover:text-[#12333a]',
             )}
           >
             {tab.label}
             {tabCounts[tab.key] > 0 && (
-              <span className={cn('text-[0.5rem] rounded-full px-1 py-px', active ? 'bg-white/25' : 'bg-brand text-white')}>
+              <span
+                className={cn(
+                  'text-[0.55rem] font-bold rounded-full px-1.5 py-px',
+                  active ? 'bg-white/22' : 'bg-[#257E8C] text-white',
+                )}
+              >
                 {tabCounts[tab.key]}
               </span>
             )}
@@ -103,7 +112,7 @@ export function NotificationFilters({
           value={readFilter}
           onChange={(e) => onReadFilterChange(e.target.value as ReadFilter)}
           aria-label="Status de leitura"
-          className="h-8 bg-[#F3F5F6]! border-[#CBD6D6]! text-[0.7rem] min-w-28"
+          className="h-9 text-[0.7rem] min-w-28"
         >
           <option value="all">Todas</option>
           <option value="unread">Não lidas</option>
@@ -115,7 +124,7 @@ export function NotificationFilters({
           onChange={(e) => onDateFromChange(e.target.value)}
           aria-label="Data início"
           aria-invalid={dateRangeError || undefined}
-          className={cn('h-8 bg-[#F3F5F6]! text-[0.7rem]', dateRangeError ? 'border-red-400!' : 'border-[#CBD6D6]!')}
+          className={cn('h-9 rounded-full! bg-white! px-4 text-[0.7rem]', dateRangeError ? 'border-red-400!' : '')}
         />
         <span className="text-[0.6rem] text-(--text-muted)" aria-hidden="true">—</span>
         <TextInput
@@ -124,7 +133,7 @@ export function NotificationFilters({
           onChange={(e) => onDateToChange(e.target.value)}
           aria-label="Data fim"
           aria-invalid={dateRangeError || undefined}
-          className={cn('h-8 bg-[#F3F5F6]! text-[0.7rem]', dateRangeError ? 'border-red-400!' : 'border-[#CBD6D6]!')}
+          className={cn('h-9 rounded-full! bg-white! px-4 text-[0.7rem]', dateRangeError ? 'border-red-400!' : '')}
         />
         {hasActiveFilters && (
           <Button tone="danger" variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faXmark} style={{ fontSize: 11 }} />} onClick={onClearFilters}>
