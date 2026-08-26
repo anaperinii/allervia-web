@@ -13,11 +13,11 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
     <table className="w-full" aria-label="Lista de imunoterapias">
       <thead>
         <tr className="border-b border-white/40 bg-white/20 backdrop-blur-md">
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] pl-5 pr-4 pt-4 pb-2.5">Nome</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] pl-6 pr-4 pt-4 pb-2.5">Tipo</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Via de administração</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Dose e Concentração Atuais</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Intervalo Atual</th>
+          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] pl-5 pr-4 pt-4 pb-2.5">Nome</th>
+          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] pl-6 pr-4 pt-4 pb-2.5">Tipo</th>
+          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Via de administração</th>
+          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Dose e Concentração Atuais</th>
+          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Intervalo Atual</th>
         </tr>
       </thead>
       <tbody>

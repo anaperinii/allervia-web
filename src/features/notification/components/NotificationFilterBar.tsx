@@ -124,7 +124,7 @@ export function NotificationFilters({
           onChange={(e) => onDateFromChange(e.target.value)}
           aria-label="Data início"
           aria-invalid={dateRangeError || undefined}
-          className={cn('h-9 text-[0.7rem]', dateRangeError ? 'border-red-400!' : '')}
+          className={cn('h-9 rounded-full! bg-white! px-4 text-[0.7rem]', dateRangeError ? 'border-red-400!' : '')}
         />
         <span className="text-[0.6rem] text-(--text-muted)" aria-hidden="true">—</span>
         <TextInput
@@ -133,7 +133,7 @@ export function NotificationFilters({
           onChange={(e) => onDateToChange(e.target.value)}
           aria-label="Data fim"
           aria-invalid={dateRangeError || undefined}
-          className={cn('h-9 text-[0.7rem]', dateRangeError ? 'border-red-400!' : '')}
+          className={cn('h-9 rounded-full! bg-white! px-4 text-[0.7rem]', dateRangeError ? 'border-red-400!' : '')}
         />
         {hasActiveFilters && (
           <Button tone="danger" variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faXmark} style={{ fontSize: 11 }} />} onClick={onClearFilters}>

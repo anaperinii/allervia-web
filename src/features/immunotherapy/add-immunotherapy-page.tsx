@@ -21,8 +21,8 @@ import { ImmunotherapyDataStep } from '@/features/immunotherapy/components/add-s
 import { AddImmunotherapyReviewStep } from '@/features/immunotherapy/components/add-steps/AddImmunotherapyReviewStep'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
-import { PageHeader, Pill } from '@/shared/components/showcase'
+import { faCircleCheck } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader } from '@/shared/components/showcase'
 
 const STEP_LABELS = ['Dados do Paciente', 'Dados da Imunoterapia', 'Revisão dos Dados']
 
@@ -133,13 +133,8 @@ export function AddImmunotherapyPage() {
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
       <PageHeader
-        breadcrumb={['Allervia', 'Imunoterapias']}
+        breadcrumb={[{ label: 'Imunoterapias', onClick: () => setShowCancelModal(true) }]}
         title="Adicionar Imunoterapia Alérgica"
-        actions={
-          <Pill icon={faChevronLeft} onClick={() => setShowCancelModal(true)}>
-            Voltar
-          </Pill>
-        }
       />
 
       <div className="wizard-fields flex flex-1 min-h-0 flex-col overflow-hidden">

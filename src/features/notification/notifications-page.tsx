@@ -107,34 +107,36 @@ export function NotificationsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
-      <div className="mb-8 flex items-start justify-between gap-3">
-        <NotificationsHeader />
-        <NotificationFilters
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          tabCounts={tabCounts}
-          readFilter={readFilter}
-          onReadFilterChange={setReadFilter}
-          dateFrom={dateFrom}
-          onDateFromChange={setDateFrom}
-          dateTo={dateTo}
-          onDateToChange={setDateTo}
-          dateRangeError={dateRangeError}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={clearFilters}
-        />
-      </div>
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
+      {/* Filters ride in the header's actions slot; the PageHeader owns the spacing. */}
+      <NotificationsHeader
+        actions={
+          <NotificationFilters
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            tabCounts={tabCounts}
+            readFilter={readFilter}
+            onReadFilterChange={setReadFilter}
+            dateFrom={dateFrom}
+            onDateFromChange={setDateFrom}
+            dateTo={dateTo}
+            onDateToChange={setDateTo}
+            dateRangeError={dateRangeError}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearFilters}
+          />
+        }
+      />
 
       <div className="flex flex-1 min-h-0 flex-col">
-        <div className="relative z-10 -mb-px shrink-0 rounded-t-xl border border-b-0 border-(--border-custom) bg-gray-50/80 px-5 py-3 flex items-center justify-between gap-3">
+        <div className="relative z-10 -mb-px shrink-0 rounded-t-3xl border border-b-0 border-[#DDE6E6] bg-[#F6F8F8] px-5 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <input
               type="checkbox"
               checked={allSelected}
               onChange={toggleSelectAll}
               aria-label="Selecionar todas as notificações"
-              className="w-4 h-4 rounded border-gray-300 text-brand cursor-pointer accent-brand"
+              className="w-4 h-4 rounded border-gray-300 text-brand cursor-pointer accent-[#257E8C]"
             />
             <span className="text-xs text-(--text-muted)">{filtered.length} notificações</span>
             {selectedIds.size > 0 && (
@@ -165,7 +167,7 @@ export function NotificationsPage() {
           </div>
         </div>
 
-        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto rounded-b-xl bg-white">
+        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto rounded-b-3xl border border-t-0 border-[#DDE6E6] bg-white">
           {filtered.length === 0 ? (
             <NotificationsEmpty hasActiveFilters={hasActiveFilters} onClearFilters={clearFilters} />
           ) : (

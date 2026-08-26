@@ -26,8 +26,8 @@ import { CompletionReviewStep } from '@/features/patient/components/treatment-co
 import { useCompletionDraftsStore } from '@/features/patient/stores/useCompletionDraftsStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faCircleCheck, faFilePen } from '@fortawesome/free-solid-svg-icons'
-import { PageHeader, Pill, SHOWCASE } from '@/shared/components/showcase'
+import { faCircleCheck, faFilePen } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader, SHOWCASE } from '@/shared/components/showcase'
 
 const STEP_LABELS = ['Visão geral', 'Plano pós-alta', 'Revisão'] as const
 
@@ -181,23 +181,18 @@ export function PatientCompletionPage() {
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
       <PageHeader
-        breadcrumb={['Prontuário', 'Conclusão de Tratamento']}
+        breadcrumb={[{ label: 'Prontuário', onClick: () => setShowCancelModal(true) }, 'Conclusão de Tratamento']}
         title={patient.name}
         actions={
-          <>
-            {draftSavedAt && (
-              <span
-                className="inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[0.7rem] font-semibold"
-                style={{ background: SHOWCASE.white, color: SHOWCASE.inkSoft, border: `1px solid ${SHOWCASE.line}` }}
-              >
-                <FontAwesomeIcon icon={faFilePen} style={{ fontSize: 11 }} />
-                Rascunho salvo · {draftSavedAt}
-              </span>
-            )}
-            <Pill icon={faChevronLeft} onClick={() => setShowCancelModal(true)}>
-              Voltar
-            </Pill>
-          </>
+          draftSavedAt && (
+            <span
+              className="inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[0.7rem] font-semibold"
+              style={{ background: SHOWCASE.white, color: SHOWCASE.inkSoft, border: `1px solid ${SHOWCASE.line}` }}
+            >
+              <FontAwesomeIcon icon={faFilePen} style={{ fontSize: 11 }} />
+              Rascunho salvo · {draftSavedAt}
+            </span>
+          )
         }
       />
 

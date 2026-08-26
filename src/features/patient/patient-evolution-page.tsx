@@ -25,8 +25,8 @@ import { PostApplicationStep } from '@/features/patient/components/treatment-evo
 import { EvolutionReviewStep } from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
-import { PageHeader, Pill } from '@/shared/components/showcase'
+import { faCircleCheck } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader } from '@/shared/components/showcase'
 
 export function PatientEvolutionPage() {
   const navigate = useNavigate()
@@ -247,19 +247,16 @@ export function PatientEvolutionPage() {
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
       <PageHeader
         key={selectedImmunotherapy?.id ?? 'root'}
-        breadcrumb={preselectedId ? ['Prontuário', 'Evolução'] : ['Imunoterapias', 'Evolução']}
+        breadcrumb={[
+          preselectedId
+            ? {
+                label: 'Prontuário',
+                onClick: () => navigate({ to: '/patient/$patientId', params: { patientId: preselectedId } }),
+              }
+            : { label: 'Imunoterapias', onClick: () => setShowCancelModal(true) },
+          'Evolução',
+        ]}
         title={selectedImmunotherapy ? selectedImmunotherapy.name : 'Evolução do Paciente'}
-        actions={
-          preselectedId ? (
-            <Link to="/patient/$patientId" params={{ patientId: preselectedId }} className="no-underline">
-              <Pill icon={faChevronLeft}>Prontuário</Pill>
-            </Link>
-          ) : (
-            <Pill icon={faChevronLeft} onClick={() => setShowCancelModal(true)}>
-              Imunoterapias
-            </Pill>
-          )
-        }
       />
 
       <div className="wizard-fields flex flex-1 min-h-0 flex-col overflow-hidden">

@@ -7,8 +7,7 @@ import { ExportPreview } from '@/features/dashboard/components/export/preview'
 import { ConfirmExportModal } from '@/features/dashboard/components/export/ConfirmExportModal'
 import { CancelExportModal } from '@/features/dashboard/components/export/CancelExportModal'
 
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
-import { PageHeader, Pill } from '@/shared/components/showcase'
+import { PageHeader } from '@/shared/components/showcase'
 
 const CHART_OPTIONS: readonly ChartOption[] = [
   { id: 'concentration', label: 'Ciclos de Tratamento por Concentração' },
@@ -53,13 +52,8 @@ export function ExportReportPage() {
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
       <PageHeader
-        breadcrumb={['Allervia', 'Painel de Métricas']}
+        breadcrumb={[{ label: 'Painel de Métricas', onClick: () => setShowCancelModal(true) }]}
         title="Exportar Relatório"
-        actions={
-          <Pill icon={faChevronLeft} onClick={() => setShowCancelModal(true)}>
-            Voltar ao painel
-          </Pill>
-        }
       />
 
       <div className="flex flex-1 min-h-0 overflow-hidden gap-4">

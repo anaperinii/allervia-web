@@ -150,7 +150,7 @@ export function AppointmentsPage() {
               aria-label="Modo de visualização"
             />
             {canNewAppointment && (
-              <Pill icon={faPlus} onClick={() => setShowAddModal(true)}>
+              <Pill active icon={faPlus} onClick={() => setShowAddModal(true)}>
                 Novo Agendamento
               </Pill>
             )}

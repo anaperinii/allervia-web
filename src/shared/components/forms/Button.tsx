@@ -59,7 +59,8 @@ const STYLES: Record<ButtonTone, Record<ButtonVariant, string>> = {
   },
   danger: {
     solid: 'bg-[#A41517] text-white hover:bg-[#8a1114]',
-    outline: `${OUTLINE_BASE} text-[#A41517] hover:border-[#A41517]/45`,
+    // Destructive actions carry the red border at rest, not only on hover.
+    outline: 'border border-[#A41517]/40 bg-white text-[#A41517] hover:border-[#A41517]/70 hover:bg-[#A41517]/6',
     ghost: 'text-[#A41517] hover:bg-[#A41517]/10',
   },
   warning: {
