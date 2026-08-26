@@ -20,7 +20,7 @@ import type { NewAppointmentForm } from '@/features/scheduling/schemas/new-appoi
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
-import { PageHeader, Pill, SelectPill } from '@/shared/components/showcase'
+import { PageHeader, Pill, SelectPill, SHOWCASE } from '@/shared/components/showcase'
 
 const MONTH_OPTIONS = [
   { value: 0, label: 'Janeiro' },
@@ -126,7 +126,23 @@ export function AppointmentsPage() {
         title="Agendamentos"
         actions={
           <>
-            <Pill onClick={calendar.goToToday}>Hoje</Pill>
+            <div className="relative w-72">
+              <label htmlFor="appointment-search" className="sr-only">
+                Pesquisar paciente
+              </label>
+              <FontAwesomeIcon
+                icon={faMagnifyingGlass}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10"
+                style={{ fontSize: 12, color: SHOWCASE.inkSoft }}
+              />
+              <TextInput
+                id="appointment-search"
+                placeholder="Pesquisar paciente"
+                value={patientSearch}
+                onChange={(e) => setPatientSearch(e.target.value)}
+                className="h-9 rounded-full! bg-white! pl-9 pr-4 text-[0.78rem]"
+              />
+            </div>
             <SelectPill
               aria-label="Filtrar por mês"
               value={String(calendar.currentDate.getMonth())}
@@ -163,18 +179,7 @@ export function AppointmentsPage() {
           monthLabel={calendar.monthLabel}
           onPrev={calendar.goToPrev}
           onNext={calendar.goToNext}
-          rightContent={
-            <div className="relative w-104">
-              <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" style={{ fontSize: 14 }} />
-              <TextInput
-                aria-label="Pesquisar paciente"
-                placeholder="Pesquisar paciente"
-                value={patientSearch}
-                onChange={(e) => setPatientSearch(e.target.value)}
-                className="h-9 pl-8"
-              />
-            </div>
-          }
+          onToday={calendar.goToToday}
         />
         <div className="flex-1 overflow-auto">
           {calendar.viewMode === 'week' ? (

@@ -68,7 +68,7 @@ export function MonthView({
                   today ? 'bg-brand text-white' : 'text-(--text-muted) font-semibold',
                 )}
               >
-                {format(day, 'd')}
+                {format(day, 'dd')}
               </div>
               <div className="space-y-0.5">
                 {applications.slice(0, 2).map((application) => {
