@@ -144,11 +144,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       setLogoDark(false)
       return
     }
-    const scroller = document.querySelector('[data-app-scroll]')
-    const band = document.querySelector('[data-dark-band]')
-    if (!scroller || !band) return
-
+    // The band belongs to the routed page, which can mount after this effect
+    // runs on a client-side navigation, so it is resolved on every tick.
     const syncTone = () => {
+      const band = document.querySelector('[data-dark-band]')
+      if (!band) return
       const bandTop = band.getBoundingClientRect().top
       const logo = logoRef.current
       if (logo) {
@@ -164,14 +164,24 @@ export function AppShell({ children }: { children: ReactNode }) {
       setRailDark((prev) => (prev.length === next.length && prev.every((v, i) => v === next[i]) ? prev : next))
     }
     syncTone()
+    const frame = requestAnimationFrame(syncTone)
     const observer = new ResizeObserver(syncTone)
-    observer.observe(band)
     observer.observe(document.documentElement)
-    scroller.addEventListener('scroll', syncTone, { passive: true })
+    const mutations = new MutationObserver(() => {
+      if (!document.querySelector('[data-dark-band]')) return
+      mutations.disconnect()
+      syncTone()
+    })
+    if (!document.querySelector('[data-dark-band]')) {
+      mutations.observe(document.body, { childList: true, subtree: true })
+    }
+    window.addEventListener('scroll', syncTone, true)
     window.addEventListener('resize', syncTone)
     return () => {
+      cancelAnimationFrame(frame)
       observer.disconnect()
-      scroller.removeEventListener('scroll', syncTone)
+      mutations.disconnect()
+      window.removeEventListener('scroll', syncTone, true)
       window.removeEventListener('resize', syncTone)
     }
   }, [pageScroll, path])
