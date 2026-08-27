@@ -129,7 +129,7 @@ export function HeroSection() {
           <div className="mt-9" style={socialRiseStyle(1.2)}>
             <Link
               to="/trial"
-              className="group inline-flex items-center gap-2 rounded-lg px-7 py-3 text-sm font-semibold no-underline transition-all hover:-translate-y-0.5"
+              className="group inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold no-underline transition-all hover:-translate-y-0.5"
               style={{
                 background: '#12333a',
                 color: '#ffffff',
