@@ -9,6 +9,7 @@ export const APPLICATION_STATUS_DISPLAY: Record<Application['status'], { label: 
 
 export function getApplicationEventColor(application: Application) {
   const grad = 'linear-gradient(105deg, rgba(255,255,255,0.12) 0%, transparent 55%)'
-  if (application.modality === 'sublingual') return { bg: '#74C3B9', text: '#1E5A52', border: '#74C3B9', grad }
-  return { bg: '#B7E06A', text: '#4E6E23', border: '#B7E06A', grad }
+  // Softer tints of the modality colors so the calendar reads calmer.
+  if (application.modality === 'sublingual') return { bg: '#A6D9D1', text: '#1E5A52', border: '#74C3B9', grad }
+  return { bg: '#CFE99E', text: '#4E6E23', border: '#B7E06A', grad }
 }
