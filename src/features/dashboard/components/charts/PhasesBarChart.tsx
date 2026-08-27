@@ -19,7 +19,7 @@ export function PhasesBarChart({ data, height = 192, showValueLabels = false }: 
     <>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} barGap={1} barCategoryGap="22%">
+          <BarChart data={data} barGap={3} barCategoryGap="18%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="month" tick={{ fontSize: 10 }} />
             <YAxis tick={{ fontSize: 10 }} />
@@ -31,7 +31,7 @@ export function PhasesBarChart({ data, height = 192, showValueLabels = false }: 
                 name={PHASE_LABELS[key]}
                 fill={PHASE_COLORS[key]}
                 radius={[3, 3, 0, 0]}
-                maxBarSize={10}
+                maxBarSize={26}
                 label={showValueLabels ? { position: 'top', fontSize: 9, fill: '#6b7280' } : undefined}
               />
             ))}

@@ -537,6 +537,14 @@ textarea:-webkit-autofill:focus {
   color: #7FA6AC;
 }
 
+.dark-charts .bg-gray-100 {
+  background-color: rgba(220, 225, 229, 0.12);
+}
+
+.dark-charts .text-slate-700 {
+  color: #DCE1E5;
+}
+
 .dark-charts .recharts-tooltip-wrapper .recharts-default-tooltip,
 .dark-charts [class*='tooltip'] {
   background: #0e353d !important;

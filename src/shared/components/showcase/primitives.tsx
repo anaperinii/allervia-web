@@ -86,10 +86,11 @@ interface SelectPillProps {
   onChange: (value: string) => void
   options: { value: string; label: string }[]
   compact?: boolean
+  dark?: boolean
   'aria-label': string
 }
 
-export function SelectPill({ value, onChange, options, compact = false, 'aria-label': ariaLabel }: SelectPillProps) {
+export function SelectPill({ value, onChange, options, compact = false, dark = false, 'aria-label': ariaLabel }: SelectPillProps) {
   return (
     <select
       aria-label={ariaLabel}
@@ -100,13 +101,18 @@ export function SelectPill({ value, onChange, options, compact = false, 'aria-la
         compact ? 'h-8 pl-3 pr-7 text-[0.7rem]' : 'h-9 px-4 pr-8 text-[0.78rem]',
       )}
       style={{
-        background: `${SHOWCASE.white} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%234A6469' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 0.85rem center/0.6rem`,
-        color: SHOWCASE.inkSoft,
-        border: `1px solid ${SHOWCASE.line}`,
+        background: `${dark ? 'rgba(220,225,229,0.08)' : SHOWCASE.white} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='${dark ? '%23DCE1E5' : '%234A6469'}' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 0.85rem center/0.6rem`,
+        color: dark ? '#DCE1E5' : SHOWCASE.inkSoft,
+        border: `1px solid ${dark ? 'rgba(220,225,229,0.16)' : SHOWCASE.line}`,
+        colorScheme: dark ? 'dark' : undefined,
       }}
     >
       {options.map((option) => (
-        <option key={option.value} value={option.value}>
+        <option
+          key={option.value}
+          value={option.value}
+          style={dark ? { background: '#0e353d', color: '#DCE1E5' } : undefined}
+        >
           {option.label}
         </option>
       ))}

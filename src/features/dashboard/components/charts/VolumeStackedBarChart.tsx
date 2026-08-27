@@ -77,18 +77,28 @@ export function VolumeStackedBarChart({ data, height = 208, showValueLabels = tr
             <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} />
             <YAxis type="category" dataKey="conc" tick={{ fontSize: 10 }} width={60} />
             <Tooltip content={<VolumeTooltip />} cursor={CHART_TOOLTIP_CURSOR} />
-            {VOLUME_KEYS.map((key, index) => {
-              const isLast = index === VOLUME_KEYS.length - 1
+            {VOLUME_KEYS.map((key) => {
               return (
-                <Bar
-                  key={key}
-                  dataKey={key}
-                  stackId="a"
-                  radius={isLast ? [0, 3, 3, 0] : 0}
-                >
+                <Bar key={key} dataKey={key} stackId="a" barSize={22}>
                   {data.map((row) => {
                     const ramp = CONCENTRATION_VOLUME_COLORS[String(row.conc)]
-                    return <Cell key={String(row.conc)} fill={ramp?.[key] || FALLBACK_COLOR} />
+                    // Round only the ends that actually exist in this row's stack.
+                    const filled = VOLUME_KEYS.filter((volume) => Number(row[volume]) > 0)
+                    const isRowFirst = filled[0] === key
+                    const isRowLast = filled[filled.length - 1] === key
+                    const radius: [number, number, number, number] = [
+                      isRowFirst ? 8 : 0,
+                      isRowLast ? 8 : 0,
+                      isRowLast ? 8 : 0,
+                      isRowFirst ? 8 : 0,
+                    ]
+                    return (
+                      <Cell
+                        key={String(row.conc)}
+                        fill={ramp?.[key] || FALLBACK_COLOR}
+                        {...({ radius } as unknown as { radius: number })}
+                      />
+                    )
                   })}
                   {showValueLabels && (
                     <LabelList dataKey={key} content={(props) => renderVolumeLabel(props as ValueLabelProps, key)} />

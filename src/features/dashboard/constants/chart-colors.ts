@@ -28,12 +28,12 @@ export const TREATMENT_STATUS_LABELS: Record<TreatmentStatusKey, string> = {
 }
 
 export const TREATMENT_STATUS_COLORS: Record<TreatmentStatusKey, string> = {
-  active: '#14B8A6',
-  interrupted: '#0891B2',
-  completed: '#0F766E',
+  active: '#74C3B9',
+  interrupted: '#F0857D',
+  completed: '#B7E06A',
 }
 
-export const SEQUENTIAL_TYPE_COLORS = ['#4d7e85', '#6C9EA5', '#9BC1C4', '#B9D4D7', '#234E58']
+export const SEQUENTIAL_TYPE_COLORS = ['#CBE7EC', '#A2D5DE', '#78BFCC', '#4FA3B4', '#2D7F91']
 
 export const VOLUME_KEYS = ['0,1ml', '0,2ml', '0,4ml', '0,5ml', '0,8ml'] as const
 export type VolumeKey = (typeof VOLUME_KEYS)[number]

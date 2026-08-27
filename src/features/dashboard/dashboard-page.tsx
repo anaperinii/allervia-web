@@ -13,8 +13,9 @@ import { TodayApplicationsCard, type TodayApplication } from '@/features/dashboa
 import { ApplicationsCard } from '@/features/dashboard/components/showcase/ApplicationsCard'
 import { ComparisonCard } from '@/features/dashboard/components/showcase/ComparisonCard'
 import { AdherenceCard, type AdherencePoint } from '@/features/dashboard/components/showcase/AdherenceCard'
+import { useMonthlyFilters, useSnapshotFilters } from '@/features/dashboard/hooks/useChartWindow'
 import { DarkChartCard, DarkMetricsSection, type DarkMetric } from '@/features/dashboard/components/showcase/DarkMetricsSection'
-import { faArrowTrendUp, faCalendar, faChartColumn, faDroplet, faGaugeHigh, faShieldHalved, faSliders, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
+import { faArrowTrendUp, faCalendar, faChartColumn, faGaugeHigh, faShieldHalved, faSliders, faSyringe, faTriangleExclamation, faUser, faUserXmark } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { CircleButton, PageHeader, Pill, SelectPill } from '@/shared/components/showcase'
 import { SegmentedControl } from '@/shared/components'
@@ -167,6 +168,42 @@ export function DashboardPage() {
       })
   }, [applications, immunotherapies])
 
+  const statusFilters = useMonthlyFilters(analytics.statusData)
+  const phaseFilters = useMonthlyFilters(analytics.phaseData)
+  const concentrationFilters = useSnapshotFilters(analytics.concentrationData, (entry) => entry.value)
+  const typeFilters = useSnapshotFilters(analytics.typeData, (entry) => entry.value)
+  const volumeFilters = useSnapshotFilters(analytics.volumeData, (row) =>
+    Object.entries(row).reduce((sum, [key, value]) => (key === 'conc' ? sum : sum + Number(value)), 0),
+  )
+
+  const reactions = useMemo(() => {
+    const hadReaction = (application: (typeof applications)[number]) =>
+      application.sideEffect === 'yes' || application.medicationNeeded === 'yes' || Boolean(application.reportedEffects)
+
+    const applied = applications.filter((application) => application.status === 'completed')
+    const withReaction = applied.filter(hadReaction)
+    const ratePer100 = applied.length > 0 ? (withReaction.length / applied.length) * 100 : 0
+
+    const now = new Date()
+    const weekly = Array.from({ length: 8 }, (_, index) => {
+      const end = new Date(now)
+      end.setDate(now.getDate() - (7 - index) * 7)
+      const start = new Date(end)
+      start.setDate(end.getDate() - 6)
+
+      const inWeek = applied.filter((application) => {
+        const [day, month, year] = application.date.split('/').map(Number)
+        if (!day || !month || !year) return false
+        const date = new Date(year, month - 1, day)
+        return date >= start && date <= end
+      })
+      const reacted = inWeek.filter(hadReaction).length
+      return inWeek.length > 0 ? Math.round((reacted / inWeek.length) * 100) : 0
+    })
+
+    return { ratePer100, total: withReaction.length, applied: applied.length, weekly }
+  }, [applications])
+
   const darkMetrics: DarkMetric[] = useMemo(
     () => [
       {
@@ -178,20 +215,21 @@ export function DashboardPage() {
         series: analytics.weekly.applications.map((d) => d.value),
       },
       {
+        label: 'Pacientes inativos',
+        value: String(analytics.inactiveFiltered.length),
+        icon: faUserXmark,
+        glow: '#F0857D',
+        visual: 'dots',
+        series: new Array(Math.max(analytics.totalActive + analytics.inactiveFiltered.length, 1)).fill(0),
+        filled: analytics.inactiveFiltered.length,
+      },
+      {
         label: 'Aplicações na semana',
         value: String(analytics.weekly.applicationsTotal),
         icon: faSyringe,
         glow: '#74C3B9',
         visual: 'bars',
         series: analytics.weekly.applications.map((d) => d.value),
-      },
-      {
-        label: 'Doses aplicadas',
-        value: String(analytics.weekly.dosesTotal),
-        icon: faDroplet,
-        glow: '#9BC1C4',
-        visual: 'spark',
-        series: analytics.weekly.doses.map((d) => d.value),
       },
       {
         label: 'Em indução',
@@ -212,16 +250,15 @@ export function DashboardPage() {
         filled: analytics.maintenanceCount,
       },
       {
-        label: 'Evolução no ano',
-        value: `${analytics.yearComparison.deltaPct >= 0 ? '+' : ''}${analytics.yearComparison.deltaPct}`,
-        unit: '%',
-        icon: faChartColumn,
-        glow: '#E4F7B8',
+        label: 'Reações por 100 aplicações',
+        value: reactions.ratePer100.toFixed(1).replace('.', ','),
+        icon: faTriangleExclamation,
+        glow: '#F2C85B',
         visual: 'spark',
-        series: analytics.yearComparison.rows.map((r) => r.current),
+        series: reactions.weekly,
       },
     ],
-    [analytics],
+    [analytics, reactions],
   )
 
   const typeOptions = useMemo(
@@ -335,14 +372,6 @@ export function DashboardPage() {
       </div>
 
       <div className="relative z-10 grid shrink-0 grid-cols-12 gap-4 auto-rows-[minmax(17.5rem,auto)]">
-          {!promoDismissed && (
-            <div className="col-span-3 row-span-2 min-h-0">
-              <TodayApplicationsCard applications={todayApplications} onOpen={() => navigate({ to: '/appointments' })}
-                onSelectPatient={(patientId) => navigate({ to: '/patient/$patientId', params: { patientId } })}
-              />
-            </div>
-          )}
-
           <div className={promoDismissed ? 'col-span-5' : 'col-span-4'}>
             <AdherenceCard
               title="Adesão às Aplicações"
@@ -362,6 +391,16 @@ export function DashboardPage() {
             />
           </div>
 
+          {!promoDismissed && (
+            <div className="col-span-3 row-span-2 min-h-0">
+              <TodayApplicationsCard
+                applications={todayApplications}
+                onOpen={() => navigate({ to: '/appointments' })}
+                onSelectPatient={(patientId) => navigate({ to: '/patient/$patientId', params: { patientId } })}
+              />
+            </div>
+          )}
+
           <div className={promoDismissed ? 'col-span-12' : 'col-span-9'}>
             <ApplicationsCard
               title="Aplicações Registradas"
@@ -379,22 +418,25 @@ export function DashboardPage() {
           title="Panorama clínico"
           subtitle="Adesão, evolução e resposta dos pacientes em tratamento, em continuidade ao painel."
           metrics={darkMetrics}
-          onOpen={() => goToTab('analytics')}
         >
-          <DarkChartCard title="Status de Imunoterapias" fullWidth>
-            <StatusLineChart data={analytics.statusData} />
+          <DarkChartCard title="Status de Imunoterapias" fullWidth filters={statusFilters.filters} filtersActive={statusFilters.active}>
+            <StatusLineChart data={statusFilters.slice} />
           </DarkChartCard>
-          <DarkChartCard title="Ciclos de Tratamento por Concentração">
-            <ConcentrationPieChart data={analytics.concentrationData} />
+          <DarkChartCard
+            title="Ciclos de Tratamento por Concentração"
+            filters={concentrationFilters.filters}
+            filtersActive={concentrationFilters.active}
+          >
+            <ConcentrationPieChart data={concentrationFilters.slice} />
           </DarkChartCard>
-          <DarkChartCard title="Distribuição de Fases">
-            <PhasesBarChart data={analytics.phaseData} />
+          <DarkChartCard title="Volume vs Concentração" filters={volumeFilters.filters} filtersActive={volumeFilters.active}>
+            <VolumeStackedBarChart data={volumeFilters.slice} />
           </DarkChartCard>
-          <DarkChartCard title="Imunoterapias Ativas por Tipo">
-            <TypesProgressBars data={analytics.typeData} />
+          <DarkChartCard title="Imunoterapias Ativas por Tipo" filters={typeFilters.filters} filtersActive={typeFilters.active}>
+            <TypesProgressBars data={typeFilters.slice} />
           </DarkChartCard>
-          <DarkChartCard title="Volume vs Concentração" fullWidth>
-            <VolumeStackedBarChart data={analytics.volumeData} />
+          <DarkChartCard title="Distribuição de Fases" fullWidth filters={phaseFilters.filters} filtersActive={phaseFilters.active}>
+            <PhasesBarChart data={phaseFilters.slice} />
           </DarkChartCard>
       </DarkMetricsSection>
 

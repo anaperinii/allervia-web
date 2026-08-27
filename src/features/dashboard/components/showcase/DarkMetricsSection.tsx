@@ -1,7 +1,8 @@
-import { faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { ReactNode } from 'react'
+import type { CardFilter } from '@/features/dashboard/hooks/useChartWindow'
+import { CardFilters } from './CardFilters'
 import { smoothPath, type Point } from './smooth-path'
 
 export const DARK_PLATE = 'linear-gradient(165deg, #0e353d 0%, #08191d 55%, #061215 100%)'
@@ -34,7 +35,6 @@ interface DarkMetricsSectionProps {
   title: string
   subtitle: string
   metrics: DarkMetric[]
-  onOpen: () => void
   children?: ReactNode
   sectionRef?: React.Ref<HTMLElement>
 }
@@ -43,19 +43,26 @@ export function DarkChartCard({
   title,
   children,
   fullWidth,
+  filters,
+  filtersActive,
 }: {
   title: string
   children: ReactNode
   fullWidth?: boolean
+  filters?: CardFilter[]
+  filtersActive?: boolean
 }) {
   return (
     <section
       className={fullWidth ? 'col-span-3 rounded-3xl p-5' : 'rounded-3xl p-5'}
       style={{ background: CARD_PLATE, border: `1px solid ${CARD_BORDER}` }}
     >
-      <h3 className="mb-4 text-[0.95rem] font-medium" style={{ color: INK }}>
-        {title}
-      </h3>
+      <header className="mb-4 flex items-start justify-between gap-3">
+        <h3 className="text-[0.95rem] font-bold" style={{ color: INK }}>
+          {title}
+        </h3>
+        {filters && <CardFilters filters={filters} active={filtersActive} dark inline={fullWidth} />}
+      </header>
       {children}
     </section>
   )
@@ -116,7 +123,7 @@ function Dots({ total, filled, glow }: { total: number; filled: number; glow: st
   )
 }
 
-function DarkTile({ metric, onOpen }: { metric: DarkMetric; onOpen: () => void }) {
+function DarkTile({ metric }: { metric: DarkMetric }) {
   return (
     <article
       className="relative flex flex-col justify-between overflow-hidden rounded-3xl p-5"
@@ -128,25 +135,16 @@ function DarkTile({ metric, onOpen }: { metric: DarkMetric; onOpen: () => void }
         style={{ background: `radial-gradient(closest-side, ${metric.glow}38, transparent 72%)`, filter: 'blur(6px)' }}
       />
 
-      <header className="relative z-10 flex items-start justify-between gap-3">
+      <header className="relative z-10 flex items-start gap-3">
         <span
           className="flex h-8 w-8 items-center justify-center rounded-full"
           style={{ background: 'rgba(220,225,229,0.08)', border: `1px solid ${CARD_BORDER}`, color: metric.glow }}
         >
           <FontAwesomeIcon icon={metric.icon} style={{ fontSize: 12 }} />
         </span>
-        <button
-          type="button"
-          onClick={onOpen}
-          aria-label={`Abrir ${metric.label}`}
-          className="flex h-8 w-8 items-center justify-center rounded-full cursor-pointer transition-transform duration-200 hover:scale-105"
-          style={{ background: 'rgba(220,225,229,0.08)', border: `1px solid ${CARD_BORDER}`, color: INK }}
-        >
-          <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 10, transform: 'rotate(-45deg)' }} />
-        </button>
       </header>
 
-      <p className="relative z-10 mt-6 text-[0.82rem] font-medium" style={{ color: INK_MUTED }}>
+      <p className="relative z-10 mt-6 text-[0.98rem] font-medium" style={{ color: INK_MUTED }}>
         {metric.label}
       </p>
 
@@ -175,7 +173,6 @@ export function DarkMetricsSection({
   title,
   subtitle,
   metrics,
-  onOpen,
   children,
   sectionRef,
 }: DarkMetricsSectionProps) {
@@ -183,7 +180,7 @@ export function DarkMetricsSection({
     <section
       ref={sectionRef}
       data-dark-band=""
-      className="relative z-30 mt-6 shrink-0 overflow-hidden pb-10 pl-[6.25rem] pr-8 pt-20"
+      className="relative z-30 mt-6 shrink-0 overflow-hidden pb-10 pl-25 pr-8 pt-20"
       style={{ ...BLEED, background: DARK_PLATE }}
     >
       <span
@@ -210,7 +207,7 @@ export function DarkMetricsSection({
 
       <div className="grid grid-cols-3 gap-4">
         {metrics.map((metric) => (
-          <DarkTile key={metric.label} metric={metric} onOpen={onOpen} />
+          <DarkTile key={metric.label} metric={metric} />
         ))}
       </div>
 
