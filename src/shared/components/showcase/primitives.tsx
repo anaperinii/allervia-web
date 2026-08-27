@@ -12,6 +12,9 @@ interface CircleButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   iconRotateDeg?: number
   activeBackground?: string
   activeShadow?: string
+  idleBackground?: string
+  idleColor?: string
+  idleBorderColor?: string
 }
 
 export function CircleButton({
@@ -22,6 +25,9 @@ export function CircleButton({
   iconRotateDeg,
   activeBackground,
   activeShadow,
+  idleBackground,
+  idleColor,
+  idleBorderColor,
   className,
   ...rest
 }: CircleButtonProps) {
@@ -32,9 +38,9 @@ export function CircleButton({
       style={{
         width: size,
         height: size,
-        background: active ? activeBackground ?? SHOWCASE.ink : SHOWCASE.white,
-        color: active ? SHOWCASE.white : SHOWCASE.inkSoft,
-        border: active ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
+        background: active ? activeBackground ?? SHOWCASE.ink : idleBackground ?? SHOWCASE.white,
+        color: active ? SHOWCASE.white : idleColor ?? SHOWCASE.inkSoft,
+        border: active ? '1px solid transparent' : `1px solid ${idleBorderColor ?? SHOWCASE.line}`,
         boxShadow: active ? activeShadow : undefined,
       }}
       {...rest}

@@ -450,7 +450,6 @@ textarea:-webkit-autofill:focus {
   border-color: #CBD6D6;
 }
 
-   bar itself is noise next to the step rail — hide the chrome, keep the scroll. */
 .wizard-fields *::-webkit-scrollbar {
   width: 0;
   height: 0;
@@ -478,4 +477,69 @@ textarea:-webkit-autofill:focus {
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(148, 163, 184, 0.6);
   }
+}
+
+.allervia-day-picker {
+  --rdp-accent-color: #257E8C;
+  --rdp-accent-background-color: rgba(37, 126, 140, 0.12);
+  --rdp-today-color: #257E8C;
+  --rdp-day-height: 2.1rem;
+  --rdp-day-width: 2.1rem;
+  --rdp-day_button-height: 2.1rem;
+  --rdp-day_button-width: 2.1rem;
+  --rdp-day_button-border-radius: 9999px;
+  --rdp-selected-border: none;
+  --rdp-range_middle-background-color: rgba(37, 126, 140, 0.12);
+  --rdp-range_middle-color: #12333a;
+  --rdp-outside-opacity: 0.35;
+  font-size: 0.78rem;
+  color: #12333a;
+  margin: 0;
+}
+
+.allervia-day-picker .rdp-month_caption {
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.allervia-day-picker .rdp-weekday {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #8CA1A6;
+  text-transform: uppercase;
+}
+
+.allervia-day-picker .rdp-selected {
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.allervia-day-picker .rdp-selected .rdp-day_button {
+  border: none;
+}
+
+.dark-charts .recharts-cartesian-grid line {
+  stroke: rgba(220, 225, 229, 0.10);
+}
+
+.dark-charts .recharts-cartesian-axis-line,
+.dark-charts .recharts-cartesian-axis-tick-line {
+  stroke: rgba(220, 225, 229, 0.18);
+}
+
+.dark-charts .recharts-cartesian-axis-tick text {
+  fill: #7FA6AC;
+}
+
+.dark-charts .text-\(--text-muted\),
+.dark-charts .text-\(--text\) {
+  color: #7FA6AC;
+}
+
+.dark-charts .recharts-tooltip-wrapper .recharts-default-tooltip,
+.dark-charts [class*='tooltip'] {
+  background: #0e353d !important;
+  border-color: rgba(220, 225, 229, 0.18) !important;
+  color: #DCE1E5 !important;
 }

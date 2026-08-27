@@ -17,7 +17,7 @@ export function PageHeader({ breadcrumb, title, actions }: PageHeaderProps) {
     <div className={cn('flex items-end justify-between gap-6 mb-7', !hasBreadcrumb && 'pt-7')}>
       <div className="min-w-0">
         {breadcrumb && breadcrumb.length > 0 && (
-          <div className="flex items-center gap-2 mb-2 text-[0.88rem] font-medium" style={{ color: SHOWCASE.muted }}>
+          <div className="flex items-center gap-2 mb-0.5 text-[0.88rem] font-medium" style={{ color: SHOWCASE.muted }}>
             {breadcrumb.map((crumb, i) => (
               <Fragment key={crumb}>
                 {i > 0 && <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 8 }} aria-hidden="true" />}

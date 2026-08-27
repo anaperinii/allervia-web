@@ -1,4 +1,4 @@
-import { faArrowRight, faComment, faSliders } from '@fortawesome/free-solid-svg-icons'
+import { faArrowRight, faSliders } from '@fortawesome/free-solid-svg-icons'
 import { AccentBadge, Card, CardHeader, CardMetric, CircleButton, DayAxis, SHOWCASE } from '@/shared/components/showcase'
 
 const VIEW_W = 640
@@ -58,7 +58,6 @@ export function ComparisonCard({
         actions={
           <>
             <CircleButton icon={faSliders} size={32} iconSize={10} active aria-label="Filtros" />
-            <CircleButton icon={faComment} size={32} iconSize={10} aria-label="Comentários" />
             <CircleButton icon={faArrowRight} iconRotateDeg={-45} size={32} iconSize={10} onClick={onOpen} aria-label="Abrir" />
           </>
         }

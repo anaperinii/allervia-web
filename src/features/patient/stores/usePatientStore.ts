@@ -301,18 +301,74 @@ function buildSeedApplications(): Application[] {
   out.push(...maintenanceFlow('11', 'j', 14, new Date(2026, 0, 20), null, '11:00', '11:30', r))
   out.push(...inductionFlow('12', 'r', 5, new Date(2026, 0, 10), null, '15:00', '15:30', r))
 
-  // Três agendamentos de teste em "hoje" para visualizar as cores de evento
-  const t = fmtDate(new Date())
-  const testApps: Application[] = [
-    { id: 'test-subcutaneous', patientId: '1', date: t.date, month: t.month, year: t.year, startTime: '09:00', endTime: '09:30', status: 'scheduled', dose: '1:100 - 0,3ml', cycle: { number: 1, days: 7 }, modality: 'subcutaneous', administrator: r },
-    { id: 'test-sublingual', patientId: '3', date: t.date, month: t.month, year: t.year, startTime: '10:00', endTime: '10:30', status: 'scheduled', dose: '1:100 - 0,4ml', cycle: { number: 1, days: 7 }, modality: 'sublingual', administrator: r },
-    { id: 'test-missed', patientId: '2', date: t.date, month: t.month, year: t.year, startTime: '11:00', endTime: '11:30', status: 'missed', dose: '1:1.000 - 0,2ml', cycle: { number: 1, days: 7 }, modality: 'subcutaneous', administrator: r },
-    { id: 'test-sublingual-2', patientId: '1', date: t.date, month: t.month, year: t.year, startTime: '13:30', endTime: '14:00', status: 'scheduled', dose: '1:10 - 0,5ml', cycle: { number: 2, days: 14 }, modality: 'sublingual', administrator: r },
-    { id: 'test-sublingual-3', patientId: '2', date: t.date, month: t.month, year: t.year, startTime: '15:00', endTime: '15:30', status: 'scheduled', dose: '1:100 - 0,3ml', cycle: { number: 1, days: 7 }, modality: 'sublingual', administrator: r },
-    { id: 'test-sublingual-4', patientId: '3', date: t.date, month: t.month, year: t.year, startTime: '16:15', endTime: '16:45', status: 'scheduled', dose: '1:1.000 - 0,2ml', cycle: { number: 1, days: 7 }, modality: 'sublingual', administrator: r },
-  ]
+  return [...applyReactions(out), ...buildCurrentWeekApplications(r)]
+}
 
-  return [...applyReactions(out), ...testApps]
+const WEEK_SLOTS = [
+  { startTime: '08:00', endTime: '08:30' },
+  { startTime: '09:00', endTime: '09:30' },
+  { startTime: '10:00', endTime: '10:30' },
+  { startTime: '11:00', endTime: '11:30' },
+  { startTime: '13:30', endTime: '14:00' },
+  { startTime: '14:45', endTime: '15:15' },
+  { startTime: '16:00', endTime: '16:30' },
+  { startTime: '17:15', endTime: '17:45' },
+]
+
+const WEEK_DOSES: { dose: string; days: 7 | 14 | 21 | 28; cycle: number }[] = [
+  { dose: '1:10.000 - 0,2ml', days: 7, cycle: 1 },
+  { dose: '1:1.000 - 0,2ml', days: 7, cycle: 1 },
+  { dose: '1:1.000 - 0,4ml', days: 7, cycle: 1 },
+  { dose: '1:100 - 0,3ml', days: 7, cycle: 1 },
+  { dose: '1:100 - 0,5ml', days: 14, cycle: 1 },
+  { dose: '1:10 - 0,4ml', days: 21, cycle: 2 },
+  { dose: '1:10 - 0,5ml', days: 28, cycle: 3 },
+]
+
+const WEEK_PATIENTS = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+// Slots per weekday, Sunday first — the clinic runs light on the weekend.
+const WEEK_LOAD = [2, 6, 7, 5, 7, 6, 3]
+
+/**
+ * Fills the week that contains today, so the scheduling screen always opens on
+ * a populated calendar regardless of when the app runs.
+ */
+function buildCurrentWeekApplications(administrator: string): Application[] {
+  const today = new Date()
+  const weekStart = daysOffset(today, -today.getDay())
+  const apps: Application[] = []
+
+  WEEK_LOAD.forEach((count, dayIndex) => {
+    const day = daysOffset(weekStart, dayIndex)
+    const { date, month, year } = fmtDate(day)
+    const isPast = day < today && day.toDateString() !== today.toDateString()
+
+    for (let i = 0; i < count; i++) {
+      const seed = dayIndex * 7 + i
+      const slot = WEEK_SLOTS[i % WEEK_SLOTS.length]
+      const doseSeed = WEEK_DOSES[seed % WEEK_DOSES.length]
+      // Every third slot on a past day reads as a no-show.
+      const missed = isPast && seed % 3 === 0
+
+      apps.push({
+        id: `week-${dayIndex}-${i}`,
+        patientId: WEEK_PATIENTS[seed % WEEK_PATIENTS.length],
+        date,
+        month,
+        year,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        status: missed ? 'missed' : 'scheduled',
+        dose: doseSeed.dose,
+        cycle: { number: doseSeed.cycle, days: doseSeed.days },
+        modality: seed % 2 === 0 ? 'subcutaneous' : 'sublingual',
+        administrator,
+      })
+    }
+  })
+
+  return apps
 }
 
 export const usePatientStore = create<PatientState>((set) => ({
