@@ -81,7 +81,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     path === item.path || path.startsWith(item.path + '/') || (item.match?.some((m) => path.startsWith(m)) ?? false)
 
   return (
-    <div className="h-screen w-full overflow-hidden" style={{ background: SHOWCASE.canvas }}>
+    <div
+      className="h-screen w-full overflow-hidden"
+      style={{
+        background: `linear-gradient(to bottom, #DFE5E5 0%, ${SHOWCASE.canvas} 42%), ${SHOWCASE.canvas}`,
+      }}
+    >
       <div className="flex h-full w-full flex-col overflow-hidden px-8 py-6">
         <div className="flex items-center gap-4 mb-4 shrink-0">
           <div className="flex flex-1 items-center">
