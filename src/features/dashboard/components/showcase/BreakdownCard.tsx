@@ -16,10 +16,6 @@ interface BreakdownCardProps {
   onOpen: () => void
 }
 
-/**
- * Headline figure over share rows where the bar's own width carries the value —
- * no separate track, matching the reference's Virtual Cards block.
- */
 export function BreakdownCard({ title, caption, total, totalPrefix, subValue, rows, onOpen }: BreakdownCardProps) {
   return (
     <Card>

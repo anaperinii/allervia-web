@@ -19,7 +19,6 @@ interface TotalSpendCardProps {
   onOpen: () => void
 }
 
-/** Big figure plus a soft curve with an inline lime callout on the peak day. */
 export function TotalSpendCard({
   title,
   caption,

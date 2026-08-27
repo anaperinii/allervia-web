@@ -1,6 +1,6 @@
 import type { UseFormReturn } from 'react-hook-form'
 import { cn } from '@/shared/lib/cn'
-import { FieldLabel, TextArea } from '@/shared/components'
+import { FieldLabel, StepHeading, TextArea } from '@/shared/components'
 import { GLASS_CARD_SHADOW } from '@/shared/components/glass-card'
 import type { CompletionForm } from '@/features/patient/schemas/completion'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
@@ -43,15 +43,7 @@ export function CompletionReviewStep({
 
   return (
     <div className="space-y-4">
-      <div>
-        <div className="flex items-center gap-2">
-          <div className="w-1 h-4 rounded-full bg-brand" />
-          <h2 className="text-sm font-bold text-(--text)">Revisão e assinatura</h2>
-        </div>
-        <p className="text-[0.65rem] text-(--text-muted) mt-1 leading-relaxed">
-          Confira o resumo do que será gravado no prontuário e assine o desfecho.
-        </p>
-      </div>
+      <StepHeading description="Confira o resumo do desfecho e assine o encerramento. O registro vai para o prontuário e a imunoterapia é inativada." />
 
       <div className="border border-(--border-custom) rounded-3xl bg-[#F6F8F8] overflow-hidden">
         <div className="px-4 py-2.5 border-b border-(--border-custom) bg-gray-50 flex items-center justify-between gap-2">

@@ -108,7 +108,6 @@ export function NotificationsPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
-      {/* Filters ride in the header's actions slot; the PageHeader owns the spacing. */}
       <NotificationsHeader
         actions={
           <NotificationFilters

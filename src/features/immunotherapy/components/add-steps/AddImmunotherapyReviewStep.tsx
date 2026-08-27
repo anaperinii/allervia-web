@@ -1,7 +1,7 @@
 import { MODALITY_LABELS, type Modality } from '@/features/immunotherapy/constants/modality'
+import { StepHeading } from '@/shared/components'
 import { formatIsoToPtOrDash } from '@/shared/lib/dates'
 import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
-
 
 interface AddImmunotherapyReviewStepProps {
   form: AddImmunotherapyForm
@@ -28,6 +28,7 @@ export function AddImmunotherapyReviewStep({ form }: AddImmunotherapyReviewStepP
 
   return (
     <div className="space-y-3">
+      <StepHeading description="Revise o cadastro do paciente e do protocolo. Ao salvar, a primeira aplicação já é agendada." />
       <div className="grid grid-cols-1 gap-3">
         <ReviewCard title="Dados do Paciente" items={patientItems} />
         <ReviewCard title="Dados da Imunoterapia" items={immunoItems} />

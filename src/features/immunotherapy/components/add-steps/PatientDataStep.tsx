@@ -1,5 +1,5 @@
 import { Controller, type UseFormReturn } from 'react-hook-form'
-import { FieldLabel, Select, TextInput } from '@/shared/components'
+import { FieldLabel, Select, StepHeading, TextInput } from '@/shared/components'
 import { formatCPF, formatPhone, formatWeight } from '@/shared/lib/formatters'
 import { todayStr } from '@/shared/lib/dates'
 import { PROFILES } from '@/shared/stores/useUserStore'
@@ -14,7 +14,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-sm font-bold text-(--text)">Dados do Paciente</h2>
+      <StepHeading description="Nome, CPF, telefone, nascimento, peso e médico responsável pelo acompanhamento." />
       <div className="grid grid-cols-2 gap-4">
         <FieldLabel label="Nome do Paciente" error={errors.name?.message}>
           <TextInput placeholder="Nome completo" invalid={!!errors.name} {...register('name')} />

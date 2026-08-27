@@ -161,7 +161,7 @@ export function ExportConfigPanel(props: ExportConfigPanelProps) {
             placeholder="Ex: Relatório para acompanhamento clínico do paciente"
             value={props.justification}
             onChange={(e) => props.onJustificationChange(e.target.value)}
-            className="w-full rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 py-2 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all resize-none"
+            className="w-full rounded-2xl border border-[#DDE6E6] bg-white px-4 py-2.5 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#257E8C]/35 focus:border-[#257E8C] transition-all resize-none"
           />
         </div>
 

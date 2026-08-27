@@ -37,7 +37,6 @@ export function ImmunotherapiesFilterBar({
   intervals,
 }: ImmunotherapiesFilterBarProps) {
   return (
-    // Rendered inside the PageHeader's actions slot, to the right of the title.
     <div className="flex items-center gap-2">
       <div className="relative w-80">
         <label htmlFor="immunotherapy-search" className="sr-only">
@@ -53,7 +52,7 @@ export function ImmunotherapiesFilterBar({
           placeholder="Pesquisar paciente"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-9 rounded-full! bg-white! pl-9 pr-4 text-[0.78rem]"
+          className="h-9 pl-9 pr-4 text-[0.78rem]"
         />
       </div>
 

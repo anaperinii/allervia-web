@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import { cn } from '@/shared/lib/cn'
-import { Button, FieldLabel, TextArea, TextInput } from '@/shared/components'
+import { Button, FieldLabel, StepHeading, TextArea, TextInput } from '@/shared/components'
 import type { CompletionForm } from '@/features/patient/schemas/completion'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -61,10 +61,7 @@ export function CompletionFollowupStep({ form }: CompletionFollowupStepProps) {
 
   return (
     <div className="space-y-4">
-      <SectionHeader
-        title="Plano de seguimento pós-alta"
-        subtitle="Defina a vigilância de recidiva e as recomendações para os meses seguintes ao encerramento."
-      />
+      <StepHeading description="Defina as recomendações de alta, os retornos de monitoramento e os sinais de alerta para retorno antecipado." />
 
       <div>
         <div className="text-xs font-semibold text-(--text-muted) mb-2">Recomendações</div>
@@ -172,14 +169,3 @@ export function CompletionFollowupStep({ form }: CompletionFollowupStepProps) {
   )
 }
 
-function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div>
-      <div className="flex items-center gap-2">
-        <div className="w-1 h-4 rounded-full bg-brand" />
-        <h2 className="text-sm font-bold text-(--text)">{title}</h2>
-      </div>
-      <p className="text-[0.65rem] text-(--text-muted) mt-1 leading-relaxed">{subtitle}</p>
-    </div>
-  )
-}

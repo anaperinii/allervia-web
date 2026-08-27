@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button, CancelWizardModal, toast, WizardStepRail } from '@/shared/components'
+import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { INDUCTION_INTERVAL, INITIAL_DOSE } from '@/features/immunotherapy/constants/scit-protocol'
@@ -21,10 +21,14 @@ import { ImmunotherapyDataStep } from '@/features/immunotherapy/components/add-s
 import { AddImmunotherapyReviewStep } from '@/features/immunotherapy/components/add-steps/AddImmunotherapyReviewStep'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleCheck } from '@fortawesome/free-solid-svg-icons'
+import { faCircleCheck, faClipboardCheck, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
 import { PageHeader } from '@/shared/components/showcase'
 
-const STEP_LABELS = ['Dados do Paciente', 'Dados da Imunoterapia', 'Revisão dos Dados']
+const STEPS: WizardStep[] = [
+  { label: 'Dados do Paciente', icon: faUser, description: 'Nome, CPF, telefone, nascimento, peso e médico responsável pelo acompanhamento.' },
+  { label: 'Dados da Imunoterapia', icon: faSyringe, description: 'Tipo de alérgeno, via de administração, extrato, data de início e as metas de concentração e volume do protocolo.' },
+  { label: 'Revisão dos Dados', icon: faClipboardCheck, description: 'Revise o cadastro do paciente e do protocolo. Ao salvar, a primeira aplicação já é agendada.' },
+]
 
 export function AddImmunotherapyPage() {
   const navigate = useNavigate()
@@ -131,33 +135,37 @@ export function AddImmunotherapyPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
       <PageHeader
-        breadcrumb={[{ label: 'Imunoterapias', onClick: () => setShowCancelModal(true) }]}
+        breadcrumb={['Imunoterapias']}
         title="Adicionar Imunoterapia Alérgica"
       />
 
+      <div className="mb-2">
+        <WizardStepsBreadcrumb
+          steps={STEPS}
+          current={step - 1}
+          ariaLabel="Etapas do cadastro"
+          onSelect={(i) => setStep((i + 1) as 1 | 2 | 3)}
+        />
+      </div>
+
       <div className="wizard-fields flex flex-1 min-h-0 flex-col overflow-hidden">
         <form onSubmit={handleFormSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
-          <div className="flex flex-1 min-h-0 gap-0">
-            <div className={`flex flex-1 min-h-0 flex-col pl-1 pr-2 ${step === 3 ? 'justify-start pt-8 pb-4 overflow-y-auto' : 'justify-center pt-2 pb-16 overflow-y-auto'}`}>
+          <div
+            className="flex flex-1 min-h-0 flex-col justify-start px-2 pt-1 pb-10 overflow-y-auto"
+          >
+            <div className="w-full">
               {step === 1 && <PatientDataStep form={form} />}
               {step === 2 && <ImmunotherapyDataStep form={form} />}
               {step === 3 && <AddImmunotherapyReviewStep form={watch()} />}
             </div>
-            <div className="hidden lg:block w-[27rem] shrink-0 py-4 pr-32">
-              <WizardStepRail
-                current={step - 1}
-                labels={STEP_LABELS}
-                descriptions={STEP_DESCRIPTIONS}
-                onSelect={(i) => {
-                  if (i < step - 1) setStep((i + 1) as 1 | 2 | 3)
-                }}
-              />
-            </div>
           </div>
 
           <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
+            <Button type="button" tone="danger" variant="outline" onClick={() => setShowCancelModal(true)}>
+              Cancelar
+            </Button>
             {step > 1 && (
               <Button type="button" tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
                 Voltar
@@ -181,8 +189,3 @@ export function AddImmunotherapyPage() {
   )
 }
 
-const STEP_DESCRIPTIONS = [
-  'Identificação e dados do paciente',
-  'Protocolo, via e metas de tratamento',
-  'Confirme os dados antes de salvar',
-]

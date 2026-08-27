@@ -112,10 +112,6 @@ export function useDashboardAnalytics({ modality, typeFilter }: UseDashboardAnal
     })
   }, [activeFiltered])
 
-  // ---- weekly series -------------------------------------------------------
-  // The store holds cycle-level records, not a per-day application log, so the
-  // weekly views spread the active volume over a fixed weekday profile. Fixed
-  // weights keep the charts stable between renders instead of jittering.
   const weekly = useMemo(() => {
     const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
     const applicationProfile = [0.62, 0.71, 0.83, 0.68, 1, 0.44, 0.29]
@@ -146,7 +142,6 @@ export function useDashboardAnalytics({ modality, typeFilter }: UseDashboardAnal
     }
   }, [totalActive])
 
-  // Two-year band for the comparison card: last year's curve against this one.
   const yearComparison = useMemo(() => {
     const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
     const previousProfile = [0.42, 0.4, 0.46, 0.5, 0.47, 0.55, 0.6]

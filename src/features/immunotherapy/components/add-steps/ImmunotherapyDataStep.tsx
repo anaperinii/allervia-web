@@ -1,5 +1,5 @@
 import { Controller, type UseFormReturn } from 'react-hook-form'
-import { FieldLabel, Select, TextInput } from '@/shared/components'
+import { FieldLabel, Select, StepHeading, TextInput } from '@/shared/components'
 import { formatConcentration, formatVolume } from '@/shared/lib/formatters'
 import { todayStr } from '@/shared/lib/dates'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
@@ -16,7 +16,7 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-sm font-bold text-(--text)">Dados da Imunoterapia</h2>
+      <StepHeading description="Tipo de alérgeno, via de administração, extrato, data de início e as metas de concentração e volume do protocolo." />
       <div className="grid grid-cols-2 gap-4">
         <FieldLabel label="Tipo" error={errors.type?.message}>
           <Select invalid={!!errors.type} {...register('type')}>

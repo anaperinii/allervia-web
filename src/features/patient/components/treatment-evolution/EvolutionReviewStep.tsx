@@ -1,4 +1,5 @@
 import { format, parse } from 'date-fns'
+import { StepHeading } from '@/shared/components'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -49,6 +50,7 @@ export function EvolutionReviewStep({ form, plannedNextDate, plannedNextInterval
 
   return (
     <div className="mt-1 space-y-3">
+      <StepHeading description="Confira o que será gravado no prontuário e a próxima aplicação que será agendada automaticamente." />
       <div className="grid grid-cols-1 gap-3">
         <ReviewCard title="Pré-Aplicação" items={preItems} />
         <ReviewCard title="Pós-Aplicação" items={postItems} />

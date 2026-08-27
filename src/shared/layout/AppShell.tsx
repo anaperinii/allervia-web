@@ -26,7 +26,6 @@ interface RailItem {
   match?: string[]
 }
 
-/** The four destinations that make up the rail's centre block. */
 const RAIL: RailItem[] = [
   { icon: faSyringe, path: '/immunotherapies', label: 'Imunoterapias', match: ['/add-immunotherapy', '/patient'] },
   { icon: faCalendarDays, path: '/appointments', label: 'Agendamentos' },
@@ -45,7 +44,6 @@ function greeting(hour: number) {
   return 'Boa noite'
 }
 
-/** Circular rail link with the hover label that slides out to its right. */
 function RailLink({ item, active }: { item: RailItem; active: boolean }) {
   return (
     <Link
@@ -53,7 +51,6 @@ function RailLink({ item, active }: { item: RailItem; active: boolean }) {
       aria-label={item.label}
       className="group relative flex h-12 w-12 items-center justify-center rounded-full no-underline transition-transform duration-200 hover:scale-105"
       style={{
-        // Brand gradient — the mark's teal falling into the deep teal.
         background: active ? 'linear-gradient(150deg, #257E8C, #12333a)' : SHOWCASE.white,
         color: active ? SHOWCASE.white : SHOWCASE.inkSoft,
         border: active ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
@@ -86,14 +83,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="h-screen w-full overflow-hidden" style={{ background: SHOWCASE.canvas }}>
       <div className="flex h-full w-full flex-col overflow-hidden px-8 py-6">
-        {/* top bar */}
-        <div className="flex items-center gap-4 mb-8 shrink-0">
-          {/* flex-1 here and on the right group leaves the nav centred between them */}
+        <div className="flex items-center gap-4 mb-4 shrink-0">
           <div className="flex flex-1 items-center">
-            {/* ml-1.5 centres the 36px mark over the 48px rail column below it */}
             <Link to="/immunotherapies" className="ml-1.5 flex items-center no-underline shrink-0">
               <img src={allerviaMark} alt="Allervia" className="h-9 w-9 object-contain" />
-              {/* gap lives on the wordmark so only the text sits further right */}
               <AllerviaWordmark className="ml-6 text-lg" style={{ color: SHOWCASE.ink }} />
             </Link>
           </div>
@@ -125,8 +118,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className="relative z-10 h-10 w-10 rounded-full object-cover"
                 style={{ border: `2px solid ${SHOWCASE.white}` }}
               />
-              {/* -ml-10 tucks the pill's left edge exactly under the 40px avatar,
-                  so the two read as one piece; pl-12 clears the text past it. */}
               <span
                 className="-ml-10 flex h-10 flex-col justify-center whitespace-nowrap rounded-full pl-12 pr-5 backdrop-blur-md"
                 style={{
@@ -144,10 +135,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        {/* rail + page */}
         <div className="flex flex-1 gap-5 min-h-0">
-          {/* z-50 keeps the hover labels above the page content to its right */}
-          <div className="relative z-50 flex w-12 shrink-0 flex-col items-center">
+          <div className="relative z-50 flex w-12 shrink-0 flex-col items-center pt-6">
             <CircleButton
               icon={faArrowLeft}
               size={48}
@@ -175,7 +164,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          {/* No bottom padding: page content runs down to the rail's Sair button. */}
           <main className="flex flex-1 min-w-0 flex-col overflow-y-auto">{children}</main>
         </div>
       </div>

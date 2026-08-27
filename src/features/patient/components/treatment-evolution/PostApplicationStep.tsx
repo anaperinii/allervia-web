@@ -1,6 +1,6 @@
 import { Controller, type UseFormReturn } from 'react-hook-form'
 import { cn } from '@/shared/lib/cn'
-import { FieldLabel, Select, TextArea, TextInput } from '@/shared/components'
+import { FieldLabel, Select, StepHeading, TextArea, TextInput } from '@/shared/components'
 import { GLASS_CARD_SHADOW } from '@/shared/components/glass-card'
 import { formatConcentration, formatVolume } from '@/shared/lib/formatters'
 import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
@@ -34,7 +34,7 @@ export function PostApplicationStep({ form }: PostApplicationStepProps) {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-sm font-bold text-(--text)">Pós-Aplicação</h2>
+      <StepHeading description="Registre a aplicação realizada com data, horário, responsável, concentração e volume, e defina o intervalo até a próxima dose." />
       <div className="grid grid-cols-2 gap-4">
         <FieldLabel label="Data da aplicação" error={errors.applicationDate?.message}>
           <TextInput type="date" invalid={!!errors.applicationDate} {...register('applicationDate')} />

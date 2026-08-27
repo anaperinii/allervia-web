@@ -176,7 +176,7 @@ export function TrialPage() {
               noValidate
               className={cn(
                 'auth-body w-full p-6 sm:px-10 lg:px-12 py-8',
-                'flex flex-col justify-center lg:h-full overflow-y-auto',
+                'flex flex-col justify-center-safe lg:h-full overflow-y-auto',
                 AUTH_FIELD_CLASSES,
               )}
               style={{ background: 'var(--ll-bg)', boxShadow: RAIL_SHADOW }}

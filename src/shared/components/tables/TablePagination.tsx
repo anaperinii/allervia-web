@@ -25,7 +25,6 @@ export function TablePagination({ currentPage, totalPages, totalItems, itemsPerP
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-(--text-muted)">Registros por página</span>
-          {/* w-24: the pill Select carries pl-4 + pr-9 of padding, so 64px squeezed the digits */}
           <div className="w-24">
             <Select
               aria-label="Registros por página"

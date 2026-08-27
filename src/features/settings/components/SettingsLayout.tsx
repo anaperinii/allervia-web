@@ -9,9 +9,9 @@ interface SettingsLayoutProps {
 
 export function SettingsLayout({ subtitle, headerActions, children }: SettingsLayoutProps) {
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
       <PageHeader
-        breadcrumb={subtitle ? ['Allervia', 'Configurações'] : ['Allervia']}
+        breadcrumb={subtitle ? ['Configurações'] : undefined}
         title={subtitle ?? 'Configurações'}
         actions={headerActions}
       />

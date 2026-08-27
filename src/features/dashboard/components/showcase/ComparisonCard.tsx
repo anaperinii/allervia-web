@@ -29,10 +29,6 @@ function scale(rows: { previous: number; current: number }[]) {
   }
 }
 
-/**
- * Two curves for consecutive years with the gap between them filled by a
- * diagonal hatch, so the widening band reads as the year-over-year gain.
- */
 export function ComparisonCard({
   title,
   caption,

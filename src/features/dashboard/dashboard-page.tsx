@@ -18,7 +18,6 @@ import { faCalendar, faChartColumn, faDatabase, faGaugeHigh, faHeartPulse, faMag
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { CircleButton, PageHeader, Pill, SelectPill } from '@/shared/components/showcase'
 
-
 type DashboardTab = 'panel' | 'analytics' | 'pulse' | 'data'
 
 const TABS: { id: DashboardTab; label: string; icon: IconDefinition }[] = [
@@ -145,7 +144,6 @@ export function DashboardPage() {
   return (
     <>
       <PageHeader
-        breadcrumb={['Imunoterapias', 'Métricas Clínicas']}
         title="Painel de Métricas"
         actions={
           <>

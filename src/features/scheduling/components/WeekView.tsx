@@ -44,7 +44,6 @@ export function WeekView({
               className="-mx-2.5 -mt-2.5 px-2.5 pt-2.5 pb-2 mb-2 text-center border-b border-(--border-custom)"
               style={{ background: today || selected ? 'transparent' : '#f9fafb' }}
             >
-              {/* Weekday and day number share one line. */}
               <div className="flex items-center justify-center gap-2">
                 <span className="text-[0.7rem] font-semibold text-slate-600 uppercase">
                   {format(day, 'EEE', { locale: ptBR })}

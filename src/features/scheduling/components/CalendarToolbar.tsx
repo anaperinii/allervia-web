@@ -24,7 +24,6 @@ export function CalendarToolbar({ monthLabel, onPrev, onNext, onToday, rightCont
       <div className="flex items-center gap-3">
         <span className="text-base font-semibold text-(--text) capitalize">{monthLabel}</span>
 
-        {/* Classes, not inline styles, so the hover tint can override the base fill. */}
         <button
           type="button"
           onClick={onToday}

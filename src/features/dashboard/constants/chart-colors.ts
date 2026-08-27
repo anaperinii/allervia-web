@@ -1,6 +1,3 @@
-// concentration ratios walk the calendar green scale, from the lime used for
-// Subcutânea (#B7E06A) to the teal used for Sublingual (#74C3B9) and beyond:
-// most diluted = lightest lime, most concentrated = deepest teal.
 export const CONCENTRATION_COLORS: Record<string, string> = {
   '1:10.000': '#B7E06A',
   '1:1.000': '#8FD285',

@@ -37,8 +37,6 @@ const SIZE_CLASS: Record<IconButtonSize, string> = {
   lg: 'h-10 w-10',
 }
 
-// Same resting white circle as the toolbar's CircleButton; the tone only shows
-// up on hover so rows of icon buttons stay quiet.
 const TONE_CLASS: Record<IconButtonTone, string> = {
   brand: 'border border-[#DDE6E6] bg-white text-[#4A6469] hover:text-[#12333a] hover:border-[#12333a]/35',
   danger: 'border border-[#DDE6E6] bg-white text-[#4A6469] hover:text-[#A41517] hover:border-[#A41517]/45',

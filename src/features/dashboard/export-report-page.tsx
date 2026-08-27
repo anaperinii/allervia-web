@@ -50,9 +50,9 @@ export function ExportReportPage() {
   void fileName 
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
       <PageHeader
-        breadcrumb={[{ label: 'Painel de Métricas', onClick: () => setShowCancelModal(true) }]}
+        breadcrumb={['Painel de Métricas']}
         title="Exportar Relatório"
       />
 

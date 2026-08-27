@@ -78,7 +78,6 @@ export function ImmunotherapiesPage() {
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-visible">
       <PageHeader
-        breadcrumb={['Allervia', 'Imunoterapias']}
         title="Imunoterapias Alérgicas"
         actions={
           <ImmunotherapiesFilterBar
@@ -96,7 +95,6 @@ export function ImmunotherapiesPage() {
         }
       />
 
-      {/* Modality switch — took over from the folder tabs above the table. */}
       <div className="mb-4 flex items-center justify-between gap-4">
         <SegmentedControl
           value={modalityTab}

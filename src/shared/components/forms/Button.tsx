@@ -47,20 +47,17 @@ const PROMINENT_SHADOW: Record<ButtonTone, string> = {
   neutral: 'shadow-[0_2px_10px_rgba(18,51,58,0.14)]',
 }
 
-// Pill language: flat fills, no gradients. `outline` is the resting white pill
-// from the toolbar, `solid` is the same pill filled with its tone.
 const OUTLINE_BASE = 'border border-[#DDE6E6] bg-white'
 
 const STYLES: Record<ButtonTone, Record<ButtonVariant, string>> = {
   brand: {
     solid: 'bg-[#12333a] text-white hover:bg-[#0c2429]',
-    outline: `${OUTLINE_BASE} text-[#12333a] hover:border-[#12333a]/35`,
+    outline: 'border border-[#257E8C]/40 bg-[#257E8C]/6 text-[#1d6772] hover:border-[#257E8C]/70 hover:bg-[#257E8C]/12',
     ghost: 'text-[#12333a] hover:bg-[#12333a]/8',
   },
   danger: {
     solid: 'bg-[#A41517] text-white hover:bg-[#8a1114]',
-    // Destructive actions carry the red border at rest, not only on hover.
-    outline: 'border border-[#A41517]/40 bg-white text-[#A41517] hover:border-[#A41517]/70 hover:bg-[#A41517]/6',
+    outline: 'border border-[#A41517]/40 bg-[#A41517]/6 text-[#A41517] hover:border-[#A41517]/70 hover:bg-[#A41517]/12',
     ghost: 'text-[#A41517] hover:bg-[#A41517]/10',
   },
   warning: {

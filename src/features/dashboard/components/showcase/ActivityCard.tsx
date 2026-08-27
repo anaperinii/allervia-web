@@ -11,10 +11,6 @@ interface ActivityCardProps {
   onOpen: () => void
 }
 
-/**
- * Weekly bars in flat grey with the peak bar picked out by a diagonal hatch and
- * a lime callout — the reference's way of highlighting one column.
- */
 export function ActivityCard({ title, caption, total, data, peakIndex, peakValue, onOpen }: ActivityCardProps) {
   const max = Math.max(...data.map((d) => d.value), 1)
 
