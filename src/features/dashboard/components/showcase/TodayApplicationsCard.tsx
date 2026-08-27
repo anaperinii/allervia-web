@@ -1,12 +1,11 @@
-import { faArrowRight, faCheck, faClock, faXmark } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import proArt from '@/assets/pro-art.jpg'
 import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
 
 export const STATUS_BADGE = {
-  completed: { color: '#8FD285', icon: faCheck, label: 'Aplicada' },
-  missed: { color: '#E0453C', icon: faXmark, label: 'Ausente' },
-  scheduled: { color: '#8CA1A6', icon: faClock, label: 'Prevista' },
+  completed: { color: '#8FD285', label: 'Aplicada' },
+  missed: { color: '#E0453C', label: 'Ausente' },
+  scheduled: { color: '#8CA1A6', label: 'Prevista' },
 } as const
 
 export interface TodayApplication {
@@ -65,22 +64,24 @@ export function TodayApplicationsCard({
           </div>
         </header>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
           {applications.map((application) => (
             <button
               type="button"
               key={application.id}
               onClick={() => onSelectPatient(application.patientId)}
-              className="flex w-full shrink-0 cursor-pointer items-center gap-2.5 rounded-2xl px-3 py-2 text-left backdrop-blur-md transition-transform duration-200 hover:scale-[1.02]"
+              className="relative flex w-full shrink-0 cursor-pointer items-center gap-2.5 rounded-2xl px-3 py-2 text-left backdrop-blur-md transition-transform duration-200 hover:scale-[1.02]"
               style={{ background: 'rgba(255,255,255,0.24)', border: '1px solid rgba(255,255,255,0.42)' }}
             >
               <span
-                className="flex h-[1.15rem] w-[1.15rem] shrink-0 items-center justify-center rounded-full"
+                aria-hidden="true"
+                className="absolute -right-1 top-1.5 h-2 w-2 rounded-full"
                 title={STATUS_BADGE[application.status].label}
-                style={{ background: STATUS_BADGE[application.status].color, color: '#FFFFFF' }}
-              >
-                <FontAwesomeIcon icon={STATUS_BADGE[application.status].icon} style={{ fontSize: 8 }} />
-              </span>
+                style={{
+                  background: STATUS_BADGE[application.status].color,
+                  boxShadow: '0 0 0 1.5px rgba(255,255,255,0.7)',
+                }}
+              />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[0.74rem] font-semibold leading-tight" style={{ color: SHOWCASE.ink }}>
                   {application.name}

@@ -8,6 +8,8 @@ type Modality = 'subcutaneous' | 'sublingual'
 
 const TIMELINE_DAYS = 120
 
+const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+
 interface UseDashboardAnalyticsOptions {
   modality: Modality
   typeFilter?: string
@@ -77,6 +79,40 @@ export function useDashboardAnalytics({ modality, typeFilter }: UseDashboardAnal
         interrupted: Math.max(0, Math.round(inactiveFiltered.length * factor)),
         completed: Math.max(0, Math.round((i / (months.length - 1)) * Math.floor(totalActive * 0.2))),
       }
+    })
+  }, [totalActive, inactiveFiltered.length])
+
+  // Three-year history for the dark charts, which filter by year.
+  const phaseHistory = useMemo(() => {
+    const currentYear = new Date().getFullYear()
+    return [currentYear - 2, currentYear - 1, currentYear].flatMap((year, yearIndex) => {
+      const growth = 0.6 + yearIndex * 0.2
+      return MONTH_LABELS.map((month, i) => {
+        const factor = ((i + 1) / MONTH_LABELS.length) * growth
+        return {
+          year,
+          month,
+          induction: Math.max(0, Math.round(inductionCount * factor)),
+          maintenance: Math.max(0, Math.round(maintenanceCount * factor)),
+        }
+      })
+    })
+  }, [inductionCount, maintenanceCount])
+
+  const statusHistory = useMemo(() => {
+    const currentYear = new Date().getFullYear()
+    return [currentYear - 2, currentYear - 1, currentYear].flatMap((year, yearIndex) => {
+      const growth = 0.6 + yearIndex * 0.2
+      return MONTH_LABELS.map((month, i) => {
+        const factor = ((i + 1) / MONTH_LABELS.length) * growth
+        return {
+          year,
+          month,
+          active: Math.max(0, Math.round(totalActive * factor)),
+          interrupted: Math.max(0, Math.round(inactiveFiltered.length * factor)),
+          completed: Math.max(0, Math.round((i / (MONTH_LABELS.length - 1)) * Math.floor(totalActive * 0.2 * growth))),
+        }
+      })
     })
   }, [totalActive, inactiveFiltered.length])
 
@@ -229,6 +265,8 @@ export function useDashboardAnalytics({ modality, typeFilter }: UseDashboardAnal
     concentrationData,
     phaseData,
     statusData,
+    statusHistory,
+    phaseHistory,
     typeData,
     volumeData,
   }

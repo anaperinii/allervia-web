@@ -32,9 +32,10 @@ export function CardFilters({
   const [coords, setCoords] = useState({ top: 0, left: 0 })
   const anchorRef = useRef<HTMLSpanElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const inlineRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
-    if (!open) return
+    if (!open || inline) return
 
     const place = () => {
       const rect = anchorRef.current?.getBoundingClientRect()
@@ -59,6 +60,7 @@ export function CardFilters({
     const onPointerDown = (event: MouseEvent) => {
       const target = event.target as HTMLElement
       if (panelRef.current?.contains(target) || anchorRef.current?.contains(target)) return
+      if (inlineRef.current?.contains(target)) return
       if (target.closest('[role="dialog"]')) return
       setOpen(false)
     }
@@ -76,6 +78,7 @@ export function CardFilters({
   if (inline) {
     return (
       <div
+        ref={inlineRef}
         className={cn(
           'flex items-center gap-1.5 rounded-full transition-all duration-500 ease-out',
           open ? 'py-0.5 pl-2 pr-0.5' : 'p-0',
@@ -115,6 +118,9 @@ export function CardFilters({
           size={32}
           iconSize={10}
           active={open || active}
+        activeBackground={dark ? '#DCE1E5' : undefined}
+        activeColor={dark ? '#0e353d' : undefined}
+        activeShadow={dark ? '0 6px 16px rgba(0,0,0,0.35)' : undefined}
           idleBackground={dark ? 'rgba(220,225,229,0.08)' : undefined}
           idleColor={dark ? '#DCE1E5' : undefined}
           idleBorderColor={dark ? 'rgba(220,225,229,0.16)' : undefined}
@@ -133,6 +139,9 @@ export function CardFilters({
         size={32}
         iconSize={10}
         active={open || active}
+        activeBackground={dark ? '#DCE1E5' : undefined}
+        activeColor={dark ? '#0e353d' : undefined}
+        activeShadow={dark ? '0 6px 16px rgba(0,0,0,0.35)' : undefined}
         idleBackground={dark ? 'rgba(220,225,229,0.08)' : undefined}
         idleColor={dark ? '#DCE1E5' : undefined}
         idleBorderColor={dark ? 'rgba(220,225,229,0.16)' : undefined}

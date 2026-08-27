@@ -168,8 +168,8 @@ export function DashboardPage() {
       })
   }, [applications, immunotherapies])
 
-  const statusFilters = useMonthlyFilters(analytics.statusData)
-  const phaseFilters = useMonthlyFilters(analytics.phaseData)
+  const statusFilters = useMonthlyFilters(analytics.statusHistory)
+  const phaseFilters = useMonthlyFilters(analytics.phaseHistory)
   const concentrationFilters = useSnapshotFilters(analytics.concentrationData, (entry) => entry.value)
   const typeFilters = useSnapshotFilters(analytics.typeData, (entry) => entry.value)
   const volumeFilters = useSnapshotFilters(analytics.volumeData, (row) =>

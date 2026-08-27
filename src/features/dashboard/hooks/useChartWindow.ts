@@ -154,26 +154,46 @@ const MONTH_RANGES = [
 ]
 
 /** Same filter contract as the light panel, applied to the monthly dark charts. */
-export function useMonthlyFilters<T extends { month: string }>(data: T[]) {
+export function useMonthlyFilters<T extends { month: string; year?: number }>(data: T[]) {
+  const defaultYear = String(new Date().getFullYear())
   const [size, setSize] = useState('12')
   const [month, setMonth] = useState('all')
+  const [year, setYear] = useState(defaultYear)
 
-  const monthOptions = useMemo(
-    () => [{ value: 'all', label: 'Todos os meses' }, ...data.map((entry) => ({ value: entry.month, label: entry.month }))],
-    [data],
-  )
+  const { monthOptions, yearOptions } = useMemo(() => {
+    const months = new Set<string>()
+    const years = new Set<string>()
+    data.forEach((entry) => {
+      months.add(entry.month)
+      if (entry.year !== undefined) years.add(String(entry.year))
+    })
+    return {
+      monthOptions: [
+        { value: 'all', label: 'Todos os meses' },
+        ...Array.from(months).map((value) => ({ value, label: value })),
+      ],
+      yearOptions: Array.from(years)
+        .sort()
+        .reverse()
+        .map((value) => ({ value, label: value })),
+    }
+  }, [data])
 
   const slice = useMemo(() => {
-    if (month !== 'all') return data.filter((entry) => entry.month === month)
-    return data.slice(-Number(size))
-  }, [data, month, size])
+    const scoped = yearOptions.length > 0 ? data.filter((entry) => String(entry.year) === year) : data
+    if (month !== 'all') return scoped.filter((entry) => entry.month === month)
+    return scoped.slice(-Number(size))
+  }, [data, month, size, year, yearOptions.length])
 
   const filters: CardFilter[] = [
     { key: 'range', value: size, onChange: setSize, options: MONTH_RANGES, ariaLabel: 'Intervalo de meses' },
     { key: 'month', value: month, onChange: setMonth, options: monthOptions, ariaLabel: 'Filtrar por mês' },
   ]
+  if (yearOptions.length > 0) {
+    filters.push({ key: 'year', value: year, onChange: setYear, options: yearOptions, ariaLabel: 'Filtrar por ano' })
+  }
 
-  return { slice, filters, active: month !== 'all' || size !== '12' }
+  return { slice, filters, active: month !== 'all' || size !== '12' || year !== defaultYear }
 }
 
 const TOP_OPTIONS = [
