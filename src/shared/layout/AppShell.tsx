@@ -5,7 +5,15 @@ import {
   faBell,
   faCalendarDays,
   faChartColumn,
+  faCircleInfo,
+  faCircleQuestion,
+  faCreditCard,
+  faDesktop,
   faGear,
+  faShield,
+  faSliders,
+  faUser,
+  faUsers,
   faRightFromBracket,
   faSyringe,
 } from '@fortawesome/free-solid-svg-icons'
@@ -15,9 +23,13 @@ import allerviaMark from '@/assets/allervia-mark-light.png'
 import userAvatar from '@/assets/user-avatar.jpg'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { Button, Modal } from '@/shared/components'
+import { cn } from '@/shared/lib/cn'
 import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
 import { useNotificationsStore } from '@/features/notification/stores/useNotificationsStore'
-import { useUserStore } from '@/shared/stores/useUserStore'
+import { useHasPermission, useUserStore, type Permission } from '@/shared/stores/useUserStore'
+
+const RAIL_ACTIVE_BACKGROUND = 'linear-gradient(150deg, #257E8C, #12333a)'
+const RAIL_ACTIVE_SHADOW = '0 6px 16px rgba(16,60,68,0.28)'
 
 interface RailItem {
   icon: IconDefinition
@@ -30,12 +42,25 @@ const RAIL: RailItem[] = [
   { icon: faSyringe, path: '/immunotherapies', label: 'Imunoterapias', match: ['/add-immunotherapy', '/patient'] },
   { icon: faCalendarDays, path: '/appointments', label: 'Agendamentos' },
   { icon: faChartColumn, path: '/dashboard', label: 'Painel de Métricas', match: ['/export-report'] },
-  {
-    icon: faGear,
-    path: '/settings',
-    label: 'Configurações',
-    match: ['/security', '/teams', '/help', '/advanced-settings', '/personalization', '/about', '/plans', '/profile'],
-  },
+  { icon: faBell, path: '/notifications', label: 'Notificações' },
+]
+
+interface SettingsLink {
+  icon: IconDefinition
+  path: string
+  label: string
+  requires?: Permission
+}
+
+const SETTINGS_LINKS: SettingsLink[] = [
+  { icon: faUser, path: '/profile', label: 'Perfil' },
+  { icon: faShield, path: '/security', label: 'Segurança' },
+  { icon: faSliders, path: '/advanced-settings', label: 'Avançado', requires: 'advanced_settings' },
+  { icon: faDesktop, path: '/personalization', label: 'Aparência' },
+  { icon: faUsers, path: '/teams', label: 'Equipes', requires: 'manage_team' },
+  { icon: faCreditCard, path: '/plans', label: 'Planos', requires: 'manage_team' },
+  { icon: faCircleQuestion, path: '/help', label: 'Ajuda' },
+  { icon: faCircleInfo, path: '/about', label: 'Sobre' },
 ]
 
 function greeting(hour: number) {
@@ -44,20 +69,29 @@ function greeting(hour: number) {
   return 'Boa noite'
 }
 
-function RailLink({ item, active }: { item: RailItem; active: boolean }) {
+function RailLink({ item, active, badge }: { item: RailItem; active: boolean; badge?: number }) {
   return (
     <Link
       to={item.path}
       aria-label={item.label}
       className="group relative flex h-12 w-12 items-center justify-center rounded-full no-underline transition-transform duration-200 hover:scale-105"
       style={{
-        background: active ? 'linear-gradient(150deg, #257E8C, #12333a)' : SHOWCASE.white,
+        background: active ? RAIL_ACTIVE_BACKGROUND : SHOWCASE.white,
         color: active ? SHOWCASE.white : SHOWCASE.inkSoft,
         border: active ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
-        boxShadow: active ? '0 6px 16px rgba(16,60,68,0.28)' : undefined,
+        boxShadow: active ? RAIL_ACTIVE_SHADOW : undefined,
       }}
     >
       <FontAwesomeIcon icon={item.icon} style={{ fontSize: 13 }} />
+      {badge !== undefined && badge > 0 && (
+        <span
+          aria-hidden="true"
+          className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.55rem] font-bold"
+          style={{ background: SHOWCASE.danger, color: '#FFFFFF' }}
+        >
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
       <span
         className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50"
         style={{ background: SHOWCASE.ink, color: '#eef3f4' }}
@@ -72,10 +106,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const path = location.pathname
-  const hasUnread = useNotificationsStore((s) => s.notifications.some((n) => !n.read))
   const unreadCount = useNotificationsStore((s) => s.notifications.filter((n) => !n.read).length)
   const userName = useUserStore((s) => s.current.name)
   const [showLogout, setShowLogout] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  const canAdvancedSettings = useHasPermission('advanced_settings')
+  const canManageTeam = useHasPermission('manage_team')
+  const visibleSettingsLinks = SETTINGS_LINKS.filter((link) =>
+    link.requires === 'advanced_settings' ? canAdvancedSettings : link.requires === 'manage_team' ? canManageTeam : true,
+  )
 
   const isActive = (item: RailItem) =>
     path === item.path || path.startsWith(item.path + '/') || (item.match?.some((m) => path.startsWith(m)) ?? false)
@@ -89,32 +129,53 @@ export function AppShell({ children }: { children: ReactNode }) {
     >
       <div className="flex h-full w-full flex-col overflow-hidden px-8 py-6">
         <div className="flex items-center gap-4 mb-4 shrink-0">
-          <div className="flex flex-1 items-center">
+          <div className="flex flex-1 items-center min-w-0 overflow-hidden">
             <Link to="/immunotherapies" className="ml-1.5 flex items-center no-underline shrink-0">
               <img src={allerviaMark} alt="Allervia" className="h-9 w-9 object-contain" />
               <AllerviaWordmark className="ml-6 text-lg" style={{ color: SHOWCASE.ink }} />
             </Link>
           </div>
 
-          <div className="flex flex-1 items-center gap-3 shrink-0 justify-end">
-            <span className="relative inline-flex">
-              <CircleButton
-                icon={faBell}
-                size={40}
-                iconSize={13}
-                aria-label="Notificações"
-                onClick={() => navigate({ to: '/notifications' })}
-              />
-              {hasUnread && (
-                <span
-                  aria-hidden="true"
-                  className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.55rem] font-bold"
-                  style={{ background: SHOWCASE.danger, color: '#FFFFFF' }}
-                >
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
+          <div className="flex shrink-0 items-center gap-3">
+            <div
+              className={cn(
+                'group/settings flex items-center gap-1.5 overflow-hidden transition-all duration-500 ease-out',
+                settingsOpen ? 'max-w-5xl opacity-100 translate-x-0' : 'max-w-0 opacity-0 translate-x-8',
               )}
-            </span>
+            >
+              {visibleSettingsLinks.map((link) => {
+                const current = path === link.path
+                return (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    aria-current={current ? 'page' : undefined}
+                    className="flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[0.66rem] font-medium whitespace-nowrap no-underline transition-all duration-300 group-hover/settings:blur-[1.5px] group-hover/settings:opacity-55 hover:blur-none! hover:opacity-100!"
+                    style={{
+                      background: current ? SHOWCASE.ink : SHOWCASE.white,
+                      border: current ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
+                      color: current ? SHOWCASE.onAccent : SHOWCASE.inkSoft,
+                    }}
+                  >
+                    <FontAwesomeIcon icon={link.icon} style={{ fontSize: 10 }} />
+                    {link.label}
+                  </Link>
+                )
+              })}
+            </div>
+
+            <CircleButton
+              icon={faGear}
+              size={40}
+              iconSize={13}
+              active={settingsOpen}
+              activeBackground={RAIL_ACTIVE_BACKGROUND}
+              activeShadow={RAIL_ACTIVE_SHADOW}
+              iconRotateDeg={settingsOpen ? 180 : 0}
+              aria-label="Configurações"
+              aria-expanded={settingsOpen}
+              onClick={() => setSettingsOpen((open) => !open)}
+            />
             <Link to="/profile" aria-label="Perfil" className="flex items-center no-underline">
               <img
                 src={userAvatar}
@@ -153,7 +214,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <div className="mt-8 flex flex-col gap-1">
               {RAIL.map((item) => (
-                <RailLink key={item.path} item={item} active={isActive(item)} />
+                <RailLink
+                  key={item.path}
+                  item={item}
+                  active={isActive(item)}
+                  badge={item.path === '/notifications' ? unreadCount : undefined}
+                />
               ))}
             </div>
 

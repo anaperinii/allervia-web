@@ -10,9 +10,21 @@ interface CircleButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: number
   iconSize?: number
   iconRotateDeg?: number
+  activeBackground?: string
+  activeShadow?: string
 }
 
-export function CircleButton({ icon, active = false, size = 36, iconSize = 12, iconRotateDeg, className, ...rest }: CircleButtonProps) {
+export function CircleButton({
+  icon,
+  active = false,
+  size = 36,
+  iconSize = 12,
+  iconRotateDeg,
+  activeBackground,
+  activeShadow,
+  className,
+  ...rest
+}: CircleButtonProps) {
   return (
     <button
       type="button"
@@ -20,14 +32,16 @@ export function CircleButton({ icon, active = false, size = 36, iconSize = 12, i
       style={{
         width: size,
         height: size,
-        background: active ? SHOWCASE.ink : SHOWCASE.white,
+        background: active ? activeBackground ?? SHOWCASE.ink : SHOWCASE.white,
         color: active ? SHOWCASE.white : SHOWCASE.inkSoft,
         border: active ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
+        boxShadow: active ? activeShadow : undefined,
       }}
       {...rest}
     >
       <FontAwesomeIcon
         icon={icon}
+        className="transition-transform duration-300"
         style={{ fontSize: iconSize, transform: iconRotateDeg ? `rotate(${iconRotateDeg}deg)` : undefined }}
       />
     </button>

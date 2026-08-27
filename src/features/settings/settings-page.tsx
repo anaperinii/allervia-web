@@ -35,29 +35,29 @@ export function SettingsPage() {
 
   return (
     <SettingsLayout>
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-2">
         {visibleOptions.map((option) => {
           const Icon = option.icon
           return (
             <Link
               key={option.label}
               to={option.route!}
-              className="group relative flex h-full flex-row items-center gap-5 overflow-hidden rounded-2xl border border-(--border-custom) pl-6 pr-4 py-4 transition-all duration-300 hover:-translate-y-1"
+              className="group relative flex h-full flex-row items-center gap-4 overflow-hidden rounded-xl border border-(--border-custom) pl-5 pr-4 py-2.5 transition-all duration-300 hover:-translate-y-0.5"
               style={{
                 background: '#ffffff',
-                boxShadow: '0 8px 24px -14px rgba(16,60,68,0.18)',
+                boxShadow: '0 6px 18px -14px rgba(16,60,68,0.18)',
               }}
             >
               <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `rgb(${CARD_TEAL})` }} />
-              <FontAwesomeIcon icon={Icon} className="shrink-0 text-brand transition-transform duration-300 group-hover:scale-105" style={{ fontSize: 18 }} />
+              <FontAwesomeIcon icon={Icon} className="shrink-0 text-brand transition-transform duration-300 group-hover:scale-105" style={{ fontSize: 15 }} />
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-slate-800">{option.label}</div>
-                <div className="mt-0.5 text-[0.78rem] text-slate-500 truncate">{option.description}</div>
+                <div className="text-[0.82rem] font-semibold text-slate-800">{option.label}</div>
+                <div className="text-[0.7rem] text-slate-500 truncate">{option.description}</div>
               </div>
               <FontAwesomeIcon
                 icon={faArrowRight}
                 className="shrink-0 text-slate-300 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-brand"
-                style={{ fontSize: 16 }}
+                style={{ fontSize: 14 }}
               />
             </Link>
           )
