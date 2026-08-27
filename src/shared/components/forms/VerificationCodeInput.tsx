@@ -72,8 +72,8 @@ export function VerificationCodeInput({
           aria-invalid={!!error || undefined}
           data-code-digit=""
           className={cn(
-            'w-11 h-12 rounded-xl border text-center text-lg font-bold bg-gray-50/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all',
-            error ? 'border-red-400 bg-red-50/30' : 'border-(--border-custom)',
+            'w-11 h-12 rounded-2xl border text-center text-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#257E8C]/35 focus:border-[#257E8C] transition-all',
+            error ? 'border-red-400 bg-red-50/40' : 'border-[#DDE6E6]',
           )}
         />
       ))}

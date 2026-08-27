@@ -45,7 +45,6 @@ export function SegmentedControl<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        // inline-flex so the track hugs its options instead of filling a block parent
         'inline-flex w-max items-stretch gap-0.5 rounded-full border border-[#DDE6E6] bg-white p-0.5',
         SIZE_CLASS[size],
         fullWidth && 'flex w-full',

@@ -1,4 +1,5 @@
 import { cn } from '@/shared/lib/cn'
+import { StepHeading } from '@/shared/components'
 import { DottedSpot } from '@/features/patient/components/DottedSpot'
 import { CompletionMetrics } from '@/features/patient/components/treatment-completion/CompletionMetrics'
 import { TreatmentTimeline } from '@/features/patient/components/treatment-completion/TreatmentTimeline'
@@ -50,6 +51,7 @@ export function CompletionOverviewStep({
 
   return (
     <div className="space-y-4">
+      <StepHeading description="Métricas do tratamento que está sendo encerrado: aplicações realizadas, aderência, reações adversas e duração total." />
       <div
         className="rounded-xl border px-5 py-4 flex items-center gap-4 overflow-hidden relative backdrop-blur-xl"
         style={{

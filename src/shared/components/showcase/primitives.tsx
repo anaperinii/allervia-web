@@ -9,11 +9,9 @@ interface CircleButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   active?: boolean
   size?: number
   iconSize?: number
-  /** Free solid has no diagonal arrow, so ↗ is faArrowRight turned -45°. */
   iconRotateDeg?: number
 }
 
-/** Round icon button — white by default, filled deep teal when active. */
 export function CircleButton({ icon, active = false, size = 36, iconSize = 12, iconRotateDeg, className, ...rest }: CircleButtonProps) {
   return (
     <button
@@ -42,7 +40,6 @@ interface PillProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode
 }
 
-/** Rounded-full label button used across the toolbar and the tab row. */
 export function Pill({ icon, active = false, children, className, ...rest }: PillProps) {
   return (
     <button
@@ -71,7 +68,6 @@ interface SelectPillProps {
   'aria-label': string
 }
 
-/** Native select wearing the toolbar pill shape. */
 export function SelectPill({ value, onChange, options, 'aria-label': ariaLabel }: SelectPillProps) {
   return (
     <select
@@ -94,7 +90,6 @@ export function SelectPill({ value, onChange, options, 'aria-label': ariaLabel }
   )
 }
 
-/** Teal callout that marks the peak point on a chart or a highlighted count. */
 export function AccentBadge({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <span
@@ -139,7 +134,6 @@ export function CardHeader({ title, actions }: CardHeaderProps) {
   )
 }
 
-/** Caption + oversized figure, the stat block every card opens with. */
 export function CardMetric({ caption, value, suffix, prefix }: { caption: string; value: string; suffix?: string; prefix?: string }) {
   return (
     <div className="mb-3">
@@ -155,7 +149,6 @@ export function CardMetric({ caption, value, suffix, prefix }: { caption: string
   )
 }
 
-/** Weekday scale shared by the three weekly charts. */
 export function DayAxis({ days }: { days: string[] }) {
   return (
     <div className="flex items-center justify-between mt-2.5 text-[0.66rem] font-medium" style={{ color: SHOWCASE.muted }}>

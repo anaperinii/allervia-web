@@ -29,31 +29,42 @@ export function FieldLabel({ label, required, hint, children, error, helperText 
 }
 
 const FIELD_BASE =
-  'w-full rounded-lg border bg-gray-50/60 px-3 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all'
-const FIELD_INVALID = 'border-red-400 bg-red-50/30'
-const FIELD_VALID = 'border-(--border-custom)'
+  'w-full border bg-white px-4 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#257E8C]/35 focus:border-[#257E8C] transition-all'
+const FIELD_INVALID = 'border-red-400 bg-red-50/40'
+const FIELD_VALID = 'border-[#DDE6E6]'
 
 interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
   invalid?: boolean
 }
 
 export function TextInput({ invalid, className, ...rest }: TextInputProps) {
-  return <input {...rest} aria-invalid={invalid || undefined} className={cn(FIELD_BASE, 'h-9', invalid ? FIELD_INVALID : FIELD_VALID, className)} />
+  return (
+    <input
+      {...rest}
+      aria-invalid={invalid || undefined}
+      className={cn(FIELD_BASE, 'h-9 rounded-full', invalid ? FIELD_INVALID : FIELD_VALID, className)}
+    />
+  )
 }
 
 interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   invalid?: boolean
 }
 export function TextArea({ invalid, className, rows = 3, ...rest }: TextAreaProps) {
-  return <textarea {...rest} rows={rows} aria-invalid={invalid || undefined} className={cn(FIELD_BASE, 'py-2 resize-none', invalid ? FIELD_INVALID : FIELD_VALID, className)} />
+  return (
+    <textarea
+      {...rest}
+      rows={rows}
+      aria-invalid={invalid || undefined}
+      className={cn(FIELD_BASE, 'rounded-2xl py-2.5 resize-none', invalid ? FIELD_INVALID : FIELD_VALID, className)}
+    />
+  )
 }
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   invalid?: boolean
   children: ReactNode
 }
-// Selects wear the toolbar pill instead of the boxed field so they match the
-// SelectPill used in page headers.
 const SELECT_BASE =
   'w-full h-9 appearance-none cursor-pointer rounded-full border bg-white pl-4 pr-9 text-[0.78rem] font-medium text-[#4A6469] transition-all focus:outline-none focus:border-[#12333a]/40'
 

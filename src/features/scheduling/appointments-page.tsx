@@ -87,7 +87,6 @@ export function AppointmentsPage() {
     return map
   }, [scheduled])
 
-
   const openPatient = (patientId: string) => {
     setSelectedApplication(null)
     navigate({ to: '/patient/$patientId', params: { patientId } })
@@ -120,9 +119,8 @@ export function AppointmentsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-1">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
       <PageHeader
-        breadcrumb={['Allervia', 'Agenda Clínica']}
         title="Agendamentos"
         actions={
           <>
@@ -140,7 +138,7 @@ export function AppointmentsPage() {
                 placeholder="Pesquisar paciente"
                 value={patientSearch}
                 onChange={(e) => setPatientSearch(e.target.value)}
-                className="h-9 rounded-full! bg-white! pl-9 pr-4 text-[0.78rem]"
+                className="h-9 pl-9 pr-4 text-[0.78rem]"
               />
             </div>
             <SelectPill

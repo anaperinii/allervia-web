@@ -3,10 +3,6 @@ export interface Point {
   y: number
 }
 
-/**
- * Catmull-Rom through the points, emitted as cubic beziers. Gives the reference
- * chart's soft S-curve without pulling in a charting library for one line.
- */
 export function smoothPath(points: Point[], tension = 0.22): string {
   if (points.length < 2) return ''
 

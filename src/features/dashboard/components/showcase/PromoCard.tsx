@@ -6,7 +6,6 @@ import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
 interface PromoBar {
   label: string
   caption: string
-  /** 0–1, share of the plot height. */
   ratio: number
   accent: boolean
 }

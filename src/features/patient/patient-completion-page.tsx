@@ -8,7 +8,8 @@ import {
   Button,
   CancelWizardModal,
   toast,
-  WizardStepsIndicator,
+  WizardStepsBreadcrumb,
+  type WizardStep,
 } from '@/shared/components'
 import { usePatientStore, derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
@@ -26,10 +27,14 @@ import { CompletionReviewStep } from '@/features/patient/components/treatment-co
 import { useCompletionDraftsStore } from '@/features/patient/stores/useCompletionDraftsStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleCheck, faFilePen } from '@fortawesome/free-solid-svg-icons'
+import { faChartColumn, faCircleCheck, faClipboardCheck, faFilePen, faListCheck } from '@fortawesome/free-solid-svg-icons'
 import { PageHeader, SHOWCASE } from '@/shared/components/showcase'
 
-const STEP_LABELS = ['Visão geral', 'Plano pós-alta', 'Revisão'] as const
+const STEPS: WizardStep[] = [
+  { label: 'Visão geral', icon: faChartColumn, description: 'Métricas do tratamento que está sendo encerrado: aplicações realizadas, aderência, reações adversas e duração total.' },
+  { label: 'Plano pós-alta', icon: faListCheck, description: 'Defina as recomendações de alta, os retornos de monitoramento e os sinais de alerta para retorno antecipado.' },
+  { label: 'Revisão', icon: faClipboardCheck, description: 'Confira o resumo do desfecho e assine o encerramento. O registro vai para o prontuário e a imunoterapia é inativada.' },
+]
 
 export function PatientCompletionPage() {
   const navigate = useNavigate()
@@ -179,9 +184,9 @@ export function PatientCompletionPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0 pb-5">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
       <PageHeader
-        breadcrumb={[{ label: 'Prontuário', onClick: () => setShowCancelModal(true) }, 'Conclusão de Tratamento']}
+        breadcrumb={['Prontuário', 'Conclusão de Tratamento']}
         title={patient.name}
         actions={
           draftSavedAt && (
@@ -196,14 +201,21 @@ export function PatientCompletionPage() {
         }
       />
 
-      <WizardStepsIndicator
-        current={step}
-        ariaLabel="Etapas da conclusão"
-        labels={STEP_LABELS}
-      />
+      <div className="mb-2">
+        <WizardStepsBreadcrumb
+          steps={STEPS}
+          current={step}
+          ariaLabel="Etapas da conclusão"
+          onSelect={(i) => setStep(i as 0 | 1 | 2)}
+        />
+      </div>
 
-      <form onSubmit={handleFormSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
-        <div key={step} className="flex-1 overflow-y-auto py-4 animate-in fade-in-0 slide-in-from-right-2 duration-300">
+      <form onSubmit={handleFormSubmit} noValidate className="wizard-fields flex flex-1 min-h-0 flex-col">
+        <div
+          key={step}
+          className="flex flex-1 flex-col overflow-y-auto pt-1 pb-4 animate-in fade-in-0 slide-in-from-right-2 duration-300"
+        >
+          <div className="w-full">
           {step === 0 && (
             <CompletionOverviewStep
               patient={patient}
@@ -229,9 +241,13 @@ export function PatientCompletionPage() {
               totalDurationLabel={totalDurationLabel}
             />
           )}
+          </div>
         </div>
 
         <div className="border-t border-(--border-custom) pt-3 flex items-center justify-end gap-2">
+          <Button type="button" tone="danger" variant="outline" onClick={() => setShowCancelModal(true)}>
+            Cancelar
+          </Button>
           {step > 0 && (
             <Button type="button" tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 0 | 1 | 2)}>
               Voltar

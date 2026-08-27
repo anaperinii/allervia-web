@@ -29,7 +29,6 @@ export function NotificationListItem({
   onMarkUnread,
 }: NotificationListItemProps) {
   const display = NOTIFICATION_TYPE_DISPLAY[notification.type]
-  // Same-day notifications only need the clock; older ones need the date.
   const receivedAt = isToday(notification.timestamp)
     ? format(notification.timestamp, 'HH:mm', { locale: ptBR })
     : format(notification.timestamp, 'dd/MM/yyyy', { locale: ptBR })

@@ -450,6 +450,16 @@ textarea:-webkit-autofill:focus {
   border-color: #CBD6D6;
 }
 
+   bar itself is noise next to the step rail — hide the chrome, keep the scroll. */
+.wizard-fields *::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.wizard-fields * {
+  scrollbar-width: none;
+}
+
 @layer base {
   ::-webkit-scrollbar {
     width: 6px;

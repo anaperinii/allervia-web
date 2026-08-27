@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/shared/lib/cn'
-import { TextInput } from '@/shared/components'
+import { StepHeading, TextInput } from '@/shared/components'
 import { PatientInitials } from '@/shared/components/glass-card'
 import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
@@ -86,7 +86,7 @@ export function SelectPatientStep({
 
   return (
     <div className="space-y-5">
-      <h2 className="text-sm font-bold text-(--text)">Selecionar Paciente</h2>
+      <StepHeading description="Escolha a imunoterapia a evoluir e confira a última aplicação, a dose atual e o que o protocolo prevê como próxima." />
       <div className="relative">
         <label htmlFor={inputId} className="sr-only">Buscar paciente</label>
         <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted)" style={{ fontSize: 14 }} />

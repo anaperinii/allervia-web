@@ -1,6 +1,6 @@
 import type { UseFormReturn } from 'react-hook-form'
 import { cn } from '@/shared/lib/cn'
-import { FieldLabel, Select, TextArea, TextInput } from '@/shared/components'
+import { FieldLabel, Select, StepHeading, TextArea, TextInput } from '@/shared/components'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
 
 interface PreApplicationStepProps {
@@ -14,7 +14,7 @@ export function PreApplicationStep({ form }: PreApplicationStepProps) {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-sm font-bold text-(--text)">Pré-Aplicação</h2>
+      <StepHeading description="Relate como o paciente passou no intervalo: efeitos colaterais, necessidade de medicação e o que foi observado." />
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
           <FieldLabel label="Como o paciente passou durante o intervalo?" required error={errors.intervalReport?.message}>
