@@ -3,5 +3,5 @@ interface StepHeadingProps {
 }
 
 export function StepHeading({ description }: StepHeadingProps) {
-  return <p className="text-[0.78rem] leading-relaxed text-(--text-muted)">{description}</p>
+  return <p className="pb-3 text-[0.78rem] leading-relaxed text-(--text-muted)">{description}</p>
 }

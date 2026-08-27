@@ -31,7 +31,7 @@ export function WizardStepsBreadcrumb({
         return (
           <li
             key={step.label}
-            className={cn('relative', i > 0 && '-ml-4')}
+            className={cn('relative', i > 0 && '-ml-5')}
             style={{ zIndex: steps.length - i }}
           >
             <button
@@ -40,12 +40,12 @@ export function WizardStepsBreadcrumb({
               onClick={() => clickable && onSelect?.(i)}
               aria-current={active ? 'step' : undefined}
               className={cn(
-                'relative flex h-7 items-center gap-1.5 overflow-hidden rounded-full pl-3 pr-4 text-[0.66rem] font-medium whitespace-nowrap transition-all duration-300',
-                i > 0 && 'pl-6',
+                'relative flex h-8 items-center gap-2 overflow-hidden rounded-full pl-4 pr-5 text-[0.72rem] font-medium whitespace-nowrap transition-all duration-300',
+                i > 0 && 'pl-7',
                 clickable ? 'cursor-pointer' : 'cursor-default',
               )}
               style={{
-                background: active ? 'linear-gradient(150deg, #257E8C, #12333a)' : SHOWCASE.white,
+                background: active ? SHOWCASE.ink : SHOWCASE.white,
                 border: active ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
                 color: active ? SHOWCASE.onAccent : SHOWCASE.muted,
                 boxShadow: active ? '0 4px 12px -6px rgba(16,60,68,0.30)' : '0 1px 4px rgba(16,60,68,0.05)',
@@ -55,7 +55,7 @@ export function WizardStepsBreadcrumb({
                 <FontAwesomeIcon
                   icon={step.icon}
                   className="relative z-10"
-                  style={{ fontSize: 10, opacity: active ? 1 : 0.7 }}
+                  style={{ fontSize: 11, opacity: active ? 1 : 0.7 }}
                   aria-hidden="true"
                 />
               )}
