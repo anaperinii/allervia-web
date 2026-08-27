@@ -7,7 +7,8 @@ import { ExportPreview } from '@/features/dashboard/components/export/preview'
 import { ConfirmExportModal } from '@/features/dashboard/components/export/ConfirmExportModal'
 import { CancelExportModal } from '@/features/dashboard/components/export/CancelExportModal'
 
-import { PageHeader } from '@/shared/components/showcase'
+import { PageHeader, Pill } from '@/shared/components/showcase'
+import { faDownload } from '@fortawesome/free-solid-svg-icons'
 
 const CHART_OPTIONS: readonly ChartOption[] = [
   { id: 'concentration', label: 'Ciclos de Tratamento por Concentração' },
@@ -47,6 +48,8 @@ export function ExportReportPage() {
     setSelectedCharts((prev) => (prev.includes(id) ? prev.filter((chartId) => chartId !== id) : [...prev, id]))
   }
 
+  const exportDisabled = !consent || !justification.trim()
+
   void fileName 
 
   return (
@@ -54,6 +57,24 @@ export function ExportReportPage() {
       <PageHeader
         breadcrumb={['Painel de Métricas']}
         title="Exportar Relatório"
+        actions={
+          <div className="flex flex-col items-end gap-1">
+            <Pill
+              icon={faDownload}
+              active
+              onClick={() => !exportDisabled && setShowExportModal(true)}
+              disabled={exportDisabled}
+              className={exportDisabled ? 'opacity-50 cursor-not-allowed' : undefined}
+            >
+              Exportar {format.toUpperCase()}
+            </Pill>
+            {!consent && (
+              <span className="text-[0.68rem] font-medium" style={{ color: '#E0453C' }}>
+                Aceite a declaração LGPD para habilitar a exportação
+              </span>
+            )}
+          </div>
+        }
       />
 
       <div className="flex flex-1 min-h-0 overflow-hidden gap-4">

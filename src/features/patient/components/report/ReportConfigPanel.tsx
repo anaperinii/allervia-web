@@ -145,9 +145,6 @@ export function ReportConfigPanel({
         />
       </div>
 
-      {!consented && (
-        <p className="text-[0.55rem] text-amber-600 text-center">Aceite a declaração LGPD para habilitar a exportação</p>
-      )}
     </div>
   )
 }
