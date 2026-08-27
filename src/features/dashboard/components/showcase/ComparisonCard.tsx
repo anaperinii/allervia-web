@@ -1,5 +1,8 @@
-import { faArrowRight, faComment, faSliders } from '@fortawesome/free-solid-svg-icons'
-import { AccentBadge, Card, CardHeader, CardMetric, CircleButton, DayAxis, SHOWCASE } from '@/shared/components/showcase'
+import { useState } from 'react'
+import { AccentBadge, Card, CardHeader, CardMetric, DayAxis, SHOWCASE } from '@/shared/components/showcase'
+import { axisLabels, todayIndex, useSeriesFilters, windowCaption } from '@/features/dashboard/hooks/useChartWindow'
+import { CardFilters } from './CardFilters'
+import { ChartTooltip, HoverBands } from './ChartHover'
 
 const VIEW_W = 640
 const VIEW_H = 150
@@ -8,13 +11,10 @@ const PAD_X = 6
 interface ComparisonCardProps {
   title: string
   caption: string
-  total: number
   totalSuffix: string
-  deltaPct: number
   previousYear: number
   currentYear: number
-  rows: { day: string; previous: number; current: number }[]
-  onOpen: () => void
+  series: { date: string; label: string; previous: number; current: number }[]
 }
 
 function scale(rows: { previous: number; current: number }[]) {
@@ -32,14 +32,17 @@ function scale(rows: { previous: number; current: number }[]) {
 export function ComparisonCard({
   title,
   caption,
-  total,
   totalSuffix,
-  deltaPct,
   previousYear,
   currentYear,
-  rows,
-  onOpen,
+  series,
 }: ComparisonCardProps) {
+  const { slice: rows, filters, active } = useSeriesFilters(series, { range: true })
+
+  const previousTotal = rows.reduce((sum, r) => sum + r.previous, 0)
+  const currentTotal = rows.reduce((sum, r) => sum + r.current, 0)
+  const deltaPct = previousTotal > 0 ? Math.round(((currentTotal - previousTotal) / previousTotal) * 100) : 0
+
   const { x, y } = scale(rows)
   const currentLine = rows.map((r, i) => `${i === 0 ? 'M' : 'L'}${x(i)},${y(r.current)}`).join(' ')
   const previousLine = rows.map((r, i) => `${i === 0 ? 'M' : 'L'}${x(i)},${y(r.previous)}`).join(' ')
@@ -49,22 +52,24 @@ export function ComparisonCard({
     'Z',
   ].join(' ')
 
-  const badgeIndex = Math.floor(rows.length / 2)
+  const badgeIndex = todayIndex(rows)
+  const [hover, setHover] = useState<number | null>(null)
+  const hovered = hover !== null ? rows[hover] : undefined
 
   return (
     <Card>
       <CardHeader
         title={title}
+        subtitle={windowCaption(caption, rows)}
         actions={
-          <>
-            <CircleButton icon={faSliders} size={32} iconSize={10} active aria-label="Filtros" />
-            <CircleButton icon={faComment} size={32} iconSize={10} aria-label="Comentários" />
-            <CircleButton icon={faArrowRight} iconRotateDeg={-45} size={32} iconSize={10} onClick={onOpen} aria-label="Abrir" />
-          </>
+          <CardFilters filters={filters} active={active} />
         }
       />
 
-      <CardMetric caption={caption} value={total.toLocaleString('pt-BR')} suffix={totalSuffix} />
+      <CardMetric
+        value={currentTotal.toLocaleString('pt-BR')}
+        suffix={totalSuffix}
+      />
 
       <div className="relative flex-1 flex gap-3 min-h-30">
         <div className="flex flex-col justify-center gap-8 text-[0.62rem] font-medium shrink-0" style={{ color: SHOWCASE.muted }}>
@@ -82,28 +87,57 @@ export function ComparisonCard({
             <path d={band} fill="url(#comparison-hatch)" />
             <path d={previousLine} fill="none" stroke={SHOWCASE.ink} strokeOpacity="0.55" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
             <path d={currentLine} fill="none" stroke={SHOWCASE.ink} strokeOpacity="0.55" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
-            {rows.map((r, i) => (
-              <circle key={r.day} cx={x(i)} cy={y(r.current)} r="2.5" fill={SHOWCASE.white} stroke={SHOWCASE.ink} strokeWidth="1" vectorEffect="non-scaling-stroke" />
-            ))}
+            {rows.map((r, i) =>
+              rows.length <= 14 || hover === i ? (
+                <circle
+                  key={`${r.label}-${i}`}
+                  cx={x(i)}
+                  cy={y(r.current)}
+                  r={hover === i ? 4 : 2.5}
+                  fill={hover === i ? SHOWCASE.accent : SHOWCASE.white}
+                  stroke={SHOWCASE.ink}
+                  strokeWidth="1"
+                  vectorEffect="non-scaling-stroke"
+                />
+              ) : null,
+            )}
           </svg>
 
-          <div
-            className="absolute -translate-x-1/2 -translate-y-1/2"
-            style={{
-              left: `${(x(badgeIndex) / VIEW_W) * 100}%`,
-              top: `${((y(rows[badgeIndex].current) + y(rows[badgeIndex].previous)) / 2 / VIEW_H) * 100}%`,
-            }}
-          >
-            <AccentBadge>
-              {deltaPct >= 0 ? '+' : ''}
-              {deltaPct}%
-            </AccentBadge>
-          </div>
+          <HoverBands count={rows.length} onHover={setHover} />
+
+          {hovered && hover !== null && (
+            <ChartTooltip
+              leftPct={(x(hover) / VIEW_W) * 100}
+              topPct={(y(hovered.current) / VIEW_H) * 100}
+              label={hovered.label}
+            >
+              {currentYear}: {hovered.current.toLocaleString('pt-BR')}
+              <span className="opacity-70">
+                {' · '}
+                {previousYear}: {hovered.previous.toLocaleString('pt-BR')}
+              </span>
+            </ChartTooltip>
+          )}
+
+          {hover === null && badgeIndex >= 0 && (
+            <div
+              className="absolute -translate-x-1/2 -translate-y-1/2"
+              style={{
+                left: `${(x(badgeIndex) / VIEW_W) * 100}%`,
+                top: `${((y(rows[badgeIndex].current) + y(rows[badgeIndex].previous)) / 2 / VIEW_H) * 100}%`,
+              }}
+            >
+              <AccentBadge>
+                {deltaPct >= 0 ? '+' : ''}
+                {deltaPct}%
+              </AccentBadge>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="pl-9">
-        <DayAxis days={rows.map((r) => r.day)} />
+        <DayAxis days={axisLabels(rows.map((r) => r.label))} />
       </div>
     </Card>
   )

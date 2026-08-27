@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   faArrowLeft,
@@ -20,6 +20,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import allerviaMark from '@/assets/allervia-mark-light.png'
+import allerviaMarkDark from '@/assets/allervia-mark-dark.png'
 import userAvatar from '@/assets/user-avatar.jpg'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { Button, Modal } from '@/shared/components'
@@ -28,6 +29,7 @@ import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
 import { useNotificationsStore } from '@/features/notification/stores/useNotificationsStore'
 import { useHasPermission, useUserStore, type Permission } from '@/shared/stores/useUserStore'
 
+const DARK_INK = '#DCE1E5'
 const RAIL_ACTIVE_BACKGROUND = 'linear-gradient(150deg, #257E8C, #12333a)'
 const RAIL_ACTIVE_SHADOW = '0 6px 16px rgba(16,60,68,0.28)'
 
@@ -69,16 +71,26 @@ function greeting(hour: number) {
   return 'Boa noite'
 }
 
-function RailLink({ item, active, badge }: { item: RailItem; active: boolean; badge?: number }) {
+function RailLink({
+  item,
+  active,
+  badge,
+  dark = false,
+}: {
+  item: RailItem
+  active: boolean
+  badge?: number
+  dark?: boolean
+}) {
   return (
     <Link
       to={item.path}
       aria-label={item.label}
-      className="group relative flex h-12 w-12 items-center justify-center rounded-full no-underline transition-transform duration-200 hover:scale-105"
+      className="group relative flex h-12 w-12 items-center justify-center rounded-full no-underline transition-all duration-300 hover:scale-105"
       style={{
-        background: active ? RAIL_ACTIVE_BACKGROUND : SHOWCASE.white,
-        color: active ? SHOWCASE.white : SHOWCASE.inkSoft,
-        border: active ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
+        background: active ? RAIL_ACTIVE_BACKGROUND : dark ? 'rgba(220,225,229,0.10)' : SHOWCASE.white,
+        color: active ? SHOWCASE.white : dark ? DARK_INK : SHOWCASE.inkSoft,
+        border: active ? '1px solid transparent' : `1px solid ${dark ? 'rgba(220,225,229,0.20)' : SHOWCASE.line}`,
         boxShadow: active ? RAIL_ACTIVE_SHADOW : undefined,
       }}
     >
@@ -120,6 +132,50 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isActive = (item: RailItem) =>
     path === item.path || path.startsWith(item.path + '/') || (item.match?.some((m) => path.startsWith(m)) ?? false)
 
+  const pageScroll = path === '/dashboard'
+  const railRef = useRef<HTMLDivElement>(null)
+  const logoRef = useRef<HTMLSpanElement>(null)
+  const [railDark, setRailDark] = useState<boolean[]>([])
+  const [logoDark, setLogoDark] = useState(false)
+
+  useEffect(() => {
+    if (!pageScroll) {
+      setRailDark([])
+      setLogoDark(false)
+      return
+    }
+    const scroller = document.querySelector('[data-app-scroll]')
+    const band = document.querySelector('[data-dark-band]')
+    if (!scroller || !band) return
+
+    const syncTone = () => {
+      const bandTop = band.getBoundingClientRect().top
+      const logo = logoRef.current
+      if (logo) {
+        const rect = logo.getBoundingClientRect()
+        setLogoDark(rect.bottom >= bandTop)
+      }
+
+      const items = railRef.current?.querySelectorAll<HTMLElement>('[data-rail-item]') ?? []
+      const next = Array.from(items).map((el) => {
+        const rect = el.getBoundingClientRect()
+        return rect.top + rect.height / 2 >= bandTop
+      })
+      setRailDark((prev) => (prev.length === next.length && prev.every((v, i) => v === next[i]) ? prev : next))
+    }
+    syncTone()
+    const observer = new ResizeObserver(syncTone)
+    observer.observe(band)
+    observer.observe(document.documentElement)
+    scroller.addEventListener('scroll', syncTone, { passive: true })
+    window.addEventListener('resize', syncTone)
+    return () => {
+      observer.disconnect()
+      scroller.removeEventListener('scroll', syncTone)
+      window.removeEventListener('resize', syncTone)
+    }
+  }, [pageScroll, path])
+
   return (
     <div
       className="h-screen w-full overflow-hidden"
@@ -127,55 +183,88 @@ export function AppShell({ children }: { children: ReactNode }) {
         background: `linear-gradient(to bottom, #DFE5E5 0%, ${SHOWCASE.canvas} 42%), ${SHOWCASE.canvas}`,
       }}
     >
-      <div className="flex h-full w-full flex-col overflow-hidden px-8 py-6">
-        <div className="flex items-center gap-4 mb-4 shrink-0">
+      <div
+        data-app-scroll={pageScroll ? '' : undefined}
+        className={cn(
+          'w-full',
+          pageScroll ? 'h-full overflow-y-auto' : 'flex h-full flex-col overflow-hidden px-8 py-6',
+        )}
+      >
+        <div className={cn('flex items-center gap-4 shrink-0', pageScroll ? 'px-8 pt-6 pb-4' : 'mb-4')}>
           <div className="flex flex-1 items-center min-w-0 overflow-hidden">
             <Link to="/immunotherapies" className="ml-1.5 flex items-center no-underline shrink-0">
-              <img src={allerviaMark} alt="Allervia" className="h-9 w-9 object-contain" />
+              {pageScroll ? (
+                <span aria-hidden="true" className="h-9 w-9 shrink-0" />
+              ) : (
+                <img src={allerviaMark} alt="Allervia" className="h-9 w-9 object-contain" />
+              )}
               <AllerviaWordmark className="ml-6 text-lg" style={{ color: SHOWCASE.ink }} />
             </Link>
           </div>
 
+          {pageScroll && (
+            <span ref={logoRef} className="fixed left-9.5 top-6 z-40 block h-9 w-9">
+              <Link to="/immunotherapies" aria-label="Allervia" className="block no-underline">
+                <img
+                  src={logoDark ? allerviaMarkDark : allerviaMark}
+                  alt="Allervia"
+                  className="h-9 w-9 object-contain"
+                />
+              </Link>
+            </span>
+          )}
+
           <div className="flex shrink-0 items-center gap-3">
             <div
               className={cn(
-                'group/settings flex items-center gap-1.5 overflow-hidden transition-all duration-500 ease-out',
-                settingsOpen ? 'max-w-5xl opacity-100 translate-x-0' : 'max-w-0 opacity-0 translate-x-8',
+                'flex items-center gap-2 rounded-full backdrop-blur-md transition-all duration-500 ease-out',
+                settingsOpen ? 'pl-3 pr-1 py-0.5' : 'p-0',
               )}
+              style={{
+                background: settingsOpen ? 'rgba(255,255,255,0.45)' : 'transparent',
+                border: settingsOpen ? '1px solid rgba(255,255,255,0.65)' : '1px solid transparent',
+              }}
             >
-              {visibleSettingsLinks.map((link) => {
-                const current = path === link.path
-                return (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    aria-current={current ? 'page' : undefined}
-                    className="flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[0.66rem] font-medium whitespace-nowrap no-underline transition-all duration-300 group-hover/settings:blur-[1.5px] group-hover/settings:opacity-55 hover:blur-none! hover:opacity-100!"
-                    style={{
-                      background: current ? SHOWCASE.ink : SHOWCASE.white,
-                      border: current ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
-                      color: current ? SHOWCASE.onAccent : SHOWCASE.inkSoft,
-                    }}
-                  >
-                    <FontAwesomeIcon icon={link.icon} style={{ fontSize: 10 }} />
-                    {link.label}
-                  </Link>
-                )
-              })}
-            </div>
+              <div
+                className={cn(
+                  'group/settings flex items-center gap-1.5 overflow-hidden transition-all duration-500 ease-out',
+                  settingsOpen ? 'max-w-5xl opacity-100 translate-x-0' : 'max-w-0 opacity-0 translate-x-8',
+                )}
+              >
+                {visibleSettingsLinks.map((link) => {
+                  const current = path === link.path
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      aria-current={current ? 'page' : undefined}
+                      className="flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[0.66rem] font-medium whitespace-nowrap no-underline transition-all duration-300 group-hover/settings:blur-[1.5px] group-hover/settings:opacity-55 hover:blur-none! hover:opacity-100!"
+                      style={{
+                        background: current ? SHOWCASE.ink : SHOWCASE.white,
+                        border: current ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
+                        color: current ? SHOWCASE.onAccent : SHOWCASE.inkSoft,
+                      }}
+                    >
+                      <FontAwesomeIcon icon={link.icon} style={{ fontSize: 10 }} />
+                      {link.label}
+                    </Link>
+                  )
+                })}
+              </div>
 
-            <CircleButton
-              icon={faGear}
-              size={40}
-              iconSize={13}
-              active={settingsOpen}
-              activeBackground={RAIL_ACTIVE_BACKGROUND}
-              activeShadow={RAIL_ACTIVE_SHADOW}
-              iconRotateDeg={settingsOpen ? 180 : 0}
-              aria-label="Configurações"
-              aria-expanded={settingsOpen}
-              onClick={() => setSettingsOpen((open) => !open)}
-            />
+              <CircleButton
+                icon={faGear}
+                size={40}
+                iconSize={13}
+                active={settingsOpen}
+                activeBackground={RAIL_ACTIVE_BACKGROUND}
+                activeShadow={RAIL_ACTIVE_SHADOW}
+                iconRotateDeg={settingsOpen ? 180 : 0}
+                aria-label="Configurações"
+                aria-expanded={settingsOpen}
+                onClick={() => setSettingsOpen((open) => !open)}
+              />
+            </div>
             <Link to="/profile" aria-label="Perfil" className="flex items-center no-underline">
               <img
                 src={userAvatar}
@@ -201,41 +290,67 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <div className="flex flex-1 gap-5 min-h-0">
-          <div className="relative z-50 flex w-12 shrink-0 flex-col items-center pt-6">
-            <CircleButton
-              icon={faArrowLeft}
-              size={48}
-              iconSize={13}
-              onClick={() => window.history.back()}
-              aria-label="Voltar"
-              title="Voltar"
-            />
+        <div className={cn('flex gap-5', pageScroll ? 'px-8' : 'flex-1 min-h-0')}>
+          {pageScroll && <div aria-hidden="true" className="w-12 shrink-0" />}
+          <div
+            ref={railRef}
+            className={cn(
+              'flex w-12 shrink-0 flex-col items-center pt-6',
+              pageScroll ? 'fixed left-8 top-20 z-40 h-[calc(100vh-6.5rem)]' : 'relative z-50',
+            )}
+          >
+            <span data-rail-item="" className="block">
+              <CircleButton
+                icon={faArrowLeft}
+                size={48}
+                iconSize={13}
+                idleBackground={railDark[0] ? 'rgba(220,225,229,0.10)' : undefined}
+                idleColor={railDark[0] ? DARK_INK : undefined}
+                idleBorderColor={railDark[0] ? 'rgba(220,225,229,0.20)' : undefined}
+                onClick={() => window.history.back()}
+                aria-label="Voltar"
+                title="Voltar"
+              />
+            </span>
 
             <div className="mt-8 flex flex-col gap-1">
-              {RAIL.map((item) => (
-                <RailLink
-                  key={item.path}
-                  item={item}
-                  active={isActive(item)}
-                  badge={item.path === '/notifications' ? unreadCount : undefined}
-                />
+              {RAIL.map((item, i) => (
+                <span key={item.path} data-rail-item="" className="block">
+                  <RailLink
+                    item={item}
+                    active={isActive(item)}
+                    dark={railDark[i + 1] ?? false}
+                    badge={item.path === '/notifications' ? unreadCount : undefined}
+                  />
+                </span>
               ))}
             </div>
 
             <div className="mt-auto pt-8">
-              <CircleButton
-                icon={faRightFromBracket}
-                size={48}
-                iconSize={13}
-                onClick={() => setShowLogout(true)}
-                aria-label="Sair"
-                title="Sair"
-              />
+              <span data-rail-item="" className="block">
+                <CircleButton
+                  icon={faRightFromBracket}
+                  size={48}
+                  iconSize={13}
+                  idleBackground={railDark[RAIL.length + 1] ? 'rgba(220,225,229,0.10)' : undefined}
+                  idleColor={railDark[RAIL.length + 1] ? DARK_INK : undefined}
+                  idleBorderColor={railDark[RAIL.length + 1] ? 'rgba(220,225,229,0.20)' : undefined}
+                  onClick={() => setShowLogout(true)}
+                  aria-label="Sair"
+                  title="Sair"
+                />
+              </span>
             </div>
           </div>
 
-          <main className="flex flex-1 min-w-0 flex-col overflow-y-auto">{children}</main>
+          <main
+            className={cn(
+              'flex min-w-0 flex-1 flex-col',
+              pageScroll ? 'min-h-[calc(100vh-6.5rem)]' : 'overflow-y-auto',
+            )}
+          >
+            {children}
+          </main>
         </div>
       </div>
 

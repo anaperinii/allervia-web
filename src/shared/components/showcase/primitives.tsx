@@ -12,6 +12,9 @@ interface CircleButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   iconRotateDeg?: number
   activeBackground?: string
   activeShadow?: string
+  idleBackground?: string
+  idleColor?: string
+  idleBorderColor?: string
 }
 
 export function CircleButton({
@@ -22,6 +25,9 @@ export function CircleButton({
   iconRotateDeg,
   activeBackground,
   activeShadow,
+  idleBackground,
+  idleColor,
+  idleBorderColor,
   className,
   ...rest
 }: CircleButtonProps) {
@@ -32,9 +38,9 @@ export function CircleButton({
       style={{
         width: size,
         height: size,
-        background: active ? activeBackground ?? SHOWCASE.ink : SHOWCASE.white,
-        color: active ? SHOWCASE.white : SHOWCASE.inkSoft,
-        border: active ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
+        background: active ? activeBackground ?? SHOWCASE.ink : idleBackground ?? SHOWCASE.white,
+        color: active ? SHOWCASE.white : idleColor ?? SHOWCASE.inkSoft,
+        border: active ? '1px solid transparent' : `1px solid ${idleBorderColor ?? SHOWCASE.line}`,
         boxShadow: active ? activeShadow : undefined,
       }}
       {...rest}
@@ -79,16 +85,20 @@ interface SelectPillProps {
   value: string
   onChange: (value: string) => void
   options: { value: string; label: string }[]
+  compact?: boolean
   'aria-label': string
 }
 
-export function SelectPill({ value, onChange, options, 'aria-label': ariaLabel }: SelectPillProps) {
+export function SelectPill({ value, onChange, options, compact = false, 'aria-label': ariaLabel }: SelectPillProps) {
   return (
     <select
       aria-label={ariaLabel}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-9 rounded-full px-4 pr-8 text-[0.78rem] font-medium whitespace-nowrap shrink-0 cursor-pointer appearance-none outline-none"
+      className={cn(
+        'rounded-full whitespace-nowrap shrink-0 cursor-pointer appearance-none outline-none font-medium',
+        compact ? 'h-8 pl-3 pr-7 text-[0.7rem]' : 'h-9 px-4 pr-8 text-[0.78rem]',
+      )}
       style={{
         background: `${SHOWCASE.white} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%234A6469' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 0.85rem center/0.6rem`,
         color: SHOWCASE.inkSoft,
@@ -134,26 +144,36 @@ export function Card({ children, className, padded = true }: CardProps) {
 
 interface CardHeaderProps {
   title: string
+  subtitle?: string
   actions?: ReactNode
 }
 
-export function CardHeader({ title, actions }: CardHeaderProps) {
+export function CardHeader({ title, subtitle, actions }: CardHeaderProps) {
   return (
     <header className="flex items-start justify-between gap-3 mb-4">
-      <h2 className="text-[1.05rem] font-semibold leading-tight" style={{ color: SHOWCASE.ink }}>
-        {title}
-      </h2>
+      <div className="min-w-0">
+        <h2 className="text-[1.05rem] font-semibold leading-tight" style={{ color: SHOWCASE.ink }}>
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-1 text-[0.68rem] font-medium" style={{ color: SHOWCASE.muted }}>
+            {subtitle}
+          </p>
+        )}
+      </div>
       {actions && <div className="flex items-center gap-1.5 shrink-0">{actions}</div>}
     </header>
   )
 }
 
-export function CardMetric({ caption, value, suffix, prefix }: { caption: string; value: string; suffix?: string; prefix?: string }) {
+export function CardMetric({ caption, value, suffix, prefix }: { caption?: string; value: string; suffix?: string; prefix?: string }) {
   return (
     <div className="mb-3">
-      <div className="text-[0.68rem] font-medium mb-1" style={{ color: SHOWCASE.muted }}>
-        {caption}
-      </div>
+      {caption && (
+        <div className="text-[0.68rem] font-medium mb-1" style={{ color: SHOWCASE.muted }}>
+          {caption}
+        </div>
+      )}
       <div className="flex items-baseline" style={{ color: SHOWCASE.ink }}>
         {prefix && <span className="text-lg font-medium">{prefix}</span>}
         <span className="text-[2.35rem] font-semibold leading-none tracking-tight tabular-nums">{value}</span>
@@ -166,8 +186,8 @@ export function CardMetric({ caption, value, suffix, prefix }: { caption: string
 export function DayAxis({ days }: { days: string[] }) {
   return (
     <div className="flex items-center justify-between mt-2.5 text-[0.66rem] font-medium" style={{ color: SHOWCASE.muted }}>
-      {days.map((day) => (
-        <span key={day} className="flex-1 text-center">
+      {days.map((day, i) => (
+        <span key={`${day}-${i}`} className="flex-1 text-center">
           {day}
         </span>
       ))}

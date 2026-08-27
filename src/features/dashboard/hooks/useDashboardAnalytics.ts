@@ -6,6 +6,8 @@ import { DEFAULT_IMMUNOTHERAPY_TYPES, VOLUME_KEYS } from '@/features/dashboard/c
 
 type Modality = 'subcutaneous' | 'sublingual'
 
+const TIMELINE_DAYS = 120
+
 interface UseDashboardAnalyticsOptions {
   modality: Modality
   typeFilter?: string
@@ -142,6 +144,54 @@ export function useDashboardAnalytics({ modality, typeFilter }: UseDashboardAnal
     }
   }, [totalActive])
 
+  const modalityMix = useMemo(() => {
+    const all = allImmunotherapies.filter((immunotherapy) => {
+      const matchDoctor = !doctorFilter || immunotherapy.responsibleDoctor === doctorFilter
+      const matchType = !typeFilter || typeFilter === 'all' || immunotherapy.type === typeFilter
+      return matchDoctor && matchType && immunotherapy.status === 'active'
+    })
+    const subcutaneous = all.filter((immunotherapy) => immunotherapy.modality === 'subcutaneous').length
+    return { subcutaneous, sublingual: all.length - subcutaneous, total: all.length }
+  }, [allImmunotherapies, doctorFilter, typeFilter])
+
+  const doseMix = useMemo(() => {
+    const counts = new Map<string, number>()
+    activeFiltered.forEach((immunotherapy) => {
+      counts.set(immunotherapy.doseConcentration, (counts.get(immunotherapy.doseConcentration) ?? 0) + 1)
+    })
+    const total = activeFiltered.length || 1
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([label, value]) => ({ label, value, pct: Math.round((value / total) * 100) }))
+  }, [activeFiltered])
+
+  const timeline = useMemo(() => {
+    const base = Math.max(totalActive, 1)
+    const comparisonBase = Math.max(totalActive + inactiveFiltered.length, 1)
+    const applicationWeekday = [0.29, 0.62, 0.71, 0.83, 0.68, 1, 0.44]
+    const doseWeekday = [1, 0.34, 0.52, 0.41, 0.7, 0.86, 0.63]
+    const today = new Date()
+
+    return Array.from({ length: TIMELINE_DAYS }, (_, i) => {
+      const date = new Date(today)
+      date.setDate(today.getDate() - (TIMELINE_DAYS - 1 - i))
+      const weekday = date.getDay()
+      const season = 0.78 + 0.22 * Math.sin(i / 11)
+      const growth = 0.72 + (0.28 * i) / TIMELINE_DAYS
+
+      return {
+        date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`,
+        label: `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`,
+        applications: Math.round(base * applicationWeekday[weekday] * season * 1.6),
+        doses: Math.round(base * doseWeekday[weekday] * season * 2.4),
+        previous: Math.round(comparisonBase * 1.9 * (0.62 + 0.2 * Math.sin(i / 7))),
+        current: Math.round(comparisonBase * 1.9 * growth * (0.78 + 0.2 * Math.cos(i / 9))),
+        active: Math.round(base * (0.9 + 0.1 * Math.sin(i / 13))),
+      }
+    })
+  }, [totalActive, inactiveFiltered.length])
+
   const yearComparison = useMemo(() => {
     const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
     const previousProfile = [0.42, 0.4, 0.46, 0.5, 0.47, 0.55, 0.6]
@@ -168,6 +218,9 @@ export function useDashboardAnalytics({ modality, typeFilter }: UseDashboardAnal
     activeFiltered,
     inactiveFiltered,
     weekly,
+    timeline,
+    modalityMix,
+    doseMix,
     yearComparison,
     totalActive,
     inductionCount,
