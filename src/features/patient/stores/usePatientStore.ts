@@ -337,12 +337,14 @@ const WEEK_LOAD = [2, 6, 7, 5, 7, 6, 3]
 function buildCurrentWeekApplications(administrator: string): Application[] {
   const today = new Date()
   const weekStart = daysOffset(today, -today.getDay())
+  const currentTime = `${String(today.getHours()).padStart(2, '0')}:${String(today.getMinutes()).padStart(2, '0')}`
   const apps: Application[] = []
 
   WEEK_LOAD.forEach((count, dayIndex) => {
     const day = daysOffset(weekStart, dayIndex)
     const { date, month, year } = fmtDate(day)
-    const isPast = day < today && day.toDateString() !== today.toDateString()
+    const isToday = day.toDateString() === today.toDateString()
+    const isPast = day < today && !isToday
 
     for (let i = 0; i < count; i++) {
       const seed = dayIndex * 7 + i
@@ -350,6 +352,19 @@ function buildCurrentWeekApplications(administrator: string): Application[] {
       const doseSeed = WEEK_DOSES[seed % WEEK_DOSES.length]
       // Every third slot on a past day reads as a no-show.
       const missed = isPast && seed % 3 === 0
+
+      // Today's agenda mixes what already happened with what is still ahead:
+      // slots whose time has passed close as applied, except every third one.
+      const slotPassed = isToday && slot.endTime <= currentTime
+      const status: Application['status'] = isPast
+        ? missed
+          ? 'missed'
+          : 'completed'
+        : slotPassed
+          ? seed % 3 === 0
+            ? 'missed'
+            : 'completed'
+          : 'scheduled'
 
       apps.push({
         id: `week-${dayIndex}-${i}`,
@@ -359,7 +374,7 @@ function buildCurrentWeekApplications(administrator: string): Application[] {
         year,
         startTime: slot.startTime,
         endTime: slot.endTime,
-        status: missed ? 'missed' : 'scheduled',
+        status,
         dose: doseSeed.dose,
         cycle: { number: doseSeed.cycle, days: doseSeed.days },
         modality: seed % 2 === 0 ? 'subcutaneous' : 'sublingual',

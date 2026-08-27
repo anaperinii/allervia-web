@@ -2,18 +2,19 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
+import { usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { ConcentrationPieChart } from '@/features/dashboard/components/charts/ConcentrationPieChart'
 import { PhasesBarChart } from '@/features/dashboard/components/charts/PhasesBarChart'
 import { StatusLineChart } from '@/features/dashboard/components/charts/StatusLineChart'
 import { TypesProgressBars } from '@/features/dashboard/components/charts/TypesProgressBars'
 import { VolumeStackedBarChart } from '@/features/dashboard/components/charts/VolumeStackedBarChart'
-import { PromoCard } from '@/features/dashboard/components/showcase/PromoCard'
-import { ActivityCard } from '@/features/dashboard/components/showcase/ActivityCard'
+import { TodayApplicationsCard, type TodayApplication } from '@/features/dashboard/components/showcase/TodayApplicationsCard'
+import { ApplicationsCard } from '@/features/dashboard/components/showcase/ApplicationsCard'
 import { ComparisonCard } from '@/features/dashboard/components/showcase/ComparisonCard'
-import { TotalSpendCard } from '@/features/dashboard/components/showcase/TotalSpendCard'
-import { BreakdownCard } from '@/features/dashboard/components/showcase/BreakdownCard'
+import { AdherenceCard, type AdherencePoint } from '@/features/dashboard/components/showcase/AdherenceCard'
 import { DarkChartCard, DarkMetricsSection, type DarkMetric } from '@/features/dashboard/components/showcase/DarkMetricsSection'
-import { faArrowTrendUp, faCalendar, faChartColumn, faDroplet, faGaugeHigh, faPlus, faShieldHalved, faSliders, faSyringe, faUser, faUserXmark } from '@fortawesome/free-solid-svg-icons'
+import { faArrowTrendUp, faCalendar, faChartColumn, faDroplet, faGaugeHigh, faShieldHalved, faSliders, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { CircleButton, PageHeader, Pill, SelectPill } from '@/shared/components/showcase'
 import { SegmentedControl } from '@/shared/components'
@@ -90,6 +91,9 @@ export function DashboardPage() {
     }
   }, [])
 
+  const applications = usePatientStore((state) => state.applications)
+  const immunotherapies = useImmunotherapiesStore((state) => state.immunotherapies)
+
   const analytics = useDashboardAnalytics({
     modality: modality === 'sub' ? 'subcutaneous' : 'sublingual',
     typeFilter,
@@ -97,16 +101,71 @@ export function DashboardPage() {
 
   const currentYear = new Date().getFullYear()
 
-
-  const promoMetrics = useMemo(
-    () => [
-      { value: analytics.totalActive, label: 'Pacientes Ativos', icon: faUser, color: '#257E8C' },
-      { value: analytics.inactiveFiltered.length, label: 'Pacientes Inativos', icon: faUserXmark, color: '#E0453C' },
-      { value: analytics.inductionCount, label: 'Em Indução', icon: faArrowTrendUp, color: '#5C8A16' },
-      { value: analytics.maintenanceCount, label: 'Em Manutenção', icon: faShieldHalved, color: '#12333a' },
-    ],
-    [analytics.totalActive, analytics.inactiveFiltered.length, analytics.inductionCount, analytics.maintenanceCount],
+  const applicationSeries = useMemo(
+    () => analytics.timeline.map((entry) => ({ date: entry.date, label: entry.label, value: entry.applications })),
+    [analytics.timeline],
   )
+  const adherenceSeries: AdherencePoint[] = useMemo(() => {
+    const byDate = new Map<string, { completed: number; missed: number; scheduled: number }>()
+
+    applications.forEach((application) => {
+      const [day, month, year] = application.date.split('/')
+      if (!day || !month || !year) return
+      const iso = `${year}-${month}-${day}`
+      const entry = byDate.get(iso) ?? { completed: 0, missed: 0, scheduled: 0 }
+      if (application.status === 'completed') entry.completed += 1
+      else if (application.status === 'missed') entry.missed += 1
+      else if (application.status === 'scheduled') entry.scheduled += 1
+      byDate.set(iso, entry)
+    })
+
+    return Array.from(byDate.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([iso, entry]) => {
+        const closed = entry.completed + entry.missed
+        return {
+          date: iso,
+          label: `${iso.slice(8, 10)}/${iso.slice(5, 7)}`,
+          value: closed > 0 ? Math.round((entry.completed / closed) * 100) : 100,
+          ...entry,
+        }
+      })
+  }, [applications])
+  const comparisonSeries = useMemo(
+    () =>
+      analytics.timeline.map((entry) => ({
+        date: entry.date,
+        label: entry.label,
+        previous: entry.previous,
+        current: entry.current,
+      })),
+    [analytics.timeline],
+  )
+
+
+  const todayApplications: TodayApplication[] = useMemo(() => {
+    const now = new Date()
+    const key = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`
+    const byId = new Map(immunotherapies.map((immunotherapy) => [immunotherapy.id, immunotherapy]))
+
+    return applications
+      .filter((application) => application.date === key && application.status !== 'canceled')
+      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+      .map((application) => {
+        const immunotherapy = byId.get(application.patientId)
+        return {
+          id: application.id,
+          patientId: application.patientId,
+          name: immunotherapy?.name ?? 'Paciente',
+          time: application.startTime,
+          dose: application.dose,
+          status: (application.status === 'completed' ? 'completed' : application.status === 'missed' ? 'missed' : 'scheduled') as
+            | 'completed'
+            | 'missed'
+            | 'scheduled',
+        }
+      })
+  }, [applications, immunotherapies])
 
   const darkMetrics: DarkMetric[] = useMemo(
     () => [
@@ -165,14 +224,6 @@ export function DashboardPage() {
     [analytics],
   )
 
-  const concentrationRows = useMemo(() => {
-    const total = analytics.concentrationData.reduce((sum, d) => sum + d.value, 0)
-    return [...analytics.concentrationData]
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 2)
-      .map((d) => ({ label: d.name, pct: total > 0 ? Math.round((d.value / total) * 100) : 0 }))
-  }, [analytics.concentrationData])
-
   const typeOptions = useMemo(
     () => [
       { value: 'all', label: 'Todos os tipos' },
@@ -188,12 +239,6 @@ export function DashboardPage() {
         actions={
           <>
             <SelectPill value={typeFilter} onChange={setTypeFilter} options={typeOptions} aria-label="Tipo de imunoterapia" />
-            <Pill
-              icon={faPlus}
-              onClick={() => goToTab('analytics')}
-            >
-              Adicionar widget
-            </Pill>
             <Pill active onClick={() => navigate({ to: '/export-report' })}>
               Gerar relatório
             </Pill>
@@ -204,7 +249,7 @@ export function DashboardPage() {
       <div className="relative z-40 flex items-center gap-2 mb-5">
         <div
           className="relative z-50 flex items-center gap-2 rounded-full p-1 backdrop-blur-md"
-          style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(255,255,255,0.95)' }}
+          style={{ background: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.65)' }}
         >
           <span className="relative inline-flex" {...{ [DATE_RANGE_ANCHOR_ATTR]: '' }}>
             <CircleButton
@@ -292,62 +337,38 @@ export function DashboardPage() {
       <div className="relative z-10 grid shrink-0 grid-cols-12 gap-4 auto-rows-[minmax(17.5rem,auto)]">
           {!promoDismissed && (
             <div className="col-span-3 row-span-2 min-h-0">
-              <PromoCard metrics={promoMetrics} />
+              <TodayApplicationsCard applications={todayApplications} onOpen={() => navigate({ to: '/appointments' })}
+                onSelectPatient={(patientId) => navigate({ to: '/patient/$patientId', params: { patientId } })}
+              />
             </div>
           )}
 
-          <div className={promoDismissed ? 'col-span-4' : 'col-span-3'}>
-            <ActivityCard
-              title="Aplicações"
-              caption="Realizadas esta semana"
-              total={analytics.weekly.applicationsTotal}
-              data={analytics.weekly.applications}
-              peakIndex={analytics.weekly.peakApplicationIndex}
-              peakValue={analytics.weekly.peakApplicationValue}
-              onOpen={() => goToTab('analytics')}
+          <div className={promoDismissed ? 'col-span-5' : 'col-span-4'}>
+            <AdherenceCard
+              title="Adesão às Aplicações"
+              caption="No período"
+              series={adherenceSeries}
             />
           </div>
 
-          <div className={promoDismissed ? 'col-span-8' : 'col-span-6'}>
+          <div className={promoDismissed ? 'col-span-8' : 'col-span-5'}>
             <ComparisonCard
-              title="Comparativo de Ciclos"
-              caption="Em todo o período"
-              total={analytics.yearComparison.currentTotal}
+              title="Comparativo de Aplicações"
+              caption="No período"
               totalSuffix=""
-              deltaPct={analytics.yearComparison.deltaPct}
               previousYear={currentYear - 1}
               currentYear={currentYear}
-              rows={analytics.yearComparison.rows}
-              onOpen={() => goToTab('analytics')}
+              series={comparisonSeries}
             />
           </div>
 
-          <div className={promoDismissed ? 'col-span-7' : 'col-span-5'}>
-            <TotalSpendCard
-              title="Doses Aplicadas"
-              caption="Na semana"
-              total={analytics.weekly.dosesTotal}
-              totalPrefix=""
-              subValue={analytics.totalActive + ' ciclos ativos'}
-              stats={[
-                { value: String(analytics.totalActive), label: 'Pacientes' },
-                { value: String(analytics.availableTypes.length), label: 'Tipos' },
-              ]}
-              data={analytics.weekly.doses}
-              peakIndex={analytics.weekly.peakDoseIndex}
-              peakValue={analytics.weekly.peakDoseValue}
-              onOpen={() => goToTab('analytics')}
-            />
-          </div>
-
-          <div className={promoDismissed ? 'col-span-5' : 'col-span-4'}>
-            <BreakdownCard
-              title="Concentrações"
-              caption="Ciclos ativos"
-              total={analytics.totalActive}
-              subValue={analytics.inactiveFiltered.length + ' inativos'}
-              rows={concentrationRows}
-              onOpen={() => goToTab('analytics')}
+          <div className={promoDismissed ? 'col-span-12' : 'col-span-9'}>
+            <ApplicationsCard
+              title="Aplicações Registradas"
+              caption="No período"
+              series={applicationSeries}
+              modalityMix={analytics.modalityMix}
+              doseMix={analytics.doseMix}
             />
           </div>
       </div>

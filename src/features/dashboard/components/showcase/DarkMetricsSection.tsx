@@ -191,7 +191,7 @@ export function DarkMetricsSection({
         className="pointer-events-none absolute left-1/2 top-0 flex h-6 w-72 -translate-x-1/2 items-end justify-center pb-1.5"
         style={{ background: '#EBEEEE', borderRadius: '0 0 999px 999px' }}
       >
-        <span className="h-1 w-11 rounded-full" style={{ background: '#B3C0C0' }} />
+        <span className="h-1 w-11 rounded-sm" style={{ background: '#0e353d' }} />
       </span>
 
       <header className="mb-6">
