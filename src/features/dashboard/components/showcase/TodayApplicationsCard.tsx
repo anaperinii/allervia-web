@@ -40,7 +40,7 @@ export function TodayApplicationsCard({
       />
 
       <div className="relative z-10 flex h-full flex-col gap-2 p-4">
-        <header className="flex items-start justify-between gap-2 px-1 pb-1 text-right">
+        <header className="flex items-start justify-between gap-2 px-1 pb-4 text-right">
           <CircleButton
             icon={faArrowRight}
             iconRotateDeg={-45}

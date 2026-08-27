@@ -147,6 +147,65 @@ export function useSeriesFilters<T extends SeriesEntry>(series: T[], options?: {
   return { slice, filters, active, size: Number(size), stepWeek, canStepWeek }
 }
 
+const MONTH_RANGES = [
+  { value: '3', label: 'Últimos 3 meses' },
+  { value: '6', label: 'Últimos 6 meses' },
+  { value: '12', label: 'Ano inteiro' },
+]
+
+/** Same filter contract as the light panel, applied to the monthly dark charts. */
+export function useMonthlyFilters<T extends { month: string }>(data: T[]) {
+  const [size, setSize] = useState('12')
+  const [month, setMonth] = useState('all')
+
+  const monthOptions = useMemo(
+    () => [{ value: 'all', label: 'Todos os meses' }, ...data.map((entry) => ({ value: entry.month, label: entry.month }))],
+    [data],
+  )
+
+  const slice = useMemo(() => {
+    if (month !== 'all') return data.filter((entry) => entry.month === month)
+    return data.slice(-Number(size))
+  }, [data, month, size])
+
+  const filters: CardFilter[] = [
+    { key: 'range', value: size, onChange: setSize, options: MONTH_RANGES, ariaLabel: 'Intervalo de meses' },
+    { key: 'month', value: month, onChange: setMonth, options: monthOptions, ariaLabel: 'Filtrar por mês' },
+  ]
+
+  return { slice, filters, active: month !== 'all' || size !== '12' }
+}
+
+const TOP_OPTIONS = [
+  { value: 'all', label: 'Todos' },
+  { value: '3', label: 'Top 3' },
+  { value: '5', label: 'Top 5' },
+]
+
+const ORDER_OPTIONS = [
+  { value: 'desc', label: 'Maior primeiro' },
+  { value: 'asc', label: 'Menor primeiro' },
+]
+
+/** Filters for the distribution charts, which have no time axis. */
+export function useSnapshotFilters<T>(data: T[], getValue: (item: T) => number) {
+  const [top, setTop] = useState('all')
+  const [order, setOrder] = useState('desc')
+
+  const slice = useMemo(() => {
+    const sorted = [...data].sort((a, b) => (order === 'desc' ? getValue(b) - getValue(a) : getValue(a) - getValue(b)))
+    return top === 'all' ? sorted : sorted.slice(0, Number(top))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, top, order])
+
+  const filters: CardFilter[] = [
+    { key: 'top', value: top, onChange: setTop, options: TOP_OPTIONS, ariaLabel: 'Quantidade exibida' },
+    { key: 'order', value: order, onChange: setOrder, options: ORDER_OPTIONS, ariaLabel: 'Ordenação' },
+  ]
+
+  return { slice, filters, active: top !== 'all' || order !== 'desc' }
+}
+
 export function todayIndex(slice: SeriesEntry[]) {
   const now = new Date()
   const key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
