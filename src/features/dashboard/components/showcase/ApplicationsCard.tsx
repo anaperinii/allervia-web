@@ -53,19 +53,19 @@ export function ApplicationsCard({ title, caption, series, modalityMix, doseMix 
                 title="Limpar seleção do dia"
               />
             )}
-            <CardFilters filters={filters} active={active} />
+            <CardFilters filters={filters} active={active} inline />
           </>
         }
       />
 
       <div className="flex flex-1 gap-5 min-h-0">
-        <div className="flex w-56 shrink-0 flex-col">
+        <div className="flex w-72 shrink-0 flex-col">
           <div className="flex items-center gap-3" style={{ color: SHOWCASE.ink }}>
             <span className="text-[2.35rem] font-semibold leading-none tracking-tight tabular-nums">
               {total.toLocaleString('pt-BR')}
             </span>
 
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
               {[
                 { label: 'SCIT', value: subcutaneous, color: MODALITY_COLORS.subcutaneous },
                 { label: 'SLIT', value: sublingual, color: MODALITY_COLORS.sublingual },

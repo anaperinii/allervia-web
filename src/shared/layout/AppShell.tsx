@@ -296,7 +296,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             ref={railRef}
             className={cn(
               'flex w-12 shrink-0 flex-col items-center pt-6',
-              pageScroll ? 'fixed left-8 top-20 z-40 h-[calc(100vh-6.5rem)]' : 'relative z-50',
+              pageScroll ? 'fixed left-8 top-20 z-52 h-[calc(100vh-6.5rem)]' : 'relative z-50',
             )}
           >
             <span data-rail-item="" className="block">

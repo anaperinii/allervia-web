@@ -1,7 +1,7 @@
-import { Button, FieldLabel, IconButton, SegmentedControl, TextInput, Select, ToggleCard } from '@/shared/components'
+import { FieldLabel, SegmentedControl, TextInput, Select, ToggleCard } from '@/shared/components'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileArrowDown, faFileExcel, faFileLines, faGear } from '@fortawesome/free-solid-svg-icons'
+import { faFileArrowDown, faFileExcel, faFileLines } from '@fortawesome/free-solid-svg-icons'
 
 const FORMAT_OPTIONS = [
   { value: 'pdf', label: 'PDF', icon: <FontAwesomeIcon icon={faFileLines} style={{ fontSize: 13 }} /> },
@@ -49,7 +49,6 @@ interface ExportConfigPanelProps {
 }
 
 export function ExportConfigPanel(props: ExportConfigPanelProps) {
-  const exportDisabled = !props.consent || !props.justification.trim()
 
   return (
     <div className="w-88 shrink-0 border-r border-(--border-custom) overflow-y-auto">
@@ -63,9 +62,6 @@ export function ExportConfigPanel(props: ExportConfigPanelProps) {
           ]}
           fullWidth
           aria-label="Modalidade"        />
-        <IconButton aria-label="Configurações avançadas">
-          <FontAwesomeIcon icon={faGear} style={{ fontSize: 14 }} />
-        </IconButton>
       </div>
 
       <div className="px-5 pb-5 space-y-5">
@@ -165,21 +161,6 @@ export function ExportConfigPanel(props: ExportConfigPanelProps) {
           />
         </div>
 
-        <Button
-          tone="brand"
-          variant="solid"
-          prominent
-          fullWidth
-          size="md"
-          disabled={exportDisabled}
-          onClick={props.onExport}
-        >
-          Exportar {props.format.toUpperCase()}
-        </Button>
-
-        {!props.consent && (
-          <p className="text-[0.55rem] text-amber-600 text-center">Aceite a declaração LGPD para habilitar a exportação</p>
-        )}
       </div>
     </div>
   )

@@ -121,7 +121,8 @@ export function PatientReportPage() {
         breadcrumb={['Prontuário', patient.name]}
         title="Emitir Relatório"
         actions={
-          <>
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-1.5">
             <Pill
               icon={faPrint}
               onClick={() => !exportDisabled && exportPdf(buildExportData())}
@@ -139,7 +140,13 @@ export function PatientReportPage() {
             >
               Exportar {fileFormat.toUpperCase()}
             </Pill>
-          </>
+            </div>
+            {!consented && (
+              <span className="text-[0.68rem] font-medium" style={{ color: '#E0453C' }}>
+                Aceite a declaração LGPD para habilitar a exportação
+              </span>
+            )}
+          </div>
         }
       />
 

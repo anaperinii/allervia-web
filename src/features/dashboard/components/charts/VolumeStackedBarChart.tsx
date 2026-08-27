@@ -51,7 +51,10 @@ function VolumeTooltip({ active, label, payload }: VolumeTooltipProps) {
   const rows = payload.filter((entry) => Number(entry.value) > 0)
   if (!rows.length) return null
   return (
-    <div style={{ ...CHART_TOOLTIP_STYLE, padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <div
+      className="chart-tooltip"
+      style={{ ...CHART_TOOLTIP_STYLE, padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}
+    >
       <div style={{ fontWeight: 600, marginBottom: 2 }}>{label}</div>
       {rows.map((entry) => {
         const key = String(entry.dataKey) as VolumeKey

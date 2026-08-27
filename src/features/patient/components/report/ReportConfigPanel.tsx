@@ -100,12 +100,19 @@ export function ReportConfigPanel({
                 type="button"
                 aria-pressed={selected}
                 onClick={() => toggleSection(section.id)}
-                className={cn(
-                  'flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer',
-                  selected ? 'border-brand bg-brand-50/50' : 'border-gray-400 hover:border-gray-500',
-                )}
+                className="flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer"
+                style={{
+                  background: selected ? 'rgba(18,51,58,0.06)' : '#F6F8F8',
+                  borderColor: selected ? '#12333a' : '#DDE6E6',
+                }}
               >
-                <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0', selected ? 'bg-brand border-brand' : 'border-gray-400')}>
+                <div
+                  className="flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0"
+                  style={{
+                    background: selected ? '#12333a' : '#EDF1F1',
+                    borderColor: selected ? '#12333a' : '#DDE6E6',
+                  }}
+                >
                   {selected && <FontAwesomeIcon icon={faCheck} className="text-white" style={{ fontSize: 10 }} />}
                 </div>
                 <span className="text-[0.7rem] font-medium text-(--text)">{section.label}</span>
@@ -145,9 +152,6 @@ export function ReportConfigPanel({
         />
       </div>
 
-      {!consented && (
-        <p className="text-[0.55rem] text-amber-600 text-center">Aceite a declaração LGPD para habilitar a exportação</p>
-      )}
     </div>
   )
 }
@@ -177,12 +181,19 @@ function ConsentCheckbox({
       type="button"
       aria-pressed={checked}
       onClick={onChange}
-      className={cn(
-        'flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer',
-        checked ? 'border-brand bg-brand/5' : 'border-gray-400 hover:border-gray-500',
-      )}
+      className="flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer"
+      style={{
+        background: checked ? 'rgba(18,51,58,0.06)' : '#F6F8F8',
+        borderColor: checked ? '#12333a' : '#DDE6E6',
+      }}
     >
-      <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0 mt-px', checked ? 'bg-brand border-brand' : 'border-gray-400')}>
+      <div
+        className="flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0 mt-px"
+        style={{
+          background: checked ? '#12333a' : '#EDF1F1',
+          borderColor: checked ? '#12333a' : '#DDE6E6',
+        }}
+      >
         {checked && <FontAwesomeIcon icon={faCheck} className="text-white" style={{ fontSize: 10 }} />}
       </div>
       <div>
