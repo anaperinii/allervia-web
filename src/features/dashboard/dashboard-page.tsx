@@ -15,7 +15,7 @@ import { ComparisonCard } from '@/features/dashboard/components/showcase/Compari
 import { AdherenceCard, type AdherencePoint } from '@/features/dashboard/components/showcase/AdherenceCard'
 import { useMonthlyFilters, useSnapshotFilters } from '@/features/dashboard/hooks/useChartWindow'
 import { DarkChartCard, DarkMetricsSection, type DarkMetric } from '@/features/dashboard/components/showcase/DarkMetricsSection'
-import { faArrowTrendUp, faCalendar, faChartColumn, faGaugeHigh, faShieldHalved, faSliders, faSyringe, faTriangleExclamation, faUser, faUserXmark } from '@fortawesome/free-solid-svg-icons'
+import { faArrowTrendUp, faCalendar, faChartColumn, faGaugeHigh, faShieldHalved, faSliders, faSyringe, faCalendarCheck, faUser, faUserXmark } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { CircleButton, PageHeader, Pill, SelectPill } from '@/shared/components/showcase'
 import { SegmentedControl } from '@/shared/components'
@@ -168,6 +168,16 @@ export function DashboardPage() {
       })
   }, [applications, immunotherapies])
 
+  const activeSpark = useMemo(() => {
+    const weeks = 8
+    const recent = analytics.timeline.slice(-weeks * 7)
+    return Array.from({ length: weeks }, (_, week) => {
+      const slice = recent.slice(week * 7, week * 7 + 7)
+      if (slice.length === 0) return 0
+      return Math.round(slice.reduce((sum, entry) => sum + entry.active, 0) / slice.length)
+    })
+  }, [analytics.timeline])
+
   const statusFilters = useMonthlyFilters(analytics.statusHistory)
   const phaseFilters = useMonthlyFilters(analytics.phaseHistory)
   const concentrationFilters = useSnapshotFilters(analytics.concentrationData, (entry) => entry.value)
@@ -176,32 +186,28 @@ export function DashboardPage() {
     Object.entries(row).reduce((sum, [key, value]) => (key === 'conc' ? sum : sum + Number(value)), 0),
   )
 
-  const reactions = useMemo(() => {
-    const hadReaction = (application: (typeof applications)[number]) =>
-      application.sideEffect === 'yes' || application.medicationNeeded === 'yes' || Boolean(application.reportedEffects)
+  const adherence = useMemo(() => {
+    const closedIn = (list: typeof applications) =>
+      list.filter((application) => application.status === 'completed' || application.status === 'missed')
 
-    const applied = applications.filter((application) => application.status === 'completed')
-    const withReaction = applied.filter(hadReaction)
-    const ratePer100 = applied.length > 0 ? (withReaction.length / applied.length) * 100 : 0
+    const closed = closedIn(applications)
+    const completed = closed.filter((application) => application.status === 'completed').length
+    const rate = closed.length > 0 ? Math.round((completed / closed.length) * 100) : 0
 
+    // Monthly rate over the last 8 months: weekly buckets are too sparse to plot.
     const now = new Date()
-    const weekly = Array.from({ length: 8 }, (_, index) => {
-      const end = new Date(now)
-      end.setDate(now.getDate() - (7 - index) * 7)
-      const start = new Date(end)
-      start.setDate(end.getDate() - 6)
+    const monthly = Array.from({ length: 8 }, (_, index) => {
+      const cursor = new Date(now.getFullYear(), now.getMonth() - (7 - index), 1)
 
-      const inWeek = applied.filter((application) => {
-        const [day, month, year] = application.date.split('/').map(Number)
-        if (!day || !month || !year) return false
-        const date = new Date(year, month - 1, day)
-        return date >= start && date <= end
+      const inMonth = closed.filter((application) => {
+        const [, month, year] = application.date.split('/').map(Number)
+        return month === cursor.getMonth() + 1 && year === cursor.getFullYear()
       })
-      const reacted = inWeek.filter(hadReaction).length
-      return inWeek.length > 0 ? Math.round((reacted / inWeek.length) * 100) : 0
+      const done = inMonth.filter((application) => application.status === 'completed').length
+      return inMonth.length > 0 ? Math.round((done / inMonth.length) * 100) : 0
     })
 
-    return { ratePer100, total: withReaction.length, applied: applied.length, weekly }
+    return { rate, monthly }
   }, [applications])
 
   const darkMetrics: DarkMetric[] = useMemo(
@@ -210,15 +216,15 @@ export function DashboardPage() {
         label: 'Pacientes ativos',
         value: String(analytics.totalActive),
         icon: faUser,
-        glow: '#B7E06A',
+        glow: '#257E8C',
         visual: 'spark',
-        series: analytics.weekly.applications.map((d) => d.value),
+        series: activeSpark,
       },
       {
         label: 'Pacientes inativos',
         value: String(analytics.inactiveFiltered.length),
         icon: faUserXmark,
-        glow: '#F0857D',
+        glow: '#12333a',
         visual: 'dots',
         series: new Array(Math.max(analytics.totalActive + analytics.inactiveFiltered.length, 1)).fill(0),
         filled: analytics.inactiveFiltered.length,
@@ -227,15 +233,15 @@ export function DashboardPage() {
         label: 'Aplicações na semana',
         value: String(analytics.weekly.applicationsTotal),
         icon: faSyringe,
-        glow: '#74C3B9',
-        visual: 'bars',
+        glow: '#3E8E86',
+        visual: 'spark',
         series: analytics.weekly.applications.map((d) => d.value),
       },
       {
         label: 'Em indução',
         value: String(analytics.inductionCount),
         icon: faArrowTrendUp,
-        glow: '#8FD285',
+        glow: '#3E8E86',
         visual: 'dots',
         series: new Array(Math.max(analytics.totalActive, 1)).fill(0),
         filled: analytics.inductionCount,
@@ -244,21 +250,22 @@ export function DashboardPage() {
         label: 'Em manutenção',
         value: String(analytics.maintenanceCount),
         icon: faShieldHalved,
-        glow: '#6C9EA5',
+        glow: '#257E8C',
         visual: 'dots',
         series: new Array(Math.max(analytics.totalActive, 1)).fill(0),
         filled: analytics.maintenanceCount,
       },
       {
-        label: 'Reações por 100 aplicações',
-        value: reactions.ratePer100.toFixed(1).replace('.', ','),
-        icon: faTriangleExclamation,
-        glow: '#F2C85B',
+        label: 'Taxa de adesão',
+        value: String(adherence.rate),
+        unit: '%',
+        icon: faCalendarCheck,
+        glow: '#12333a',
         visual: 'spark',
-        series: reactions.weekly,
+        series: adherence.monthly,
       },
     ],
-    [analytics, reactions],
+    [analytics, adherence, activeSpark],
   )
 
   const typeOptions = useMemo(
@@ -272,7 +279,8 @@ export function DashboardPage() {
   return (
     <>
       <PageHeader
-        title="Painel de Métricas"
+        breadcrumb={['Painel de Métricas']}
+        title="Painel geral"
         actions={
           <>
             <SelectPill value={typeFilter} onChange={setTypeFilter} options={typeOptions} aria-label="Tipo de imunoterapia" />

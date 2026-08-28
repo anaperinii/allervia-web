@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   faArrowLeft,
@@ -20,7 +20,6 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import allerviaMark from '@/assets/allervia-mark-light.png'
-import allerviaMarkDark from '@/assets/allervia-mark-dark.png'
 import userAvatar from '@/assets/user-avatar.jpg'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { Button, Modal } from '@/shared/components'
@@ -133,48 +132,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     path === item.path || path.startsWith(item.path + '/') || (item.match?.some((m) => path.startsWith(m)) ?? false)
 
   const pageScroll = path === '/dashboard'
-  const railRef = useRef<HTMLDivElement>(null)
-  const logoRef = useRef<HTMLSpanElement>(null)
-  const [railDark, setRailDark] = useState<boolean[]>([])
-  const [logoDark, setLogoDark] = useState(false)
 
-  useEffect(() => {
-    if (!pageScroll) {
-      setRailDark([])
-      setLogoDark(false)
-      return
-    }
-    const scroller = document.querySelector('[data-app-scroll]')
-    const band = document.querySelector('[data-dark-band]')
-    if (!scroller || !band) return
-
-    const syncTone = () => {
-      const bandTop = band.getBoundingClientRect().top
-      const logo = logoRef.current
-      if (logo) {
-        const rect = logo.getBoundingClientRect()
-        setLogoDark(rect.bottom >= bandTop)
-      }
-
-      const items = railRef.current?.querySelectorAll<HTMLElement>('[data-rail-item]') ?? []
-      const next = Array.from(items).map((el) => {
-        const rect = el.getBoundingClientRect()
-        return rect.top + rect.height / 2 >= bandTop
-      })
-      setRailDark((prev) => (prev.length === next.length && prev.every((v, i) => v === next[i]) ? prev : next))
-    }
-    syncTone()
-    const observer = new ResizeObserver(syncTone)
-    observer.observe(band)
-    observer.observe(document.documentElement)
-    scroller.addEventListener('scroll', syncTone, { passive: true })
-    window.addEventListener('resize', syncTone)
-    return () => {
-      observer.disconnect()
-      scroller.removeEventListener('scroll', syncTone)
-      window.removeEventListener('resize', syncTone)
-    }
-  }, [pageScroll, path])
 
   return (
     <div
@@ -203,10 +161,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
 
           {pageScroll && (
-            <span ref={logoRef} className="fixed left-9.5 top-6 z-40 block h-9 w-9">
+            <span className="fixed left-9.5 top-6 z-40 block h-9 w-9">
               <Link to="/immunotherapies" aria-label="Allervia" className="block no-underline">
                 <img
-                  src={logoDark ? allerviaMarkDark : allerviaMark}
+                  src={allerviaMark}
                   alt="Allervia"
                   className="h-9 w-9 object-contain"
                 />
@@ -293,7 +251,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className={cn('flex gap-5', pageScroll ? 'px-8' : 'flex-1 min-h-0')}>
           {pageScroll && <div aria-hidden="true" className="w-12 shrink-0" />}
           <div
-            ref={railRef}
             className={cn(
               'flex w-12 shrink-0 flex-col items-center pt-6',
               pageScroll ? 'fixed left-8 top-20 z-52 h-[calc(100vh-6.5rem)]' : 'relative z-50',
@@ -304,9 +261,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 icon={faArrowLeft}
                 size={48}
                 iconSize={13}
-                idleBackground={railDark[0] ? 'rgba(220,225,229,0.10)' : undefined}
-                idleColor={railDark[0] ? DARK_INK : undefined}
-                idleBorderColor={railDark[0] ? 'rgba(220,225,229,0.20)' : undefined}
                 onClick={() => window.history.back()}
                 aria-label="Voltar"
                 title="Voltar"
@@ -314,12 +268,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
 
             <div className="mt-8 flex flex-col gap-1">
-              {RAIL.map((item, i) => (
+              {RAIL.map((item) => (
                 <span key={item.path} data-rail-item="" className="block">
                   <RailLink
                     item={item}
                     active={isActive(item)}
-                    dark={railDark[i + 1] ?? false}
                     badge={item.path === '/notifications' ? unreadCount : undefined}
                   />
                 </span>
@@ -332,9 +285,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                   icon={faRightFromBracket}
                   size={48}
                   iconSize={13}
-                  idleBackground={railDark[RAIL.length + 1] ? 'rgba(220,225,229,0.10)' : undefined}
-                  idleColor={railDark[RAIL.length + 1] ? DARK_INK : undefined}
-                  idleBorderColor={railDark[RAIL.length + 1] ? 'rgba(220,225,229,0.20)' : undefined}
                   onClick={() => setShowLogout(true)}
                   aria-label="Sair"
                   title="Sair"

@@ -37,7 +37,7 @@ export function ThemeSwitch({ overHero = false, scheme = 'auto' }: ThemeSwitchPr
       role="switch"
       aria-checked={!isDark}
       aria-label={isDark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
-      className="inline-flex h-[38px] shrink-0 items-center gap-1.5 rounded-lg px-2 cursor-pointer"
+      className="inline-flex h-[38px] shrink-0 items-center gap-1.5 rounded-full px-2 cursor-pointer"
       style={{
         background: 'transparent',
         border,
@@ -46,7 +46,7 @@ export function ThemeSwitch({ overHero = false, scheme = 'auto' }: ThemeSwitchPr
     >
       <span
         aria-hidden="true"
-        className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md transition-colors duration-200"
+        className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-full transition-colors duration-200"
         style={{
           background: isDark ? 'transparent' : slotOn,
           color: isDark ? inkOff : inkOn,
@@ -56,7 +56,7 @@ export function ThemeSwitch({ overHero = false, scheme = 'auto' }: ThemeSwitchPr
       </span>
       <span
         aria-hidden="true"
-        className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md transition-colors duration-200"
+        className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-full transition-colors duration-200"
         style={{
           background: isDark ? slotOn : 'transparent',
           color: isDark ? inkOn : inkOff,

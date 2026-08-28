@@ -78,7 +78,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
         className={cn(
           'fixed z-100 flex items-center justify-between transition-all duration-900 ease-[cubic-bezier(0.22,1,0.36,1)]',
           heroPill
-            ? 'left-0 right-0 mx-auto w-[min(1120px,92%)] h-14 px-6 rounded-2xl border backdrop-blur-md'
+            ? 'left-0 right-0 mx-auto w-[min(1120px,92%)] h-14 px-6 rounded-full border backdrop-blur-md'
             : bareBar
               ? 'left-0 right-0 px-[5%] h-17'
               : 'left-0 right-0 px-[5%] h-17 border-b backdrop-blur-xl',
@@ -133,7 +133,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
         <div className="hidden md:flex gap-2.5 items-center">
           <Link
             to="/login"
-            className="px-5 py-2 rounded-lg text-[0.8rem] font-medium cursor-pointer transition-all duration-200 no-underline hover:shadow-[0_6px_16px_var(--ll-halo-accent)]"
+            className="px-5 py-2 rounded-full text-[0.8rem] font-medium cursor-pointer transition-all duration-200 no-underline hover:shadow-[0_6px_16px_var(--ll-halo-accent)]"
             style={{
               border: loginBorder,
               color: loginInk,
@@ -152,7 +152,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
           </Link>
           <Link
             to="/trial"
-            className="px-5 py-2 rounded-lg text-[0.8rem] font-semibold cursor-pointer no-underline text-white transition-[filter] duration-200 hover:brightness-95"
+            className="px-5 py-2 rounded-full text-[0.8rem] font-semibold cursor-pointer no-underline text-white transition-[filter] duration-200 hover:brightness-95"
             style={{ background: ctaSolidBg, boxShadow: ctaSolidShadow, border: ctaSolidBorder }}
           >
             Começar agora
@@ -163,7 +163,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
         </div>
 
         <button
-          className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl border transition-all duration-200"
+          className="md:hidden flex items-center justify-center w-10 h-10 rounded-full border transition-all duration-200"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Menu"
           style={{
@@ -201,7 +201,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
               key={link.href}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="text-base font-medium no-underline py-3 px-4 rounded-xl transition-all duration-200"
+              className="text-base font-medium no-underline py-3 px-4 rounded-full transition-all duration-200"
               style={{ color: 'var(--ll-ink-muted)' }}
             >
               {link.label}
@@ -213,7 +213,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
           >
             <Link
               to="/login"
-              className="text-center px-4 py-2.5 rounded-lg text-sm font-semibold no-underline"
+              className="text-center px-4 py-2.5 rounded-full text-sm font-semibold no-underline"
               style={{
                 border: '1.5px solid var(--ll-border-strong)',
                 color: 'var(--ll-ink-strong)',
@@ -223,7 +223,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
             </Link>
             <Link
               to="/trial"
-              className="text-center px-4 py-2.5 rounded-lg text-sm font-semibold no-underline text-white"
+              className="text-center px-4 py-2.5 rounded-full text-sm font-semibold no-underline text-white"
               style={{ background: ctaSolidBg, boxShadow: ctaSolidShadow, border: ctaSolidBorder }}
             >
               Começar agora

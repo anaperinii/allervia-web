@@ -29,8 +29,8 @@ type MarketingCTAProps = AsLink | AsAnchor
 const BASE = 'font-semibold cursor-pointer transition-all duration-250 no-underline'
 
 const SHAPE: Record<MarketingCTAShape, string> = {
-  pill: 'inline-block px-6 py-2.5 rounded-lg text-[0.9rem]',
-  block: 'block w-full py-3 rounded-lg text-center text-sm',
+  pill: 'inline-block px-6 py-2.5 rounded-full text-[0.9rem]',
+  block: 'block w-full py-3 rounded-full text-center text-sm',
 }
 
 const VARIANT_CLASS: Record<MarketingCTAVariant, string> = {
