@@ -221,16 +221,16 @@ function DarkTile({ metric, index }: { metric: DarkMetric; index: number }) {
         <span
           className="flex h-11 w-11 items-center justify-center rounded-full"
           style={{
-            background: `${metric.glow}2E`,
-            border: `1px solid ${metric.glow}66`,
-            color: metric.glow,
+            background: metric.glow,
+            border: '1px solid transparent',
+            color: '#F2F6F6',
           }}
         >
-          <FontAwesomeIcon icon={metric.icon} style={{ fontSize: 17, filter: 'saturate(1.85) brightness(0.96)' }} />
+          <FontAwesomeIcon icon={metric.icon} style={{ fontSize: 17 }} />
         </span>
       </header>
 
-      <p className="relative z-10 mt-6 text-[0.8rem] font-medium" style={{ color: INK_MUTED }}>
+      <p className="relative z-10 mt-3 text-[0.9rem] font-medium" style={{ color: INK_MUTED }}>
         {metric.label}
       </p>
 
