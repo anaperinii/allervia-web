@@ -1,5 +1,5 @@
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons'
-import proArt from '@/assets/pro-art.jpg'
+import todayArt from '@/assets/today-art.jpg'
 import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
 
 export const STATUS_BADGE = {
@@ -32,14 +32,13 @@ export function TodayApplicationsCard({
       style={{ background: SHOWCASE.card, border: `1px solid ${SHOWCASE.line}` }}
     >
       <img
-        src={proArt}
+        src={todayArt}
         alt=""
-        className="pointer-events-none absolute inset-x-0 top-0 h-[115%] w-full scale-105 object-cover blur-[3px]"
-        style={{ transform: 'translateY(-13%) scale(1.05)' }}
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover"
       />
 
-      <div className="relative z-10 flex h-full flex-col gap-2 p-4">
-        <header className="flex items-start justify-between gap-2 px-1 pb-4 text-right">
+      <div className="relative z-10 flex h-full flex-col gap-2 px-5 pb-5 pt-6">
+        <header className="flex items-start justify-between gap-2 px-1 pb-5 text-right">
           <CircleButton
             icon={faArrowRight}
             iconRotateDeg={-45}
@@ -71,7 +70,7 @@ export function TodayApplicationsCard({
               key={application.id}
               onClick={() => onSelectPatient(application.patientId)}
               className="relative flex w-full shrink-0 cursor-pointer items-center gap-2.5 rounded-2xl px-3 py-2 text-left backdrop-blur-md transition-transform duration-200 hover:scale-[1.02]"
-              style={{ background: 'rgba(255,255,255,0.24)', border: '1px solid rgba(255,255,255,0.42)' }}
+              style={{ background: 'rgba(255,255,255,0.28)', border: '1px solid rgba(255,255,255,0.5)' }}
             >
               <span
                 aria-hidden="true"
@@ -79,7 +78,6 @@ export function TodayApplicationsCard({
                 title={STATUS_BADGE[application.status].label}
                 style={{
                   background: STATUS_BADGE[application.status].color,
-                  boxShadow: '0 0 0 1.5px rgba(255,255,255,0.7)',
                 }}
               />
               <div className="min-w-0 flex-1">

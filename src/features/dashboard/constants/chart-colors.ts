@@ -28,9 +28,9 @@ export const TREATMENT_STATUS_LABELS: Record<TreatmentStatusKey, string> = {
 }
 
 export const TREATMENT_STATUS_COLORS: Record<TreatmentStatusKey, string> = {
-  active: '#74C3B9',
-  interrupted: '#F0857D',
-  completed: '#B7E06A',
+  active: '#14B8A6',
+  interrupted: '#0891B2',
+  completed: '#0F766E',
 }
 
 export const SEQUENTIAL_TYPE_COLORS = ['#CBE7EC', '#A2D5DE', '#78BFCC', '#4FA3B4', '#2D7F91']
