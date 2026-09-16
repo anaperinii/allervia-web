@@ -1,5 +1,6 @@
 import { cn } from '@/shared/lib/cn'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
+import { MODALITY_LABELS } from '@/features/immunotherapy/constants/modality'
 import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 
 interface ImmunotherapiesTableProps {
@@ -11,17 +12,18 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
   return (
     <table className="w-full" aria-label="Lista de imunoterapias">
       <thead>
-        <tr className="border-b border-(--border-custom) bg-gray-50/80">
-          <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-4 py-2.5">Nome</th>
-          <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-4 py-2.5">Tipo</th>
-          <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-4 py-2.5">Dose e Concentração Atuais</th>
-          <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-4 py-2.5">Intervalo Atual</th>
+        <tr className="border-b border-white/40 bg-white/20 backdrop-blur-md">
+          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] pl-5 pr-4 pt-4 pb-2.5">Nome</th>
+          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] pl-6 pr-4 pt-4 pb-2.5">Tipo</th>
+          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Via de administração</th>
+          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Dose e Concentração Atuais</th>
+          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Intervalo Atual</th>
         </tr>
       </thead>
       <tbody>
         {items.length === 0 ? (
           <tr>
-            <td colSpan={4} className="text-center text-(--text-muted) py-10 text-xs">Nenhum resultado encontrado</td>
+            <td colSpan={5} className="text-center text-(--text-muted) py-10 text-xs">Nenhum resultado encontrado</td>
           </tr>
         ) : (
           items.map((item) => {
@@ -40,9 +42,9 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
                     onSelect(item)
                   }
                 }}
-                className="border-b border-(--border-custom) last:border-0 cursor-pointer hover:bg-teal-50/40 transition-colors duration-150 focus:outline-none focus:bg-teal-50/60"
+                className="border-b border-(--border-custom) last:border-0 cursor-pointer hover:bg-[#6C9EA5]/5 transition-colors duration-150 focus:outline-none focus:bg-[#6C9EA5]/10"
               >
-                <td className={cn('px-4 py-2 text-xs font-medium', isInactive ? 'text-(--text-muted)' : 'text-(--text)')}>
+                <td className={cn('pl-5 pr-4 py-2 text-xs font-medium', isInactive ? 'text-(--text-muted)' : 'text-(--text)')}>
                   <div className="flex items-center gap-2">
                     {item.name}
                     {isInactive && (
@@ -53,17 +55,17 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
                   </div>
                 </td>
                 <td className="px-4 py-2">
-                  <span className="inline-block px-2 py-0.5 rounded-md bg-gray-100 text-[0.7rem] font-medium text-(--text-muted)">
+                  <span className="inline-block px-2 py-0.5 rounded-md bg-gray-200/70 text-[0.7rem] font-medium text-(--text-muted) border border-gray-200">
                     {item.type}
                   </span>
                 </td>
+                <td className="px-4 py-2 text-xs text-(--text-muted)">{MODALITY_LABELS[item.modality]}</td>
                 <td className="px-4 py-2 text-xs text-(--text-muted)">{item.doseConcentration}</td>
                 <td className="px-4 py-2">
                   <span
-                    className="inline-flex items-center gap-1.5 px-2 py-px rounded-full text-[0.65rem] font-semibold border"
-                    style={{ backgroundColor: color.bg, color: color.text, borderColor: color.dot + '30' }}
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border"
+                    style={{ backgroundColor: color.bg + '4D', color: color.text, borderColor: color.dot + '30' }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color.dot }} />
                     {item.cycleInterval.days} dias
                   </span>
                 </td>

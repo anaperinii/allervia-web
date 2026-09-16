@@ -3,14 +3,18 @@ import { isAfter, isBefore, startOfDay, endOfDay } from 'date-fns'
 import { useNotificationsStore, TYPE_TO_CATEGORY } from '@/features/notification/stores/useNotificationsStore'
 import type { NotificationTabKey } from '@/features/notification/constants/notification-display'
 import type { ReadFilter } from '@/features/notification/components/NotificationFilterBar'
+import { Button } from '@/shared/components'
 import { NotificationsHeader } from '@/features/notification/components/NotificationsHeader'
-import { NotificationFilterBar } from '@/features/notification/components/NotificationFilterBar'
+import { NotificationFilters } from '@/features/notification/components/NotificationFilterBar'
 import { NotificationListItem } from '@/features/notification/components/NotificationListItem'
 import { NotificationsEmpty } from '@/features/notification/components/NotificationsEmpty'
 import { parseIsoDate } from '@/shared/lib/dates'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheckDouble, faEnvelope, faEnvelopeOpen, faTrash } from '@fortawesome/free-solid-svg-icons'
+
 export function NotificationsPage() {
-  const { notifications, markAsRead, markAsUnread, markAllAsRead, markSelectedAsRead, markSelectedAsUnread } =
+  const { notifications, markAsRead, markAsUnread, markAllAsRead, markSelectedAsRead, markSelectedAsUnread, deleteSelected } =
     useNotificationsStore()
 
   const [activeTab, setActiveTab] = useState<NotificationTabKey>('all')
@@ -30,7 +34,7 @@ export function NotificationsPage() {
   }, [dateFrom, dateTo])
 
   const hasActiveFilters =
-    activeTab !== 'all' || readFilter !== 'all' || dateFrom !== '' || dateTo !== ''
+    readFilter !== 'all' || dateFrom !== '' || dateTo !== ''
 
   const clearFilters = () => {
     setActiveTab('all')
@@ -93,48 +97,76 @@ export function NotificationsPage() {
     setSelectedIds(new Set())
   }
 
+  const handleBatchDelete = () => {
+    deleteSelected([...selectedIds])
+    setSelectedIds(new Set())
+  }
+
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id))
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <NotificationsHeader
-          unreadCount={unreadCount}
-          selectedCount={selectedIds.size}
-          onMarkAllRead={markAllAsRead}
-          onBatchRead={handleBatchRead}
-          onBatchUnread={handleBatchUnread}
-        />
-
-        <NotificationFilterBar
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          tabCounts={tabCounts}
-          readFilter={readFilter}
-          onReadFilterChange={setReadFilter}
-          dateFrom={dateFrom}
-          onDateFromChange={setDateFrom}
-          dateTo={dateTo}
-          onDateToChange={setDateTo}
-          dateRangeError={dateRangeError}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={clearFilters}
-        />
-
-        <div className="px-5 py-1.5 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={allSelected}
-            onChange={toggleSelectAll}
-            aria-label="Selecionar todas as notificações"
-            className="w-3.5 h-3.5 rounded border-gray-300 text-brand cursor-pointer accent-brand"
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
+      <NotificationsHeader
+        actions={
+          <NotificationFilters
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            tabCounts={tabCounts}
+            readFilter={readFilter}
+            onReadFilterChange={setReadFilter}
+            dateFrom={dateFrom}
+            onDateFromChange={setDateFrom}
+            dateTo={dateTo}
+            onDateToChange={setDateTo}
+            dateRangeError={dateRangeError}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearFilters}
           />
-          <span className="text-[0.6rem] text-(--text-muted)">{filtered.length} notificações</span>
+        }
+      />
+
+      <div className="flex flex-1 min-h-0 flex-col">
+        <div className="relative z-10 -mb-px shrink-0 rounded-t-3xl border border-b-0 border-[#DDE6E6] bg-[#F6F8F8] px-5 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleSelectAll}
+              aria-label="Selecionar todas as notificações"
+              className="w-4 h-4 rounded border-gray-300 text-brand cursor-pointer accent-[#257E8C]"
+            />
+            <span className="text-xs text-(--text-muted)">{filtered.length} notificações</span>
+            {selectedIds.size > 0 && (
+              <span className="text-[0.6rem] font-semibold text-brand-dark bg-brand/25 border border-brand/20 px-2 py-0.5 rounded-md">
+                {selectedIds.size} selecionadas
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && (
+              <>
+                <Button variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faEnvelopeOpen} style={{ fontSize: 11 }} />} onClick={handleBatchRead} className="bg-gray-100! border-gray-300! text-gray-700! hover:bg-gray-200!">
+                  Marcar como lidas
+                </Button>
+                <Button variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faEnvelope} style={{ fontSize: 11 }} />} onClick={handleBatchUnread} className="bg-gray-100! border-gray-300! text-gray-700! hover:bg-gray-200!">
+                  Marcar como não lidas
+                </Button>
+                <Button tone="danger" variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faTrash} style={{ fontSize: 11 }} />} onClick={handleBatchDelete}>
+                  Excluir
+                </Button>
+              </>
+            )}
+            {unreadCount > 0 && selectedIds.size === 0 && (
+              <Button variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faCheckDouble} style={{ fontSize: 12 }} />} onClick={markAllAsRead} className="bg-gray-100! border-gray-300! text-gray-700! hover:bg-gray-200!">
+                Marcar todas como lidas
+              </Button>
+            )}
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto rounded-b-3xl border border-t-0 border-[#DDE6E6] bg-white">
           {filtered.length === 0 ? (
             <NotificationsEmpty hasActiveFilters={hasActiveFilters} onClearFilters={clearFilters} />
           ) : (

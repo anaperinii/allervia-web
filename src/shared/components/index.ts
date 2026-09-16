@@ -22,6 +22,8 @@ export { ToastViewport } from './toasts/ToastViewport'
 export { useToastStore, toast } from './toasts/useToastStore'
 export type { ToastItem, ToastInput } from './toasts/useToastStore'
 
-export { WizardStepsIndicator } from './wizard/WizardStepsIndicator'
+export { StepHeading } from './wizard/StepHeading'
+export { WizardStepsBreadcrumb } from './wizard/WizardStepsBreadcrumb'
+export type { WizardStep } from './wizard/WizardStepsBreadcrumb'
 
 export { TablePagination } from './tables/TablePagination'

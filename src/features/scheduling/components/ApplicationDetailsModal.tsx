@@ -1,11 +1,12 @@
-import { Calendar, Clock, ExternalLink, Phone, Syringe, User } from 'lucide-react'
 import { Modal, Button } from '@/shared/components'
-import { cn } from '@/shared/lib/cn'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { openWhatsApp, sendReminder } from '@/shared/lib/whatsapp'
 import { APPLICATION_STATUS_DISPLAY } from '@/features/scheduling/constants/application-display'
 import type { Application } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowUpRightFromSquare, faCalendar, faClock, faPhone, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
 
 interface ApplicationDetailsModalProps {
   application: Application | null
@@ -42,7 +43,7 @@ export function ApplicationDetailsModal({
               }
               className="text-[0.65rem] font-medium text-[#25D366] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none mr-auto"
             >
-              <Phone size={11} />
+              <FontAwesomeIcon icon={faPhone} style={{ fontSize: 11 }} />
               Enviar lembrete via WhatsApp
             </button>
             <Button variant="outline" onClick={onClose}>
@@ -55,7 +56,16 @@ export function ApplicationDetailsModal({
       {application && (
         <>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-sm font-bold text-white shrink-0">
+            <div
+              className="relative flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white shrink-0 overflow-hidden"
+              style={{
+                background:
+                  'radial-gradient(circle at 22% 20%, rgba(255,255,255,0.38) 0%, transparent 45%), radial-gradient(circle at 80% 82%, rgba(255,255,255,0.18) 0%, transparent 48%), linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
+                border: '1px solid rgba(255,255,255,0.4)',
+                boxShadow:
+                  'inset 0 1px 0 rgba(255,255,255,0.5), inset 0 0 12px rgba(255,255,255,0.15), 0 4px 12px rgba(0,0,0,0.15)',
+              }}
+            >
               {getFullName(application.patientId)
                 .split(' ')
                 .map((part) => part[0])
@@ -76,7 +86,7 @@ export function ApplicationDetailsModal({
               onClick={() => openWhatsApp(getPhone(application.patientId))}
               className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-[#25D366] text-white text-[0.65rem] font-semibold hover:bg-[#20BD5A] transition-all shrink-0"
             >
-              <Phone size={12} />
+              <FontAwesomeIcon icon={faPhone} style={{ fontSize: 12 }} />
               WhatsApp
             </button>
           </div>
@@ -84,14 +94,14 @@ export function ApplicationDetailsModal({
           <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
             <div className="bg-white px-3.5 py-2.5">
               <div className="flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
-                <Calendar size={9} />
+                <FontAwesomeIcon icon={faCalendar} style={{ fontSize: 9 }} />
                 Data
               </div>
               <div className="text-xs font-medium text-(--text)">{application.date}</div>
             </div>
             <div className="bg-white px-3.5 py-2.5">
               <div className="flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
-                <Clock size={9} />
+                <FontAwesomeIcon icon={faClock} style={{ fontSize: 9 }} />
                 Horário
               </div>
               <div className="text-xs font-medium text-(--text)">
@@ -100,7 +110,7 @@ export function ApplicationDetailsModal({
             </div>
             <div className="bg-white px-3.5 py-2.5">
               <div className="flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
-                <Syringe size={9} />
+                <FontAwesomeIcon icon={faSyringe} style={{ fontSize: 9 }} />
                 Dose
               </div>
               <div className="text-xs font-medium text-(--text)">{application.dose}</div>
@@ -114,10 +124,9 @@ export function ApplicationDetailsModal({
                   const intervalColor = getIntervalColor(application.cycle.days)
                   return (
                     <span
-                      className="inline-flex items-center gap-1 px-2 py-px rounded-full text-[0.6rem] font-semibold border"
-                      style={{ backgroundColor: intervalColor.bg, color: intervalColor.text, borderColor: intervalColor.dot + '30' }}
+                      className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border"
+                      style={{ backgroundColor: intervalColor.bg + '4D', color: intervalColor.text, borderColor: intervalColor.dot + '30' }}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: intervalColor.dot }} />
                       {application.cycle.days} dias
                     </span>
                   )
@@ -126,15 +135,13 @@ export function ApplicationDetailsModal({
             </div>
             <div className="bg-white px-3.5 py-2.5">
               <div className="text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">Status</div>
-              <div className="text-xs font-medium">
-                <span className={cn('px-2 py-0.5 rounded-full text-[0.6rem] font-semibold', APPLICATION_STATUS_DISPLAY[application.status].className)}>
-                  {APPLICATION_STATUS_DISPLAY[application.status].label}
-                </span>
+              <div className="text-xs font-medium text-(--text)">
+                {APPLICATION_STATUS_DISPLAY[application.status].label}
               </div>
             </div>
             <div className="bg-white px-3.5 py-2.5">
               <div className="flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
-                <User size={9} />
+                <FontAwesomeIcon icon={faUser} style={{ fontSize: 9 }} />
                 Modalidade
               </div>
               <div className="text-xs font-medium text-(--text)">
@@ -145,7 +152,7 @@ export function ApplicationDetailsModal({
 
           {googleConnected && (
             <div className="flex items-center gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2">
-              <Calendar size={13} className="text-brand shrink-0" />
+              <FontAwesomeIcon icon={faCalendar} className="text-brand shrink-0" style={{ fontSize: 13 }} />
               <div className="flex-1">
                 <p className="text-[0.6rem] text-brand font-medium">Sincronizado com Google Agenda</p>
                 <p className="text-[0.5rem] text-brand/60">
@@ -156,7 +163,7 @@ export function ApplicationDetailsModal({
                 href="#"
                 className="text-[0.55rem] text-brand font-semibold hover:underline no-underline flex items-center gap-0.5 shrink-0"
               >
-                <ExternalLink size={9} />
+                <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ fontSize: 9 }} />
                 Abrir
               </a>
             </div>

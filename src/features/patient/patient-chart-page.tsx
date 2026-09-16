@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { addDays, differenceInDays, format } from 'date-fns'
-import { CalendarDays, ChevronDown, List, Power, PowerOff, Save } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { SegmentedControl, Toast } from '@/shared/components'
+import { sendReminder } from '@/shared/lib/whatsapp'
 import { usePatientStore, derivePatientDates, type Application } from '@/features/patient/stores/usePatientStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
@@ -22,9 +22,12 @@ import { ApplicationsMonthFilter } from '@/features/patient/components/chart/App
 import { ApplicationsTimeline } from '@/features/patient/components/chart/ApplicationsTimeline'
 import { ApplicationsCalendar } from '@/features/patient/components/chart/ApplicationsCalendar'
 import { ProgressIndicator, PROGRESS_INDUCTION_STEPS } from '@/features/patient/components/chart/ProgressIndicator'
+import { TreatmentTimeline } from '@/features/patient/components/treatment-completion/TreatmentTimeline'
 import { ApplicationDetailModal } from '@/features/patient/components/chart/ApplicationDetailModal'
 import { EditPatientModal } from '@/features/patient/components/chart/EditPatientModal'
 import { AdjustProtocolModal } from '@/features/patient/components/chart/AdjustProtocolModal'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCalendarDays, faFloppyDisk, faList, faPowerOff } from '@fortawesome/free-solid-svg-icons'
 import { AdjustHistoryModal } from '@/features/patient/components/chart/AdjustHistoryModal'
 import { InactivateModal } from '@/features/patient/components/chart/InactivateModal'
 import { InactivationHistoryModal } from '@/features/patient/components/chart/InactivationHistoryModal'
@@ -89,7 +92,7 @@ export function PatientChartPage() {
 
   const [selectedApplication, setSelectedApp] = useState<Application | null>(null)
   const [monthFilter, setMonthFilter] = useState('all')
-  const [showProgress, setShowProgress] = useState(false)
+  const [activeTab, setActiveTab] = useState<'applications' | 'progress'>('applications')
   const [viewMode, setViewMode] = useState<'timeline' | 'calendar'>('timeline')
   const [calMonth, setCalMonth] = useState(new Date().getMonth())
   const [calYear, setCalYear] = useState(new Date().getFullYear())
@@ -244,8 +247,8 @@ export function PatientChartPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="mx-4 my-4 flex flex-1 gap-4 min-h-0 min-w-0">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+      <div className="ml-1 mr-1 mt-1 mb-1 flex flex-1 gap-4 min-h-0 min-w-0">
         <PatientInfoSidebar
           patient={selectedPatient}
           treatmentTime={treatmentTime}
@@ -275,73 +278,110 @@ export function PatientChartPage() {
         <div className="flex flex-1 flex-col gap-3 min-w-0">
           <SummaryCards currentInterval={currentInterval} nextDate={nextDate} currentDose={currentDose} />
 
-          <div className="flex-1 flex flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden min-h-0 min-w-0">
-            <div className="px-5 py-3 border-b border-(--border-custom) min-w-0">
-              <div className="flex items-center justify-between mb-2.5">
-                <h2 className="text-sm font-bold text-(--text)">Aplicações</h2>
+          <div className="flex flex-1 flex-col min-h-0 min-w-0">
+          <div className="relative z-10 flex items-end justify-between gap-2">
+            <div className="flex items-end gap-1">
+            {([
+              { key: 'applications', label: 'Aplicações', first: true },
+              { key: 'progress', label: 'Gráficos de Progressão', first: false },
+            ] as const).map((t) => {
+              const active = activeTab === t.key
+              return (
                 <button
+                  key={t.key}
                   type="button"
-                  aria-expanded={showProgress}
-                  onClick={() => setShowProgress(!showProgress)}
-                  className="text-[0.6rem] font-semibold text-brand hover:underline cursor-pointer flex items-center gap-1"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setActiveTab(t.key)}
+                  className={cn(
+                    'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors cursor-pointer',
+                    active ? 'bg-white text-slate-800 z-10' : 'bg-gray-100/70 text-slate-400 hover:bg-gray-100 hover:text-slate-600',
+                  )}
                 >
-                  {showProgress ? 'Ocultar' : 'Ver'} progressão
-                  <ChevronDown size={10} className={cn('transition-transform', showProgress && 'rotate-180')} />
+                  {active && (
+                    <>
+                      {!t.first && (
+                        <span aria-hidden="true" className="pointer-events-none absolute -left-3 bottom-0 h-3 w-3" style={{ background: 'radial-gradient(circle at 0% 0%, transparent 11.5px, #ffffff 12.5px)' }} />
+                      )}
+                      <span aria-hidden="true" className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3" style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, #ffffff 12.5px)' }} />
+                    </>
+                  )}
+                  {t.label}
                 </button>
-              </div>
-
-              <ProgressIndicator
-                open={showProgress}
-                patientApplications={patientApplications}
-                isMaintenance={isMaintenance}
-                currentInterval={currentInterval}
-                currentStepIndex={currentStepIndex}
-                progressPct={progressPct}
-              />
-
-              <div className="flex items-center gap-2 min-w-0">
-                <ApplicationsMonthFilter
-                  months={availableMonths}
-                  activeKey={monthFilter}
-                  onChange={(key) => {
-                    setMonthFilter(key)
-                    if (key === 'all') {
-                      const now = new Date()
-                      setCalMonth(now.getMonth())
-                      setCalYear(now.getFullYear())
-                    } else {
-                      const [yr, monthName] = key.split('-')
-                      const mi = monthIndexFromPtUpper(monthName)
-                      if (mi >= 0) { setCalMonth(mi); setCalYear(Number(yr)) }
-                    }
-                  }}
-                />
-                <SegmentedControl
-                  value={viewMode}
-                  onChange={setViewMode}
-                  size="xs"
-                  options={[
-                    { value: 'timeline', label: 'Lista', icon: <List size={10} /> },
-                    { value: 'calendar', label: 'Calendário', icon: <CalendarDays size={10} /> },
-                  ]}
-                  aria-label="Modo de visualização das aplicações"
-                />
-              </div>
+              )
+            })}
             </div>
-
-            {viewMode === 'timeline' ? (
-              <div className="flex-1 overflow-y-auto px-5 py-4">
-                <ApplicationsTimeline applicationsByMonth={groupedByMonth} onSelect={setSelectedApp} />
-              </div>
-            ) : (
-              <ApplicationsCalendar
-                month={calMonth}
-                year={calYear}
-                applicationsByDate={applicationsByDate}
-                onMonthChange={(m, y) => { setCalMonth(m); setCalYear(y) }}
-                onSelect={setSelectedApp}
+            {activeTab === 'applications' && (
+              <SegmentedControl
+                value={viewMode}
+                onChange={setViewMode}
+                size="sm"
+                options={[
+                  { value: 'timeline', label: 'Lista', icon: <FontAwesomeIcon icon={faList} style={{ fontSize: 11 }} /> },
+                  { value: 'calendar', label: 'Calendário', icon: <FontAwesomeIcon icon={faCalendarDays} style={{ fontSize: 11 }} /> },
+                ]}
+                aria-label="Modo de visualização das aplicações"
+                className="mb-1 bg-white"
               />
             )}
+          </div>
+
+          <div className="flex-1 flex flex-col rounded-tr-xl rounded-b-xl bg-white overflow-hidden min-h-0 min-w-0">
+            {activeTab === 'applications' ? (
+              <>
+                <div className="px-5 py-3 border-b border-(--border-custom) min-w-0">
+                  <ApplicationsMonthFilter
+                    months={availableMonths}
+                    activeKey={monthFilter}
+                    onChange={(key) => {
+                      setMonthFilter(key)
+                      if (key === 'all') {
+                        const now = new Date()
+                        setCalMonth(now.getMonth())
+                        setCalYear(now.getFullYear())
+                      } else {
+                        const [yr, monthName] = key.split('-')
+                        const mi = monthIndexFromPtUpper(monthName)
+                        if (mi >= 0) { setCalMonth(mi); setCalYear(Number(yr)) }
+                      }
+                    }}
+                  />
+                </div>
+
+                {viewMode === 'timeline' ? (
+                  <div className="flex-1 overflow-y-auto px-5 py-4">
+                    <ApplicationsTimeline
+                      applicationsByMonth={groupedByMonth}
+                      onSelect={setSelectedApp}
+                      onEditScheduled={setSelectedApp}
+                      onSendReminder={(app) => sendReminder(selectedPatient.phone, selectedPatient.name.split(' ')[0], app.date, app.startTime)}
+                    />
+                  </div>
+                ) : (
+                  <ApplicationsCalendar
+                    month={calMonth}
+                    year={calYear}
+                    applicationsByDate={applicationsByDate}
+                    onMonthChange={(m, y) => { setCalMonth(m); setCalYear(y) }}
+                    onSelect={setSelectedApp}
+                  />
+                )}
+              </>
+            ) : (
+              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                <ProgressIndicator
+                  currentStepIndex={currentStepIndex}
+                  progressPct={progressPct}
+                />
+                <TreatmentTimeline
+                  applications={patientApplications}
+                  inductionStart={inductionStart ?? '—'}
+                  maintenanceStart={maintenanceStart}
+                  flat
+                />
+              </div>
+            )}
+          </div>
           </div>
         </div>
       </div>
@@ -419,7 +459,7 @@ export function PatientChartPage() {
         open={showAdjustToast}
         onClose={() => setShowAdjustToast(false)}
         variant="success"
-        icon={<Save size={16} />}
+        icon={<FontAwesomeIcon icon={faFloppyDisk} style={{ fontSize: 16 }} />}
         title="Protocolo ajustado com sucesso!"
         description="A alteração foi registrada no histórico clínico e marcará as próximas aplicações como desvio de protocolo."
       />
@@ -427,7 +467,7 @@ export function PatientChartPage() {
         open={showInactivateToast}
         onClose={() => setShowInactivateToast(false)}
         variant="warning"
-        icon={<PowerOff size={16} />}
+        icon={<FontAwesomeIcon icon={faPowerOff} style={{ fontSize: 16 }} />}
         title="Imunoterapia inativada"
         description='As aplicações foram pausadas. Use "Reativar paciente" quando ele estiver apto a continuar o protocolo.'
       />
@@ -435,7 +475,7 @@ export function PatientChartPage() {
         open={showReactivateToast}
         onClose={() => setShowReactivateToast(false)}
         variant="success"
-        icon={<Power size={16} />}
+        icon={<FontAwesomeIcon icon={faPowerOff} style={{ fontSize: 16 }} />}
         title="Paciente reativado"
         description="O paciente está ativo novamente e pode continuar o protocolo a partir do ponto definido."
       />

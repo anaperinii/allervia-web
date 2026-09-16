@@ -2,9 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, CheckCircle } from 'lucide-react'
 import { addDays, differenceInDays, format } from 'date-fns'
-import { Button, CancelWizardModal, IconButton, toast, WizardStepsIndicator } from '@/shared/components'
+import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
 import { usePatientStore, derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
@@ -24,6 +23,17 @@ import { SelectPatientStep } from '@/features/patient/components/treatment-evolu
 import { PreApplicationStep } from '@/features/patient/components/treatment-evolution/PreApplicationStep'
 import { PostApplicationStep } from '@/features/patient/components/treatment-evolution/PostApplicationStep'
 import { EvolutionReviewStep } from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleCheck, faClipboardCheck, faNotesMedical, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader } from '@/shared/components/showcase'
+
+const STEPS: WizardStep[] = [
+  { label: 'Paciente', icon: faUser, description: 'Escolha a imunoterapia a evoluir e confira a última aplicação, a dose atual e o que o protocolo prevê como próxima.' },
+  { label: 'Pré-Aplicação', icon: faSyringe, description: 'Relate como o paciente passou no intervalo: efeitos colaterais, necessidade de medicação e o que foi observado.' },
+  { label: 'Pós-Aplicação', icon: faNotesMedical, description: 'Registre a aplicação realizada com data, horário, responsável, concentração e volume, e defina o intervalo até a próxima dose.' },
+  { label: 'Revisão dos Dados', icon: faClipboardCheck, description: 'Confira o que será gravado no prontuário e a próxima aplicação que será agendada automaticamente.' },
+]
 
 export function PatientEvolutionPage() {
   const navigate = useNavigate()
@@ -209,7 +219,7 @@ export function PatientEvolutionPage() {
     })
 
     toast.success({
-      icon: <CheckCircle size={16} />,
+      icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
       title: 'Evolução registrada com sucesso!',
       description: (
         <>
@@ -241,49 +251,61 @@ export function PatientEvolutionPage() {
   const continueDisabled = step === 0 && (!selectedImmunotherapy || selectedImmunotherapy.status === 'inactive')
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 p-4 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
-            <ArrowLeft size={16} />
-          </IconButton>
-          <h1 className="text-2xl font-bold text-(--text)">Evolução do Paciente</h1>
-        </div>
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
+      <PageHeader
+        key={selectedImmunotherapy?.id ?? 'root'}
+        breadcrumb={[
+          preselectedId ? 'Prontuário' : 'Imunoterapias',
+          ...(selectedImmunotherapy ? ['Evolução do Paciente'] : []),
+        ]}
+        title={selectedImmunotherapy ? selectedImmunotherapy.name : 'Evolução do Paciente'}
+      />
 
-        <WizardStepsIndicator
+      <div className="mb-2">
+        <WizardStepsBreadcrumb
+          steps={STEPS}
           current={step}
           ariaLabel="Etapas da evolução"
-          labels={['Paciente', 'Pré-Aplicação', 'Pós-Aplicação', 'Revisão dos Dados']}
+          onSelect={(i) => setStep(i as 0 | 1 | 2 | 3)}
         />
+      </div>
 
+      <div className="wizard-fields flex flex-1 min-h-0 flex-col overflow-hidden">
         <form onSubmit={handleFormSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
-          <div className="flex-1 overflow-y-auto px-5 py-4">
-            {step === 0 && (
-              <SelectPatientStep
-                selected={selectedImmunotherapy}
-                patient={patientFromStore}
-                applicationsForPatient={applicationsForPatient}
-                lastApplication={lastApplication}
-                doseNumber={doseNumber}
-                nextDose={nextDose}
-                treatmentTime={treatmentTime}
-                immunotherapies={immunotherapies}
-                preselectedLocked={!!preselectedId && !!selectedImmunotherapy}
-                onSelect={handleSelect}
-              />
-            )}
-            {step === 1 && <PreApplicationStep form={form} />}
-            {step === 2 && <PostApplicationStep form={form} />}
-            {step === 3 && (
-              <EvolutionReviewStep
-                form={formValues}
-                plannedNextDate={plannedNext?.date ?? null}
-                plannedNextInterval={plannedNext?.interval ?? null}
-              />
-            )}
+          <div
+            className="flex flex-1 min-h-0 flex-col justify-start px-2 pt-1 pb-10 overflow-y-auto"
+          >
+            <div className="w-full">
+              {step === 0 && (
+                <SelectPatientStep
+                  selected={selectedImmunotherapy}
+                  patient={patientFromStore}
+                  applicationsForPatient={applicationsForPatient}
+                  lastApplication={lastApplication}
+                  doseNumber={doseNumber}
+                  nextDose={nextDose}
+                  treatmentTime={treatmentTime}
+                  immunotherapies={immunotherapies}
+                  preselectedLocked={!!preselectedId && !!selectedImmunotherapy}
+                  onSelect={handleSelect}
+                />
+              )}
+              {step === 1 && <PreApplicationStep form={form} />}
+              {step === 2 && <PostApplicationStep form={form} />}
+              {step === 3 && (
+                <EvolutionReviewStep
+                  form={formValues}
+                  plannedNextDate={plannedNext?.date ?? null}
+                  plannedNextInterval={plannedNext?.interval ?? null}
+                />
+              )}
+            </div>
           </div>
 
           <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
+            <Button type="button" tone="danger" variant="outline" onClick={() => setShowCancelModal(true)}>
+              Cancelar
+            </Button>
             {step > 0 && (
               <Button type="button" tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 0 | 1 | 2 | 3)}>
                 Voltar

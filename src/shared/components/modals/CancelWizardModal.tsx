@@ -11,6 +11,9 @@ interface CancelWizardModalProps {
   keepEditingLabel?: string
   cancelLabel?: string
   cancelTone?: ButtonTone
+  secondaryLabel?: string
+  onSecondary?: () => void
+  secondaryTone?: ButtonTone
 }
 
 export function CancelWizardModal({
@@ -22,6 +25,9 @@ export function CancelWizardModal({
   keepEditingLabel = 'Continuar editando',
   cancelLabel = 'Cancelar',
   cancelTone = 'danger',
+  secondaryLabel,
+  onSecondary,
+  secondaryTone = 'danger',
 }: CancelWizardModalProps) {
   return (
     <Modal
@@ -32,6 +38,9 @@ export function CancelWizardModal({
       footer={
         <>
           <Button variant="outline" onClick={onClose}>{keepEditingLabel}</Button>
+          {secondaryLabel && onSecondary && (
+            <Button tone={secondaryTone} variant="outline" onClick={onSecondary}>{secondaryLabel}</Button>
+          )}
           <Button tone={cancelTone} variant="solid" onClick={onConfirm}>{cancelLabel}</Button>
         </>
       }

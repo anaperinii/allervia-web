@@ -1,6 +1,5 @@
-import { ShieldCheck } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
-import { Button, FieldLabel, PasswordInput, PasswordRequirements } from '@/shared/components'
+import { FieldLabel, PasswordInput, PasswordRequirements } from '@/shared/components'
 import type { ForgotPasswordResetForm } from '@/features/auth/schemas/forgot-password'
 
 interface NewPasswordStepProps {
@@ -15,11 +14,8 @@ export function NewPasswordStep({ form, onSubmit }: NewPasswordStepProps) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6" noValidate>
       <div className="flex flex-col items-center text-center gap-1.5">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand/10 mb-2">
-          <ShieldCheck size={22} className="text-brand" />
-        </div>
-        <h1 className="font-extrabold text-2xl text-(--text)">Criar nova senha</h1>
-        <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
+        <h1 className="font-semibold text-[1.75rem] tracking-tight text-[color:var(--ink)]">Criar nova senha</h1>
+        <p className="text-[0.84rem] leading-relaxed max-w-sm" style={{ color: 'var(--ink-soft)' }}>
           Defina uma nova senha segura para sua conta.
         </p>
       </div>
@@ -44,9 +40,17 @@ export function NewPasswordStep({ form, onSubmit }: NewPasswordStepProps) {
         <PasswordRequirements password={password} />
       </div>
 
-      <Button type="submit" tone="brand" variant="solid" prominent fullWidth size="lg" disabled={form.formState.isSubmitting}>
+      <button
+        type="submit"
+        disabled={form.formState.isSubmitting}
+        className="inline-flex w-full items-center justify-center rounded-lg h-10 text-sm font-semibold transition-[filter] duration-200 hover:brightness-95 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+        style={{
+          background: 'var(--btn)',
+          color: 'var(--btn-ink)',
+        }}
+      >
         Redefinir senha
-      </Button>
+      </button>
     </form>
   )
 }

@@ -1,10 +1,12 @@
-import { FileText, FileSpreadsheet, FileDown, Settings } from 'lucide-react'
-import { Button, FieldLabel, IconButton, SegmentedControl, TextInput, Select, ToggleCard } from '@/shared/components'
+import { FieldLabel, SegmentedControl, TextInput, Select, ToggleCard } from '@/shared/components'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFileArrowDown, faFileExcel, faFileLines } from '@fortawesome/free-solid-svg-icons'
 
 const FORMAT_OPTIONS = [
-  { value: 'pdf', label: 'PDF', icon: <FileText size={13} /> },
-  { value: 'excel', label: 'Excel', icon: <FileSpreadsheet size={13} /> },
-  { value: 'csv', label: 'CSV', icon: <FileDown size={13} /> },
+  { value: 'pdf', label: 'PDF', icon: <FontAwesomeIcon icon={faFileLines} style={{ fontSize: 13 }} /> },
+  { value: 'excel', label: 'Excel', icon: <FontAwesomeIcon icon={faFileExcel} style={{ fontSize: 13 }} /> },
+  { value: 'csv', label: 'CSV', icon: <FontAwesomeIcon icon={faFileArrowDown} style={{ fontSize: 13 }} /> },
 ]
 
 const INTERVALS = ['Este Mês', 'Este Trimestre', 'Este Semestre', 'Este Ano', 'Personalizado'] as const
@@ -47,7 +49,6 @@ interface ExportConfigPanelProps {
 }
 
 export function ExportConfigPanel(props: ExportConfigPanelProps) {
-  const exportDisabled = !props.consent || !props.justification.trim()
 
   return (
     <div className="w-88 shrink-0 border-r border-(--border-custom) overflow-y-auto">
@@ -60,11 +61,7 @@ export function ExportConfigPanel(props: ExportConfigPanelProps) {
             { value: 'sbl', label: 'Sublingual' },
           ]}
           fullWidth
-          aria-label="Modalidade"
-        />
-        <IconButton aria-label="Configurações avançadas">
-          <Settings size={14} />
-        </IconButton>
+          aria-label="Modalidade"        />
       </div>
 
       <div className="px-5 pb-5 space-y-5">
@@ -79,6 +76,7 @@ export function ExportConfigPanel(props: ExportConfigPanelProps) {
             options={FORMAT_OPTIONS}
             fullWidth
             aria-label="Formato do arquivo"
+            className="bg-white"
           />
         </FieldLabel>
 
@@ -159,25 +157,10 @@ export function ExportConfigPanel(props: ExportConfigPanelProps) {
             placeholder="Ex: Relatório para acompanhamento clínico do paciente"
             value={props.justification}
             onChange={(e) => props.onJustificationChange(e.target.value)}
-            className="w-full rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 py-2 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all resize-none"
+            className="w-full rounded-2xl border border-[#DDE6E6] bg-white px-4 py-2.5 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#257E8C]/35 focus:border-[#257E8C] transition-all resize-none"
           />
         </div>
 
-        <Button
-          tone="brand"
-          variant="solid"
-          prominent
-          fullWidth
-          size="md"
-          disabled={exportDisabled}
-          onClick={props.onExport}
-        >
-          Exportar {props.format.toUpperCase()}
-        </Button>
-
-        {!props.consent && (
-          <p className="text-[0.55rem] text-amber-600 text-center">Aceite a declaração LGPD para habilitar a exportação</p>
-        )}
       </div>
     </div>
   )

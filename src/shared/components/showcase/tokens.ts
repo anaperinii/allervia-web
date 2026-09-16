@@ -1,0 +1,16 @@
+export const SHOWCASE = {
+  canvas: '#EBEEEE',
+  card: '#F6F8F8',
+  cardInner: '#EDF1F1',
+  cardInnerStrong: '#E3E9E9',
+  ink: '#12333a',
+  inkSoft: '#4A6469',
+  muted: '#8CA1A6',
+  line: '#DDE6E6',
+  accent: '#257E8C',
+  onAccent: '#FFFFFF',
+  accentSoft: '#74C3B9',
+  danger: '#E0453C',
+  brand: '#6C9EA5',
+  white: '#FFFFFF',
+} as const

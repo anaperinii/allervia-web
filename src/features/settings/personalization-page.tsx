@@ -1,7 +1,10 @@
-import { ArrowLeft, Contrast, Eye, Layout, MousePointer, Type } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-import { IconButton, Switch } from '@/shared/components'
+import { Switch } from '@/shared/components'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { useSettingsStore, type Density, type Theme } from '@/features/settings/stores/useSettingsStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowPointer, faCircleHalfStroke, faEye, faFont, faTableColumns } from '@fortawesome/free-solid-svg-icons'
 
 const THEME_OPTIONS: { id: Theme; label: string; preview: string }[] = [
   { id: 'light', label: 'Claro', preview: 'bg-white border-2' },
@@ -32,26 +35,19 @@ export function PersonalizationPage() {
   const setFocusIndicators = useSettingsStore((s) => s.setFocusIndicators)
 
   const visualToggles = [
-    { label: 'Alto contraste', desc: 'Aumenta o contraste entre texto e fundo', icon: Contrast, value: highContrast, set: setHighContrast },
-    { label: 'Texto ampliado', desc: 'Aumenta o tamanho base da fonte em 20%', icon: Eye, value: largeText, set: setLargeText },
+    { label: 'Alto contraste', desc: 'Aumenta o contraste entre texto e fundo', icon: faCircleHalfStroke, value: highContrast, set: setHighContrast },
+    { label: 'Texto ampliado', desc: 'Aumenta o tamanho base da fonte em 20%', icon: faEye, value: largeText, set: setLargeText },
   ] as const
 
   const motionToggles = [
-    { label: 'Reduzir animações', desc: 'Minimiza transições e efeitos de movimento', icon: MousePointer, value: reducedMotion, set: setReducedMotion },
-    { label: 'Indicadores de foco visíveis', desc: 'Destaca o elemento selecionado ao navegar por teclado', icon: Eye, value: focusIndicators, set: setFocusIndicators },
+    { label: 'Reduzir animações', desc: 'Minimiza transições e efeitos de movimento', icon: faArrowPointer, value: reducedMotion, set: setReducedMotion },
+    { label: 'Indicadores de foco visíveis', desc: 'Destaca o elemento selecionado ao navegar por teclado', icon: faEye, value: focusIndicators, set: setFocusIndicators },
   ] as const
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
-          <h1 className="text-2xl font-bold text-(--text)">Personalização e Acessibilidade</h1>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-5">
-          <div className="max-w-2xl mx-auto space-y-5">
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+    <SettingsLayout subtitle="Personalização e Acessibilidade">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <section className="lg:col-span-2 border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Tema</h2>
               </div>
@@ -80,9 +76,9 @@ export function PersonalizationPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
-                <Layout size={14} className="text-(--text-muted)" />
+                <FontAwesomeIcon icon={faTableColumns} className="text-(--text-muted)" style={{ fontSize: 14 }} />
                 <h2 className="text-xs font-bold text-(--text)">Densidade da interface</h2>
               </div>
               <div className="p-4">
@@ -110,9 +106,9 @@ export function PersonalizationPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
-                <Type size={14} className="text-(--text-muted)" />
+                <FontAwesomeIcon icon={faFont} className="text-(--text-muted)" style={{ fontSize: 14 }} />
                 <h2 className="text-xs font-bold text-(--text)">Tamanho da fonte</h2>
               </div>
               <div className="p-4">
@@ -136,7 +132,7 @@ export function PersonalizationPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Acessibilidade visual</h2>
               </div>
@@ -147,7 +143,7 @@ export function PersonalizationPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                          <item.icon size={14} className="text-brand" />
+                          <FontAwesomeIcon icon={item.icon} className="text-brand" style={{ fontSize: 14 }} />
                         </div>
                         <div>
                           <div className="text-xs font-semibold text-(--text)">{item.label}</div>
@@ -161,7 +157,7 @@ export function PersonalizationPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Movimento e navegação</h2>
               </div>
@@ -172,7 +168,7 @@ export function PersonalizationPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                          <item.icon size={14} className="text-brand" />
+                          <FontAwesomeIcon icon={item.icon} className="text-brand" style={{ fontSize: 14 }} />
                         </div>
                         <div>
                           <div className="text-xs font-semibold text-(--text)">{item.label}</div>
@@ -184,10 +180,8 @@ export function PersonalizationPage() {
                   </div>
                 ))}
               </div>
-            </section>
-          </div>
-        </div>
+      </section>
       </div>
-    </div>
+    </SettingsLayout>
   )
 }

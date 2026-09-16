@@ -1,5 +1,11 @@
-import { AlertCircle, CalendarDays, Droplet, RotateCcw } from 'lucide-react'
-import type { ComponentType } from 'react'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowTrendUp, faCalendarDays, faCircleExclamation, faDroplet } from '@fortawesome/free-solid-svg-icons'
+
+const withSmallSymbol = (value: string) =>
+  value.split(/(%)/g).map((part, index) =>
+    part === '%' ? <span key={index} className="text-[0.6em] font-normal">%</span> : part,
+  )
 
 interface CompletionMetricsProps {
   totalApplications: number
@@ -11,7 +17,7 @@ interface CompletionMetricsProps {
 
 interface MetricCard {
   key: string
-  icon: ComponentType<{ size?: number; className?: string }>
+  icon: IconDefinition
   label: string
   value: string
   valueTag?: string
@@ -25,18 +31,18 @@ export function CompletionMetrics({
   totalDurationLabel,
 }: CompletionMetricsProps) {
   const cards: MetricCard[] = [
-    { key: 'apps', icon: Droplet, label: 'Aplicações totais', value: String(totalApplications) },
+    { key: 'apps', icon: faDroplet, label: 'Aplicações totais', value: String(totalApplications) },
     {
       key: 'adherence',
-      icon: RotateCcw,
+      icon: faArrowTrendUp,
       label: 'Aderência',
       value: `${adherencePct}%`,
       valueTag: rescheduledCount === 1 ? '1 reagendamento' : `${rescheduledCount} reagendamentos`,
     },
-    { key: 'adverse', icon: AlertCircle, label: 'Reações adversas', value: String(adverseEventsCount) },
+    { key: 'adverse', icon: faCircleExclamation, label: 'Reações adversas', value: String(adverseEventsCount) },
     {
       key: 'duration',
-      icon: CalendarDays,
+      icon: faCalendarDays,
       label: 'Duração total',
       value: totalDurationLabel,
     },
@@ -49,22 +55,22 @@ export function CompletionMetrics({
         return (
           <div
             key={card.key}
-            className="border border-(--border-custom) rounded-xl bg-white p-4 flex items-start gap-3"
+            className="relative overflow-hidden border border-(--border-custom) rounded-3xl bg-[#F6F8F8] p-4 flex items-center gap-3"
+            style={{
+              backgroundImage:
+                'linear-gradient(105deg, rgba(108,158,165,0.28) 0%, rgba(155,193,196,0.16) 25%, rgba(234,241,241,0.07) 55%, transparent 80%)',
+            }}
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0 bg-teal-100/70">
-              <Icon size={16} className="text-brand" />
+            <FontAwesomeIcon icon={Icon} className="pointer-events-none absolute -bottom-5 -left-9 text-brand/15" style={{ fontSize: 82 }} />
+            <div className="relative flex flex-1 items-baseline gap-2 min-w-0">
+              <span className="text-2xl font-semibold leading-none text-(--text) shrink-0">{withSmallSymbol(card.value)}</span>
+              <span className="text-[0.7rem] font-medium leading-tight text-(--text-muted)">{card.label}</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[0.65rem] font-medium text-(--text-muted)">{card.label}</div>
-              <div className="flex items-baseline gap-1.5">
-                <div className="text-base font-extrabold text-(--text) leading-tight">{card.value}</div>
-                {card.valueTag && (
-                  <span className="text-[0.55rem] font-semibold text-(--text-muted) bg-gray-100 border border-(--border-custom) rounded-full px-1.5 py-0.5">
-                    {card.valueTag}
-                  </span>
-                )}
-              </div>
-            </div>
+            {card.valueTag && (
+              <span className="relative shrink-0 text-[0.55rem] font-semibold text-(--text-muted) bg-gray-100 border border-(--border-custom) rounded-md px-1.5 py-0.5">
+                {card.valueTag}
+              </span>
+            )}
           </div>
         )
       })}

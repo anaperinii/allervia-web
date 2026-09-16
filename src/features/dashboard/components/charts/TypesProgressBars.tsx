@@ -30,7 +30,7 @@ export function TypesProgressBars({ data, showCountsAlways = false }: TypesProgr
                 >
                   {datum.value} pacientes
                 </span>
-                <span className="text-xs font-bold" style={{ color }}>{datum.pct}%</span>
+                <span className="text-xs font-bold text-slate-700">{datum.pct}%</span>
               </div>
             </div>
             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">

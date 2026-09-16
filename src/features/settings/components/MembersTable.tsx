@@ -1,5 +1,6 @@
 import { cn } from '@/shared/lib/cn'
 import { MediaRow } from './MediaRow'
+import { PatientInitials } from '@/shared/components/glass-card'
 import { ROLE_BADGES } from '@/features/settings/constants/team-roles'
 import type { TeamMember } from '@/features/settings/stores/useTeamsStore'
 import { MemberActionMenu } from './MemberActionMenu'
@@ -27,11 +28,11 @@ export function MembersTable({
     <table className="w-full">
       <thead>
         <tr className="border-b border-(--border-custom) bg-gray-50/80">
-          <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5">Membro</th>
-          <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5">Perfil</th>
-          <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5">Status</th>
-          <th className="text-left text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5">Desde</th>
-          <th className="text-right text-[0.65rem] font-semibold text-(--text-muted) uppercase tracking-wider px-5 py-2.5 w-12"></th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Membro</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Perfil</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Status</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Desde</th>
+          <th className="text-right text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5 w-12"></th>
         </tr>
       </thead>
       <tbody>
@@ -41,17 +42,13 @@ export function MembersTable({
             <tr key={member.id} className="border-b border-(--border-custom) last:border-0 hover:bg-gray-50/50 transition-colors">
               <td className="px-5 py-3">
                 <MediaRow
-                  leading={
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-white text-[0.6rem] font-bold shrink-0">
-                      {member.avatar}
-                    </div>
-                  }
+                  leading={<PatientInitials name={member.name} size={32} />}
                   title={member.name}
                   description={member.email}
                 />
               </td>
               <td className="px-5 py-3">
-                <span className={cn('text-[0.65rem] font-semibold px-2 py-0.5 rounded-full', role.bg, role.color)}>
+                <span className="inline-block px-2 py-0.5 rounded-md bg-gray-200/70 text-[0.65rem] font-medium text-(--text-muted) border border-gray-200">
                   {role.label}
                 </span>
               </td>

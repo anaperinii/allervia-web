@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/shared/lib/cn'
-import type { ReactNode, AnchorHTMLAttributes } from 'react'
+import type { ReactNode, AnchorHTMLAttributes, CSSProperties } from 'react'
 
 type MarketingCTAVariant = 'filled' | 'outline'
 type MarketingCTAShape = 'pill' | 'block'
@@ -30,21 +30,39 @@ const BASE = 'font-semibold cursor-pointer transition-all duration-250 no-underl
 
 const SHAPE: Record<MarketingCTAShape, string> = {
   pill: 'inline-block px-6 py-2.5 rounded-full text-[0.9rem]',
-  block: 'block w-full py-3 rounded-xl text-center text-sm',
+  block: 'block w-full py-3 rounded-full text-center text-sm',
 }
 
-const VARIANT: Record<MarketingCTAVariant, string> = {
-  filled:
-    'border-none bg-linear-to-br from-brand to-teal-400 text-white shadow-[0_4px_20px_rgba(24,193,203,0.35)] hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(24,193,203,0.4)]',
-  outline: 'border-[1.5px] border-brand bg-transparent text-brand hover:bg-brand-50',
+const VARIANT_CLASS: Record<MarketingCTAVariant, string> = {
+  filled: 'border-none text-white hover:brightness-95',
+  outline:
+    'border-[1.5px] bg-transparent hover:bg-[color:var(--ll-accent-bg-soft)] hover:shadow-[0_6px_16px_var(--ll-halo-accent)]',
+}
+
+const VARIANT_STYLE: Record<MarketingCTAVariant, CSSProperties> = {
+  filled: {
+    background: 'linear-gradient(to bottom right, var(--color-brand), var(--color-brand-dark))',
+    color: '#ffffff',
+    boxShadow: '0 2px 12px rgba(108,158,165,0.3)',
+  },
+  outline: {
+    borderColor: 'var(--ll-accent-border)',
+    color: 'var(--ll-accent-strong)',
+  },
 }
 
 export function MarketingCTA(props: MarketingCTAProps) {
-  const cls = cn(BASE, SHAPE[props.shape ?? 'pill'], VARIANT[props.variant], props.className)
+  const cls = cn(BASE, SHAPE[props.shape ?? 'pill'], VARIANT_CLASS[props.variant], props.className)
+  const style = VARIANT_STYLE[props.variant]
   if ('to' in props && props.to !== undefined) {
     return (
-
-      <Link to={props.to as any} params={props.params as any} search={props.search as any} className={cls}>
+      <Link
+        to={props.to as any}
+        params={props.params as any}
+        search={props.search as any}
+        className={cls}
+        style={style}
+      >
         {props.children}
       </Link>
     )
@@ -54,7 +72,7 @@ export function MarketingCTA(props: MarketingCTAProps) {
   void _s
   void _c
   return (
-    <a {...rest} className={cls}>
+    <a {...rest} className={cls} style={style}>
       {children}
     </a>
   )

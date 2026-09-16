@@ -11,7 +11,7 @@ export function exportExcel(data: ReportData) {
   const { patient, realizedApplications, sections } = data
   const { inductionStart } = derivePatientDates(realizedApplications, patient.id)
   const rows: string[] = []
-  rows.push(`<tr><th colspan="2" style="background:#18C1CB;color:#fff;padding:8px;font-size:14px;">Relatório Clínico — ${patient.name}</th></tr>`)
+  rows.push(`<tr><th colspan="2" style="background:#6C9EA5;color:#fff;padding:8px;font-size:14px;">Relatório Clínico — ${patient.name}</th></tr>`)
   rows.push(`<tr><td colspan="2" style="padding:6px;font-size:11px;color:#666;">Gerado em: ${data.generatedAt}${data.anonymized ? ' · Dados anonimizados' : ''}</td></tr>`)
   rows.push(`<tr><td colspan="2" style="height:10px;"></td></tr>`)
 

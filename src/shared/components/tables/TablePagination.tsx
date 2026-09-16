@@ -1,20 +1,23 @@
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import { IconButton, Select } from '@/shared/components'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faAnglesLeft, faAnglesRight, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
 interface TablePaginationProps {
   currentPage: number
   totalPages: number
+  totalItems?: number
   itemsPerPage: number
   onPageChange: (page: number) => void
   onItemsPerPageChange: (n: number) => void
 }
 
-export function TablePagination({ currentPage, totalPages, itemsPerPage, onPageChange, onItemsPerPageChange }: TablePaginationProps) {
+export function TablePagination({ currentPage, totalPages, totalItems, itemsPerPage, onPageChange, onItemsPerPageChange }: TablePaginationProps) {
   const controls = [
-    { icon: ChevronsLeft, label: 'Primeira página', action: () => onPageChange(1), disabled: currentPage === 1 },
-    { icon: ChevronLeft, label: 'Página anterior', action: () => onPageChange(currentPage - 1), disabled: currentPage === 1 },
-    { icon: ChevronRight, label: 'Próxima página', action: () => onPageChange(currentPage + 1), disabled: currentPage === totalPages },
-    { icon: ChevronsRight, label: 'Última página', action: () => onPageChange(totalPages), disabled: currentPage === totalPages },
+    { icon: faAnglesLeft, label: 'Primeira página', action: () => onPageChange(1), disabled: currentPage === 1 },
+    { icon: faChevronLeft, label: 'Página anterior', action: () => onPageChange(currentPage - 1), disabled: currentPage === 1 },
+    { icon: faChevronRight, label: 'Próxima página', action: () => onPageChange(currentPage + 1), disabled: currentPage === totalPages },
+    { icon: faAnglesRight, label: 'Última página', action: () => onPageChange(totalPages), disabled: currentPage === totalPages },
   ]
 
   return (
@@ -22,18 +25,23 @@ export function TablePagination({ currentPage, totalPages, itemsPerPage, onPageC
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-(--text-muted)">Registros por página</span>
-          <div className="w-16">
+          <div className="w-24">
             <Select
               aria-label="Registros por página"
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="h-7 text-xs"
+              className="h-8 text-xs"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={20}>20</option>
             </Select>
           </div>
+          {totalItems !== undefined && (
+            <span className="ml-3 text-xs text-(--text-muted)">
+              {totalItems} {totalItems === 1 ? 'registro' : 'registros'} no total
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <span className="text-xs text-(--text-muted) mr-1.5">Página {currentPage} de {totalPages}</span>
@@ -46,7 +54,7 @@ export function TablePagination({ currentPage, totalPages, itemsPerPage, onPageC
               disabled={disabled}
               className="border border-(--border-custom)"
             >
-              <Icon size={12} />
+              <FontAwesomeIcon icon={Icon} style={{ fontSize: 12 }} />
             </IconButton>
           ))}
         </div>

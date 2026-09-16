@@ -1,4 +1,3 @@
-import { EyeOff } from 'lucide-react'
 import type { ChartOption } from './ConfigPanel'
 import { ConcentrationPieChart } from '@/features/dashboard/components/charts/ConcentrationPieChart'
 import { PhasesBarChart } from '@/features/dashboard/components/charts/PhasesBarChart'
@@ -6,6 +5,9 @@ import { StatusLineChart } from '@/features/dashboard/components/charts/StatusLi
 import { TypesProgressBars } from '@/features/dashboard/components/charts/TypesProgressBars'
 import { VolumeStackedBarChart } from '@/features/dashboard/components/charts/VolumeStackedBarChart'
 import type { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 
 type Analytics = ReturnType<typeof useDashboardAnalytics>
 
@@ -42,12 +44,12 @@ export function ExportPreview({
         : `${interval} · ${yearFilter}`
 
   return (
-    <div className="flex-1 overflow-y-auto p-5 bg-gray-50/50">
+    <div className="flex-1 overflow-y-auto p-5 bg-gray-50/50 rounded-2xl border border-(--border-custom)">
       <div className="bg-white rounded-xl border border-(--border-custom) shadow-sm max-w-2xl mx-auto">
         <div className="px-6 py-5 border-b border-(--border-custom)">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-(--text)">ImuneCare — Relatório Clínico</h2>
+              <h2 className="text-sm font-bold text-(--text)">Allervia — Relatório Clínico</h2>
               <p className="text-[0.65rem] text-(--text-muted) mt-0.5">
                 {periodLabel} · Gerado em {new Date().toLocaleDateString('pt-BR')}
               </p>
@@ -56,7 +58,7 @@ export function ExportPreview({
               <div>Modalidade: {modality === 'sub' ? 'Subcutânea' : 'Sublingual'}</div>
               {anonymize && (
                 <div className="flex items-center gap-1 text-brand font-semibold mt-0.5 justify-end">
-                  <EyeOff size={10} />
+                  <FontAwesomeIcon icon={faEyeSlash} style={{ fontSize: 10 }} />
                   Dados anonimizados
                 </div>
               )}
@@ -109,7 +111,7 @@ export function ExportPreview({
 
         <div className="px-6 py-3 border-t border-(--border-custom)">
           <div className="flex justify-between mb-2">
-            <span className="text-[0.6rem] text-(--text-muted)">ImuneCare © 2026</span>
+            <span className="text-[0.6rem] text-(--text-muted)">Allervia © 2026</span>
             <span className="text-[0.6rem] text-(--text-muted)">Página 1 de 1</span>
           </div>
           <p className="text-[0.5rem] text-(--text-muted)/60 leading-relaxed mb-2">

@@ -1,6 +1,8 @@
-import { Send, Trash2, UserCheck, UserX } from 'lucide-react'
 import { Modal, Button } from '@/shared/components'
 import type { ReactNode } from 'react'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPaperPlane, faTrash, faUserCheck, faUserXmark } from '@fortawesome/free-solid-svg-icons'
 
 export type TeamConfirmType =
   | 'remove-member'
@@ -30,7 +32,7 @@ const buildConfig = (state: TeamConfirmState): ConfirmConfig => {
   switch (state.type) {
     case 'remove-member':
       return {
-        icon: <Trash2 size={16} />,
+        icon: <FontAwesomeIcon icon={faTrash} style={{ fontSize: 16 }} />,
         tone: 'danger',
         title: 'Remover membro',
         body: <>Tem certeza que deseja remover {name} da equipe? Esta ação não pode ser desfeita.</>,
@@ -38,7 +40,7 @@ const buildConfig = (state: TeamConfirmState): ConfirmConfig => {
       }
     case 'deactivate':
       return {
-        icon: <UserX size={16} />,
+        icon: <FontAwesomeIcon icon={faUserXmark} style={{ fontSize: 16 }} />,
         tone: 'warning',
         title: 'Desativar membro',
         body: <>{name} perderá o acesso ao sistema até ser reativado. Os dados não serão removidos.</>,
@@ -46,7 +48,7 @@ const buildConfig = (state: TeamConfirmState): ConfirmConfig => {
       }
     case 'activate':
       return {
-        icon: <UserCheck size={16} />,
+        icon: <FontAwesomeIcon icon={faUserCheck} style={{ fontSize: 16 }} />,
         tone: 'success',
         title: 'Reativar membro',
         body: <>{name} terá o acesso ao sistema restaurado com as mesmas permissões anteriores.</>,
@@ -54,7 +56,7 @@ const buildConfig = (state: TeamConfirmState): ConfirmConfig => {
       }
     case 'resend-invite':
       return {
-        icon: <Send size={16} />,
+        icon: <FontAwesomeIcon icon={faPaperPlane} style={{ fontSize: 16 }} />,
         tone: 'brand',
         title: 'Reenviar convite',
         body: <>Um novo e-mail de convite será enviado para {name}. O convite anterior será invalidado.</>,
@@ -62,7 +64,7 @@ const buildConfig = (state: TeamConfirmState): ConfirmConfig => {
       }
     case 'delete-invite':
       return {
-        icon: <Trash2 size={16} />,
+        icon: <FontAwesomeIcon icon={faTrash} style={{ fontSize: 16 }} />,
         tone: 'danger',
         title: 'Excluir convite',
         body: <>O convite para {name} será excluído permanentemente e não poderá mais ser utilizado.</>,

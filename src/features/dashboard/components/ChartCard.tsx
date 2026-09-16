@@ -1,6 +1,8 @@
-import { Pin, PinOff } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import type { ReactNode } from 'react'
+
+import { faThumbtack, faThumbtackSlash } from '@fortawesome/free-solid-svg-icons'
+import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
 
 interface ChartCardProps {
   id: string
@@ -9,6 +11,8 @@ interface ChartCardProps {
   onToggleArchive: (id: string) => void
   filterSlot?: ReactNode
   fullWidth?: boolean
+  widthBasis?: string
+  gradient?: string
   children: ReactNode
 }
 
@@ -19,30 +23,41 @@ export function ChartCard({
   onToggleArchive,
   filterSlot,
   fullWidth,
+  widthBasis,
+  gradient,
   children,
 }: ChartCardProps) {
   return (
-    <div
+    <section
       className={cn(
-        'border border-(--border-custom) rounded-xl p-4 group',
-        fullWidth ? 'basis-full w-full' : 'flex-1 basis-[calc(50%-0.5rem)] min-w-95',
+        'group relative overflow-hidden rounded-3xl p-5',
+        fullWidth ? 'basis-full w-full' : 'flex-1 min-w-72',
       )}
+      style={{
+        background: SHOWCASE.card,
+        border: `1px solid ${SHOWCASE.line}`,
+        flexBasis: !fullWidth ? widthBasis ?? 'calc(50% - 0.5rem)' : undefined,
+        backgroundImage: gradient,
+      }}
     >
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-bold text-(--text)">{title}</h3>
-        <div className="flex items-center gap-1">
+      <header className="flex items-start justify-between gap-3 mb-4">
+        <h2 className="text-[1.05rem] font-semibold leading-tight" style={{ color: SHOWCASE.ink }}>
+          {title}
+        </h2>
+        <div className="flex items-center gap-1.5 shrink-0">
           {filterSlot}
-          <button
+          <CircleButton
+            icon={archived ? faThumbtack : faThumbtackSlash}
+            size={32}
+            iconSize={10}
             onClick={() => onToggleArchive(id)}
             aria-label={archived ? 'Desarquivar gráfico' : 'Arquivar gráfico'}
             title={archived ? 'Desarquivar (Fixar)' : 'Arquivar (Ocultar)'}
-            className="opacity-0 group-hover:opacity-100 p-1 text-(--text-muted) hover:bg-teal-50 hover:text-teal-600 rounded transition-all cursor-pointer"
-          >
-            {archived ? <Pin size={12} /> : <PinOff size={12} />}
-          </button>
+            className="opacity-0 group-hover:opacity-100"
+          />
         </div>
-      </div>
+      </header>
       {children}
-    </div>
+    </section>
   )
 }

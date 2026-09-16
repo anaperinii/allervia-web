@@ -1,8 +1,12 @@
-import { Trophy } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
+import { StepHeading } from '@/shared/components'
+import { DottedSpot } from '@/features/patient/components/DottedSpot'
 import { CompletionMetrics } from '@/features/patient/components/treatment-completion/CompletionMetrics'
 import { TreatmentTimeline } from '@/features/patient/components/treatment-completion/TreatmentTimeline'
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTrophy } from '@fortawesome/free-solid-svg-icons'
 
 interface CompletionOverviewStepProps {
   patient: Patient
@@ -47,14 +51,36 @@ export function CompletionOverviewStep({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl bg-linear-to-br from-teal-50 via-white to-white border border-teal-200 px-5 py-4 flex items-center gap-4 overflow-hidden relative">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand text-white shrink-0 shadow-[0_4px_16px_rgba(20,184,166,0.35)]">
-          <Trophy size={20} />
+      <StepHeading description="Métricas do tratamento que está sendo encerrado: aplicações realizadas, aderência, reações adversas e duração total." />
+      <div
+        className="rounded-xl border px-5 py-4 flex items-center gap-4 overflow-hidden relative backdrop-blur-xl"
+        style={{
+          backgroundImage:
+            'linear-gradient(160deg, rgba(220,225,229,0.14), rgba(220,225,229,0.04)), linear-gradient(160deg, #0e353d 0%, #08191d 100%)',
+          borderColor: 'rgba(220,225,229,0.14)',
+          boxShadow:
+            '0 12px 30px -14px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 22px -8px rgba(108,158,165,0.3)',
+        }}
+      >
+        <DottedSpot className="pointer-events-none absolute bottom-0 right-0" />
+        <div
+          className="relative flex h-12 w-12 items-center justify-center rounded-full shrink-0 overflow-hidden"
+          style={{
+            background:
+              'radial-gradient(circle at 20% 22%, rgba(255,255,255,0.28) 0%, transparent 40%), radial-gradient(circle at 80% 18%, rgba(255,255,255,0.16) 0%, transparent 45%), radial-gradient(circle at 78% 82%, rgba(255,255,255,0.22) 0%, transparent 45%), radial-gradient(circle at 22% 80%, rgba(255,255,255,0.14) 0%, transparent 42%), rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.22)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            boxShadow:
+              'inset 0 0 14px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.20)',
+          }}
+        >
+          <FontAwesomeIcon icon={faTrophy} style={{ fontSize: 22, color: '#9BC1C4' }} />
         </div>
-        <div className="min-w-0">
-          <div className="text-xs font-bold text-teal-800">Encerramento do protocolo de imunoterapia</div>
-          <div className="text-[0.7rem] text-teal-800/80 mt-0.5 leading-relaxed">
-            Você está revisando o desfecho clínico de <span className="font-bold">{patient.name}</span>. Confira métricas, registre o plano de seguimento pós-alta e assine a conclusão nos próximos passos.
+        <div className="relative min-w-0">
+          <div className="text-sm font-semibold" style={{ color: '#F2F6F7' }}>Encerramento do protocolo de imunoterapia</div>
+          <div className="text-xs mt-0.5 leading-relaxed" style={{ color: '#8FB4BA' }}>
+            Você está revisando o desfecho clínico de <span className="font-bold" style={{ color: '#EAF1F1' }}>{patient.name}</span>. Confira métricas, registre o plano de seguimento pós-alta e assine a conclusão nos próximos passos.
           </div>
         </div>
       </div>
@@ -83,8 +109,8 @@ export function CompletionOverviewStep({
 
 function DetailsCard({ title, rows }: { title: string; rows: [string, string][] }) {
   return (
-    <div className="border border-(--border-custom) rounded-xl bg-white overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-(--border-custom) text-xs font-bold text-(--text)">
+    <div className="border border-(--border-custom) rounded-3xl bg-[#F6F8F8] overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-(--border-custom) text-sm font-bold text-(--text)">
         {title}
       </div>
       <div className="px-4 py-3 space-y-2">

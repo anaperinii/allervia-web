@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
-import { IconButton } from '@/shared/components'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
 import { ExportConfigPanel, type ChartOption } from '@/features/dashboard/components/export/ConfigPanel'
 import { ExportPreview } from '@/features/dashboard/components/export/preview'
 import { ConfirmExportModal } from '@/features/dashboard/components/export/ConfirmExportModal'
 import { CancelExportModal } from '@/features/dashboard/components/export/CancelExportModal'
+
+import { PageHeader, Pill } from '@/shared/components/showcase'
+import { faDownload } from '@fortawesome/free-solid-svg-icons'
 
 const CHART_OPTIONS: readonly ChartOption[] = [
   { id: 'concentration', label: 'Ciclos de Tratamento por Concentração' },
@@ -25,7 +26,7 @@ export function ExportReportPage() {
   }, [canViewDashboard, navigate])
 
   const [modality, setModality] = useState<'sub' | 'sbl'>('sub')
-  const [fileName, setFileName] = useState('relatorio-imunecare')
+  const [fileName, setFileName] = useState('relatorio-allervia')
   const [format, setFormat] = useState('pdf')
   const [interval, setInterval] = useState<string>('Este Mês')
   const [monthFilter, setMonthFilter] = useState('all')
@@ -47,19 +48,36 @@ export function ExportReportPage() {
     setSelectedCharts((prev) => (prev.includes(id) ? prev.filter((chartId) => chartId !== id) : [...prev, id]))
   }
 
+  const exportDisabled = !consent || !justification.trim()
+
   void fileName 
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" variant="danger" onClick={() => setShowCancelModal(true)}>
-            <ArrowLeft size={18} />
-          </IconButton>
-          <h1 className="text-2xl font-bold text-(--text)">Exportar Relatório</h1>
-        </div>
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
+      <PageHeader
+        breadcrumb={['Painel de Métricas']}
+        title="Exportar Relatório"
+        actions={
+          <div className="flex flex-col items-end gap-1">
+            <Pill
+              icon={faDownload}
+              active
+              onClick={() => !exportDisabled && setShowExportModal(true)}
+              disabled={exportDisabled}
+              className={exportDisabled ? 'opacity-50 cursor-not-allowed' : undefined}
+            >
+              Exportar {format.toUpperCase()}
+            </Pill>
+            {!consent && (
+              <span className="text-[0.68rem] font-medium" style={{ color: '#E0453C' }}>
+                Aceite a declaração LGPD para habilitar a exportação
+              </span>
+            )}
+          </div>
+        }
+      />
 
-        <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden gap-4">
           <ExportConfigPanel
             modality={modality}
             onModalityChange={setModality}
@@ -101,7 +119,6 @@ export function ExportReportPage() {
             chartOptions={CHART_OPTIONS}
             analytics={analytics}
           />
-        </div>
       </div>
 
       <ConfirmExportModal

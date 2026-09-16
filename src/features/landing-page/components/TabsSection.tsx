@@ -1,93 +1,197 @@
 import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { cn } from '@/shared/lib/cn'
-import { Blob } from './Blob'
+import { CardSwap, Card } from '@/shared/components/CardSwap'
 import { Reveal } from './Reveal'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
+import { useLandingTheme } from '@/features/landing-page/theme-context'
 import { PRODUCT_TABS, type TabId } from '@/features/landing-page/constants/tabs'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
 export function TabsSection() {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard')
-  const [visited, setVisited] = useState<Set<TabId>>(() => new Set(['dashboard']))
 
   const handleSelectTab = (id: TabId) => {
+    if (id === activeTab) return
     setActiveTab(id)
-    if (!visited.has(id)) {
-      setVisited((prev) => new Set(prev).add(id))
-    }
   }
 
-  const active = PRODUCT_TABS.find((tab) => tab.id === activeTab) ?? PRODUCT_TABS[0]
+  const activeIndex = PRODUCT_TABS.findIndex((t) => t.id === activeTab)
+  const { theme } = useLandingTheme()
+  const darkTheme = theme === 'dark'
+  const panelBorder = darkTheme ? 'rgba(224,240,238,0.1)' : 'rgba(18,51,58,0.16)'
+  const panelBg = darkTheme ? '#101617' : '#eef2f3'
+  const panelTabBorder = darkTheme ? 'rgba(224,240,238,0.07)' : 'rgba(18,51,58,0.1)'
+  const tabActiveColor = darkTheme ? '#f2f6f6' : '#12333a'
+  const tabIdleColor = darkTheme ? '#5e7376' : '#8299a0'
 
   return (
-    <section className="py-24 px-[5%] relative overflow-hidden">
-      <Blob className="-top-28 -left-20 w-95 h-95 bg-teal-200/20" />
-      <Blob className="-top-32 -right-20 w-100 h-100 bg-cyan-100/25" />
-      <Blob className="top-1/2 left-1/3 w-75 h-75 bg-teal-100/20" />
-      <Blob className="-bottom-32 -left-16 w-100 h-100 bg-linear-to-br from-teal-200/25 to-cyan-200/20" />
-      <Blob className="-bottom-28 -right-20 w-95 h-95 bg-teal-100/25" />
+    <section
+      className="py-24 px-[5%] relative overflow-hidden"
+      style={{ background: 'var(--ll-bg)' }}
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute"
+        style={{
+          top: '40%',
+          left: '20%',
+          width: '60vmax',
+          height: '60vmax',
+          background: 'radial-gradient(circle, var(--ll-halo-soft), transparent 62%)',
+          transform: 'translate(-50%, -50%)',
+          animation: 'av-drift-2 30s ease-in-out infinite',
+        }}
+      />
 
-      <Reveal className="mb-12 relative">
+      <Reveal className="mb-16 relative">
         <SectionHeader
           eyebrow="Aprofunde-se"
           title="Projetado para o fluxo clínico real"
           description="Cada funcionalidade reflete as necessidades reais de clínicas de imunoterapia alérgica."
           align="center"
-          titleMaxWidth="max-w-150"
+          titleMaxWidth="max-w-4xl"
         />
       </Reveal>
 
-      <div className="flex gap-2 justify-center flex-wrap mb-12">
-        {PRODUCT_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => handleSelectTab(tab.id)}
-            className={cn(
-              'px-5 py-2 rounded-full border-[1.5px] font-semibold text-[0.875rem] cursor-pointer transition-all duration-200',
-              activeTab === tab.id
-                ? 'bg-linear-to-br from-brand to-teal-400 border-transparent text-white shadow-[0_4px_16px_rgba(20,184,166,0.3)]'
-                : 'border-(--border-custom) bg-transparent text-(--text-muted) hover:border-teal-300 hover:text-teal-600',
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-[4%] items-center">
-        <Reveal>
-          <h3 className="text-[1.4rem] font-extrabold mb-4">{active.title}</h3>
-          <p className="text-[0.95rem] text-(--text-muted) leading-[1.7] mb-6">{active.description}</p>
-          <span className="text-teal-600 font-semibold text-[0.9rem] cursor-default opacity-70">
-            {active.linkLabel} →
-          </span>
+      <div className="relative grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-14 items-center">
+        {/* Left — numbered step list */}
+        <Reveal className="relative lg:max-w-lg lg:justify-self-end">
+          <div
+            aria-hidden="true"
+            className="absolute left-4.25 top-6 bottom-6 w-px"
+            style={{ background: 'var(--ll-border)' }}
+          />
+          <ul className="relative flex flex-col gap-1 list-none">
+            {PRODUCT_TABS.map((tab) => {
+              const isActive = tab.id === activeTab
+              return (
+                <li key={tab.id} className="flex items-start gap-4">
+                  <button
+                    onClick={() => handleSelectTab(tab.id)}
+                    aria-label={tab.title}
+                    className="relative z-10 mt-3.5 shrink-0 flex h-9 w-9 items-center justify-center cursor-pointer"
+                  >
+                    <span
+                      className="rounded-full transition-all duration-300"
+                      style={
+                        isActive
+                          ? {
+                              height: '20px',
+                              width: '20px',
+                              background:
+                                'linear-gradient(to bottom right, var(--color-brand), var(--color-brand-dark))',
+                              boxShadow: '0 2px 12px rgba(108,158,165,0.3)',
+                            }
+                          : {
+                              height: '11px',
+                              width: '11px',
+                              background:
+                                'linear-gradient(var(--ll-surface), var(--ll-surface)), var(--ll-bg)',
+                              border: '1px solid var(--ll-border)',
+                            }
+                      }
+                    />
+                  </button>
+                  <div className="flex-1 py-3.5">
+                    <button
+                      onClick={() => handleSelectTab(tab.id)}
+                      className="block text-left cursor-pointer"
+                    >
+                      <h4
+                        className="text-[1.05rem] tracking-tight transition-colors duration-300"
+                        style={{
+                          color: isActive ? 'var(--ll-ink)' : 'var(--ll-ink-muted)',
+                          fontWeight: isActive ? 600 : 500,
+                        }}
+                      >
+                        {tab.title}
+                      </h4>
+                    </button>
+                    <div
+                      className="grid transition-all duration-400 ease-out"
+                      style={{
+                        gridTemplateRows: isActive ? '1fr' : '0fr',
+                        opacity: isActive ? 1 : 0,
+                      }}
+                    >
+                      <div className="overflow-hidden">
+                        <p
+                          className="text-[0.9rem] leading-[1.65] mt-2"
+                          style={{ color: 'var(--ll-ink-muted)' }}
+                        >
+                          {tab.description}
+                        </p>
+                        <Link
+                          to="/trial"
+                          tabIndex={isActive ? 0 : -1}
+                          className={cn(
+                            'group mt-3 inline-flex items-center gap-1.5 font-semibold text-[0.875rem] no-underline cursor-pointer transition-colors duration-200 hover:underline underline-offset-4 decoration-2',
+                            !isActive && 'pointer-events-none',
+                          )}
+                          style={{ color: 'var(--ll-accent-strong)' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--ll-ink)' }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--ll-accent-strong)' }}
+                        >
+                          {tab.linkLabel}
+                          <FontAwesomeIcon
+                            icon={faChevronRight}
+                            className="transition-transform duration-200 group-hover:translate-x-1"
+                            style={{ fontSize: 15 }}
+                          />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
         </Reveal>
-        <Reveal className="bg-gray-50/80 border border-(--border-custom) rounded-2xl p-3 relative overflow-hidden shadow-[0_8px_40px_rgba(0,70,40,0.08)]">
-          <div className="flex items-center gap-1.5 mb-2 px-1">
-            <div className="w-2 h-2 rounded-full bg-red-400" />
-            <div className="w-2 h-2 rounded-full bg-amber-400" />
-            <div className="w-2 h-2 rounded-full bg-emerald-400" />
-            <div className="ml-2 flex-1 bg-white border border-(--border-custom) rounded-md h-4 flex items-center px-2">
-              <span className="text-[0.5rem] text-(--text-muted) font-medium">
-                imunecare.com.br/{active.urlSlug}
-              </span>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border border-(--border-custom) shadow-[0_2px_12px_rgba(0,70,40,0.05)] overflow-hidden relative">
-            {PRODUCT_TABS.filter((tab) => visited.has(tab.id)).map((tab, index) => (
-              <img
+
+        <Reveal className="relative min-w-0 flex justify-center lg:justify-end lg:pl-10 lg:-mr-[8vw] lg:mt-16 lg:-mb-28">
+          <CardSwap
+            width="min(100%, 44rem)"
+            height="clamp(18rem, 30vw, 28rem)"
+            cardDistance={54}
+            verticalDistance={62}
+            skewAmount={5}
+            active={activeIndex}
+            onCardClick={(idx) => handleSelectTab(PRODUCT_TABS[idx].id)}
+            className="mx-auto lg:mx-0"
+          >
+            {PRODUCT_TABS.map((tab) => (
+              <Card
                 key={tab.id}
-                src={tab.image}
-                alt={tab.label}
-                loading="lazy"
-                decoding="async"
-                className={cn(
-                  'w-full block transition-opacity duration-500 ease-out',
-                  index === 0 ? 'relative' : 'absolute inset-0',
-                  activeTab === tab.id ? 'opacity-100' : 'opacity-0 pointer-events-none',
-                )}
-              />
+                className="cursor-pointer flex flex-col"
+                style={{
+                  background: panelBg,
+                  border: `1px solid ${panelBorder}`,
+                }}
+              >
+                <div
+                  className="flex items-center h-10 shrink-0 px-4"
+                  style={{ borderBottom: `1px solid ${panelTabBorder}` }}
+                >
+                  <span
+                    className="text-[0.78rem] font-semibold"
+                    style={{ color: tab.id === activeTab ? tabActiveColor : tabIdleColor }}
+                  >
+                    {tab.label}
+                  </span>
+                </div>
+                <img
+                  src={tab.image}
+                  alt={tab.label}
+                  loading="lazy"
+                  decoding="async"
+                  className="flex-1 min-h-0 w-full object-cover object-top"
+                />
+              </Card>
             ))}
-          </div>
+          </CardSwap>
         </Reveal>
       </div>
     </section>

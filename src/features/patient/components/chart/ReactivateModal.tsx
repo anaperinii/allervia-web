@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Info, PowerOff } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Button, ConfirmDiscardModal, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
 import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
@@ -13,6 +12,9 @@ import {
   type ReactivateForm,
 } from '@/features/patient/schemas/reactivate'
 import type { Application, Inactivation, Patient } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleInfo, faPowerOff } from '@fortawesome/free-solid-svg-icons'
 
 interface ReactivateModalProps {
   open: boolean
@@ -114,16 +116,16 @@ export function ReactivateModal({
         </>
       }
     >
-      <div className="flex items-start gap-2 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2.5">
-        <Info size={14} className="text-brand shrink-0 mt-0.5" />
-        <p className="text-[0.65rem] text-teal-800 leading-relaxed">
+      <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
+        <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
+        <p className="text-[0.65rem] text-brand-dark leading-relaxed">
           A sugestão abaixo respeita a progressão do protocolo. O médico pode <span className="font-bold">ajustar o ponto de retomada</span> conforme o tempo de pausa e a avaliação clínica.
         </p>
       </div>
 
       <div className="bg-yellow-50/50 border border-yellow-200 rounded-lg p-3 space-y-1.5">
         <div className="flex items-center gap-1.5 text-[0.55rem] font-bold text-yellow-700 uppercase tracking-wider mb-2">
-          <PowerOff size={10} />
+          <FontAwesomeIcon icon={faPowerOff} style={{ fontSize: 10 }} />
           Inativação atual
         </div>
         <Row label="Motivo" value={INACTIVATION_CATEGORY_LABELS[activeInactivation.category]} />

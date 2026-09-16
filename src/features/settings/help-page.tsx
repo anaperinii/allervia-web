@@ -1,47 +1,43 @@
 import { useState } from 'react'
-import { ArrowLeft, Book, ChevronDown, Mail, MessageCircle } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-import { IconButton } from '@/shared/components'
 import { CardButton } from '@/features/settings/components/CardButton'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { CONTACT_SUPPORT_EMAIL } from '@/shared/constants/contact'
 import { FAQS } from '@/features/settings/constants/faqs'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBook, faChevronDown, faComment, faEnvelope } from '@fortawesome/free-solid-svg-icons'
+
 const quickLinks = [
-  { icon: Book, label: 'Documentação', desc: 'Guias e tutoriais', color: '#18C1CB' },
-  { icon: MessageCircle, label: 'Chat de suporte', desc: 'Fale com a equipe', color: '#6366F1' },
-  { icon: Mail, label: 'E-mail', desc: CONTACT_SUPPORT_EMAIL, color: '#F4845F' },
+  { icon: faBook, label: 'Documentação', desc: 'Guias e tutoriais', color: '#6C9EA5' },
+  { icon: faComment, label: 'Chat de suporte', desc: 'Fale com a equipe', color: '#6366F1' },
+  { icon: faEnvelope, label: 'E-mail', desc: CONTACT_SUPPORT_EMAIL, color: '#F4845F' },
 ]
 
 export function HelpPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
-          <h1 className="text-2xl font-bold text-(--text)">Ajuda</h1>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-5">
-          <div className="max-w-2xl mx-auto space-y-5">
-            <div className="grid grid-cols-3 gap-3">
+    <SettingsLayout subtitle="Ajuda">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+            <div className="lg:col-span-2 grid grid-cols-3 gap-3">
               {quickLinks.map((item) => {
                 const Icon = item.icon
                 return (
                   <CardButton
                     key={item.label}
                     orientation="vertical"
-                    icon={<Icon size={16} />}
+                    icon={<FontAwesomeIcon icon={Icon} style={{ fontSize: 16 }} />}
                     iconColor={item.color}
                     title={item.label}
                     description={item.desc}
+                    className="bg-white!"
                   />
                 )
               })}
             </div>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="lg:col-span-2 border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Perguntas frequentes</h2>
               </div>
@@ -56,10 +52,10 @@ export function HelpPage() {
                         aria-expanded={expanded}
                         aria-controls={panelId}
                         onClick={() => setOpenFaq(expanded ? null : index)}
-                        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50/50 transition-colors cursor-pointer"
+                        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-200/60 transition-colors cursor-pointer"
                       >
                         <span className="text-xs font-medium text-(--text) pr-4">{faq.question}</span>
-                        <ChevronDown size={14} className={cn('text-(--text-muted) shrink-0 transition-transform', expanded && 'rotate-180')} />
+                        <FontAwesomeIcon icon={faChevronDown} className={cn('text-(--text-muted) shrink-0 transition-transform', expanded && 'rotate-180')} style={{ fontSize: 14 }} />
                       </button>
                       <div
                         id={panelId}
@@ -74,12 +70,10 @@ export function HelpPage() {
               </div>
             </section>
 
-            <div className="text-center text-[0.65rem] text-(--text-muted) py-2">
-              ImuneCare v2.0.0-beta · Precisa de ajuda? Entre em contato pelo chat.
-            </div>
-          </div>
+        <div className="lg:col-span-2 text-center text-[0.65rem] text-(--text-muted) py-2">
+          Allervia v2.0.0-beta · Precisa de ajuda? Entre em contato pelo chat.
         </div>
       </div>
-    </div>
+    </SettingsLayout>
   )
 }

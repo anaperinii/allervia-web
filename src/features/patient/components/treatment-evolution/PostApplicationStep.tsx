@@ -1,12 +1,15 @@
 import { Controller, type UseFormReturn } from 'react-hook-form'
-import { Info } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-import { FieldLabel, Select, TextArea, TextInput } from '@/shared/components'
+import { FieldLabel, Select, StepHeading, TextArea, TextInput } from '@/shared/components'
+import { GLASS_CARD_SHADOW } from '@/shared/components/glass-card'
 import { formatConcentration, formatVolume } from '@/shared/lib/formatters'
 import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
 import { APPLICATION_ADMINISTRATORS } from '@/shared/stores/useUserStore'
 import { addMinutesToTime } from '@/shared/lib/dates'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
 const REACTION_OPTIONS = [
   { value: 'reduce_dose', label: 'Reduzir dose', desc: 'Retornar ao volume anterior' },
@@ -31,7 +34,7 @@ export function PostApplicationStep({ form }: PostApplicationStepProps) {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-sm font-bold text-(--text)">Pós-Aplicação</h2>
+      <StepHeading description="Registre a aplicação realizada com data, horário, responsável, concentração e volume, e defina o intervalo até a próxima dose." />
       <div className="grid grid-cols-2 gap-4">
         <FieldLabel label="Data da aplicação" error={errors.applicationDate?.message}>
           <TextInput type="date" invalid={!!errors.applicationDate} {...register('applicationDate')} />
@@ -169,22 +172,37 @@ export function PostApplicationStep({ form }: PostApplicationStepProps) {
             <option value="yes">Sim</option>
           </Select>
         </FieldLabel>
-        <div className={cn('transition-all duration-300 overflow-hidden', sideEffectPost === 'yes' ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0')}>
-          <FieldLabel label="Efeitos colaterais relatados" error={errors.reportedEffectsPost?.message}>
-            <TextInput placeholder="Insira aqui" invalid={!!errors.reportedEffectsPost} {...register('reportedEffectsPost')} />
-          </FieldLabel>
-        </div>
-        <div className={cn('transition-all duration-300 overflow-hidden', medicationNeededPost === 'yes' ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0')}>
-          <FieldLabel label="Medicações administradas" error={errors.medicationsPost?.message}>
-            <TextInput placeholder="Insira aqui" invalid={!!errors.medicationsPost} {...register('medicationsPost')} />
-          </FieldLabel>
-        </div>
-        <div className={cn('col-span-2 transition-all duration-300 overflow-hidden', sideEffectPost === 'yes' && medicationNeededPost === 'yes' ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0')}>
-          <div className="bg-amber-50/60 border border-amber-200 rounded-lg p-3 space-y-2.5">
+        {sideEffectPost === 'yes' && (
+          <div className="col-start-1" style={{ animation: 'slide-up-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
+            <FieldLabel label="Efeitos colaterais relatados" error={errors.reportedEffectsPost?.message}>
+              <TextInput placeholder="Insira aqui" invalid={!!errors.reportedEffectsPost} {...register('reportedEffectsPost')} />
+            </FieldLabel>
+          </div>
+        )}
+        {medicationNeededPost === 'yes' && (
+          <div className="col-start-2" style={{ animation: 'slide-up-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
+            <FieldLabel label="Medicações administradas" error={errors.medicationsPost?.message}>
+              <TextInput placeholder="Insira aqui" invalid={!!errors.medicationsPost} {...register('medicationsPost')} />
+            </FieldLabel>
+          </div>
+        )}
+        {sideEffectPost === 'yes' && medicationNeededPost === 'yes' && (
+          <div className="col-span-2" style={{ animation: 'slide-up-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
+          <div
+            className="rounded-2xl bg-white/25 backdrop-blur-xl p-3.5 space-y-2.5"
+            style={{
+              boxShadow: GLASS_CARD_SHADOW,
+              backdropFilter: 'blur(20px) saturate(150%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+              backgroundImage:
+                'linear-gradient(105deg, rgba(245,158,11,0.18) 0%, rgba(252,211,77,0.10) 25%, rgba(254,243,199,0.04) 55%, transparent 80%)',
+            }}
+          >
             <div className="flex items-start gap-2">
-              <Info size={14} className="text-amber-700 shrink-0 mt-0.5" />
-              <div className="text-[0.65rem] text-amber-800 leading-relaxed">
-                <span className="font-bold">Reação adversa com uso de medicação registrada.</span> Selecione a conduta a ser aplicada no protocolo antes de concluir a evolução. A escolha fica vinculada a esta aplicação no histórico clínico.
+              <FontAwesomeIcon icon={faCircleInfo} className="text-amber-700 shrink-0 mt-0.5" style={{ fontSize: 16 }} />
+              <div className="leading-relaxed">
+                <div className="text-[0.78rem] font-bold text-amber-800">Reação adversa com uso de medicação registrada</div>
+                <div className="text-[0.68rem] text-amber-800/80 mt-0.5">Selecione a conduta a ser aplicada no protocolo antes de concluir a evolução. A escolha fica vinculada a esta aplicação no histórico clínico.</div>
               </div>
             </div>
             <Controller
@@ -203,11 +221,13 @@ export function PostApplicationStep({ form }: PostApplicationStepProps) {
                         onClick={() => field.onChange(opt.value as EvolutionForm['reactionAdjustment'])}
                         className={cn(
                           'text-left px-2.5 py-2 rounded-lg border-[1.5px] transition-all cursor-pointer',
-                          selected ? 'border-amber-500 bg-amber-100/50' : 'border-amber-200 bg-white hover:border-amber-400',
+                          selected
+                            ? 'border-amber-500 bg-gray-50/60'
+                            : 'border-amber-200 bg-gray-50/60 hover:border-amber-400',
                         )}
                       >
-                        <div className="text-[0.65rem] font-bold text-(--text)">{opt.label}</div>
-                        <div className="text-[0.55rem] text-(--text-muted) mt-0.5">{opt.desc}</div>
+                        <div className="text-[0.75rem] font-bold text-(--text)">{opt.label}</div>
+                        <div className="text-[0.65rem] text-(--text-muted) mt-0.5">{opt.desc}</div>
                       </button>
                     )
                   })}
@@ -231,7 +251,8 @@ export function PostApplicationStep({ form }: PostApplicationStepProps) {
               </FieldLabel>
             )}
           </div>
-        </div>
+          </div>
+        )}
         <div className="col-span-2">
           <FieldLabel label="Notas do responsável">
             <TextArea rows={2} placeholder="Insira aqui" {...register('notesPost')} />

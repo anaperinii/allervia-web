@@ -1,11 +1,13 @@
 import { useMemo } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { IconButton } from '@/shared/components'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 import type { Application } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faChevronRight, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 
 interface ApplicationsCalendarProps {
   month: number
@@ -45,11 +47,11 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
     <div className="flex-1 overflow-y-auto px-5 py-4">
       <div className="flex items-center justify-between mb-4">
         <IconButton aria-label="Mês anterior" size="sm" onClick={goPrev} className="border border-(--border-custom)">
-          <ChevronLeft size={14} />
+          <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 14 }} />
         </IconButton>
         <span className="text-xs font-bold text-(--text)">{monthLabel}</span>
         <IconButton aria-label="Próximo mês" size="sm" onClick={goNext} className="border border-(--border-custom)">
-          <ChevronRight size={14} />
+          <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 14 }} />
         </IconButton>
       </div>
 
@@ -93,11 +95,11 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
                     const isNext = application.status === 'scheduled'
                     const hasReaction = application.sideEffect === 'yes'
                     const intervalColor = getIntervalColor(application.cycle.days)
-                    const accent = hasReaction ? '#EA580C' : intervalColor.dot
+                    const accent = intervalColor.dot
                     const style = {
-                      backgroundColor: hasReaction ? '#FFEDD5' : intervalColor.bg,
-                      color: hasReaction ? '#9A3412' : intervalColor.text,
-                      borderColor: accent,
+                      backgroundColor: intervalColor.bg + '66',
+                      color: intervalColor.text,
+                      borderColor: accent + '80',
                       ['--app-glow' as string]: accent,
                     } as React.CSSProperties
                     return (
@@ -107,7 +109,7 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
                         disabled={!isRealized}
                         onClick={() => isRealized && onSelect(application)}
                         className={cn(
-                          'w-full rounded px-1 py-0.5 text-[0.45rem] font-semibold truncate flex items-center gap-0.5 transition-all',
+                          'relative w-full rounded px-1 py-0.5 text-[0.45rem] font-semibold flex items-center gap-0.5 transition-all',
                           isNext ? 'cursor-default border-dashed border' :
                           isRealized ? 'cursor-pointer border hover:-translate-y-px hover:shadow-[0_2px_6px_-3px_var(--app-glow)]' :
                           'bg-gray-100 text-(--text-muted) border border-gray-200',
@@ -116,6 +118,11 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
                         title={hasReaction ? 'Reação adversa registrada' : undefined}
                       >
                         <span className="truncate">{application.dose}</span>
+                        {hasReaction && (
+                          <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-[#C46A3C] ring-1 ring-white shadow-sm">
+                            <FontAwesomeIcon icon={faTriangleExclamation} className="text-white" style={{ fontSize: 7 }} />
+                          </span>
+                        )}
                       </button>
                     )
                   })}

@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { CheckCircle, Plus } from 'lucide-react'
-import { Button, Toast } from '@/shared/components'
+import { Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
+import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
+import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { useHasPermission, useDoctorFilter } from '@/shared/stores/useUserStore'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
@@ -13,10 +14,31 @@ import { useCalendarNav } from '@/features/scheduling/hooks/useCalendarNav'
 import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolbar'
 import { WeekView } from '@/features/scheduling/components/WeekView'
 import { MonthView } from '@/features/scheduling/components/MonthView'
-import { SelectedDayStrip } from '@/features/scheduling/components/SelectedDayStrip'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
 import { NewAppointmentModal } from '@/features/scheduling/components/NewAppointmentModal'
 import type { NewAppointmentForm } from '@/features/scheduling/schemas/new-appointment'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader, Pill, SelectPill, SHOWCASE } from '@/shared/components/showcase'
+
+const MONTH_OPTIONS = [
+  { value: 0, label: 'Janeiro' },
+  { value: 1, label: 'Fevereiro' },
+  { value: 2, label: 'Março' },
+  { value: 3, label: 'Abril' },
+  { value: 4, label: 'Maio' },
+  { value: 5, label: 'Junho' },
+  { value: 6, label: 'Julho' },
+  { value: 7, label: 'Agosto' },
+  { value: 8, label: 'Setembro' },
+  { value: 9, label: 'Outubro' },
+  { value: 10, label: 'Novembro' },
+  { value: 11, label: 'Dezembro' },
+]
+
+const CURRENT_YEAR = new Date().getFullYear()
+const YEAR_OPTIONS = Array.from({ length: 7 }, (_, i) => CURRENT_YEAR - 2 + i)
 
 export function AppointmentsPage() {
   const { applications: allApplications, scheduleApplication } = usePatientStore()
@@ -30,14 +52,25 @@ export function AppointmentsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
+  const [patientSearch, setPatientSearch] = useState('')
+  const [dayModal, setDayModal] = useState<{ date: Date; apps: Application[] } | null>(null)
+  const { getName } = useImmunotherapyLookup()
 
   const applications = useMemo(() => {
-    if (!doctorFilter) return allApplications
-    const ownedIds = new Set(
-      immunotherapies.filter((immunotherapy) => immunotherapy.responsibleDoctor === doctorFilter).map((immunotherapy) => immunotherapy.id),
-    )
-    return allApplications.filter((application) => ownedIds.has(application.patientId))
-  }, [allApplications, immunotherapies, doctorFilter])
+    let list = allApplications
+    if (doctorFilter) {
+      const ownedIds = new Set(
+        immunotherapies.filter((immunotherapy) => immunotherapy.responsibleDoctor === doctorFilter).map((immunotherapy) => immunotherapy.id),
+      )
+      list = list.filter((application) => ownedIds.has(application.patientId))
+    }
+    const term = patientSearch.trim().toLowerCase()
+    if (term) {
+      const nameById = new Map(immunotherapies.map((immunotherapy) => [immunotherapy.id, immunotherapy.name.toLowerCase()]))
+      list = list.filter((application) => (nameById.get(application.patientId) ?? '').includes(term))
+    }
+    return list
+  }, [allApplications, immunotherapies, doctorFilter, patientSearch])
 
   const scheduled = useMemo(
     () => applications.filter((application) => application.status === 'scheduled' || application.status === 'missed'),
@@ -53,11 +86,6 @@ export function AppointmentsPage() {
     }
     return map
   }, [scheduled])
-
-  const selectedDayApplications = useMemo(
-    () => applicationsByDate.get(format(calendar.selectedDate, 'dd/MM/yyyy')) ?? [],
-    [applicationsByDate, calendar.selectedDate],
-  )
 
   const openPatient = (patientId: string) => {
     setSelectedApplication(null)
@@ -91,34 +119,66 @@ export function AppointmentsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-(--text)">Agendamentos</h1>
-          {canNewAppointment && (
-            <Button
-              tone="brand"
-              variant="solid"
-              prominent
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
+      <PageHeader
+        title="Agendamentos"
+        actions={
+          <>
+            <div className="relative w-72">
+              <label htmlFor="appointment-search" className="sr-only">
+                Pesquisar paciente
+              </label>
+              <FontAwesomeIcon
+                icon={faMagnifyingGlass}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10"
+                style={{ fontSize: 12, color: SHOWCASE.inkSoft }}
+              />
+              <TextInput
+                id="appointment-search"
+                placeholder="Pesquisar paciente"
+                value={patientSearch}
+                onChange={(e) => setPatientSearch(e.target.value)}
+                className="h-9 pl-9 pr-4 text-[0.78rem]"
+              />
+            </div>
+            <SelectPill
+              aria-label="Filtrar por mês"
+              value={String(calendar.currentDate.getMonth())}
+              onChange={(value) => calendar.setMonth(Number(value))}
+              options={MONTH_OPTIONS.map((m) => ({ value: String(m.value), label: m.label }))}
+            />
+            <SelectPill
+              aria-label="Filtrar por ano"
+              value={String(calendar.currentDate.getFullYear())}
+              onChange={(value) => calendar.setYear(Number(value))}
+              options={YEAR_OPTIONS.map((y) => ({ value: String(y), label: String(y) }))}
+            />
+            <SegmentedControl
+              value={calendar.viewMode}
+              onChange={calendar.setViewMode}
               size="md"
-              leftIcon={<Plus size={13} />}
-              onClick={() => setShowAddModal(true)}
-              className="px-3"
-            >
-              Novo Agendamento
-            </Button>
-          )}
-        </div>
+              options={[
+                { value: 'week', label: 'Semana' },
+                { value: 'month', label: 'Mês' },
+              ]}
+              aria-label="Modo de visualização"
+            />
+            {canNewAppointment && (
+              <Pill active icon={faPlus} onClick={() => setShowAddModal(true)}>
+                Novo Agendamento
+              </Pill>
+            )}
+          </>
+        }
+      />
 
+      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-3xl border border-(--border-custom) bg-[#F6F8F8]">
         <CalendarToolbar
-          viewMode={calendar.viewMode}
-          onViewModeChange={calendar.setViewMode}
           monthLabel={calendar.monthLabel}
           onPrev={calendar.goToPrev}
           onNext={calendar.goToNext}
           onToday={calendar.goToToday}
         />
-
         <div className="flex-1 overflow-auto">
           {calendar.viewMode === 'week' ? (
             <WeekView
@@ -136,17 +196,52 @@ export function AppointmentsPage() {
               onSelectDate={calendar.setSelectedDate}
               applicationsByDate={applicationsByDate}
               onSelectApplication={setSelectedApplication}
+              onOpenDay={(date, apps) => setDayModal({ date, apps })}
             />
           )}
         </div>
-
-        <SelectedDayStrip
-          selectedDate={calendar.selectedDate}
-          applications={selectedDayApplications}
-          googleConnected={googleCalendarConnected}
-          onSelectApplication={setSelectedApplication}
-        />
       </div>
+
+      <Modal
+        open={!!dayModal}
+        onClose={() => setDayModal(null)}
+        size="sm"
+        title={
+          dayModal
+            ? (() => {
+                const s = format(dayModal.date,"EEEE, dd 'de' MMMM", { locale: ptBR })
+                return s.charAt(0).toUpperCase() + s.slice(1)
+              })()
+            : ''
+        }
+      >
+        <div className="space-y-2">
+          {dayModal?.apps.map((app) => {
+            const c = getApplicationEventColor(app)
+            return (
+              <button
+                key={app.id}
+                type="button"
+                onClick={() => { setSelectedApplication(app); setDayModal(null) }}
+                className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:brightness-95 cursor-pointer ${app.status === 'missed' ? 'opacity-60' : ''}`}
+                style={{
+                  backgroundColor: c.bg,
+                  backgroundImage:
+                    app.status === 'missed'
+                      ? `repeating-linear-gradient(45deg, rgba(100,116,139,0.22) 0 1.5px, transparent 1.5px 6px), ${c.grad}`
+                      : c.grad,
+                  color: c.text,
+                }}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold">{app.startTime} – {app.endTime}</div>
+                  <div className="text-[0.7rem] font-medium opacity-90 truncate">{getName(app.patientId)} · {app.dose}</div>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </Modal>
 
       <ApplicationDetailsModal
         application={selectedApplication}
@@ -166,7 +261,7 @@ export function AppointmentsPage() {
         open={showToast}
         onClose={() => setShowToast(false)}
         variant="success"
-        icon={<CheckCircle size={16} />}
+        icon={<FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />}
         title="Agendamento criado com sucesso!"
         description={
           googleCalendarConnected

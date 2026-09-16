@@ -44,6 +44,7 @@ interface NotificationsState {
   markAllAsRead: () => void
   markSelectedAsRead: (ids: string[]) => void
   markSelectedAsUnread: (ids: string[]) => void
+  deleteSelected: (ids: string[]) => void
 }
 
 export const useNotificationsStore = create<NotificationsState>((set) => ({
@@ -64,7 +65,7 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
 
     { id: 'n11', type: 'system_alert', priority: 'low', title: 'Backup automático concluído', message: 'Backup diário dos dados clínicos realizado com sucesso às 03:00.', timestamp: daysAgo(0.5), read: true },
     { id: 'n12', type: 'system_alert', priority: 'low', title: 'Sincronização Google Agenda', message: '12 eventos sincronizados com sucesso com o Google Agenda.', timestamp: daysAgo(0.5), read: true },
-    { id: 'n13', type: 'system_alert', priority: 'low', title: 'Atualização do sistema', message: 'ImuneCare foi atualizado para a versão 2.1.0. Novas funcionalidades disponíveis.', details: 'Novidades: central de notificações, integração com Google Agenda, exportação com LGPD, calendário no prontuário do paciente.', timestamp: daysAgo(2), read: true },
+    { id: 'n13', type: 'system_alert', priority: 'low', title: 'Atualização do sistema', message: 'Allervia foi atualizado para a versão 2.1.0. Novas funcionalidades disponíveis.', details: 'Novidades: central de notificações, integração com Google Agenda, exportação com LGPD, calendário no prontuário do paciente.', timestamp: daysAgo(2), read: true },
     { id: 'n14', type: 'patient_inactivity', priority: 'low', title: 'Paciente com protocolo pausado', message: 'Lucas Ferreira Lima — protocolo inativo há 60 dias por solicitação do paciente.', details: 'O paciente solicitou pausa no tratamento por motivos pessoais. Retorno previsto para reavaliação em 3 meses.', timestamp: daysAgo(3), read: true, patientId: '10' },
     { id: 'n15', type: 'system_alert', priority: 'low', title: 'Relatório mensal gerado', message: 'O relatório clínico mensal de março/2026 está disponível para download.', timestamp: daysAgo(5), read: true },
   ],
@@ -73,4 +74,5 @@ export const useNotificationsStore = create<NotificationsState>((set) => ({
   markAllAsRead: () => set((state) => ({ notifications: state.notifications.map((notification) => ({ ...notification, read: true })) })),
   markSelectedAsRead: (ids) => set((state) => ({ notifications: state.notifications.map((notification) => ids.includes(notification.id) ? { ...notification, read: true } : notification) })),
   markSelectedAsUnread: (ids) => set((state) => ({ notifications: state.notifications.map((notification) => ids.includes(notification.id) ? { ...notification, read: false } : notification) })),
+  deleteSelected: (ids) => set((state) => ({ notifications: state.notifications.filter((notification) => !ids.includes(notification.id)) })),
 }))

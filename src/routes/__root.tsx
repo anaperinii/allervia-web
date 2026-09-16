@@ -1,14 +1,16 @@
 import { createRootRoute, Outlet, useLocation } from '@tanstack/react-router'
 import { Header } from '@/shared/layout/header'
-import { Sidebar } from '@/shared/layout/sidebar'
+import { AppShell } from '@/shared/layout/AppShell'
 import { useState, useEffect } from 'react'
-import { useSidebarStore } from '@/shared/layout/useSidebarStore'
 import { ToastViewport } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
+import { LandingThemeProvider, useLandingTheme } from '@/features/landing-page/theme-context'
 
 const publicRoutes = ['/', '/login', '/register', '/trial', '/forgot-password']
-const authRoutes = ['/login', '/register', '/forgot-password']
-const noHeaderRoutes = ['/trial']
+const authRoutes = ['/login', '/register', '/forgot-password', '/trial']
+const noHeaderRoutes: string[] = ['/login', '/register', '/forgot-password', '/trial']
+const heroRoutes = ['/', '/trial', '/login', '/register', '/forgot-password']
+const noTransitionRoutes = ['/forgot-password', '/register']
 
 function PageTransition({ children }: { children: React.ReactNode }) {
   const [visible, setVisible] = useState(false)
@@ -25,43 +27,60 @@ function PageTransition({ children }: { children: React.ReactNode }) {
   )
 }
 
+interface PublicShellProps {
+  hideHeader: boolean
+  isAuthRoute: boolean
+  hasHero: boolean
+  pathname: string
+}
+
+function PublicShell({ hideHeader, isAuthRoute, hasHero, pathname }: PublicShellProps) {
+  const { theme } = useLandingTheme()
+  const skipTransition = noTransitionRoutes.includes(pathname)
+  return (
+    <div data-landing-theme={theme} className="min-h-screen" style={{ background: 'var(--ll-bg)' }}>
+      {!hideHeader && <Header isAuthPage={isAuthRoute} hasHero={hasHero} />}
+      {skipTransition ? (
+        <Outlet />
+      ) : (
+        <PageTransition key={pathname}>
+          <Outlet />
+        </PageTransition>
+      )}
+      <ToastViewport />
+    </div>
+  )
+}
+
 function RootComponent() {
-  const { isCollapsed, toggle } = useSidebarStore()
   const location = useLocation()
   const isPublicRoute = publicRoutes.includes(location.pathname)
   const isAuthRoute = authRoutes.includes(location.pathname)
   const hideHeader = noHeaderRoutes.includes(location.pathname)
-  const hasHero = location.pathname === '/'
+  const hasHero = heroRoutes.includes(location.pathname)
 
   if (isPublicRoute) {
     return (
-      <div className="min-h-screen">
-        {!hideHeader && <Header isAuthPage={isAuthRoute} hasHero={hasHero} />}
-        {isAuthRoute ? (
-          <Outlet />
-        ) : (
-          <PageTransition key={location.pathname}>
-            <Outlet />
-          </PageTransition>
-        )}
-        <ToastViewport />
-      </div>
+      <LandingThemeProvider>
+        <PublicShell
+          hideHeader={hideHeader}
+          isAuthRoute={isAuthRoute}
+          hasHero={hasHero}
+          pathname={location.pathname}
+        />
+      </LandingThemeProvider>
     )
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar
-        isCollapsed={isCollapsed}
-        onToggle={toggle}
-      />
-      <main className="flex-1 flex flex-col min-h-0 min-w-0 transition-all duration-300">
-        <PageTransition key={location.pathname}>
-          <Outlet />
-        </PageTransition>
-      </main>
+    <AppShell>
+      <div className="flex flex-1 flex-col min-h-0">
+          <PageTransition key={location.pathname}>
+            <Outlet />
+          </PageTransition>
+      </div>
       <ToastViewport />
-    </div>
+    </AppShell>
   )
 }
 

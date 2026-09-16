@@ -1,7 +1,9 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { IconButton } from '@/shared/components'
 import { useScrollIndicators } from '@/shared/hooks/useScrollIndicators'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
 interface MonthOption {
   key: string
@@ -24,9 +26,9 @@ export function ApplicationsMonthFilter({ months, activeKey, onChange }: Applica
           aria-label="Rolar meses para a esquerda"
           size="sm"
           onClick={() => scrollBy('left')}
-          className="border border-(--border-custom) shadow-sm rounded-full"
+          className="border border-[#DDE6E6] shadow-sm rounded-full"
         >
-          <ChevronLeft size={12} />
+          <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 12 }} />
         </IconButton>
       )}
       <div ref={ref} className="flex gap-1.5 overflow-x-auto pb-0.5 scroll-smooth flex-1 min-w-0" style={{ scrollbarWidth: 'none' }}>
@@ -42,9 +44,9 @@ export function ApplicationsMonthFilter({ months, activeKey, onChange }: Applica
           aria-label="Rolar meses para a direita"
           size="sm"
           onClick={() => scrollBy('right')}
-          className="border border-(--border-custom) shadow-sm rounded-full"
+          className="border border-[#DDE6E6] shadow-sm rounded-full"
         >
-          <ChevronRight size={12} />
+          <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />
         </IconButton>
       )}
     </div>
@@ -58,10 +60,10 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'shrink-0 px-3 py-1 rounded-full text-[0.65rem] font-semibold border transition-all cursor-pointer',
+        'shrink-0 h-6.5 inline-flex items-center px-3 rounded-full text-[0.62rem] font-medium border transition-all cursor-pointer whitespace-nowrap',
         active
-          ? 'bg-linear-to-br from-brand to-teal-400 text-white border-transparent'
-          : 'bg-white text-(--text-muted) border-(--border-custom) hover:border-teal-300 hover:text-teal-600',
+          ? 'bg-[#12333a] text-white border-transparent'
+          : 'bg-white text-[#4A6469] border-[#DDE6E6] hover:border-[#257E8C]/45 hover:text-[#257E8C]',
       )}
     >
       {children}

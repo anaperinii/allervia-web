@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { ArrowLeft, ChevronRight, Eye, FileDown, Lock, LogOut, Smartphone, UserX } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-import { Button, FieldLabel, IconButton, Modal, Switch, TextInput } from '@/shared/components'
+import { Button, FieldLabel, Modal, Switch, TextInput } from '@/shared/components'
 import { MediaRow } from '@/features/settings/components/MediaRow'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronRight, faEye, faFileArrowDown, faLock, faMobileScreen, faRightFromBracket, faUserXmark } from '@fortawesome/free-solid-svg-icons'
 
 const sessions = [
   { id: '1', device: 'Chrome · Windows 11', location: 'Anápolis, GO', time: 'Agora (sessão atual)', current: true },
@@ -22,33 +25,26 @@ export function SecurityPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
-          <h1 className="text-2xl font-bold text-(--text)">Segurança e Privacidade</h1>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-5">
-          <div className="max-w-2xl mx-auto space-y-5">
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+    <SettingsLayout subtitle="Segurança e Privacidade">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+            <section className="lg:col-span-2 border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Autenticação</h2>
               </div>
               <div className="p-4 space-y-3">
                 <MediaRow
-                  icon={<Lock size={14} />}
+                  icon={<FontAwesomeIcon icon={faLock} style={{ fontSize: 14 }} />}
                   title="Alterar senha"
                   description="Última alteração há 30 dias"
                   trailing={
-                    <Button variant="outline" size="sm" rightIcon={<ChevronRight size={12} />} onClick={() => setShowPasswordModal(true)}>
+                    <Button variant="outline" size="sm" rightIcon={<FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />} onClick={() => setShowPasswordModal(true)}>
                       Alterar
                     </Button>
                   }
                 />
                 <div className="border-t border-(--border-custom)" />
                 <MediaRow
-                  icon={<Smartphone size={14} />}
+                  icon={<FontAwesomeIcon icon={faMobileScreen} style={{ fontSize: 14 }} />}
                   title="Autenticação em dois fatores (2FA)"
                   description="Proteja sua conta com verificação adicional"
                   trailing={<Switch checked={twoFaEnabled} onChange={setTwoFaEnabled} aria-label="Autenticação em dois fatores" />}
@@ -56,7 +52,7 @@ export function SecurityPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center justify-between">
                 <h2 className="text-xs font-bold text-(--text)">Sessões ativas</h2>
                 <span className="text-[0.6rem] text-(--text-muted) bg-gray-100 px-2 py-0.5 rounded-full">{sessions.length} dispositivos</span>
@@ -66,7 +62,7 @@ export function SecurityPage() {
                   <div key={session.id} className="px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg shrink-0', session.current ? 'bg-brand-50' : 'bg-gray-100')}>
-                        <Smartphone size={14} className={session.current ? 'text-brand' : 'text-(--text-muted)'} />
+                        <FontAwesomeIcon icon={faMobileScreen} className={session.current ? 'text-brand' : 'text-(--text-muted)'} style={{ fontSize: 14 }} />
                       </div>
                       <div>
                         <div className="text-xs font-semibold text-(--text) flex items-center gap-1.5">
@@ -77,7 +73,7 @@ export function SecurityPage() {
                       </div>
                     </div>
                     {!session.current && (
-                      <Button tone="danger" variant="outline" size="sm" leftIcon={<LogOut size={10} />} onClick={() => setShowRevokeModal(session.id)}>
+                      <Button tone="danger" variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 10 }} />} onClick={() => setShowRevokeModal(session.id)}>
                         Encerrar
                       </Button>
                     )}
@@ -86,35 +82,35 @@ export function SecurityPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Privacidade e LGPD</h2>
               </div>
               <div className="p-4 space-y-3">
                 <MediaRow
-                  icon={<Eye size={14} />}
+                  icon={<FontAwesomeIcon icon={faEye} style={{ fontSize: 14 }} />}
                   title="Visibilidade do perfil"
                   description="Controle quem pode ver seus dados na equipe"
                   trailing={<span className="text-[0.65rem] font-medium text-brand bg-brand-50 px-2 py-0.5 rounded-full">Equipe</span>}
                 />
                 <div className="border-t border-(--border-custom)" />
                 <MediaRow
-                  icon={<FileDown size={14} />}
+                  icon={<FontAwesomeIcon icon={faFileArrowDown} style={{ fontSize: 14 }} />}
                   title="Exportar meus dados"
                   description="Solicite uma cópia de todos os seus dados pessoais"
                   trailing={
-                    <Button variant="outline" size="sm" rightIcon={<ChevronRight size={12} />} onClick={() => setShowExportModal(true)}>
+                    <Button variant="outline" size="sm" rightIcon={<FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />} onClick={() => setShowExportModal(true)}>
                       Solicitar
                     </Button>
                   }
                 />
                 <div className="border-t border-(--border-custom)" />
                 <MediaRow
-                  icon={<UserX size={14} />}
+                  icon={<FontAwesomeIcon icon={faUserXmark} style={{ fontSize: 14 }} />}
                   title="Anonimização de pacientes"
                   description="Gerencie solicitações de anonimização de dados de pacientes (Art. 18 LGPD)"
                   trailing={
-                    <Button variant="outline" size="sm" rightIcon={<ChevronRight size={12} />}>
+                    <Button variant="outline" size="sm" rightIcon={<FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />}>
                       Gerenciar
                     </Button>
                   }
@@ -122,8 +118,6 @@ export function SecurityPage() {
               </div>
             </section>
           </div>
-        </div>
-      </div>
 
       <Modal
         open={showPasswordModal}
@@ -153,7 +147,7 @@ export function SecurityPage() {
         onClose={() => setShowExportModal(false)}
         size="sm"
         title="Exportar dados"
-        icon={<FileDown size={16} />}
+        icon={<FontAwesomeIcon icon={faFileArrowDown} style={{ fontSize: 16 }} />}
         footer={
           <>
             <Button variant="outline" onClick={() => setShowExportModal(false)}>Cancelar</Button>
@@ -171,7 +165,7 @@ export function SecurityPage() {
         onClose={() => setShowRevokeModal(null)}
         size="sm"
         title="Encerrar sessão"
-        icon={<LogOut size={16} />}
+        icon={<FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 16 }} />}
         tone="danger"
         footer={
           <>
@@ -184,6 +178,6 @@ export function SecurityPage() {
           Este dispositivo será desconectado imediatamente e precisará fazer login novamente para acessar o sistema.
         </p>
       </Modal>
-    </div>
+    </SettingsLayout>
   )
 }

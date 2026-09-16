@@ -1,7 +1,9 @@
 import { cn } from '@/shared/lib/cn'
 import { Link } from '@tanstack/react-router'
-import { ChevronRight, ExternalLink } from 'lucide-react'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowUpRightFromSquare, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
 type Orientation = 'horizontal' | 'vertical'
 
@@ -45,7 +47,7 @@ function HorizontalInner({ icon, title, description, trailing }: SharedProps) {
         {description && <div className="text-[0.65rem] text-(--text-muted)">{description}</div>}
       </div>
       {trailing ?? (
-        <ChevronRight size={14} className="text-(--text-muted)/30 group-hover:text-teal-500 transition-colors shrink-0" />
+        <FontAwesomeIcon icon={faChevronRight} className="text-(--text-muted)/30 group-hover:text-teal-500 transition-colors shrink-0" style={{ fontSize: 14 }} />
       )}
     </>
   )
@@ -67,7 +69,7 @@ function VerticalInner({ icon, iconColor, title, description, trailing }: Shared
       <div className="text-xs font-semibold text-(--text) flex items-center gap-1">
         {title}
         {trailing ?? (
-          <ExternalLink size={10} className="text-(--text-muted) opacity-0 group-hover:opacity-100 transition-opacity" />
+          <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-(--text-muted) opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontSize: 10 }} />
         )}
       </div>
       {description && <div className="text-[0.6rem] text-(--text-muted) mt-0.5">{description}</div>}

@@ -1,21 +1,18 @@
-import {
-  Check,
-  FileDown,
-  FileSpreadsheet,
-  FileText,
-} from 'lucide-react'
-import type { ComponentType } from 'react'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { cn } from '@/shared/lib/cn'
-import { TextArea } from '@/shared/components'
+import { SegmentedControl, TextArea } from '@/shared/components'
 import type {
   ReportFileFormat,
   ReportSectionId,
 } from '@/features/patient/exporters/types'
 
-const REPORT_FORMATS: { id: ReportFileFormat; label: string; icon: ComponentType<{ size?: number }> }[] = [
-  { id: 'pdf', label: 'PDF', icon: FileText },
-  { id: 'excel', label: 'Excel', icon: FileSpreadsheet },
-  { id: 'csv', label: 'CSV', icon: FileDown },
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faFileArrowDown, faFileExcel, faFileLines } from '@fortawesome/free-solid-svg-icons'
+
+const REPORT_FORMATS: { id: ReportFileFormat; label: string; icon: IconDefinition }[] = [
+  { id: 'pdf', label: 'PDF', icon: faFileLines },
+  { id: 'excel', label: 'Excel', icon: faFileExcel },
+  { id: 'csv', label: 'CSV', icon: faFileArrowDown },
 ]
 
 const REPORT_SECTIONS: { id: ReportSectionId; label: string }[] = [
@@ -62,7 +59,7 @@ export function ReportConfigPanel({
   patientStatus,
 }: ReportConfigPanelProps) {
   return (
-    <div className="w-72 shrink-0 border-r border-(--border-custom) p-5 overflow-y-auto space-y-5">
+    <div className="w-[22rem] shrink-0 border-r border-(--border-custom) px-5 pt-0 pb-5 overflow-y-auto space-y-5">
       <div className="bg-gray-50 rounded-lg p-3 space-y-2">
         <div className="text-[0.6rem] font-bold text-(--text-muted) uppercase tracking-wider">Resumo</div>
         <div className="text-[0.65rem] text-(--text-muted) space-y-1">
@@ -79,28 +76,17 @@ export function ReportConfigPanel({
 
       <div>
         <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Formato</span>
-        <div className="flex gap-2" role="radiogroup" aria-label="Formato do relatório">
-          {REPORT_FORMATS.map((format) => {
+        <SegmentedControl
+          value={fileFormat}
+          onChange={setFileFormat}
+          options={REPORT_FORMATS.map((format) => {
             const Icon = format.icon
-            const selected = fileFormat === format.id
-            return (
-              <button
-                key={format.id}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                onClick={() => setFileFormat(format.id)}
-                className={cn(
-                  'flex-1 h-9 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
-                  selected ? 'border-brand bg-brand-50 text-brand-dark' : 'border-(--border-custom) text-(--text-muted) hover:border-brand/50',
-                )}
-              >
-                <Icon size={13} />
-                {format.label}
-              </button>
-            )
+            return { value: format.id, label: format.label, icon: <FontAwesomeIcon icon={Icon} style={{ fontSize: 13 }} /> }
           })}
-        </div>
+          fullWidth
+          aria-label="Formato do relatório"
+          className="bg-white"
+        />
       </div>
 
       <div>
@@ -114,13 +100,20 @@ export function ReportConfigPanel({
                 type="button"
                 aria-pressed={selected}
                 onClick={() => toggleSection(section.id)}
-                className={cn(
-                  'flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer',
-                  selected ? 'border-brand bg-brand-50/50' : 'border-(--border-custom) hover:border-brand/50',
-                )}
+                className="flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer"
+                style={{
+                  background: selected ? 'rgba(18,51,58,0.06)' : '#F6F8F8',
+                  borderColor: selected ? '#12333a' : '#DDE6E6',
+                }}
               >
-                <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0', selected ? 'bg-brand border-brand' : 'border-gray-300')}>
-                  {selected && <Check size={10} className="text-white" />}
+                <div
+                  className="flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0"
+                  style={{
+                    background: selected ? '#12333a' : '#EDF1F1',
+                    borderColor: selected ? '#12333a' : '#DDE6E6',
+                  }}
+                >
+                  {selected && <FontAwesomeIcon icon={faCheck} className="text-white" style={{ fontSize: 10 }} />}
                 </div>
                 <span className="text-[0.7rem] font-medium text-(--text)">{section.label}</span>
               </button>
@@ -159,9 +152,6 @@ export function ReportConfigPanel({
         />
       </div>
 
-      {!consented && (
-        <p className="text-[0.55rem] text-amber-600 text-center">Aceite a declaração LGPD para habilitar a exportação</p>
-      )}
     </div>
   )
 }
@@ -191,13 +181,20 @@ function ConsentCheckbox({
       type="button"
       aria-pressed={checked}
       onClick={onChange}
-      className={cn(
-        'flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer',
-        checked ? 'border-brand bg-brand/5' : 'border-(--border-custom) hover:border-brand/40',
-      )}
+      className="flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer"
+      style={{
+        background: checked ? 'rgba(18,51,58,0.06)' : '#F6F8F8',
+        borderColor: checked ? '#12333a' : '#DDE6E6',
+      }}
     >
-      <div className={cn('flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0 mt-px', checked ? 'bg-brand border-brand' : 'border-gray-300')}>
-        {checked && <Check size={10} className="text-white" />}
+      <div
+        className="flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0 mt-px"
+        style={{
+          background: checked ? '#12333a' : '#EDF1F1',
+          borderColor: checked ? '#12333a' : '#DDE6E6',
+        }}
+      >
+        {checked && <FontAwesomeIcon icon={faCheck} className="text-white" style={{ fontSize: 10 }} />}
       </div>
       <div>
         <span className="text-[0.7rem] font-medium text-(--text) block">{title}</span>

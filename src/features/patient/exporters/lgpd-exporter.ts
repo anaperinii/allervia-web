@@ -80,7 +80,7 @@ function buildPayload(data: LgpdExportData) {
 
 export function exportLgpd(data: LgpdExportData, fileFormat: LgpdFileFormat) {
   const payload = buildPayload(data)
-  const filename = `imunecare_lgpd_${data.patient.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.${fileFormat}`
+  const filename = `allervia_lgpd_${data.patient.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.${fileFormat}`
 
   if (fileFormat === 'json') {
     downloadFile(JSON.stringify(payload, null, 2), filename, 'application/json')

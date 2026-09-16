@@ -1,21 +1,4 @@
 import { useState } from 'react'
-import {
-  ArrowLeft,
-  Bell,
-  Calendar,
-  Check,
-  CheckCircle,
-  Database,
-  ExternalLink,
-  Lock,
-  Palette,
-  Pencil,
-  Plus,
-  Server,
-  Syringe,
-  Trash2,
-  X,
-} from 'lucide-react'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
 import {
@@ -33,6 +16,10 @@ import {
   TextInput,
 } from '@/shared/components'
 import { MediaRow } from '@/features/settings/components/MediaRow'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowUpRightFromSquare, faBell, faCalendar, faCheck, faCircleCheck, faDatabase, faLock, faPalette, faPencil, faPlus, faServer, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 
 const FIXED_EVENT_IDS = ['subcutaneous', 'sublingual', 'missed']
 
@@ -111,10 +98,10 @@ export function AdvancedSettingsPage() {
 
   if (!canAdvanced) {
     return (
-      <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-        <div className="flex flex-1 min-h-0 flex-col items-center justify-center rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] m-4 p-10 text-center">
+      <SettingsLayout subtitle="Configurações Avançadas">
+        <div className="flex flex-1 flex-col items-center justify-center p-10 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 mb-4">
-            <Lock size={22} className="text-(--text-muted)" />
+            <FontAwesomeIcon icon={faLock} className="text-(--text-muted)" style={{ fontSize: 22 }} />
           </div>
           <h2 className="text-base font-bold text-(--text) mb-1.5">Acesso restrito</h2>
           <p className="text-xs text-(--text-muted) max-w-sm leading-relaxed mb-5">
@@ -122,21 +109,14 @@ export function AdvancedSettingsPage() {
           </p>
           <Button variant="outline" to="/settings">Voltar para configurações</Button>
         </div>
-      </div>
+      </SettingsLayout>
     )
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
-          <h1 className="text-2xl font-bold text-(--text)">Configurações Avançadas</h1>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-5">
-          <div className="max-w-2xl mx-auto space-y-5">
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+    <SettingsLayout subtitle="Configurações Avançadas">
+      <div className="flex flex-col gap-5">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Notificações</h2>
               </div>
@@ -147,7 +127,7 @@ export function AdvancedSettingsPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                          <Bell size={14} className="text-brand" />
+                          <FontAwesomeIcon icon={faBell} className="text-brand" style={{ fontSize: 14 }} />
                         </div>
                         <div>
                           <div className="text-xs font-semibold text-(--text)">{item.label}</div>
@@ -161,7 +141,7 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Sistema</h2>
               </div>
@@ -194,7 +174,7 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Agendamentos</h2>
               </div>
@@ -202,13 +182,13 @@ export function AdvancedSettingsPage() {
                 <div>
                   <MediaRow
                     className="mb-3"
-                    icon={<Calendar size={14} />}
+                    icon={<FontAwesomeIcon icon={faCalendar} style={{ fontSize: 14 }} />}
                     title="Google Agenda"
                     description="Sincronize agendamentos automaticamente"
                     trailing={googleConnected ? (
                       <div className="flex items-center gap-2">
                         <span className="flex items-center gap-1 text-[0.6rem] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          <CheckCircle size={10} />
+                          <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 10 }} />
                           Conectado
                         </span>
                         <Button tone="danger" variant="ghost" size="sm" onClick={() => setGoogleConnected(false)}>
@@ -232,8 +212,8 @@ export function AdvancedSettingsPage() {
                         <Switch checked={autoSync} onChange={setAutoSync} aria-label="Sincronização automática" />
                       </div>
                       <div className="flex items-center gap-1.5 text-[0.6rem] text-(--text-muted)">
-                        <ExternalLink size={10} />
-                        <span>Conta vinculada: <span className="font-medium text-(--text)">clinica@imunecare.com.br</span></span>
+                        <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ fontSize: 10 }} />
+                        <span>Conta vinculada: <span className="font-medium text-(--text)">clinica@allervia.com.br</span></span>
                       </div>
                     </div>
                   )}
@@ -242,7 +222,7 @@ export function AdvancedSettingsPage() {
                 <div className="border-t border-(--border-custom)" />
 
                 <MediaRow
-                  icon={<Bell size={14} />}
+                  icon={<FontAwesomeIcon icon={faBell} style={{ fontSize: 14 }} />}
                   title="Lembrete via WhatsApp"
                   description="Enviar lembrete automático ao paciente antes da consulta"
                   trailing={<Switch checked={reminderWhatsapp} onChange={setReminderWhatsapp} aria-label="Lembrete via WhatsApp" />}
@@ -270,7 +250,7 @@ export function AdvancedSettingsPage() {
                 <div>
                   <MediaRow
                     className="mb-3"
-                    icon={<Palette size={14} />}
+                    icon={<FontAwesomeIcon icon={faPalette} style={{ fontSize: 14 }} />}
                     title="Cores dos eventos"
                     description="Personalize as cores para cada tipo de agendamento"
                   />
@@ -314,14 +294,14 @@ export function AdvancedSettingsPage() {
                                 onClick={() => removeEventColor(ec.id)}
                                 className="opacity-0 group-hover:opacity-100 h-5 w-5"
                               >
-                                <X size={11} />
+                                <FontAwesomeIcon icon={faXmark} style={{ fontSize: 11 }} />
                               </IconButton>
                             )}
                           </div>
                         </div>
                       )
                     })}
-                    <Button variant="ghost" size="sm" leftIcon={<Plus size={12} />} onClick={addEventColor}>
+                    <Button variant="ghost" size="sm" leftIcon={<FontAwesomeIcon icon={faPlus} style={{ fontSize: 12 }} />} onClick={addEventColor}>
                       Adicionar tipo de evento
                     </Button>
                   </div>
@@ -329,7 +309,7 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Tipos de Imunoterapia</h2>
               </div>
@@ -345,16 +325,13 @@ export function AdvancedSettingsPage() {
                     placeholder="Ex: Pólen, Pelos de Gato..."
                     className="flex-1"
                   />
-                  <Button tone="brand" variant="solid" leftIcon={<Plus size={13} />} onClick={handleAddType} className="h-9 px-3">
+                  <Button tone="brand" variant="solid" leftIcon={<FontAwesomeIcon icon={faPlus} style={{ fontSize: 13 }} />} onClick={handleAddType} className="h-9 px-3">
                     Adicionar
                   </Button>
                 </div>
                 <div className="space-y-1.5">
                   {customTypes.map((t) => (
                     <div key={t.id} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-(--border-custom) bg-gray-50/40">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-50 shrink-0">
-                        <Syringe size={11} className="text-brand" />
-                      </div>
                       {editingTypeId === t.id ? (
                         <>
                           <TextInput
@@ -365,20 +342,20 @@ export function AdvancedSettingsPage() {
                             className="flex-1 h-7"
                           />
                           <IconButton aria-label="Salvar" size="sm" tone="success" onClick={saveEditType}>
-                            <Check size={14} />
+                            <FontAwesomeIcon icon={faCheck} style={{ fontSize: 14 }} />
                           </IconButton>
                           <IconButton aria-label="Cancelar edição" size="sm" onClick={() => setEditingTypeId(null)}>
-                            <X size={14} />
+                            <FontAwesomeIcon icon={faXmark} style={{ fontSize: 14 }} />
                           </IconButton>
                         </>
                       ) : (
                         <>
                           <span className="flex-1 text-xs font-medium text-(--text)">{t.label}</span>
-                          <IconButton aria-label={`Editar ${t.label}`} size="sm" tone="brand" onClick={() => startEditType(t.id, t.label)}>
-                            <Pencil size={12} />
+                          <IconButton aria-label={`Editar ${t.label}`} size="sm" tone="brand" onClick={() => startEditType(t.id, t.label)} className="hover:bg-brand/15! hover:text-brand-dark!">
+                            <FontAwesomeIcon icon={faPencil} style={{ fontSize: 12 }} />
                           </IconButton>
                           <IconButton aria-label={`Remover ${t.label}`} size="sm" tone="danger" onClick={() => removeType(t.id)}>
-                            <Trash2 size={12} />
+                            <FontAwesomeIcon icon={faTrash} style={{ fontSize: 12 }} />
                           </IconButton>
                         </>
                       )}
@@ -388,29 +365,27 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados e Backup</h2>
               </div>
               <div className="p-4 space-y-3">
                 <MediaRow
-                  icon={<Database size={14} />}
+                  icon={<FontAwesomeIcon icon={faDatabase} style={{ fontSize: 14 }} />}
                   title="Backup automático"
                   description="Backup diário dos dados clínicos às 03:00"
                   trailing={<Switch checked={autoBackup} onChange={setAutoBackup} aria-label="Backup automático" />}
                 />
                 <div className="border-t border-(--border-custom)" />
                 <MediaRow
-                  icon={<Server size={14} />}
+                  icon={<FontAwesomeIcon icon={faServer} style={{ fontSize: 14 }} />}
                   title="Último backup"
                   description="10/04/2026 às 03:00 — 42.3 MB"
                   trailing={<span className="text-[0.65rem] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Sucesso</span>}
                 />
               </div>
-            </section>
-          </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </SettingsLayout>
   )
 }

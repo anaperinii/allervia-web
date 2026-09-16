@@ -1,18 +1,13 @@
 import { useState } from 'react'
-import {
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
-  History,
-  Info,
-  Pencil,
-  SlidersHorizontal,
-} from 'lucide-react'
+import { PatientInitials } from '@/shared/components/glass-card'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/components'
 import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
 import { PatientActionsMenu } from '@/features/patient/components/chart/PatientActionsMenu'
 import type { Inactivation, Patient } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronDown, faChevronUp, faCircleInfo, faClockRotateLeft, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 
 interface PatientInfoSidebarProps {
   patient: Patient
@@ -38,10 +33,6 @@ interface PatientInfoSidebarProps {
   onShowInactivationHistory: () => void
   onPortability: () => void
   onComplete: () => void
-}
-
-function getInitials(name: string) {
-  return name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
 }
 
 export function PatientInfoSidebar({
@@ -97,14 +88,12 @@ export function PatientInfoSidebar({
     inactivationCount > 0
 
   return (
-    <div className="flex w-[320px] shrink-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
+    <div className="flex w-[360px] shrink-0 flex-col rounded-xl bg-white overflow-hidden">
       <div className="border-b border-(--border-custom) px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-base font-bold text-white shrink-0">
-            {getInitials(patient.name)}
-          </div>
+          <PatientInitials name={patient.name} size={48} />
           <div className="min-w-0">
-            <h1 className="text-base font-extrabold text-(--text) leading-tight">{patient.name}</h1>
+            <h1 className="text-base font-bold text-(--text) leading-tight">{patient.name}</h1>
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               {patient.status === 'active' ? (
                 <StatusBadge tone="emerald" dot>Tratamento Ativo</StatusBadge>
@@ -122,7 +111,7 @@ export function PatientInfoSidebar({
           <div className="mt-2.5 bg-gray-50 border border-(--border-custom) rounded-lg px-3 py-2">
             <div className="flex items-center justify-between mb-0.5">
               <div className="text-[0.6rem] font-semibold text-(--text-muted) flex items-center gap-1">
-                <Info size={9} />
+                <FontAwesomeIcon icon={faCircleInfo} style={{ fontSize: 9 }} />
                 Motivo da inativação
               </div>
               <span className="text-[0.55rem] text-(--text-muted)">{activeInactivation.startDate}</span>
@@ -188,7 +177,7 @@ export function PatientInfoSidebar({
             className="flex w-full items-center justify-between px-3.5 py-2.5 text-xs font-bold text-(--text) hover:bg-gray-50 transition-colors cursor-pointer"
           >
             Dados Pessoais
-            {showPersonal ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {showPersonal ? <FontAwesomeIcon icon={faChevronUp} style={{ fontSize: 14 }} /> : <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 14 }} />}
           </button>
           <div id={personalId} className={cn('overflow-hidden transition-all duration-300', showPersonal ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0')}>
             <div className="px-3.5 pb-3 space-y-2">
@@ -197,7 +186,7 @@ export function PatientInfoSidebar({
               ))}
               {canEditPatient && (
                 <div className="pt-2 mt-1 border-t border-(--border-custom)">
-                  <Button variant="outline" size="sm" fullWidth leftIcon={<Pencil size={11} />} onClick={onEditPatient}>
+                  <Button variant="outline" size="sm" fullWidth onClick={onEditPatient}>
                     Editar dados pessoais
                   </Button>
                 </div>
@@ -220,13 +209,13 @@ export function PatientInfoSidebar({
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" title="Protocolo ajustado" />
               )}
             </span>
-            {showImmuno ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {showImmuno ? <FontAwesomeIcon icon={faChevronUp} style={{ fontSize: 14 }} /> : <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 14 }} />}
           </button>
           <div id={immunoId} className={cn('overflow-hidden transition-all duration-300', showImmuno ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0')}>
             <div className="px-3.5 pb-3 space-y-2">
               {(patient.protocolAdjustments?.length ?? 0) > 0 && (
                 <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-md px-2 py-1 text-[0.6rem] text-amber-700 font-semibold">
-                  <AlertTriangle size={10} />
+                  <FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 10 }} />
                   Protocolo ajustado · {patient.protocolAdjustments!.length} {patient.protocolAdjustments!.length === 1 ? 'alteração' : 'alterações'}
                 </div>
               )}
@@ -245,7 +234,6 @@ export function PatientInfoSidebar({
                         <Button
                           variant="outline"
                           size="sm"
-                          leftIcon={<SlidersHorizontal size={11} />}
                           disabled={patient.status === 'inactive'}
                           onClick={onAdjustProtocol}
                           className="flex-1"
@@ -257,7 +245,7 @@ export function PatientInfoSidebar({
                         <Button
                           variant="outline"
                           size="sm"
-                          leftIcon={<History size={11} />}
+                          leftIcon={<FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 11 }} />}
                           onClick={onShowAdjustHistory}
                           className={cn(!canAdjustProtocol && 'flex-1')}
                         >
@@ -267,7 +255,7 @@ export function PatientInfoSidebar({
                     </div>
                   )}
                   {inactivationCount > 0 && (
-                    <Button variant="outline" size="sm" fullWidth leftIcon={<History size={10} />} onClick={onShowInactivationHistory}>
+                    <Button variant="outline" size="sm" fullWidth leftIcon={<FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 10 }} />} onClick={onShowInactivationHistory}>
                       Histórico de inativações ({inactivationCount})
                     </Button>
                   )}
@@ -298,7 +286,7 @@ function StatusBadge({ tone, dot, children }: { tone: 'emerald' | 'yellow' | 'gr
   }
   const s = map[tone]
   return (
-    <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-semibold border', s.wrap)}>
+    <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.6rem] font-semibold border', s.wrap)}>
       {dot && <span className={cn('w-1.5 h-1.5 rounded-full', s.dot)} />}
       {children}
     </span>

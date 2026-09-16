@@ -34,21 +34,30 @@ export function WeekView({
             onClick={() => onSelectDate(day)}
             className={cn(
               'border-r border-(--border-custom) last:border-r-0 p-2.5 cursor-pointer transition-colors flex flex-col min-h-0 relative',
-              today ? 'bg-teal-50/80 hover:bg-teal-50' : 'hover:bg-teal-50/30',
-              selected && !today && 'bg-teal-50/50',
+              today || selected ? 'bg-[#1d6772]/14' : 'hover:bg-brand/6',
             )}
           >
             {today && (
-              <div className="absolute top-0 left-0 right-0 h-0.75 bg-brand rounded-b-sm" />
+              <div className="absolute top-0 left-0 right-0 h-0.75 rounded-b-sm z-10" style={{ background: '#1d6772' }} />
             )}
-            <div className="text-center mb-2">
-              <div className="text-[0.6rem] font-semibold text-(--text-muted) uppercase">
-                {format(day, 'EEE', { locale: ptBR })}
+            <div
+              className="-mx-2.5 -mt-2.5 px-2.5 pt-2.5 pb-2 mb-2 text-center border-b border-(--border-custom)"
+              style={{ background: today || selected ? 'transparent' : '#f9fafb' }}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-[0.7rem] font-semibold text-slate-600 uppercase">
+                  {format(day, 'EEE', { locale: ptBR })}
+                </span>
+                <span
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-full text-[1.05rem] font-bold',
+                    today || selected ? 'text-white' : 'text-(--text)',
+                  )}
+                  style={today || selected ? { background: '#1d6772' } : undefined}
+                >
+                  {format(day, 'dd')}
+                </span>
               </div>
-              <div className={cn('text-lg font-bold mt-0.5', today ? 'text-brand' : 'text-(--text)')}>
-                {format(day, 'd')}
-              </div>
-              <div className={cn('w-1.5 h-1.5 rounded-full mx-auto mt-0.5', today ? 'bg-brand' : 'bg-transparent')} />
             </div>
             <div className="flex-1 space-y-1 overflow-y-auto">
               {applications.map((application) => {
@@ -61,14 +70,25 @@ export function WeekView({
                       onSelectApplication(application)
                     }}
                     className={cn(
-                      'rounded-md px-2 py-1.5 text-[0.6rem] border-l-2 cursor-pointer hover:opacity-80 transition-opacity',
-                      application.status === 'missed' && 'line-through opacity-70',
+                      'group relative rounded-md px-2.5 py-1.5 text-[0.6rem] backdrop-blur-sm cursor-pointer hover:brightness-95 transition-all',
+                      application.status === 'missed' && 'opacity-70',
                     )}
-                    style={{ backgroundColor: color.bg, color: color.text, borderLeftColor: color.border }}
+                    style={{
+                      backgroundColor: color.bg,
+                      backgroundImage:
+                        application.status === 'missed'
+                          ? `repeating-linear-gradient(45deg, rgba(100,116,139,0.22) 0 1.5px, transparent 1.5px 6px), ${color.grad}`
+                          : color.grad,
+                      color: color.text,
+                      boxShadow: '0 1px 4px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.04)',
+                    }}
                   >
-                    <div className="font-semibold truncate">{getName(application.patientId)}</div>
-                    <div className="opacity-75">
-                      {application.startTime} · {application.dose.split(' - ')[1]}
+                    <div className="space-y-0.5">
+                      <div className="text-[0.72rem] font-bold">
+                        {application.startTime} – {application.endTime}
+                      </div>
+                      <div className="font-semibold opacity-90 truncate">{getName(application.patientId)}</div>
+                      <div className="font-medium opacity-90 truncate">{application.dose}</div>
                     </div>
                   </div>
                 )

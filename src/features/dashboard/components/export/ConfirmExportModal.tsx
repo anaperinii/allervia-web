@@ -1,6 +1,8 @@
-import { ShieldCheck } from 'lucide-react'
 import { Modal, Button } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faShieldHalved } from '@fortawesome/free-solid-svg-icons'
 
 interface ConfirmExportModalProps {
   open: boolean
@@ -34,7 +36,7 @@ export function ConfirmExportModal({
     >
       <div className="flex justify-center">
         <div className="h-11 w-11 rounded-full bg-brand/10 flex items-center justify-center">
-          <ShieldCheck size={20} className="text-brand" />
+          <FontAwesomeIcon icon={faShieldHalved} className="text-brand" style={{ fontSize: 20 }} />
         </div>
       </div>
       <p className="text-[0.7rem] text-(--text-muted) text-center leading-relaxed">

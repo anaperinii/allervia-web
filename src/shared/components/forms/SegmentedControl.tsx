@@ -5,7 +5,7 @@ export type SegmentedControlSize = 'xs' | 'sm' | 'md'
 
 export interface SegmentedControlOption<T extends string> {
   value: T
-  label: string
+  label: ReactNode
   icon?: ReactNode
 }
 
@@ -15,19 +15,20 @@ interface SegmentedControlProps<T extends string> {
   options: SegmentedControlOption<T>[]
   size?: SegmentedControlSize
   fullWidth?: boolean
+  className?: string
   'aria-label'?: string
 }
 
 const SIZE_CLASS: Record<SegmentedControlSize, string> = {
-  xs: 'h-6 text-[0.55rem]',
-  sm: 'h-7 text-[0.65rem]',
-  md: 'h-8 text-xs',
+  xs: 'h-7 text-[0.6rem]',
+  sm: 'h-8 text-[0.7rem]',
+  md: 'h-9 text-[0.78rem]',
 }
 
 const ITEM_PADDING: Record<SegmentedControlSize, string> = {
-  xs: 'px-2',
-  sm: 'px-2.5',
-  md: 'px-3',
+  xs: 'px-2.5',
+  sm: 'px-3',
+  md: 'px-4',
 }
 
 export function SegmentedControl<T extends string>({
@@ -36,6 +37,7 @@ export function SegmentedControl<T extends string>({
   options,
   size = 'md',
   fullWidth,
+  className,
   'aria-label': ariaLabel,
 }: SegmentedControlProps<T>) {
   return (
@@ -43,9 +45,10 @@ export function SegmentedControl<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        'flex rounded-lg border border-(--border-custom) overflow-hidden',
+        'inline-flex w-max items-stretch gap-0.5 rounded-full border border-[#DDE6E6] bg-white p-0.5',
         SIZE_CLASS[size],
-        fullWidth && 'w-full'
+        fullWidth && 'flex w-full',
+        className,
       )}
     >
       {options.map((opt) => {
@@ -57,12 +60,10 @@ export function SegmentedControl<T extends string>({
             aria-selected={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
+              'rounded-full font-medium transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap',
               ITEM_PADDING[size],
               fullWidth && 'flex-1',
-              active
-                ? 'bg-linear-to-br from-brand to-teal-400 text-white'
-                : 'text-(--text-muted) hover:bg-gray-50'
+              active ? 'bg-[#12333a] text-white' : 'text-[#4A6469] hover:text-[#12333a]'
             )}
           >
             {opt.icon}

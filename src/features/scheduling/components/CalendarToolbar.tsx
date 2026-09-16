@@ -1,59 +1,58 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { SegmentedControl } from '@/shared/components'
-import type { CalendarViewMode } from '@/features/scheduling/hooks/useCalendarNav'
+import type { ReactNode } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
 interface CalendarToolbarProps {
-  viewMode: CalendarViewMode
-  onViewModeChange: (mode: CalendarViewMode) => void
   monthLabel: string
   onPrev: () => void
   onNext: () => void
   onToday: () => void
+  rightContent?: ReactNode
 }
 
-export function CalendarToolbar({
-  viewMode,
-  onViewModeChange,
-  monthLabel,
-  onPrev,
-  onNext,
-  onToday,
-}: CalendarToolbarProps) {
+const LEGEND_ITEMS = [
+  { color: '#B7E06A', label: 'Subcutânea' },
+  { color: '#74C3B9', label: 'Sublingual' },
+]
+
+const NAV_BUTTON_CLASS =
+  'flex h-8 w-8 items-center justify-center rounded-full cursor-pointer transition-colors text-(--text) hover:text-brand'
+
+export function CalendarToolbar({ monthLabel, onPrev, onNext, onToday, rightContent }: CalendarToolbarProps) {
   return (
-    <div className="border-b border-(--border-custom) px-5 py-2.5 flex items-center justify-between">
-      <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between gap-3 h-14 px-6 border-b border-(--border-custom) shrink-0">
+      <div className="flex items-center gap-3">
+        <span className="text-base font-semibold text-(--text) capitalize">{monthLabel}</span>
+
         <button
-          onClick={onPrev}
-          aria-label="Período anterior"
-          className="h-7 w-7 flex items-center justify-center rounded-md border border-(--border-custom) text-(--text-muted) hover:border-brand hover:text-brand transition-all"
-        >
-          <ChevronLeft size={14} />
-        </button>
-        <button
-          onClick={onNext}
-          aria-label="Próximo período"
-          className="h-7 w-7 flex items-center justify-center rounded-md border border-(--border-custom) text-(--text-muted) hover:border-brand hover:text-brand transition-all"
-        >
-          <ChevronRight size={14} />
-        </button>
-        <button
+          type="button"
           onClick={onToday}
-          className="h-7 px-2.5 rounded-md border border-(--border-custom) text-xs font-medium text-(--text-muted) hover:border-brand hover:text-brand transition-all"
+          className="h-7 rounded-full border border-[#257E8C] bg-[#257E8C]/10 px-4 text-[0.75rem] font-medium text-[#257E8C] cursor-pointer transition-colors hover:bg-[#257E8C]/20"
         >
           Hoje
         </button>
-        <span className="text-sm font-semibold text-(--text) ml-1">{monthLabel}</span>
+
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={onPrev} aria-label="Período anterior" className={NAV_BUTTON_CLASS}>
+            <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 16 }} />
+          </button>
+          <button type="button" onClick={onNext} aria-label="Próximo período" className={NAV_BUTTON_CLASS}>
+            <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 16 }} />
+          </button>
+        </div>
       </div>
-      <SegmentedControl
-        value={viewMode}
-        onChange={onViewModeChange}
-        size="sm"
-        options={[
-          { value: 'week', label: 'Semana' },
-          { value: 'month', label: 'Mês' },
-        ]}
-        aria-label="Modo de visualização"
-      />
+
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 text-[0.7rem] text-(--text-muted)">
+          {LEGEND_ITEMS.map((item) => (
+            <span key={item.label} className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+              {item.label}
+            </span>
+          ))}
+        </div>
+        {rightContent}
+      </div>
     </div>
   )
 }

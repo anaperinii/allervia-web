@@ -2,15 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, CheckCircle, FileEdit } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   Button,
   CancelWizardModal,
-  IconButton,
   toast,
-  WizardStepsIndicator,
+  WizardStepsBreadcrumb,
+  type WizardStep,
 } from '@/shared/components'
 import { usePatientStore, derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
@@ -27,7 +26,15 @@ import { CompletionFollowupStep } from '@/features/patient/components/treatment-
 import { CompletionReviewStep } from '@/features/patient/components/treatment-completion/CompletionReviewStep'
 import { useCompletionDraftsStore } from '@/features/patient/stores/useCompletionDraftsStore'
 
-const STEP_LABELS = ['Visão geral', 'Plano pós-alta', 'Revisão'] as const
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChartColumn, faCircleCheck, faClipboardCheck, faFilePen, faListCheck } from '@fortawesome/free-solid-svg-icons'
+import { PageHeader, SHOWCASE } from '@/shared/components/showcase'
+
+const STEPS: WizardStep[] = [
+  { label: 'Visão geral', icon: faChartColumn, description: 'Métricas do tratamento que está sendo encerrado: aplicações realizadas, aderência, reações adversas e duração total.' },
+  { label: 'Plano pós-alta', icon: faListCheck, description: 'Defina as recomendações de alta, os retornos de monitoramento e os sinais de alerta para retorno antecipado.' },
+  { label: 'Revisão', icon: faClipboardCheck, description: 'Confira o resumo do desfecho e assine o encerramento. O registro vai para o prontuário e a imunoterapia é inativada.' },
+]
 
 export function PatientCompletionPage() {
   const navigate = useNavigate()
@@ -110,7 +117,7 @@ export function PatientCompletionPage() {
 
   if (!patient) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-gray-50/80">
+      <div className="flex flex-1 items-center justify-center">
         <span className="text-xs text-(--text-muted)">Paciente não encontrado</span>
       </div>
     )
@@ -161,7 +168,7 @@ export function PatientCompletionPage() {
     })
 
     toast.success({
-      icon: <CheckCircle size={16} />,
+      icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
       title: 'Tratamento concluído',
       description: 'O protocolo foi encerrado com desfecho de sucesso e o registro está disponível no prontuário.',
       autoDismissMs: 8000,
@@ -177,84 +184,99 @@ export function PatientCompletionPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 p-4 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center gap-3">
-          <IconButton aria-label="Voltar" onClick={() => setShowCancelModal(true)}>
-            <ArrowLeft size={16} />
-          </IconButton>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-(--text)">Concluir tratamento</h1>
-            <p className="text-[0.7rem] text-(--text-muted)">{patient.name}</p>
-          </div>
-          {draftSavedAt && (
-            <span className="inline-flex items-center gap-1.5 text-[0.6rem] font-semibold text-(--text-muted) bg-gray-50 border border-(--border-custom) rounded-full px-2.5 py-1">
-              <FileEdit size={11} className="text-brand" />
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
+      <PageHeader
+        breadcrumb={['Prontuário', 'Conclusão de Tratamento']}
+        title={patient.name}
+        actions={
+          draftSavedAt && (
+            <span
+              className="inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[0.7rem] font-semibold"
+              style={{ background: SHOWCASE.white, color: SHOWCASE.inkSoft, border: `1px solid ${SHOWCASE.line}` }}
+            >
+              <FontAwesomeIcon icon={faFilePen} style={{ fontSize: 11 }} />
               Rascunho salvo · {draftSavedAt}
             </span>
-          )}
-        </div>
+          )
+        }
+      />
 
-        <WizardStepsIndicator
+      <div className="mb-2">
+        <WizardStepsBreadcrumb
+          steps={STEPS}
           current={step}
           ariaLabel="Etapas da conclusão"
-          labels={STEP_LABELS}
+          onSelect={(i) => setStep(i as 0 | 1 | 2)}
         />
-
-        <form onSubmit={handleFormSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
-          <div key={step} className="flex-1 overflow-y-auto px-5 py-4 animate-in fade-in-0 slide-in-from-right-2 duration-300">
-            {step === 0 && (
-              <CompletionOverviewStep
-                patient={patient}
-                applications={patientApplications}
-                inductionStart={inductionStart}
-                maintenanceStart={maintenanceStart}
-                totalApplications={realizedApplications.length}
-                adherencePct={adherencePct}
-                rescheduledCount={rescheduledCount}
-                adverseEventsCount={adverseEventsCount}
-                totalDurationLabel={totalDurationLabel}
-              />
-            )}
-            {step === 1 && <CompletionFollowupStep form={form} />}
-            {step === 2 && (
-              <CompletionReviewStep
-                form={form}
-                patient={patient}
-                doctorRegistration={doctorRegistration}
-                inductionStart={inductionStart}
-                totalApplications={realizedApplications.length}
-                adverseEventsCount={adverseEventsCount}
-                totalDurationLabel={totalDurationLabel}
-              />
-            )}
-          </div>
-
-          <div className="border-t border-(--border-custom) px-5 py-3 flex items-center justify-end gap-2">
-            {step > 0 && (
-              <Button type="button" tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 0 | 1 | 2)}>
-                Voltar
-              </Button>
-            )}
-            <Button type="submit" tone="brand" variant="solid">
-              {step < 2 ? 'Continuar' : 'Concluir tratamento'}
-            </Button>
-          </div>
-        </form>
       </div>
+
+      <form onSubmit={handleFormSubmit} noValidate className="wizard-fields flex flex-1 min-h-0 flex-col">
+        <div
+          key={step}
+          className="flex flex-1 flex-col overflow-y-auto pt-1 pb-4 animate-in fade-in-0 slide-in-from-right-2 duration-300"
+        >
+          <div className="w-full">
+          {step === 0 && (
+            <CompletionOverviewStep
+              patient={patient}
+              applications={patientApplications}
+              inductionStart={inductionStart}
+              maintenanceStart={maintenanceStart}
+              totalApplications={realizedApplications.length}
+              adherencePct={adherencePct}
+              rescheduledCount={rescheduledCount}
+              adverseEventsCount={adverseEventsCount}
+              totalDurationLabel={totalDurationLabel}
+            />
+          )}
+          {step === 1 && <CompletionFollowupStep form={form} />}
+          {step === 2 && (
+            <CompletionReviewStep
+              form={form}
+              patient={patient}
+              doctorRegistration={doctorRegistration}
+              inductionStart={inductionStart}
+              totalApplications={realizedApplications.length}
+              adverseEventsCount={adverseEventsCount}
+              totalDurationLabel={totalDurationLabel}
+            />
+          )}
+          </div>
+        </div>
+
+        <div className="border-t border-(--border-custom) pt-3 flex items-center justify-end gap-2">
+          <Button type="button" tone="danger" variant="outline" onClick={() => setShowCancelModal(true)}>
+            Cancelar
+          </Button>
+          {step > 0 && (
+            <Button type="button" tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 0 | 1 | 2)}>
+              Voltar
+            </Button>
+          )}
+          <Button type="submit" tone="brand" variant="solid">
+            {step < 2 ? 'Continuar' : 'Concluir tratamento'}
+          </Button>
+        </div>
+      </form>
 
       <CancelWizardModal
         open={showCancelModal}
         title="Sair da conclusão?"
         description="Suas últimas inserções serão salvas automaticamente como rascunho. Você pode retomar a conclusão de onde parou a qualquer momento."
         keepEditingLabel="Continuar editando"
+        secondaryLabel="Sair sem salvar"
+        onSecondary={() => {
+          setShowCancelModal(false)
+          clearDraft(patient.id)
+          navigate({ to: '/patient/$patientId', params: { patientId: patient.id } })
+        }}
         cancelLabel="Salvar e sair"
         cancelTone="brand"
         onClose={() => setShowCancelModal(false)}
         onConfirm={() => {
           persistDraft()
           toast.success({
-            icon: <FileEdit size={16} />,
+            icon: <FontAwesomeIcon icon={faFilePen} style={{ fontSize: 16 }} />,
             title: 'Rascunho salvo',
             description: 'Você pode retomar a conclusão de onde parou.',
             autoDismissMs: 4000,

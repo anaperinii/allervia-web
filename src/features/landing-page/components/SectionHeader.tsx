@@ -11,17 +11,17 @@ interface SectionHeaderProps {
 }
 
 const EYEBROW_TONE: Record<'light' | 'dark', string> = {
-  light: 'text-teal-600 bg-teal-50 border border-teal-200',
-  dark: 'text-white bg-white/15 border border-white/20',
+  light: 'text-[color:var(--ll-accent-strong)]',
+  dark: 'text-white',
 }
 
 const TITLE_TONE: Record<'light' | 'dark', string> = {
-  light: '',
+  light: 'text-[color:var(--ll-ink)]',
   dark: 'text-white',
 }
 
 const DESCRIPTION_TONE: Record<'light' | 'dark', string> = {
-  light: 'text-(--text-muted)',
+  light: 'text-[color:var(--ll-ink-muted)]',
   dark: 'text-white/70',
 }
 
@@ -38,13 +38,15 @@ export function SectionHeader({
   return (
     <div className={cn(centered && 'text-center mx-auto', centered && titleMaxWidth)}>
       {eyebrow && (
-        <span className={cn('inline-block text-[0.75rem] font-bold tracking-[2px] uppercase px-4 py-1.5 rounded-full mb-4', EYEBROW_TONE[tone])}>
+        <span className={cn('inline-flex items-center gap-2.5 text-[0.75rem] font-bold tracking-[2px] uppercase mb-4', EYEBROW_TONE[tone])}>
+          <span className="opacity-45">[</span>
           {eyebrow}
+          <span className="opacity-45">]</span>
         </span>
       )}
       <h2
         className={cn(
-          'text-[clamp(1.4rem,2.8vw,2.1rem)] font-extrabold tracking-[-0.5px] leading-[1.15]',
+          'text-[clamp(1.6rem,3.2vw,2.6rem)] font-medium tracking-tight leading-[1.15]',
           TITLE_TONE[tone],
           !centered && titleMaxWidth,
         )}

@@ -1,8 +1,10 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowLeft, KeyRound } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
-import { Button, FieldLabel, TextInput } from '@/shared/components'
+import { FieldLabel, TextInput } from '@/shared/components'
 import type { ForgotPasswordEmailForm } from '@/features/auth/schemas/forgot-password'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 
 interface RequestEmailStepProps {
   form: UseFormReturn<ForgotPasswordEmailForm>
@@ -15,12 +17,10 @@ export function RequestEmailStep({ form, onSubmit }: RequestEmailStepProps) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6" noValidate>
       <div className="flex flex-col items-center text-center gap-1.5">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand/10 mb-2">
-          <KeyRound size={22} className="text-brand" />
-        </div>
-        <h1 className="font-extrabold text-2xl text-(--text)">Redefinição de senha</h1>
-        <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
-          Informe o e-mail associado à sua conta. Enviaremos um código de verificação para confirmar sua identidade.
+        <h1 className="font-semibold text-[1.75rem] tracking-tight text-[color:var(--ink)]">Redefinição de senha</h1>
+        <p className="text-[0.84rem] leading-relaxed max-w-sm" style={{ color: 'var(--ink-soft)' }}>
+          Informe o e-mail associado à sua conta. Enviaremos um código de verificação para
+          confirmar sua identidade.
         </p>
       </div>
 
@@ -33,12 +33,25 @@ export function RequestEmailStep({ form, onSubmit }: RequestEmailStepProps) {
         />
       </FieldLabel>
 
-      <Button type="submit" tone="brand" variant="solid" prominent fullWidth size="lg" disabled={form.formState.isSubmitting}>
+      <button
+        type="submit"
+        disabled={form.formState.isSubmitting}
+        className="inline-flex w-full items-center justify-center rounded-lg h-10 text-sm font-semibold transition-[filter] duration-200 hover:brightness-95 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+        style={{
+          background:
+            'var(--btn)',
+          color: 'var(--btn-ink)',
+        }}
+      >
         Enviar código de verificação
-      </Button>
+      </button>
 
-      <Link to="/login" className="flex items-center justify-start gap-1.5 text-xs font-medium text-(--text-muted) hover:text-brand no-underline transition-colors">
-        <ArrowLeft size={13} />
+      <Link
+        to="/login"
+        className="flex items-center justify-start gap-1.5 text-xs font-medium no-underline transition-colors"
+        style={{ color: 'var(--ink-soft)' }}
+      >
+        <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 13 }} />
         Voltar
       </Link>
     </form>

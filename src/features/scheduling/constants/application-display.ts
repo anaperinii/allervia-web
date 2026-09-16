@@ -8,7 +8,8 @@ export const APPLICATION_STATUS_DISPLAY: Record<Application['status'], { label: 
 }
 
 export function getApplicationEventColor(application: Application) {
-  if (application.status === 'missed') return { bg: '#FEE2E2', text: '#991B1B', border: '#EF4444' }
-  if (application.modality === 'sublingual') return { bg: '#EDE9FE', text: '#5B21B6', border: '#8B5CF6' }
-  return { bg: '#CCFBF1', text: '#115E59', border: '#14B8A6' }
+  const grad = 'linear-gradient(105deg, rgba(255,255,255,0.12) 0%, transparent 55%)'
+  // Softer tints of the modality colors so the calendar reads calmer.
+  if (application.modality === 'sublingual') return { bg: '#A6D9D1', text: '#1E5A52', border: '#74C3B9', grad }
+  return { bg: '#CFE99E', text: '#4E6E23', border: '#B7E06A', grad }
 }

@@ -1,11 +1,13 @@
 import { Link } from '@tanstack/react-router'
-import { ChevronDown, ChevronRight, ChevronUp, Mail, MailOpen } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
+import { format, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/cn'
 import { IconButton } from '@/shared/components'
 import { NOTIFICATION_TYPE_DISPLAY } from '@/features/notification/constants/notification-display'
 import type { Notification } from '@/features/notification/stores/useNotificationsStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronDown, faChevronRight, faChevronUp, faEnvelope, faEnvelopeOpen } from '@fortawesome/free-solid-svg-icons'
 
 interface NotificationListItemProps {
   notification: Notification
@@ -27,7 +29,9 @@ export function NotificationListItem({
   onMarkUnread,
 }: NotificationListItemProps) {
   const display = NOTIFICATION_TYPE_DISPLAY[notification.type]
-  const relativeTime = formatDistanceToNow(notification.timestamp, { locale: ptBR, addSuffix: true })
+  const receivedAt = isToday(notification.timestamp)
+    ? format(notification.timestamp, 'HH:mm', { locale: ptBR })
+    : format(notification.timestamp, 'dd/MM/yyyy', { locale: ptBR })
 
   return (
     <div
@@ -43,40 +47,47 @@ export function NotificationListItem({
           checked={selected}
           onChange={() => onToggleSelect(notification.id)}
           aria-label={`Selecionar notificação: ${notification.title}`}
-          className="w-3.5 h-3.5 rounded border-gray-300 mt-1 cursor-pointer accent-brand shrink-0"
+          className="w-3.5 h-3.5 rounded border-gray-300 mt-1 cursor-pointer accent-[#257E8C] shrink-0"
         />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-            <span className={cn('text-[0.55rem] font-semibold px-1.5 py-px rounded-full', display.bg, display.color)}>
+            <span className="text-[0.62rem] font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 border border-gray-200">
               {display.label}
             </span>
             <time
               dateTime={notification.timestamp.toISOString()}
               title={notification.timestamp.toLocaleString('pt-BR')}
-              className="text-[0.6rem] text-(--text-muted)"
+              className="text-[0.68rem] text-(--text-muted)"
             >
-              {relativeTime}
+              {receivedAt}
             </time>
-            {!notification.read && <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-label="Não lida" />}
+            {!notification.read && <span className="w-1.5 h-1.5 rounded-full bg-red-500" aria-label="Não lida" />}
           </div>
-          <div className="text-xs font-semibold text-(--text)">{notification.title}</div>
-          <div className={cn('text-[0.65rem] text-(--text-muted) mt-0.5 leading-relaxed', !expanded && 'line-clamp-2')}>
+          <div className="text-[0.85rem] font-semibold text-(--text)">{notification.title}</div>
+          <div className={cn('text-[0.78rem] text-(--text-muted) mt-1 leading-relaxed', !expanded && 'line-clamp-2')}>
             {notification.message}
           </div>
 
-          {expanded && notification.details && (
-            <div className="mt-2 pt-2 border-t border-(--border-custom)">
-              <p className="text-[0.65rem] text-(--text-muted) leading-relaxed">{notification.details}</p>
-              {notification.actionUrl && (
-                <Link
-                  to={notification.actionUrl}
-                  className="inline-flex items-center gap-1 text-[0.7rem] font-semibold text-brand hover:underline no-underline mt-2"
-                >
-                  {notification.actionLabel || 'Ver detalhes'}
-                  <ChevronRight size={12} />
-                </Link>
+          {notification.details && (
+            <div
+              className={cn(
+                'overflow-hidden transition-[max-height,opacity] duration-300 ease-out',
+                expanded ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0',
               )}
+            >
+              <div className="mt-2 pt-2 border-t border-(--border-custom)">
+                <p className="text-[0.78rem] text-(--text-muted) leading-relaxed">{notification.details}</p>
+                {notification.actionUrl && (
+                  <Link
+                    to={notification.actionUrl}
+                    className="inline-flex items-center gap-1 text-[0.7rem] font-semibold text-brand hover:underline no-underline mt-2"
+                  >
+                    {notification.actionLabel || 'Ver detalhes'}
+                    <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />
+                  </Link>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -87,7 +98,7 @@ export function NotificationListItem({
             aria-label={notification.read ? 'Marcar como não lida' : 'Marcar como lida'}
             onClick={() => (notification.read ? onMarkUnread(notification.id) : onMarkRead(notification.id))}
           >
-            {notification.read ? <Mail size={13} /> : <MailOpen size={13} />}
+            {notification.read ? <FontAwesomeIcon icon={faEnvelope} style={{ fontSize: 13 }} /> : <FontAwesomeIcon icon={faEnvelopeOpen} style={{ fontSize: 13 }} />}
           </IconButton>
           <IconButton
             size="sm"
@@ -95,7 +106,7 @@ export function NotificationListItem({
             aria-expanded={expanded}
             onClick={() => onToggleExpand(notification.id)}
           >
-            {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            {expanded ? <FontAwesomeIcon icon={faChevronUp} style={{ fontSize: 13 }} /> : <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 13 }} />}
           </IconButton>
         </div>
       </div>

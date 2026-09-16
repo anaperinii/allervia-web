@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Info, Search } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-import { TextInput } from '@/shared/components'
+import { StepHeading, TextInput } from '@/shared/components'
+import { PatientInitials } from '@/shared/components/glass-card'
 import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleInfo, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 
 interface NextDoseSummary {
   date: string
@@ -69,9 +72,10 @@ export function SelectPatientStep({
       setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : filtered.length - 1))
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      if (highlightedIndex >= 0 && filtered[highlightedIndex]) {
-        onSelect(filtered[highlightedIndex])
-        setSearch(filtered[highlightedIndex].name)
+      const idx = highlightedIndex >= 0 ? highlightedIndex : 0
+      if (filtered[idx]) {
+        onSelect(filtered[idx])
+        setSearch(filtered[idx].name)
         setShowSuggestions(false)
       }
     } else if (e.key === 'Escape') {
@@ -82,10 +86,10 @@ export function SelectPatientStep({
 
   return (
     <div className="space-y-5">
-      <h2 className="text-sm font-bold text-(--text)">Selecionar Paciente</h2>
+      <StepHeading description="Escolha a imunoterapia a evoluir e confira a última aplicação, a dose atual e o que o protocolo prevê como próxima." />
       <div className="relative">
         <label htmlFor={inputId} className="sr-only">Buscar paciente</label>
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted)" />
+        <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted)" style={{ fontSize: 14 }} />
         <TextInput
           id={inputId}
           placeholder="Buscar paciente por nome"
@@ -134,25 +138,14 @@ export function SelectPatientStep({
 
       {selected && patient && (
         <div className="border border-(--border-custom) rounded-xl mt-4 overflow-hidden">
-          <div className="px-4 py-3.5 border-b border-(--border-custom) flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-sm font-bold text-white shrink-0">
-              {patient.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
-            </div>
+          <div className="px-4 py-3.5 border-b border-(--border-custom) flex items-center gap-3 bg-gray-50/80">
+            <PatientInitials name={patient.name} size={40} />
             <div className="min-w-0 flex-1">
               <div className="text-sm font-bold text-(--text)">{patient.name}</div>
               <div className="text-[0.7rem] text-(--text-muted)">
-                {patient.age} anos · {patient.weight} · {patient.responsibleDoctor}
+                {patient.age} anos · {patient.weight} · {patient.responsibleDoctor} · {selected.type}
+                {treatmentTime && <> · {treatmentTime}</>}
               </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 text-[0.6rem] font-semibold border border-teal-200">
-                {selected.type}
-              </span>
-              {treatmentTime && (
-                <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 text-[0.6rem] font-medium border border-amber-200">
-                  {treatmentTime}
-                </span>
-              )}
             </div>
           </div>
 
@@ -182,7 +175,7 @@ export function SelectPatientStep({
 
       {selected && selected.status === 'inactive' && (
         <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 rounded-lg px-3.5 py-3 mt-3">
-          <Info size={14} className="text-red-500 shrink-0" />
+          <FontAwesomeIcon icon={faCircleInfo} className="text-red-500 shrink-0" style={{ fontSize: 14 }} />
           <p className="text-xs text-red-700">
             Este paciente está <span className="font-semibold">inativo</span>. Não é possível registrar uma evolução para pacientes inativos.
           </p>

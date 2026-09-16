@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Project docs (kept local)
+docs/
+
+# Root-level markdown (except README)
+/*.md
+!/README.md

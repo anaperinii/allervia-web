@@ -1,7 +1,16 @@
-import { CalendarDays } from 'lucide-react'
 import { format, parse } from 'date-fns'
-import { cn } from '@/shared/lib/cn'
+import { StepHeading } from '@/shared/components'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCalendarCheck } from '@fortawesome/free-solid-svg-icons'
+
+const REACTION_LABELS: Record<string, string> = {
+  reduce_dose: 'Reduzir dose',
+  increase_interval: 'Aumentar intervalo',
+  suspend: 'Suspender temporariamente',
+  maintain: 'Manter protocolo',
+}
 
 interface ReviewStepProps {
   form: EvolutionForm
@@ -11,6 +20,7 @@ interface ReviewStepProps {
 
 export function EvolutionReviewStep({ form, plannedNextDate, plannedNextInterval }: ReviewStepProps) {
   const preItems: { label: string; value: string }[] = [
+    ...(form.intervalReport ? [{ label: 'Relato do intervalo', value: form.intervalReport }] : []),
     { label: 'Efeito Colateral', value: form.sideEffect === 'yes' ? 'Sim' : 'Não' },
     { label: 'Necessidade de Medicação', value: form.medicationNeeded === 'yes' ? 'Sim' : 'Não' },
     ...(form.sideEffect === 'yes' ? [{ label: 'Efeitos Relatados', value: form.reportedEffects || '—' }] : []),
@@ -26,83 +36,92 @@ export function EvolutionReviewStep({ form, plannedNextDate, plannedNextInterval
     { label: 'Intervalo Próxima Dose', value: form.nextInterval ? `${form.nextInterval} dias` : '—' },
     { label: 'Responsável', value: form.administrator || '—' },
     { label: 'Efeito Colateral', value: form.sideEffectPost === 'yes' ? 'Sim' : 'Não' },
+    ...(form.sideEffectPost === 'yes' ? [{ label: 'Efeitos Relatados', value: form.reportedEffectsPost || '—' }] : []),
     { label: 'Necessidade de Medicação', value: form.medicationNeededPost === 'yes' ? 'Sim' : 'Não' },
+    ...(form.medicationNeededPost === 'yes' ? [{ label: 'Medicações', value: form.medicationsPost || '—' }] : []),
+    ...(form.sideEffectPost === 'yes' && form.medicationNeededPost === 'yes' && form.reactionAdjustment
+      ? [{ label: 'Conduta no protocolo', value: REACTION_LABELS[form.reactionAdjustment] ?? '—' }]
+      : []),
+    ...(form.reactionAdjustmentJustification
+      ? [{ label: 'Justificativa da conduta', value: form.reactionAdjustmentJustification }]
+      : []),
     ...(form.notesPost ? [{ label: 'Notas', value: form.notesPost }] : []),
   ]
 
   return (
-    <div className="space-y-3.5">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-bold text-(--text)">Revisão da evolução</h2>
-          <p className="text-[0.7rem] text-(--text-muted) mt-1">Confirme os dados antes de registrar a dose.</p>
-        </div>
-        {plannedNextDate && (
-          <div className="flex items-center gap-2 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2 shrink-0">
-            <CalendarDays size={13} className="text-teal-600 shrink-0" />
-            <p className="text-[0.7rem] text-teal-800 leading-relaxed">
-              Próxima dose agendada para <span className="font-bold">{plannedNextDate}</span>
-              {plannedNextInterval != null && (
-                <> (intervalo de <span className="font-bold">{plannedNextInterval} dias</span> a partir da aplicação).</>
-              )}
-            </p>
-          </div>
-        )}
+    <div className="mt-1 space-y-3">
+      <StepHeading description="Confira o que será gravado no prontuário e a próxima aplicação que será agendada automaticamente." />
+      <div className="grid grid-cols-1 gap-3">
+        <ReviewCard title="Pré-Aplicação" items={preItems} />
+        <ReviewCard title="Pós-Aplicação" items={postItems} />
       </div>
 
-      <Section title="Pré-Aplicação">
-        <Grid
-          items={preItems}
-          header={form.intervalReport ? { label: 'Relato do intervalo', value: form.intervalReport } : undefined}
-        />
-      </Section>
-
-      <Section title="Pós-Aplicação">
-        <Grid items={postItems} />
-      </Section>
-    </div>
-  )
-}
-
-interface SectionProps {
-  title: string
-  children: React.ReactNode
-}
-
-function Section({ title, children }: SectionProps) {
-  return (
-    <div className="border border-(--border-custom) rounded-xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-(--border-custom) bg-white">
-        <span className="text-xs font-bold text-(--text)">{title}</span>
-      </div>
-      <div className="bg-gray-50/60 p-4">{children}</div>
-    </div>
-  )
-}
-
-function Grid({
-  items,
-  header,
-}: {
-  items: { label: string; value: string }[]
-  header?: { label: string; value: string }
-}) {
-  return (
-    <div className="rounded-lg overflow-hidden border border-(--border-custom) bg-(--border-custom)">
-      {header && (
-        <div className="bg-white px-3.5 py-2.5">
-          <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{header.label}</div>
-          <div className="text-xs font-medium text-(--text) leading-relaxed">{header.value}</div>
+      {plannedNextDate && (
+        <div
+          className="relative flex items-center gap-3 overflow-hidden rounded-xl px-4 py-3"
+          style={{
+            background: 'linear-gradient(120deg, #fbfcfc, #f4f7f7)',
+            boxShadow: '0 6px 18px -6px rgba(16,60,68,0.18)',
+          }}
+        >
+          <span
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+            style={{ background: '#10b981', boxShadow: '0 2px 8px rgba(16,185,129,0.35)' }}
+          >
+            <FontAwesomeIcon icon={faCalendarCheck} style={{ fontSize: 16, color: '#ffffff' }} />
+          </span>
+          <p className="text-[0.78rem] leading-relaxed text-slate-600">
+            Próxima dose agendada para <span className="font-bold text-slate-800">{plannedNextDate}</span>
+            {plannedNextInterval != null && (
+              <> (intervalo de <span className="font-bold text-slate-800">{plannedNextInterval} dias</span> a partir da aplicação).</>
+            )}
+          </p>
         </div>
       )}
-      <div className={cn('grid grid-cols-2 gap-px', header && 'mt-px')}>
-        {items.map((item) => (
-          <div key={item.label} className="bg-white px-3.5 py-2.5">
-            <div className="text-[0.6rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">{item.label}</div>
-            <div className="text-xs font-medium text-(--text)">{item.value || '—'}</div>
-          </div>
-        ))}
+    </div>
+  )
+}
+
+interface ReviewCardProps {
+  title: string
+  items: { label: string; value: string }[]
+}
+
+function ReviewCard({ title, items }: ReviewCardProps) {
+  return (
+    <div
+      className="relative overflow-hidden rounded-xl px-3.5 pt-4 pb-4"
+      style={{
+        background: 'radial-gradient(120% 130% at 12% 10%, #f5f8f8 0%, #eff4f4 52%, #e9f0f0 100%)',
+        border: '1px solid rgba(16,113,129,0.14)',
+      }}
+    >
+      <div className="relative mb-3 flex items-center">
+        <span
+          aria-hidden="true"
+          className="absolute -left-3.5 h-5 w-0.75 rounded-r-full"
+          style={{ background: '#257E8C' }}
+        />
+        <div className="text-[0.8rem] font-bold text-(--text)">{title}</div>
       </div>
+      <ReviewGroup items={items} />
+    </div>
+  )
+}
+
+interface ReviewGroupProps {
+  items: { label: string; value: string }[]
+}
+
+function ReviewGroup({ items }: ReviewGroupProps) {
+  return (
+    <div className="grid grid-cols-3 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
+      {items.map((item) => (
+        <div key={item.label} className="bg-white px-3 py-2">
+          <div className="text-[0.7rem] font-semibold text-(--text-muted) mb-0.5">{item.label}</div>
+          <div className="text-[0.82rem] font-medium text-(--text)">{item.value || '—'}</div>
+        </div>
+      ))}
     </div>
   )
 }

@@ -1,58 +1,55 @@
-import { Users, Syringe, Activity } from 'lucide-react'
-import { cn } from '@/shared/lib/cn'
-import type { LucideIcon } from 'lucide-react'
+import { DottedSpot } from '@/features/patient/components/DottedSpot'
+
+import { faArrowTrendUp, faShieldHalved, faUser, faUserXmark } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 interface StatCardsProps {
   totalActive: number
+  inactiveCount: number
   inductionCount: number
   maintenanceCount: number
 }
 
 interface StatDefinition {
-  key: 'active' | 'induction' | 'maintenance'
-  icon: LucideIcon
+  key: 'active' | 'inactive' | 'induction' | 'maintenance'
+  icon: IconDefinition
   label: string
-  color: string
-  iconBg: string
-  accentColor: string
+  rgb: string
+  accent: string
 }
 
-const STAT_DEFINITIONS: StatDefinition[] = [
-  { key: 'active', icon: Users, label: 'Pacientes Ativos', color: 'text-[#E8768E]', iconBg: 'bg-[#FDECF0]/80', accentColor: '#E8768E' },
-  { key: 'induction', icon: Syringe, label: 'Em Indução', color: 'text-[#18C1CB]', iconBg: 'bg-[#B6F2EC]/70', accentColor: '#18C1CB' },
-  { key: 'maintenance', icon: Activity, label: 'Em Manutenção', color: 'text-[#A78BFA]', iconBg: 'bg-[#E8DFFE]/80', accentColor: '#A78BFA' },
+const STATS: StatDefinition[] = [
+  { key: 'active', icon: faUser, label: 'Pacientes Ativos', rgb: '155,193,196', accent: '#257E8C' },
+  { key: 'inactive', icon: faUserXmark, label: 'Pacientes Inativos', rgb: '108,158,165', accent: '#1d6772' },
+  { key: 'induction', icon: faArrowTrendUp, label: 'Em Indução', rgb: '77,126,133', accent: '#12333a' },
+  { key: 'maintenance', icon: faShieldHalved, label: 'Em Manutenção', rgb: '29,103,114', accent: '#0e2e34' },
 ]
 
-export function StatCards({ totalActive, inductionCount, maintenanceCount }: StatCardsProps) {
+export function StatCards({ totalActive, inactiveCount, inductionCount, maintenanceCount }: StatCardsProps) {
   const values: Record<StatDefinition['key'], number> = {
     active: totalActive,
+    inactive: inactiveCount,
     induction: inductionCount,
     maintenance: maintenanceCount,
   }
 
   return (
-    <div className="grid grid-cols-3 gap-3">
-      {STAT_DEFINITIONS.map((stat) => {
-        const Icon = stat.icon
+    <div className="grid grid-cols-4 gap-3">
+      {STATS.map((stat) => {
         return (
           <div
             key={stat.key}
-            className="border border-(--border-custom) rounded-xl p-4 flex items-center gap-3.5 relative overflow-hidden bg-white"
+            className="relative flex items-center overflow-hidden rounded-xl px-6 py-5 border backdrop-blur-xl"
+            style={{
+              background: `linear-gradient(150deg, rgba(${stat.rgb},0.34), rgba(8,25,29,0.72) 72%), linear-gradient(160deg, #0e353d, #08191d)`,
+              borderColor: 'rgba(220,225,229,0.16)',
+              boxShadow: `0 12px 30px -14px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08), 0 0 24px -10px rgba(${stat.rgb},0.55)`,
+            }}
           >
-            <div
-              className="absolute top-0 left-0 right-0 h-1"
-              style={{ background: `linear-gradient(to right, ${stat.accentColor}, ${stat.accentColor}40)` }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{ background: `linear-gradient(to right, ${stat.accentColor}18, transparent 50%)` }}
-            />
-            <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl shrink-0 relative z-10', stat.iconBg)}>
-              <Icon size={18} className={stat.color} />
-            </div>
-            <div className="flex-1 relative z-10">
-              <div className="text-[0.65rem] text-(--text-muted) font-medium">{stat.label}</div>
-              <span className="text-xl font-extrabold text-(--text)">{values[stat.key]}</span>
+            <DottedSpot className="pointer-events-none absolute bottom-0 right-0" />
+            <div className="relative flex flex-1 items-baseline gap-2 min-w-0">
+              <span className="text-3xl font-semibold leading-none" style={{ color: '#F2F6F7' }}>{values[stat.key]}</span>
+              <span className="text-[0.82rem] font-medium leading-tight" style={{ color: '#9FBEC2' }}>{stat.label}</span>
             </div>
           </div>
         )

@@ -1,4 +1,3 @@
-import { EyeOff } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -9,6 +8,9 @@ import {
 import { derivePatientDates, type Application, type Patient } from '@/features/patient/stores/usePatientStore'
 import type { ReportFileFormat, ReportSectionId } from '@/features/patient/exporters/types'
 import { maskCpf, maskName, maskPhone } from '@/shared/lib/mask'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 
 interface ReportClinicalPreviewProps {
   patient: Patient
@@ -41,11 +43,11 @@ export function ReportClinicalPreview({
             </p>
           </div>
           <div className="text-[0.6rem] text-(--text-muted) text-right">
-            <div>ImuneCare</div>
+            <div>Allervia</div>
             <div>Formato: {fileFormat.toUpperCase()}</div>
             {anonymized && (
               <div className="flex items-center gap-1 text-brand font-semibold mt-0.5 justify-end">
-                <EyeOff size={10} />
+                <FontAwesomeIcon icon={faEyeSlash} style={{ fontSize: 10 }} />
                 Dados anonimizados
               </div>
             )}
@@ -91,10 +93,10 @@ export function ReportClinicalPreview({
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-(--border-custom)">
-                      <th className="text-left text-[0.6rem] font-semibold text-(--text-muted) uppercase pb-2">Data</th>
-                      <th className="text-left text-[0.6rem] font-semibold text-(--text-muted) uppercase pb-2">Dose</th>
-                      <th className="text-left text-[0.6rem] font-semibold text-(--text-muted) uppercase pb-2">Intervalo</th>
-                      <th className="text-left text-[0.6rem] font-semibold text-(--text-muted) uppercase pb-2">Reação</th>
+                      <th className="text-left text-[0.68rem] font-semibold text-[#12333a] pb-2">Data</th>
+                      <th className="text-left text-[0.68rem] font-semibold text-[#12333a] pb-2">Dose</th>
+                      <th className="text-left text-[0.68rem] font-semibold text-[#12333a] pb-2">Intervalo</th>
+                      <th className="text-left text-[0.68rem] font-semibold text-[#12333a] pb-2">Reação</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -204,7 +206,7 @@ export function ReportClinicalPreview({
 
       <div className="px-6 py-3 border-t border-(--border-custom)">
         <div className="flex justify-between mb-2">
-          <span className="text-[0.6rem] text-(--text-muted)">ImuneCare © 2026</span>
+          <span className="text-[0.6rem] text-(--text-muted)">Allervia © 2026</span>
           <span className="text-[0.6rem] text-(--text-muted)">Página 1 de 1</span>
         </div>
         <p className="text-[0.5rem] text-(--text-muted)/60 leading-relaxed mb-2">

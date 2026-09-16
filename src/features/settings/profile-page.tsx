@@ -1,17 +1,21 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, Camera, Save } from 'lucide-react'
 import {
   Button,
   FieldLabel,
-  IconButton,
   Modal,
   ReadOnlyField,
   TextInput,
 } from '@/shared/components'
-import { useUserStore } from '@/shared/stores/useUserStore'
+import { cn } from '@/shared/lib/cn'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
+import userAvatar from '@/assets/user-avatar.jpg'
+import { useUserStore, PROFILES, ROLE_LABELS } from '@/shared/stores/useUserStore'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCamera, faCheck, faFloppyDisk, faUserGear } from '@fortawesome/free-solid-svg-icons'
 
 const formatBirthDate = (iso: string) => {
   const [year, month, day] = iso.split('-')
@@ -21,6 +25,7 @@ const formatBirthDate = (iso: string) => {
 export function ProfilePage() {
   const currentUser = useUserStore((s) => s.current)
   const updateCurrentProfile = useUserStore((s) => s.updateCurrentProfile)
+  const setProfile = useUserStore((s) => s.setProfile)
 
   const [editing, setEditing] = useState(false)
   const [showSaveModal, setShowSaveModal] = useState(false)
@@ -63,67 +68,54 @@ export function ProfilePage() {
     setEditing(false)
   }
 
-  const avatarInitials = watched.name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
-
   return (
-    <div className="flex flex-1 flex-col bg-gray-50/80 min-h-0 overflow-hidden">
-      <div className="flex flex-1 min-h-0 flex-col rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden m-4">
-        <div className="border-b border-(--border-custom) px-5 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <IconButton aria-label="Voltar" to="/settings"><ArrowLeft size={16} /></IconButton>
-            <h1 className="text-2xl font-bold text-(--text)">Meu Perfil</h1>
-          </div>
-          {!editing ? (
-            <Button tone="brand" variant="solid" prominent onClick={() => setEditing(true)} className="px-3">
-              Editar perfil
-            </Button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={handleCancel} className="px-3">Cancelar</Button>
-              <Button
-                tone="brand"
-                variant="solid"
-                prominent
-                leftIcon={<Save size={13} />}
-                onClick={handleSubmit(() => setShowSaveModal(true))}
-                className="px-3"
-              >
-                Salvar alterações
-              </Button>
-            </div>
-          )}
-        </div>
-
-        <form className="flex-1 overflow-y-auto p-5" onSubmit={(e) => e.preventDefault()}>
-          <div className="max-w-2xl mx-auto space-y-6">
-            <div className="flex items-center gap-5">
-              <div className="relative">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-br from-brand to-teal-400 text-2xl font-bold text-white">
-                  {avatarInitials}
+    <SettingsLayout subtitle="Meu Perfil">
+      <form onSubmit={(e) => e.preventDefault()}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <div className="flex items-center justify-between gap-5 lg:col-span-2">
+              <div className="flex items-center gap-5 min-w-0">
+                <div className="relative shrink-0">
+                  <img src={userAvatar} alt="" className="h-20 w-20 rounded-full object-cover border border-(--border-custom)" />
+                  {editing && (
+                    <button
+                      type="button"
+                      aria-label="Alterar foto"
+                      className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-white border border-(--border-custom) shadow-sm hover:bg-brand-50 transition-all cursor-pointer"
+                    >
+                      <FontAwesomeIcon icon={faCamera} className="text-brand" style={{ fontSize: 13 }} />
+                    </button>
+                  )}
                 </div>
-                {editing && (
-                  <button
-                    type="button"
-                    aria-label="Alterar foto"
-                    className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-white border border-(--border-custom) shadow-sm hover:bg-brand-50 transition-all cursor-pointer"
-                  >
-                    <Camera size={13} className="text-brand" />
-                  </button>
+                <div className="min-w-0">
+                  <div className="text-lg font-bold text-(--text)">{watched.name}</div>
+                  <div className="text-xs text-(--text-muted)">{watched.specialty}</div>
+                  <div className="text-xs text-(--text-muted) mt-0.5">{watched.institution}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {!editing ? (
+                  <Button tone="brand" variant="solid" prominent onClick={() => setEditing(true)} className="px-3">
+                    Editar perfil
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" onClick={handleCancel} className="px-3">Cancelar</Button>
+                    <Button
+                      tone="brand"
+                      variant="solid"
+                      prominent
+                      leftIcon={<FontAwesomeIcon icon={faFloppyDisk} style={{ fontSize: 13 }} />}
+                      onClick={handleSubmit(() => setShowSaveModal(true))}
+                      className="px-3"
+                    >
+                      Salvar alterações
+                    </Button>
+                  </>
                 )}
               </div>
-              <div>
-                <div className="text-lg font-bold text-(--text)">{watched.name}</div>
-                <div className="text-xs text-(--text-muted)">{watched.specialty}</div>
-                <div className="text-xs text-(--text-muted) mt-0.5">{watched.institution}</div>
-              </div>
             </div>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Pessoais</h2>
               </div>
@@ -149,7 +141,7 @@ export function ProfilePage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden">
+            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Profissionais</h2>
               </div>
@@ -173,17 +165,49 @@ export function ProfilePage() {
                     : <ReadOnlyField>{watched.institution}</ReadOnlyField>}
                 </FieldLabel>
               </div>
+          </section>
+
+            <section className="lg:col-span-2 border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
+                <FontAwesomeIcon icon={faUserGear} className="text-(--text-muted)" style={{ fontSize: 14 }} />
+                <h2 className="text-xs font-bold text-(--text)">Trocar de profissional</h2>
+              </div>
+              <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {PROFILES.map((profile) => {
+                  const active = profile.id === currentUser.id
+                  return (
+                    <button
+                      key={profile.id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setProfile(profile.id)}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg border p-3 text-left transition-all cursor-pointer',
+                        active ? 'border-brand bg-brand-50/40' : 'border-(--border-custom) hover:border-gray-300 hover:bg-gray-50/60',
+                      )}
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-bold text-brand">
+                        {profile.name.split(' ').filter((w) => !w.endsWith('.')).slice(0, 2).map((w) => w[0]).join('')}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-semibold text-(--text) truncate">{profile.name}</div>
+                        <div className="text-[0.65rem] text-(--text-muted) truncate">{ROLE_LABELS[profile.role]}</div>
+                      </div>
+                      {active && <FontAwesomeIcon icon={faCheck} className="shrink-0 text-brand" style={{ fontSize: 15 }} />}
+                    </button>
+                  )
+                })}
+              </div>
             </section>
-          </div>
-        </form>
-      </div>
+        </div>
+      </form>
 
       <Modal
         open={showSaveModal}
         onClose={() => setShowSaveModal(false)}
         size="sm"
         title="Salvar alterações"
-        icon={<Save size={16} />}
+        icon={<FontAwesomeIcon icon={faFloppyDisk} style={{ fontSize: 16 }} />}
         footer={
           <>
             <Button variant="outline" onClick={() => setShowSaveModal(false)}>Cancelar</Button>
@@ -193,6 +217,6 @@ export function ProfilePage() {
       >
         <p className="text-xs text-(--text-muted)">As alterações no seu perfil serão salvas e aplicadas imediatamente.</p>
       </Modal>
-    </div>
+    </SettingsLayout>
   )
 }

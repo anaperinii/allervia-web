@@ -1,6 +1,15 @@
-import { Archive, FileText, Plus, Search } from 'lucide-react'
-import { cn } from '@/shared/lib/cn'
-import { Button, IconButton, Select, TextInput } from '@/shared/components'
+import { Select, TextInput } from '@/shared/components'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import { SHOWCASE } from '@/shared/components/showcase'
+
+export type ModalityTab = 'all' | 'subcutaneous' | 'sublingual'
+
+export const MODALITY_OPTIONS: { value: ModalityTab; label: string }[] = [
+  { value: 'all', label: 'Todas' },
+  { value: 'subcutaneous', label: 'Subcutânea' },
+  { value: 'sublingual', label: 'Sublingual' },
+]
 
 interface ImmunotherapiesFilterBarProps {
   searchTerm: string
@@ -9,12 +18,10 @@ interface ImmunotherapiesFilterBarProps {
   setTypeFilter: (v: string) => void
   intervalFilter: string
   setIntervalFilter: (v: string) => void
-  showInactive: boolean
-  setShowInactive: (v: boolean) => void
+  statusFilter: string
+  setStatusFilter: (v: string) => void
   types: string[]
   intervals: string[]
-  canAddImmunotherapy: boolean
-  canEvolve: boolean
 }
 
 export function ImmunotherapiesFilterBar({
@@ -24,24 +31,28 @@ export function ImmunotherapiesFilterBar({
   setTypeFilter,
   intervalFilter,
   setIntervalFilter,
-  showInactive,
-  setShowInactive,
+  statusFilter,
+  setStatusFilter,
   types,
   intervals,
-  canAddImmunotherapy,
-  canEvolve,
 }: ImmunotherapiesFilterBarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <div className="relative flex-1 min-w-45">
-        <label htmlFor="immunotherapy-search" className="sr-only">Pesquisar paciente</label>
-        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) z-10" />
+    <div className="flex items-center gap-2">
+      <div className="relative w-80">
+        <label htmlFor="immunotherapy-search" className="sr-only">
+          Pesquisar paciente
+        </label>
+        <FontAwesomeIcon
+          icon={faMagnifyingGlass}
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10"
+          style={{ fontSize: 12, color: SHOWCASE.inkSoft }}
+        />
         <TextInput
           id="immunotherapy-search"
           placeholder="Pesquisar paciente"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-8 pl-8"
+          className="h-9 pl-9 pr-4 text-[0.78rem]"
         />
       </div>
 
@@ -49,7 +60,7 @@ export function ImmunotherapiesFilterBar({
         aria-label="Filtrar por tipo"
         value={typeFilter}
         onChange={(e) => setTypeFilter(e.target.value)}
-        className="h-8 bg-white w-auto"
+        className="h-9 w-auto"
       >
         <option value="Todos os tipos">Todos os tipos</option>
         {types.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -59,36 +70,23 @@ export function ImmunotherapiesFilterBar({
         aria-label="Filtrar por intervalo"
         value={intervalFilter}
         onChange={(e) => setIntervalFilter(e.target.value)}
-        className="h-8 bg-white w-auto"
+        className="h-9 w-auto"
       >
         <option value="Todos os intervalos">Todos os intervalos</option>
         {intervals.map((c) => <option key={c} value={c}>{c} dias</option>)}
       </Select>
 
-      <IconButton
-        aria-label="Mostrar imunoterapias inativas"
-        aria-pressed={showInactive}
-        size="md"
-        onClick={() => setShowInactive(!showInactive)}
-        className={cn(
-          'border-[1.5px]',
-          showInactive ? 'border-brand bg-teal-50 text-brand' : 'border-(--border-custom)',
-        )}
+      <Select
+        aria-label="Filtrar por status"
+        value={statusFilter}
+        onChange={(e) => setStatusFilter(e.target.value)}
+        className="h-9 w-auto"
       >
-        <Archive size={14} />
-      </IconButton>
-
-      {canAddImmunotherapy && (
-        <Button tone="brand" variant="solid" prominent leftIcon={<Plus size={14} />} to="/add-immunotherapy" className="px-3">
-          Adicionar Imunoterapia
-        </Button>
-      )}
-
-      {canEvolve && (
-        <Button tone="brand" variant="outline" leftIcon={<FileText size={14} />} to="/patient-evolution" className="px-3">
-          Evoluir Paciente
-        </Button>
-      )}
+        <option value="active">Ativas</option>
+        <option value="inactive">Inativas</option>
+        <option value="completed">Concluídas</option>
+        <option value="all">Todas</option>
+      </Select>
     </div>
   )
 }

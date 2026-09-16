@@ -1,27 +1,40 @@
-import { CheckCircle, ShieldCheck } from 'lucide-react'
-import { Button } from '@/shared/components'
+import { Link } from '@tanstack/react-router'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faShieldHalved } from '@fortawesome/free-solid-svg-icons'
 
 export function DoneStep() {
   return (
     <>
       <div className="flex flex-col items-center text-center gap-1.5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 mb-2">
-          <CheckCircle size={26} className="text-brand" />
-        </div>
-        <h1 className="font-extrabold text-2xl text-(--text)">Senha redefinida</h1>
-        <p className="text-xs text-(--text-muted) leading-relaxed max-w-xs">
-          Sua senha foi atualizada com sucesso. Agora você pode acessar sua conta com a nova senha. Por segurança, todas as sessões anteriores foram encerradas.
+        <h1 className="font-semibold text-[1.75rem] tracking-tight text-[color:var(--ink)]">Senha redefinida</h1>
+        <p className="text-[0.84rem] leading-relaxed max-w-sm" style={{ color: 'var(--ink-soft)' }}>
+          Sua senha foi atualizada com sucesso. Agora você pode acessar sua conta com a nova
+          senha. Por segurança, todas as sessões anteriores foram encerradas.
         </p>
       </div>
 
-      <Button tone="brand" variant="solid" prominent fullWidth size="lg" to="/login">
+      <Link
+        to="/login"
+        className="inline-flex w-full items-center justify-center rounded-lg h-10 text-sm font-semibold transition-[filter] duration-200 hover:brightness-95 no-underline cursor-pointer"
+        style={{
+          background: 'var(--btn)',
+          color: 'var(--btn-ink)',
+        }}
+      >
         Acessar minha conta
-      </Button>
+      </Link>
 
-      <div className="flex items-center gap-2 bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5">
-        <ShieldCheck size={14} className="text-brand shrink-0" />
-        <p className="text-[0.6rem] text-(--text-muted) leading-relaxed">
-          Caso não tenha solicitado esta alteração, entre em contato imediatamente com nosso suporte pelo e-mail seguranca@imunecare.com.br.
+      <div
+        className="flex items-center gap-2 rounded-lg px-3.5 py-2.5"
+        style={{
+          background: 'var(--field)',
+          border: '1px solid var(--bd)',
+        }}
+      >
+        <FontAwesomeIcon icon={faShieldHalved} className="shrink-0" style={{ fontSize: 14, color: 'var(--accent)' }} />
+        <p className="text-[0.6rem] leading-relaxed" style={{ color: 'var(--ink-faint)' }}>
+          Caso não tenha solicitado esta alteração, entre em contato imediatamente com nosso
+          suporte pelo e-mail seguranca@allervia.com.br.
         </p>
       </div>
     </>

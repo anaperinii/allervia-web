@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { MoreVertical } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { IconButton } from '@/shared/components'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
 
 interface PatientActionsMenuProps {
   canInactivate: boolean
@@ -60,7 +62,7 @@ export function PatientActionsMenu({
         onClick={() => setOpen((o) => !o)}
         className="border border-(--border-custom)"
       >
-        <MoreVertical size={14} />
+        <FontAwesomeIcon icon={faEllipsisVertical} style={{ fontSize: 14 }} />
       </IconButton>
 
       {open && (
