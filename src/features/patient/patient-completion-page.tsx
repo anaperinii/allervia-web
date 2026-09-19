@@ -1,34 +1,30 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useSearch } from '@tanstack/react-router'
-import { useForm } from 'react-hook-form'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { CompletionFollowupStep } from '@/features/patient/components/treatment-completion/CompletionFollowupStep'
+import { CompletionOverviewStep } from '@/features/patient/components/treatment-completion/CompletionOverviewStep'
+import { CompletionReviewStep } from '@/features/patient/components/treatment-completion/CompletionReviewStep'
+import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
+import { COMPLETION_DEFAULTS, completionSchema, type CompletionForm } from '@/features/patient/schemas/completion'
+import { useCompletionDraftsStore } from '@/features/patient/stores/useCompletionDraftsStore'
+import { derivePatientDates, usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
+import { formatDurationFromIsoStart } from '@/shared/lib/dates'
+import { PROFILES } from '@/shared/stores/useUserStore'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import {
-  Button,
-  CancelWizardModal,
-  toast,
-  WizardStepsBreadcrumb,
-  type WizardStep,
-} from '@/shared/components'
-import { usePatientStore, derivePatientDates } from '@/features/patient/stores/usePatientStore'
-import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { PROFILES } from '@/shared/stores/useUserStore'
-import { formatDurationFromIsoStart } from '@/shared/lib/dates'
-import {
-  completionSchema,
-  COMPLETION_DEFAULTS,
-  type CompletionForm,
-} from '@/features/patient/schemas/completion'
-import { CompletionOverviewStep } from '@/features/patient/components/treatment-completion/CompletionOverviewStep'
-import { CompletionFollowupStep } from '@/features/patient/components/treatment-completion/CompletionFollowupStep'
-import { CompletionReviewStep } from '@/features/patient/components/treatment-completion/CompletionReviewStep'
-import { useCompletionDraftsStore } from '@/features/patient/stores/useCompletionDraftsStore'
+import { useMemo, useState } from 'react'
+import { useForm } from 'react-hook-form'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChartColumn, faCircleCheck, faClipboardCheck, faFilePen, faListCheck } from '@fortawesome/free-solid-svg-icons'
 import { PageHeader, SHOWCASE } from '@/shared/components/showcase'
+import {
+  faChartColumn,
+  faCircleCheck,
+  faClipboardCheck,
+  faFilePen,
+  faListCheck,
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const STEPS: WizardStep[] = [
   { label: 'Visão geral', icon: faChartColumn, description: 'Métricas do tratamento que está sendo encerrado: aplicações realizadas, aderência, reações adversas e duração total.' },
@@ -37,6 +33,12 @@ const STEPS: WizardStep[] = [
 ]
 
 export function PatientCompletionPage() {
+  const { patientId } = useSearch({ from: '/patient-completion' })
+  const selectedId = usePatientStore((s) => s.selectedPatient?.id)
+  return <PatientCompletionContent key={patientId ?? selectedId ?? 'none'} />
+}
+
+function PatientCompletionContent() {
   const navigate = useNavigate()
   const { patientId } = useSearch({ from: '/patient-completion' })
   const selectedPatient = usePatientStore((s) => s.selectedPatient)
@@ -44,10 +46,7 @@ export function PatientCompletionPage() {
   const inactivateImmunotherapy = usePatientStore((s) => s.inactivateImmunotherapy)
   const immunotherapies = useImmunotherapiesStore((s) => s.immunotherapies)
 
-  const [step, setStep] = useState<0 | 1 | 2>(0)
   const [showCancelModal, setShowCancelModal] = useState(false)
-  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null)
-  const restoredRef = useRef(false)
   const saveDraft = useCompletionDraftsStore((s) => s.saveDraft)
   const loadDraft = useCompletionDraftsStore((s) => s.loadDraft)
   const clearDraft = useCompletionDraftsStore((s) => s.clearDraft)
@@ -59,23 +58,17 @@ export function PatientCompletionPage() {
     return imm ? buildPatientFromImmunotherapy(imm) : null
   }, [selectedPatient, patientId, immunotherapies])
 
+  const [initialDraft] = useState(() => patient ? loadDraft(patient.id) : null)
+  const [step, setStep] = useState<0 | 1 | 2>(initialDraft?.step ?? 0)
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(initialDraft?.savedAt ?? null)
+
   const form = useForm<CompletionForm>({
     resolver: zodResolver(completionSchema),
     mode: 'onBlur',
-    defaultValues: COMPLETION_DEFAULTS,
+    defaultValues: initialDraft?.values ?? COMPLETION_DEFAULTS,
   })
-  const { handleSubmit, trigger, reset, getValues } = form
+  const { handleSubmit, trigger, getValues } = form
 
-  useEffect(() => {
-    if (restoredRef.current || !patient) return
-    restoredRef.current = true
-    const draft = loadDraft(patient.id)
-    if (draft) {
-      reset(draft.values)
-      setStep(draft.step)
-      setDraftSavedAt(draft.savedAt)
-    }
-  }, [patient, loadDraft, reset])
 
   const patientApplications = useMemo(
     () => (patient ? applications.filter((application) => application.patientId === patient.id) : []),
@@ -138,7 +131,7 @@ export function PatientCompletionPage() {
     setDraftSavedAt(savedAt)
   }
 
-  const onConfirm = handleSubmit((data) => {
+  const onConfirm = () => handleSubmit((data) => {
     clearDraft(patient.id)
     const recommendations: string[] = []
     if (data.recommendRetesting) recommendations.push('Retestagem alérgica')
@@ -175,7 +168,7 @@ export function PatientCompletionPage() {
     })
 
     navigate({ to: '/patient/$patientId', params: { patientId: patient.id } })
-  })
+  })()
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()

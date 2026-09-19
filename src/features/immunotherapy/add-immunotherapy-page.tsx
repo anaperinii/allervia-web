@@ -1,28 +1,28 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate } from '@tanstack/react-router'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
-import { useHasPermission } from '@/shared/stores/useUserStore'
-import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { AddImmunotherapyReviewStep } from '@/features/immunotherapy/components/add-steps/AddImmunotherapyReviewStep'
+import { ImmunotherapyDataStep } from '@/features/immunotherapy/components/add-steps/ImmunotherapyDataStep'
+import { PatientDataStep } from '@/features/immunotherapy/components/add-steps/PatientDataStep'
 import { INDUCTION_INTERVAL, INITIAL_DOSE } from '@/features/immunotherapy/constants/scit-protocol'
-import { registerPatientProfile } from '@/features/patient/constants/patient-profiles'
-import { usePatientStore, type Application } from '@/features/patient/stores/usePatientStore'
-import { tomorrowStr, isoToPtDate, calculateAge } from '@/shared/lib/dates'
-import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
 import {
   addImmunotherapySchema,
-  type AddImmunotherapyForm,
   STEP_1_FIELDS,
   STEP_2_FIELDS,
+  type AddImmunotherapyForm,
 } from '@/features/immunotherapy/schemas/add-immunotherapy'
-import { PatientDataStep } from '@/features/immunotherapy/components/add-steps/PatientDataStep'
-import { ImmunotherapyDataStep } from '@/features/immunotherapy/components/add-steps/ImmunotherapyDataStep'
-import { AddImmunotherapyReviewStep } from '@/features/immunotherapy/components/add-steps/AddImmunotherapyReviewStep'
+import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { registerPatientProfile } from '@/features/patient/constants/patient-profiles'
+import { usePatientStore, type Application } from '@/features/patient/stores/usePatientStore'
+import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
+import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
+import { calculateAge, isoToPtDate, tomorrowStr } from '@/shared/lib/dates'
+import { useHasPermission } from '@/shared/stores/useUserStore'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleCheck, faClipboardCheck, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
 import { PageHeader } from '@/shared/components/showcase'
+import { faCircleCheck, faClipboardCheck, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const STEPS: WizardStep[] = [
   { label: 'Dados do Paciente', icon: faUser, description: 'Nome, CPF, telefone, nascimento, peso e médico responsável pelo acompanhamento.' },
@@ -51,7 +51,9 @@ export function AddImmunotherapyPage() {
       type: '', modality: '', startDate: tomorrowStr(), extract: '', targetConcentration: '', targetVolume: '',
     },
   })
-  const { handleSubmit, trigger, watch } = form
+  const { handleSubmit, trigger, control } = form
+
+  const values = useWatch({ control }) as AddImmunotherapyForm
 
   const advanceStep = async () => {
     const fields = step === 1 ? STEP_1_FIELDS : STEP_2_FIELDS
@@ -59,7 +61,7 @@ export function AddImmunotherapyPage() {
     if (isValid) setStep((s) => (s + 1) as 1 | 2 | 3)
   }
 
-  const saveImmunotherapy = handleSubmit((data) => {
+  const saveImmunotherapy = () => handleSubmit((data) => {
     const newId = `new-${Date.now()}`
     const modality = data.modality as Immunotherapy['modality']
 
@@ -123,7 +125,7 @@ export function AddImmunotherapyPage() {
     })
 
     navigate({ to: '/immunotherapies' })
-  })
+  })()
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -158,7 +160,7 @@ export function AddImmunotherapyPage() {
             <div className="w-full">
               {step === 1 && <PatientDataStep form={form} />}
               {step === 2 && <ImmunotherapyDataStep form={form} />}
-              {step === 3 && <AddImmunotherapyReviewStep form={watch()} />}
+              {step === 3 && <AddImmunotherapyReviewStep form={values} />}
             </div>
           </div>
 

@@ -1,15 +1,22 @@
-import { useEffect, useMemo, useState } from 'react'
-import { cn } from '@/shared/lib/cn'
-import { Button, ConfirmDiscardModal, Modal, SegmentedControl, TextArea } from '@/shared/components'
-import { usePatientStore } from '@/features/patient/stores/usePatientStore'
-import { useAuditStore } from '@/shared/stores/useAuditStore'
-import { useUserStore } from '@/shared/stores/useUserStore'
-import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import { exportLgpd, type LgpdFileFormat } from '@/features/patient/exporters'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
+import { usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { Button, ConfirmDiscardModal, Modal, SegmentedControl, TextArea } from '@/shared/components'
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
+import { cn } from '@/shared/lib/cn'
+import { useAuditStore } from '@/shared/stores/useAuditStore'
+import { useUserStore } from '@/shared/stores/useUserStore'
+import { useMemo, useState } from 'react'
 
+import {
+  faCheck,
+  faCircleInfo,
+  faDownload,
+  faFileCode,
+  faFileExcel,
+  faSquareCheck,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faCircleInfo, faDownload, faFileCode, faFileExcel, faSquareCheck } from '@fortawesome/free-solid-svg-icons'
 
 interface PortabilityModalProps {
   open: boolean
@@ -17,7 +24,11 @@ interface PortabilityModalProps {
   onClose: () => void
 }
 
-export function PortabilityModal({ open, patient, onClose }: PortabilityModalProps) {
+export function PortabilityModal(props: PortabilityModalProps) {
+  return props.open ? <PortabilityModalForm key={props.patient.id} {...props} /> : null
+}
+
+function PortabilityModalForm({ open, patient, onClose }: PortabilityModalProps) {
   const applications = usePatientStore((s) => s.applications)
   const auditLogs = useAuditStore((s) => s.logs)
   const currentUser = useUserStore((s) => s.current)
@@ -26,13 +37,6 @@ export function PortabilityModal({ open, patient, onClose }: PortabilityModalPro
   const [justification, setJustification] = useState('')
   const [consented, setConsented] = useState(false)
 
-  useEffect(() => {
-    if (open) {
-      setLgpdFormat('json')
-      setJustification('')
-      setConsented(false)
-    }
-  }, [open])
 
   const isDirty = !!justification.trim() || consented
   const { requestClose, guardOpen, cancelDiscard, confirmDiscard } = useUnsavedChangesGuard({

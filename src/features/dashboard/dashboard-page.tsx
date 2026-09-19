@@ -1,31 +1,46 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { useHasPermission } from '@/shared/stores/useUserStore'
-import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
-import { usePatientStore } from '@/features/patient/stores/usePatientStore'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { ConcentrationPieChart } from '@/features/dashboard/components/charts/ConcentrationPieChart'
 import { PhasesBarChart } from '@/features/dashboard/components/charts/PhasesBarChart'
 import { StatusLineChart } from '@/features/dashboard/components/charts/StatusLineChart'
 import { TypesProgressBars } from '@/features/dashboard/components/charts/TypesProgressBars'
 import { VolumeStackedBarChart } from '@/features/dashboard/components/charts/VolumeStackedBarChart'
-import { TodayApplicationsCard, type TodayApplication } from '@/features/dashboard/components/showcase/TodayApplicationsCard'
+import { AdherenceCard, type AdherencePoint } from '@/features/dashboard/components/showcase/AdherenceCard'
 import { ApplicationsCard } from '@/features/dashboard/components/showcase/ApplicationsCard'
 import { ComparisonCard } from '@/features/dashboard/components/showcase/ComparisonCard'
-import { AdherenceCard, type AdherencePoint } from '@/features/dashboard/components/showcase/AdherenceCard'
-import { useMonthlyFilters, useSnapshotFilters } from '@/features/dashboard/hooks/useChartWindow'
-import { DarkChartCard, DarkMetricsSection, type DarkMetric } from '@/features/dashboard/components/showcase/DarkMetricsSection'
-import { faArrowTrendUp, faCalendar, faChartColumn, faGaugeHigh, faShieldHalved, faSliders, faSyringe, faCalendarCheck, faUser, faUserXmark } from '@fortawesome/free-solid-svg-icons'
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { CircleButton, PageHeader, Pill, SelectPill } from '@/shared/components/showcase'
-import { SegmentedControl } from '@/shared/components'
-import { cn } from '@/shared/lib/cn'
-import type { DateRange } from 'react-day-picker'
 import {
-  DATE_RANGE_ANCHOR_ATTR,
-  DateRangePopover,
-  formatRange,
-} from '@/features/dashboard/components/showcase/DateRangePopover'
+  DarkChartCard,
+  DarkMetricsSection,
+  type DarkMetric,
+} from '@/features/dashboard/components/showcase/DarkMetricsSection'
+import { DATE_RANGE_ANCHOR_ATTR, DateRangePopover } from '@/features/dashboard/components/showcase/DateRangePopover'
+import {
+  TodayApplicationsCard,
+  type TodayApplication,
+} from '@/features/dashboard/components/showcase/TodayApplicationsCard'
+import { useMonthlyFilters, useSnapshotFilters } from '@/features/dashboard/hooks/useChartWindow'
+import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
+import { formatRange } from '@/features/dashboard/lib/format-range'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { SegmentedControl } from '@/shared/components'
+import { CircleButton, PageHeader, Pill, SelectPill } from '@/shared/components/showcase'
+import { cn } from '@/shared/lib/cn'
+import { useHasPermission } from '@/shared/stores/useUserStore'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import {
+  faArrowTrendUp,
+  faCalendar,
+  faCalendarCheck,
+  faChartColumn,
+  faGaugeHigh,
+  faShieldHalved,
+  faSliders,
+  faSyringe,
+  faUser,
+  faUserXmark,
+} from '@fortawesome/free-solid-svg-icons'
+import { useNavigate } from '@tanstack/react-router'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { DateRange } from 'react-day-picker'
 
 const MONTH_FILTER_OPTIONS = [
   { value: 'all', label: 'Todos os meses' },

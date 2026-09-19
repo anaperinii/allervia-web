@@ -1,21 +1,15 @@
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  Button,
-  FieldLabel,
-  Modal,
-  ReadOnlyField,
-  TextInput,
-} from '@/shared/components'
-import { cn } from '@/shared/lib/cn'
-import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import userAvatar from '@/assets/user-avatar.jpg'
-import { useUserStore, PROFILES, ROLE_LABELS } from '@/shared/stores/useUserStore'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
+import { Button, FieldLabel, Modal, ReadOnlyField, TextInput } from '@/shared/components'
+import { cn } from '@/shared/lib/cn'
+import { PROFILES, ROLE_LABELS, useUserStore } from '@/shared/stores/useUserStore'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCamera, faCheck, faFloppyDisk, faUserGear } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const formatBirthDate = (iso: string) => {
   const [year, month, day] = iso.split('-')
@@ -33,7 +27,7 @@ export function ProfilePage() {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     getValues,
     formState: { errors },
   } = useForm<ProfileForm>({
@@ -48,7 +42,7 @@ export function ProfilePage() {
     },
   })
 
-  const watched = watch()
+  const watched = useWatch({ control }) as ProfileForm
 
   const handleCancel = () => {
     reset({

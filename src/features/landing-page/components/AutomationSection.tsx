@@ -1,11 +1,11 @@
-import { Reveal } from './Reveal'
-import { useLandingTheme } from '@/features/landing-page/theme-context'
 import glowDark from '@/assets/automation-glow-dark.png'
 import glowLight from '@/assets/automation-glow-light.png'
+import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
+import { Reveal } from './Reveal'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowsRotate, faBrain, faDiagramProject, faHeartPulse } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { faArrowsRotate, faBrain, faDiagramProject, faHeartPulse } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const FEATURES: { icon: IconDefinition; title: string; description: string }[] = [
   { icon: faHeartPulse, title: 'Rastreamento de Desempenho', description: 'Monitore adesão, intervalos e resultados sem precisar revisar registros manualmente.' },

@@ -1,15 +1,15 @@
-import { Controller, type UseFormReturn } from 'react-hook-form'
-import { cn } from '@/shared/lib/cn'
-import { FieldLabel, Select, StepHeading, TextArea, TextInput } from '@/shared/components'
-import { GLASS_CARD_SHADOW } from '@/shared/components/glass-card'
-import { formatConcentration, formatVolume } from '@/shared/lib/formatters'
 import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
-import { APPLICATION_ADMINISTRATORS } from '@/shared/stores/useUserStore'
-import { addMinutesToTime } from '@/shared/lib/dates'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
+import { FieldLabel, Select, StepHeading, TextArea, TextInput } from '@/shared/components'
+import { GLASS_CARD_SHADOW } from '@/shared/constants/glass-card'
+import { cn } from '@/shared/lib/cn'
+import { addMinutesToTime } from '@/shared/lib/dates'
+import { formatConcentration, formatVolume } from '@/shared/lib/formatters'
+import { APPLICATION_ADMINISTRATORS } from '@/shared/stores/useUserStore'
+import { Controller, type UseFormReturn } from 'react-hook-form'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const REACTION_OPTIONS = [
   { value: 'reduce_dose', label: 'Reduzir dose', desc: 'Retornar ao volume anterior' },

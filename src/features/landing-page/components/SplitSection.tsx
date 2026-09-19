@@ -1,11 +1,11 @@
+import { SPLIT_FEATURES } from '@/features/landing-page/constants/split-features'
+import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
+import { Card, CardSwap } from '@/shared/components/CardSwap'
 import { useState } from 'react'
 import { Reveal } from './Reveal'
-import { CardSwap, Card } from '@/shared/components/CardSwap'
-import { useLandingTheme } from '@/features/landing-page/theme-context'
-import { SPLIT_FEATURES } from '@/features/landing-page/constants/split-features'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const CARD_TONES_LIGHT = ['155,193,196', '108,158,165', '37,126,140', '20,74,86']
 const CARD_TONES_DARK = ['155,193,196', '108,158,165', '74,163,175', '96,168,178']

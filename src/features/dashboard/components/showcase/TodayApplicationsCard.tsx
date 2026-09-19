@@ -1,12 +1,7 @@
-import { faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import todayArt from '@/assets/today-art.jpg'
+import { STATUS_BADGE } from '@/features/dashboard/constants/status-badge'
 import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
-
-export const STATUS_BADGE = {
-  completed: { color: '#8FD285', label: 'Aplicada' },
-  missed: { color: '#E0453C', label: 'Ausente' },
-  scheduled: { color: '#8CA1A6', label: 'Prevista' },
-} as const
+import { faArrowRight } from '@fortawesome/free-solid-svg-icons'
 
 export interface TodayApplication {
   id: string

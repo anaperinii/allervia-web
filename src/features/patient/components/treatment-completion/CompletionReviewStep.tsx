@@ -1,12 +1,12 @@
-import type { UseFormReturn } from 'react-hook-form'
-import { cn } from '@/shared/lib/cn'
-import { FieldLabel, StepHeading, TextArea } from '@/shared/components'
-import { GLASS_CARD_SHADOW } from '@/shared/components/glass-card'
 import type { CompletionForm } from '@/features/patient/schemas/completion'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
+import { FieldLabel, StepHeading, TextArea } from '@/shared/components'
+import { GLASS_CARD_SHADOW } from '@/shared/constants/glass-card'
+import { cn } from '@/shared/lib/cn'
+import type { UseFormReturn } from 'react-hook-form'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faLock, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface CompletionReviewStepProps {
   form: UseFormReturn<CompletionForm>

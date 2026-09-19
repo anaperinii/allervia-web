@@ -1,15 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { TablePagination } from '@/shared/components'
-import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
-import { usePatientStore } from '@/features/patient/stores/usePatientStore'
-import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { useDoctorFilter, useHasPermission } from '@/shared/stores/useUserStore'
-import { ImmunotherapiesFilterBar, MODALITY_OPTIONS, type ModalityTab } from '@/features/immunotherapy/components/ImmunotherapiesFilterBar'
+import {
+  ImmunotherapiesFilterBar,
+  type ModalityTab,
+} from '@/features/immunotherapy/components/ImmunotherapiesFilterBar'
 import { ImmunotherapiesTable } from '@/features/immunotherapy/components/ImmunotherapiesTable'
+import { MODALITY_OPTIONS } from '@/features/immunotherapy/constants/modality-options'
+import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
+import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
+import { usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { SegmentedControl, TablePagination } from '@/shared/components'
 import { PageHeader, Pill, SHOWCASE } from '@/shared/components/showcase'
-import { SegmentedControl } from '@/shared/components'
+import { useDoctorFilter, useHasPermission } from '@/shared/stores/useUserStore'
+import { useNavigate } from '@tanstack/react-router'
+import { useMemo, useState } from 'react'
 
 export function ImmunotherapiesPage() {
   const navigate = useNavigate()
@@ -66,9 +69,14 @@ export function ImmunotherapiesPage() {
     return filtered.slice(start, start + itemsPerPage)
   }, [filtered, currentPage, itemsPerPage])
 
-  useEffect(() => {
+  const filterKey = JSON.stringify([searchTerm, typeFilter, intervalFilter, statusFilter, itemsPerPage, modalityTab, doctorFilter])
+  const [previousFilterKey, setPreviousFilterKey] = useState(filterKey)
+  if (previousFilterKey !== filterKey) {
+    setPreviousFilterKey(filterKey)
     setCurrentPage(1)
-  }, [searchTerm, typeFilter, intervalFilter, statusFilter, itemsPerPage, modalityTab])
+  } else if (currentPage > totalPages) {
+    setCurrentPage(totalPages)
+  }
 
   const handleSelect = (item: Immunotherapy) => {
     setSelectedPatient(buildPatientFromImmunotherapy(item))

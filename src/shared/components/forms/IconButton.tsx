@@ -1,5 +1,5 @@
 import { cn } from '@/shared/lib/cn'
-import { Link } from '@tanstack/react-router'
+import { Link, type LinkProps } from '@tanstack/react-router'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import type { ButtonTone } from './Button'
 
@@ -23,9 +23,9 @@ type IconButtonAsAction = SharedProps & Omit<ButtonHTMLAttributes<HTMLButtonElem
 }
 
 type IconButtonAsLink = SharedProps & {
-  to: string
-  params?: Record<string, unknown>
-  search?: Record<string, unknown>
+  to: NonNullable<LinkProps['to']>
+  params?: LinkProps['params']
+  search?: LinkProps['search']
   onClick?: never
 }
 
@@ -67,7 +67,7 @@ export function IconButton(props: IconButtonProps) {
   if ('to' in props && props.to !== undefined) {
     return (
 
-      <Link to={props.to as any} params={props.params as any} search={props.search as any} className={cls} aria-label={ariaLabel}>
+      <Link to={props.to} params={props.params} search={props.search} className={cls} aria-label={ariaLabel}>
         {children}
       </Link>
     )

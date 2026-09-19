@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { cn } from '@/shared/lib/cn'
-import { StepHeading, TextInput } from '@/shared/components'
-import { PatientInitials } from '@/shared/components/glass-card'
 import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
+import { StepHeading, TextInput } from '@/shared/components'
+import { PatientInitials } from '@/shared/components/glass-card'
+import { cn } from '@/shared/lib/cn'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleInfo, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface NextDoseSummary {
   date: string
@@ -51,9 +51,12 @@ export function SelectPatientStep({
     return immunotherapies.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()))
   }, [search, immunotherapies])
 
-  useEffect(() => {
+  const suggestionsKey = JSON.stringify([search, showSuggestions, filtered.map((item) => item.id)])
+  const [previousSuggestionsKey, setPreviousSuggestionsKey] = useState(suggestionsKey)
+  if (previousSuggestionsKey !== suggestionsKey) {
+    setPreviousSuggestionsKey(suggestionsKey)
     setHighlightedIndex(-1)
-  }, [filtered.length, showSuggestions])
+  }
 
   useEffect(() => {
     if (highlightedIndex >= 0 && suggestionsRef.current) {

@@ -1,11 +1,10 @@
+import proArt from '@/assets/pro-art.jpg'
+import { formatRange } from '@/features/dashboard/lib/format-range'
+import { SHOWCASE } from '@/shared/components/showcase'
+import { cn } from '@/shared/lib/cn'
 import { useEffect, useRef } from 'react'
 import { DayPicker, type DateRange } from 'react-day-picker'
 import { ptBR } from 'react-day-picker/locale'
-import { format } from 'date-fns'
-import { ptBR as ptBRDateFns } from 'date-fns/locale'
-import proArt from '@/assets/pro-art.jpg'
-import { cn } from '@/shared/lib/cn'
-import { SHOWCASE } from '@/shared/components/showcase'
 import 'react-day-picker/style.css'
 
 export const DATE_RANGE_ANCHOR_ATTR = 'data-daterange-anchor'
@@ -15,13 +14,6 @@ interface DateRangePopoverProps {
   range: DateRange | undefined
   onRangeChange: (range: DateRange | undefined) => void
   onClose: () => void
-}
-
-export function formatRange(range: DateRange | undefined) {
-  if (!range?.from) return 'Selecionar período'
-  const from = format(range.from, 'dd MMM yyyy', { locale: ptBRDateFns })
-  if (!range.to) return from
-  return `${from} – ${format(range.to, 'dd MMM yyyy', { locale: ptBRDateFns })}`
 }
 
 export function DateRangePopover({ open, range, onRangeChange, onClose }: DateRangePopoverProps) {

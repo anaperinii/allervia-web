@@ -28,7 +28,7 @@ it('returns exact configured values and a read-only recommendation', async () =>
     administeredAt: '2026-01-01T13:00:00Z',
     values: { stepId: 'low', concentration: '1000', volume: '0.1', intervalDays: 7 },
   }) })
-  expect(preview.status).toBe(201)
+  expect(preview.status).toBe(200)
   const result = await preview.json()
   expect(result.recommendation.kind).toBe('RECOMMENDED')
   const after = await fetch(`${base}/doses/${doseId}`, { headers })
@@ -40,5 +40,21 @@ it('rejects numeric decimals instead of silently accepting a lossy body', async 
     Authorization: `Bearer ${token}`, 'Content-Type': 'application/json',
   }, body: JSON.stringify({ expectedRevision: 0, expectedTherapyRevision: 0,
     administeredAt: '2026-01-01T13:00:00Z', values: { stepId: 'low', concentration: '1000', volume: 0.1, intervalDays: 7 } }) })
+  expect(response.status).toBe(400)
+})
+
+it('returns only public account fields over HTTP', async () => {
+  const response = await fetch(`${base}/account/me`, { headers: { Authorization: `Bearer ${token}` } })
+  expect(response.status).toBe(200)
+  expect(Object.keys(await response.json()).sort()).toEqual([
+    'createdAt', 'email', 'id', 'isActive', 'isArchived', 'type', 'updatedAt',
+  ])
+})
+
+it('requires the dedicated password-change flow', async () => {
+  const response = await fetch(`${base}/account/update/me`, {
+    method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: 'ShouldNotBeAccepted1!' }),
+  })
   expect(response.status).toBe(400)
 })

@@ -47,11 +47,11 @@ export function formatIsoToPtOrDash(value: string): string {
 }
 
 export function parseIsoDate(value: string): Date | null {
-  if (!value) return null
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
   const [year, month, day] = value.split('-').map(Number)
   if (!year || !month || !day) return null
   const parsed = new Date(year, month - 1, day)
-  return isNaN(parsed.getTime()) ? null : parsed
+  return parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day ? parsed : null
 }
 
 export function addMinutesToTime(time: string, minutes: number): string {
