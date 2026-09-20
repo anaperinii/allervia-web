@@ -7,6 +7,7 @@ import { ImmunotherapiesTable } from '@/features/immunotherapy/components/Immuno
 import { MODALITY_OPTIONS } from '@/features/immunotherapy/constants/modality-options'
 import { legacyModalityToRoute } from '@/features/patient/adapters/clinical-presentation'
 import { listImmunotherapies } from '@/shared/api/clinical.api'
+import { readAutomation } from '@/shared/api/protocols.api'
 import type { ImmunotherapyListItem } from '@/shared/api/contracts/clinical'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
@@ -47,6 +48,18 @@ export function ImmunotherapiesPage() {
     queryFn: ({ signal }) => listImmunotherapies(filters, signal),
     enabled: organizationId !== '',
   })
+
+  // Estado de configuração da organização: sem versão padrão publicada, novas
+  // prescrições ficam bloqueadas — a pendência aparece para todos, com o
+  // responsável pela configuração indicado, sem impedir a consulta ao histórico.
+  const automationQuery = useQuery({
+    queryKey: queryKeys.automation(organizationId),
+    queryFn: ({ signal }) => readAutomation(signal),
+    enabled: organizationId !== '',
+  })
+  const configurationPending =
+    automationQuery.data?.defaults !== undefined &&
+    automationQuery.data.defaults.length === 0
 
   const items = listQuery.data?.items ?? []
   const total = listQuery.data?.total ?? 0
@@ -104,6 +117,20 @@ export function ImmunotherapiesPage() {
           )}
         </div>
       </div>
+
+      {configurationPending && (
+        <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[0.7rem] text-amber-800">
+          <span className="font-semibold">Configuração de protocolo pendente.</span>{' '}
+          Novas prescrições dependem de uma versão publicada e padrão.{' '}
+          <button
+            type="button"
+            onClick={() => navigate({ to: '/protocols' })}
+            className="font-semibold underline cursor-pointer bg-transparent border-none text-amber-800"
+          >
+            Abrir catálogo de protocolos
+          </button>
+        </div>
+      )}
 
       {listQuery.error && (
         <div
