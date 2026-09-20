@@ -2,15 +2,13 @@ import { editPatientSchema, type EditPatientForm } from '@/features/patient/sche
 import type { Patient } from '@/features/patient/stores/usePatientStore'
 import { Button, ConfirmDiscardModal, FieldLabel, Modal, ReadOnlyField, Select, TextInput } from '@/shared/components'
 import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
-import { MOCK_PROFESSIONAL_DIRECTORY } from '@/shared/stores/professional-directory.mock'
+import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-
-const DOCTORS = MOCK_PROFESSIONAL_DIRECTORY.filter((p) => p.role === 'doctor')
 
 interface EditPatientModalProps {
   open: boolean
@@ -25,6 +23,7 @@ export function EditPatientModal(props: EditPatientModalProps) {
 
 function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientModalProps) {
   const [step, setStep] = useState<'form' | 'review'>('form')
+  const { members: doctors } = useProfessionalDirectory('PHYSICIAN')
   const {
     control,
     register,
@@ -112,9 +111,12 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
               <FieldLabel label="Médico responsável" error={errors.responsibleDoctor?.message}>
                 <Select invalid={!!errors.responsibleDoctor} {...register('responsibleDoctor')}>
                   <option value="" disabled>Selecione o médico</option>
-                  {DOCTORS.map((doctor) => (
-                    <option key={doctor.id} value={doctor.name}>
-                      {doctor.name} · {doctor.registration}
+                  {doctors.map((doctor) => (
+                    <option key={doctor.professionalId} value={doctor.fullName}>
+                      {doctor.fullName}
+                      {doctor.councilNumber
+                        ? ` · ${doctor.councilNumber}/${doctor.councilUf ?? ''}`
+                        : ''}
                     </option>
                   ))}
                 </Select>

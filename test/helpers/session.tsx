@@ -8,6 +8,7 @@ import {
   SessionContext,
   type SessionValue,
 } from '@/shared/auth/session-context'
+import { useUserStore } from '@/shared/stores/useUserStore'
 
 export function buildSessionState(
   overrides: Partial<SessionState> = {},
@@ -83,14 +84,21 @@ export function buildSessionValue(
  * Envolve a árvore com os provedores que a aplicação real monta, sem fazer
  * chamadas de rede: a sessão é fornecida diretamente pelo teste.
  */
-export function withSession(children: ReactNode, value?: Partial<SessionValue>) {
+export type SessionOverrides = Partial<SessionValue>
+
+export function withSession(children: ReactNode, value?: SessionOverrides) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
 
+  const session = buildSessionValue(value)
+  // Na aplicação real quem publica identidade e capacidades é a guarda de
+  // sessão; aqui o mesmo passo é feito para que as telas leiam o mesmo estado.
+  useUserStore.getState().syncFromAccount(session.account)
+
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionContext.Provider value={buildSessionValue(value)}>
+      <SessionContext.Provider value={session}>
         {children}
       </SessionContext.Provider>
     </QueryClientProvider>

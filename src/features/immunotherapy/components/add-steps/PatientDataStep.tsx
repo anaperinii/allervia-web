@@ -2,7 +2,7 @@ import { Controller, type UseFormReturn } from 'react-hook-form'
 import { FieldLabel, Select, StepHeading, TextInput } from '@/shared/components'
 import { formatCPF, formatPhone, formatWeight } from '@/shared/lib/formatters'
 import { todayStr } from '@/shared/lib/dates'
-import { MOCK_PROFESSIONAL_DIRECTORY } from '@/shared/stores/professional-directory.mock'
+import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
 import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
 
 interface PatientDataStepProps {
@@ -11,6 +11,8 @@ interface PatientDataStepProps {
 
 export function PatientDataStep({ form }: PatientDataStepProps) {
   const { control, register, formState: { errors } } = form
+  // Médicos da organização, carregados do servidor.
+  const { members: physicians, isLoading } = useProfessionalDirectory('PHYSICIAN')
 
   return (
     <div className="space-y-5">
@@ -73,9 +75,14 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
         </FieldLabel>
         <FieldLabel label="Médico Responsável" error={errors.responsibleDoctor?.message}>
           <Select invalid={!!errors.responsibleDoctor} {...register('responsibleDoctor')}>
-            <option value="" disabled>Selecione o médico</option>
-            {MOCK_PROFESSIONAL_DIRECTORY.filter((p) => p.role === 'doctor').map((p) => (
-              <option key={p.id} value={p.name}>{p.name} · {p.registration}</option>
+            <option value="" disabled>
+              {isLoading ? 'Carregando médicos…' : 'Selecione o médico'}
+            </option>
+            {physicians.map((physician) => (
+              <option key={physician.professionalId} value={physician.fullName}>
+                {physician.fullName}
+                {physician.councilNumber ? ` · ${physician.councilNumber}/${physician.councilUf ?? ''}` : ''}
+              </option>
             ))}
           </Select>
         </FieldLabel>

@@ -9,6 +9,15 @@ export const queryKeys = {
   devices: () => ['account', 'devices'] as const,
   mfaFactors: () => ['account', 'mfa-factors'] as const,
 
+  organization: () => ['organization', 'me'] as const,
+  professionalProfile: () => ['professionals', 'me'] as const,
+
+  team: (organizationId: string, filters: Record<string, unknown>) =>
+    ['team', organizationId, filters] as const,
+  invites: (organizationId: string, filters: Record<string, unknown>) =>
+    ['invites', organizationId, filters] as const,
+  inviteContext: (token: string) => ['invites', 'context', token] as const,
+
   /** Prefixo dos dados clínicos, sempre escopados por organização. */
   clinical: (organizationId: string) => ['clinical', organizationId] as const,
 } as const

@@ -1,26 +1,35 @@
 import userAvatar from '@/assets/user-avatar.jpg'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
+import { PROFESSION_LABELS, ROLE_BADGES } from '@/features/settings/constants/team-roles'
 import { Button, FieldLabel, Modal, ReadOnlyField, TextInput } from '@/shared/components'
-import { ROLE_LABELS, useCurrentUser, useUserStore } from '@/shared/stores/useUserStore'
+import { queryKeys } from '@/shared/api/query-keys'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { readOwnProfile, updateOwnProfile } from '@/shared/api/team.api'
+import { useSession } from '@/shared/auth/useSession'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
 import { faCamera, faFloppyDisk, faUserGear } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-const formatBirthDate = (iso: string) => {
-  const [year, month, day] = iso.split('-')
-  return `${day}/${month}/${year}`
-}
-
 export function ProfilePage() {
-  const currentUser = useCurrentUser()
-  const updateCurrentProfile = useUserStore((s) => s.updateCurrentProfile)
+  const { account, refresh } = useSession()
+  const queryClient = useQueryClient()
 
   const [editing, setEditing] = useState(false)
   const [showSaveModal, setShowSaveModal] = useState(false)
+  const [failure, setFailure] = useState<string | null>(null)
+
+  const profileQuery = useQuery({
+    queryKey: queryKeys.professionalProfile(),
+    queryFn: ({ signal }) => readOwnProfile(signal),
+  })
+
+  const profile = profileQuery.data
+
   const {
     register,
     handleSubmit,
@@ -30,35 +39,72 @@ export function ProfilePage() {
     formState: { errors },
   } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: currentUser.name,
-      email: currentUser.email,
-      phone: currentUser.phone,
-      specialty: currentUser.specialty,
-      institution: currentUser.institution,
-      birthDate: currentUser.birthDate,
+    values: {
+      name: profile?.fullName ?? '',
+      phone: profile?.phoneNumber ?? '',
+      councilNumber: profile?.councilNumber ?? '',
+      councilUf: profile?.councilUf ?? '',
     },
   })
 
   const watched = useWatch({ control }) as ProfileForm
 
+  const saveMutation = useMutation({
+    mutationFn: (values: ProfileForm) =>
+      updateOwnProfile({
+        fullName: values.name,
+        phoneNumber: values.phone,
+        councilNumber: values.councilNumber || undefined,
+        councilUf: values.councilUf || undefined,
+      }),
+    onSuccess: async () => {
+      setShowSaveModal(false)
+      setEditing(false)
+      setFailure(null)
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.professionalProfile(),
+      })
+      // O nome exibido na aplicação vem de /account/me: recarregar mantém a
+      // identidade coerente em toda a interface.
+      await refresh()
+    },
+    onError: (error) => {
+      setShowSaveModal(false)
+      setFailure(
+        error instanceof ApiError
+          ? error.message
+          : 'Não foi possível salvar o perfil.',
+      )
+    },
+  })
+
   const handleCancel = () => {
-    reset({
-      name: currentUser.name,
-      email: currentUser.email,
-      phone: currentUser.phone,
-      specialty: currentUser.specialty,
-      institution: currentUser.institution,
-      birthDate: currentUser.birthDate,
-    })
+    reset()
+    setFailure(null)
     setEditing(false)
   }
 
-  const handleConfirmSave = () => {
-    updateCurrentProfile(getValues())
-    setShowSaveModal(false)
-    setEditing(false)
+  if (profileQuery.isPending) {
+    return (
+      <SettingsLayout subtitle="Meu Perfil">
+        <p className="p-6 text-xs text-(--text-muted)">Carregando perfil…</p>
+      </SettingsLayout>
+    )
   }
+
+  if (profileQuery.error || !profile) {
+    return (
+      <SettingsLayout subtitle="Meu Perfil">
+        <p className="p-6 text-xs text-(--text-muted)" role="alert">
+          {profileQuery.error instanceof ApiError
+            ? profileQuery.error.message
+            : 'Não foi possível carregar o seu perfil.'}
+        </p>
+      </SettingsLayout>
+    )
+  }
+
+  const roles = account?.roles ?? []
 
   return (
     <SettingsLayout subtitle="Meu Perfil">
@@ -80,8 +126,12 @@ export function ProfilePage() {
                 </div>
                 <div className="min-w-0">
                   <div className="text-lg font-bold text-(--text)">{watched.name}</div>
-                  <div className="text-xs text-(--text-muted)">{watched.specialty}</div>
-                  <div className="text-xs text-(--text-muted) mt-0.5">{watched.institution}</div>
+                  <div className="text-xs text-(--text-muted)">
+                    {PROFESSION_LABELS[profile.profession]}
+                  </div>
+                  <div className="text-xs text-(--text-muted) mt-0.5">
+                    {account?.organization?.name ?? ''}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -107,6 +157,12 @@ export function ProfilePage() {
               </div>
             </div>
 
+            {failure && (
+              <p className="lg:col-span-2 text-xs text-red-600" role="alert">
+                {failure}
+              </p>
+            )}
+
             <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Pessoais</h2>
@@ -117,19 +173,15 @@ export function ProfilePage() {
                     ? <TextInput invalid={!!errors.name} {...register('name')} />
                     : <ReadOnlyField>{watched.name}</ReadOnlyField>}
                 </FieldLabel>
-                <FieldLabel label="CPF">
-                  <ReadOnlyField>{currentUser.cpf}</ReadOnlyField>
-                </FieldLabel>
-                <FieldLabel label="Data de nascimento" error={errors.birthDate?.message}>
-                  {editing
-                    ? <TextInput type="date" invalid={!!errors.birthDate} {...register('birthDate')} />
-                    : <ReadOnlyField>{formatBirthDate(watched.birthDate)}</ReadOnlyField>}
-                </FieldLabel>
                 <FieldLabel label="Telefone" error={errors.phone?.message}>
                   {editing
                     ? <TextInput invalid={!!errors.phone} {...register('phone')} />
                     : <ReadOnlyField>{watched.phone}</ReadOnlyField>}
                 </FieldLabel>
+              </div>
+              <div className="px-4 pb-4 text-[0.65rem] leading-relaxed text-(--text-muted)">
+                CPF e data de nascimento ainda não têm campo no servidor; por
+                isso não aparecem aqui em vez de exibirem um valor inventado.
               </div>
             </section>
 
@@ -138,26 +190,29 @@ export function ProfilePage() {
                 <h2 className="text-xs font-bold text-(--text)">Dados Profissionais</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
-                <FieldLabel label="E-mail" error={errors.email?.message}>
-                  {editing
-                    ? <TextInput type="email" invalid={!!errors.email} {...register('email')} />
-                    : <ReadOnlyField>{watched.email}</ReadOnlyField>}
+                <FieldLabel label="E-mail">
+                  <ReadOnlyField>{account?.user.email ?? ''}</ReadOnlyField>
                 </FieldLabel>
-                <FieldLabel label="CRM">
-                  <ReadOnlyField>{currentUser.registration}</ReadOnlyField>
+                <FieldLabel label="Profissão">
+                  <ReadOnlyField>{PROFESSION_LABELS[profile.profession]}</ReadOnlyField>
                 </FieldLabel>
-                <FieldLabel label="Especialidade" error={errors.specialty?.message}>
+                <FieldLabel label="Conselho" error={errors.councilNumber?.message}>
                   {editing
-                    ? <TextInput invalid={!!errors.specialty} {...register('specialty')} />
-                    : <ReadOnlyField>{watched.specialty}</ReadOnlyField>}
+                    ? <TextInput invalid={!!errors.councilNumber} {...register('councilNumber')} />
+                    : <ReadOnlyField>{watched.councilNumber || '—'}</ReadOnlyField>}
                 </FieldLabel>
-                <FieldLabel label="Instituição" error={errors.institution?.message}>
+                <FieldLabel label="UF do conselho" error={errors.councilUf?.message}>
                   {editing
-                    ? <TextInput invalid={!!errors.institution} {...register('institution')} />
-                    : <ReadOnlyField>{watched.institution}</ReadOnlyField>}
+                    ? <TextInput invalid={!!errors.councilUf} maxLength={2} {...register('councilUf')} />
+                    : <ReadOnlyField>{watched.councilUf || '—'}</ReadOnlyField>}
                 </FieldLabel>
               </div>
-          </section>
+              <div className="px-4 pb-4 text-[0.65rem] leading-relaxed text-(--text-muted)">
+                E-mail e profissão são mantidos por contratos próprios: o
+                primeiro exige verificação do novo endereço, a segunda é
+                atualizada pela administração.
+              </div>
+            </section>
 
             <section className="lg:col-span-2 border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
@@ -166,13 +221,13 @@ export function ProfilePage() {
               </div>
               <div className="p-4 flex flex-col gap-3">
                 <div className="flex flex-wrap gap-2">
-                  {currentUser.roles.length > 0 ? (
-                    currentUser.roles.map((role) => (
+                  {roles.length > 0 ? (
+                    roles.map((role) => (
                       <span
                         key={role}
                         className="rounded-full border border-(--border-custom) bg-white px-3 py-1 text-[0.7rem] font-semibold text-(--text)"
                       >
-                        {ROLE_LABELS[role]}
+                        {ROLE_BADGES[role].label}
                       </span>
                     ))
                   ) : (
@@ -200,11 +255,20 @@ export function ProfilePage() {
         footer={
           <>
             <Button variant="outline" onClick={() => setShowSaveModal(false)}>Cancelar</Button>
-            <Button tone="brand" variant="solid" onClick={handleConfirmSave}>Confirmar</Button>
+            <Button
+              tone="brand"
+              variant="solid"
+              disabled={saveMutation.isPending}
+              onClick={() => saveMutation.mutate(getValues())}
+            >
+              Confirmar
+            </Button>
           </>
         }
       >
-        <p className="text-xs text-(--text-muted)">As alterações no seu perfil serão salvas e aplicadas imediatamente.</p>
+        <p className="text-xs text-(--text-muted)">
+          As alterações do seu cadastro profissional serão salvas no servidor.
+        </p>
       </Modal>
     </SettingsLayout>
   )

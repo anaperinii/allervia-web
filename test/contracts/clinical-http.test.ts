@@ -83,9 +83,38 @@ it('refuses a cookie-borne command without the synchronizer token', async () => 
 })
 
 it('requires the dedicated password-change flow', async () => {
-  const response = await fetch(`${base}/account/update/me`, {
+  // A rota genérica de atualização de usuário foi retirada: perfil e senha têm
+  // contratos próprios.
+  const retired = await fetch(`${base}/account/update/me`, {
     method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ password: 'ShouldNotBeAccepted1!' }),
   })
-  expect(response.status).toBe(400)
+  expect(retired.status).toBe(404)
+
+  const profile = await fetch(`${base}/professionals/me`, {
+    method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: 'ShouldNotBeAccepted1!' }),
+  })
+  expect(profile.status).toBe(400)
+  expect((await profile.json()).code).toBe('VALIDATION_ERROR')
+})
+
+it('paginates the team listing within the caller organization', async () => {
+  const response = await fetch(`${base}/professionals?page=1&pageSize=5`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  expect(response.status).toBe(200)
+  const page = await response.json()
+  expect(page).toMatchObject({ page: 1, pageSize: 5, total: expect.any(Number) })
+  expect(Array.isArray(page.items)).toBe(true)
+  // A listagem descreve o vínculo; ela não devolve credencial nem segredo.
+  expect(JSON.stringify(page)).not.toMatch(/password|tokenVersion|secretHash/)
+})
+
+it('keeps organization provisioning out of the product surface', async () => {
+  const response = await fetch(`${base}/organization/register`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: 'Clínica Não Autorizada', taxId: '12345678000199' }),
+  })
+  expect(response.status).toBe(404)
 })

@@ -5,7 +5,7 @@ import { GLASS_CARD_SHADOW } from '@/shared/constants/glass-card'
 import { cn } from '@/shared/lib/cn'
 import { addMinutesToTime } from '@/shared/lib/dates'
 import { formatConcentration, formatVolume } from '@/shared/lib/formatters'
-import { MOCK_APPLICATION_ADMINISTRATORS } from '@/shared/stores/professional-directory.mock'
+import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
 import { Controller, type UseFormReturn } from 'react-hook-form'
 
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
@@ -24,6 +24,9 @@ interface PostApplicationStepProps {
 
 export function PostApplicationStep({ form }: PostApplicationStepProps) {
   const { control, register, watch, getValues, setValue, formState: { errors } } = form
+  // Quem pode figurar como executor da aplicação vem da equipe real; a autoria
+  // do registro continua sendo o ator autenticado no servidor.
+  const { members: administrators } = useProfessionalDirectory('NURSE')
   const nextInterval = watch('nextInterval')
   const sideEffectPost = watch('sideEffectPost')
   const medicationNeededPost = watch('medicationNeededPost')
@@ -155,8 +158,10 @@ export function PostApplicationStep({ form }: PostApplicationStepProps) {
         <FieldLabel label="Responsável" error={errors.administrator?.message}>
           <Select invalid={!!errors.administrator} {...register('administrator')}>
             <option value="" disabled>Selecione o responsável pela aplicação</option>
-            {MOCK_APPLICATION_ADMINISTRATORS.map((p) => (
-              <option key={p.id} value={p.name}>{p.name} — {p.title}</option>
+            {administrators.map((person) => (
+              <option key={person.professionalId} value={person.fullName}>
+                {person.fullName}
+              </option>
             ))}
           </Select>
         </FieldLabel>

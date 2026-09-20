@@ -5,8 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPaperPlane, faTrash, faUserCheck, faUserXmark } from '@fortawesome/free-solid-svg-icons'
 
 export type TeamConfirmType =
-  | 'remove-member'
-  | 'delete-invite'
+  | 'cancel-invite'
   | 'resend-invite'
   | 'deactivate'
   | 'activate'
@@ -30,56 +29,64 @@ interface ConfirmConfig {
 const buildConfig = (state: TeamConfirmState): ConfirmConfig => {
   const name = <span className="font-semibold text-(--text)">{state.name}</span>
   switch (state.type) {
-    case 'remove-member':
-      return {
-        icon: <FontAwesomeIcon icon={faTrash} style={{ fontSize: 16 }} />,
-        tone: 'danger',
-        title: 'Remover membro',
-        body: <>Tem certeza que deseja remover {name} da equipe? Esta ação não pode ser desfeita.</>,
-        btn: 'Remover',
-      }
     case 'deactivate':
       return {
         icon: <FontAwesomeIcon icon={faUserXmark} style={{ fontSize: 16 }} />,
         tone: 'warning',
-        title: 'Desativar membro',
-        body: <>{name} perderá o acesso ao sistema até ser reativado. Os dados não serão removidos.</>,
-        btn: 'Desativar',
+        title: 'Encerrar acesso',
+        body: (
+          <>
+            {name} deixa de entrar no sistema e as sessões abertas caem. O
+            cadastro e a autoria dos registros permanecem.
+          </>
+        ),
+        btn: 'Encerrar acesso',
       }
     case 'activate':
       return {
         icon: <FontAwesomeIcon icon={faUserCheck} style={{ fontSize: 16 }} />,
         tone: 'success',
-        title: 'Reativar membro',
-        body: <>{name} terá o acesso ao sistema restaurado com as mesmas permissões anteriores.</>,
-        btn: 'Reativar',
+        title: 'Restaurar acesso',
+        body: <>{name} volta a entrar no sistema com os papéis que ainda estiverem vigentes.</>,
+        btn: 'Restaurar',
       }
     case 'resend-invite':
       return {
         icon: <FontAwesomeIcon icon={faPaperPlane} style={{ fontSize: 16 }} />,
         tone: 'brand',
         title: 'Reenviar convite',
-        body: <>Um novo e-mail de convite será enviado para {name}. O convite anterior será invalidado.</>,
+        body: (
+          <>
+            O convite atual de {name} é cancelado e um novo é emitido com prazo
+            renovado. O link anterior deixa de funcionar.
+          </>
+        ),
         btn: 'Reenviar',
       }
-    case 'delete-invite':
+    case 'cancel-invite':
       return {
         icon: <FontAwesomeIcon icon={faTrash} style={{ fontSize: 16 }} />,
         tone: 'danger',
-        title: 'Excluir convite',
-        body: <>O convite para {name} será excluído permanentemente e não poderá mais ser utilizado.</>,
-        btn: 'Excluir',
+        title: 'Cancelar convite',
+        body: <>O link enviado para {name} deixa de funcionar imediatamente.</>,
+        btn: 'Cancelar convite',
       }
   }
 }
 
 interface TeamConfirmModalProps {
   state: TeamConfirmState | null
+  submitting?: boolean
   onClose: () => void
   onConfirm: () => void
 }
 
-export function TeamConfirmModal({ state, onClose, onConfirm }: TeamConfirmModalProps) {
+export function TeamConfirmModal({
+  state,
+  submitting = false,
+  onClose,
+  onConfirm,
+}: TeamConfirmModalProps) {
   if (!state) return null
   const cfg = buildConfig(state)
   return (
@@ -93,7 +100,9 @@ export function TeamConfirmModal({ state, onClose, onConfirm }: TeamConfirmModal
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button tone={cfg.tone} variant="solid" onClick={onConfirm}>{cfg.btn}</Button>
+          <Button tone={cfg.tone} variant="solid" disabled={submitting} onClick={onConfirm}>
+            {cfg.btn}
+          </Button>
         </>
       }
     >

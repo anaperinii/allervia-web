@@ -1,14 +1,16 @@
 import type { UseFormReturn } from 'react-hook-form'
-import { Button, FieldLabel, TextInput, PasswordInput, PasswordRequirements } from '@/shared/components'
-import type { RegisterForm } from '@/features/auth/schemas/register'
+import { Button, FieldLabel, TextInput, PasswordInput, PasswordRequirements, Select } from '@/shared/components'
+import { PROFESSION_OPTIONS, type RegisterForm } from '@/features/auth/schemas/register'
 
 interface FormStepProps {
   form: UseFormReturn<RegisterForm>
   maskedEmail: string
+  submitting: boolean
+  error: string | null
   onSubmit: (event: React.BaseSyntheticEvent) => void
 }
 
-export function FormStep({ form, maskedEmail, onSubmit }: FormStepProps) {
+export function FormStep({ form, maskedEmail, submitting, error, onSubmit }: FormStepProps) {
   const password = form.watch('password')
   const errors = form.formState.errors
 
@@ -65,18 +67,35 @@ export function FormStep({ form, maskedEmail, onSubmit }: FormStepProps) {
 
         <PasswordRequirements password={password} />
 
-        <FieldLabel label="Especialidade" error={errors.specialty?.message}>
+        <FieldLabel label="Profissão" error={errors.profession?.message}>
+          <Select invalid={!!errors.profession} {...form.register('profession')}>
+            <option value="">Selecione a sua profissão</option>
+            {PROFESSION_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </FieldLabel>
+
+        <FieldLabel label="Telefone comercial" error={errors.phoneNumber?.message}>
           <TextInput
-            type="text"
-            placeholder="Ex.: Alergologia e Imunologia"
-            invalid={!!errors.specialty}
-            maxLength={80}
-            {...form.register('specialty')}
+            type="tel"
+            placeholder="(00) 00000-0000"
+            invalid={!!errors.phoneNumber}
+            maxLength={20}
+            {...form.register('phoneNumber')}
           />
         </FieldLabel>
+
+        {error && (
+          <p className="text-[0.7rem] text-[color:var(--err)]" role="alert">
+            {error}
+          </p>
+        )}
       </div>
 
-      <Button type="submit" tone="brand" variant="solid" prominent fullWidth size="lg" disabled={form.formState.isSubmitting}>
+      <Button type="submit" tone="brand" variant="solid" prominent fullWidth size="lg" disabled={submitting}>
         Criar conta
       </Button>
 
