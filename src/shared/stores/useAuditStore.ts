@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import type { UserRole } from '@/shared/stores/useUserStore'
 
 export type AuditAction = 'view_chart' | 'view_report' | 'export_lgpd' | 'edit_patient' | 'adjust_protocol' | 'inactivate' | 'reactivate' | 'apply_dose'
 
@@ -7,7 +6,12 @@ export interface AccessLog {
   id: string
   userId: string
   userName: string
-  userRole: UserRole
+  /**
+   * Papel registrado no momento do acesso. É texto histórico, não o papel atual
+   * do usuário: registros antigos preservam rótulos que o produto já não usa.
+   * A trilha oficial passa a vir do servidor na etapa de auditoria.
+   */
+  userRole: string
   userRegistration: string
   patientId: string
   patientName: string

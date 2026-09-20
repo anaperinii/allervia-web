@@ -5,7 +5,7 @@ import { Button, ConfirmDiscardModal, Modal, SegmentedControl, TextArea } from '
 import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import { cn } from '@/shared/lib/cn'
 import { useAuditStore } from '@/shared/stores/useAuditStore'
-import { useUserStore } from '@/shared/stores/useUserStore'
+import { useCurrentUser } from '@/shared/stores/useUserStore'
 import { useMemo, useState } from 'react'
 
 import {
@@ -31,7 +31,7 @@ export function PortabilityModal(props: PortabilityModalProps) {
 function PortabilityModalForm({ open, patient, onClose }: PortabilityModalProps) {
   const applications = usePatientStore((s) => s.applications)
   const auditLogs = useAuditStore((s) => s.logs)
-  const currentUser = useUserStore((s) => s.current)
+  const currentUser = useCurrentUser()
 
   const [lgpdFormat, setLgpdFormat] = useState<LgpdFileFormat>('json')
   const [justification, setJustification] = useState('')

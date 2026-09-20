@@ -4,6 +4,7 @@ import { ToastViewport } from '@/shared/components'
 import { AppShell } from '@/shared/layout/AppShell'
 import { Header } from '@/shared/layout/header'
 import { cn } from '@/shared/lib/cn'
+import { RequireSession } from '@/shared/auth/RequireSession'
 import { Outlet, useLocation } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
@@ -74,14 +75,16 @@ export function RootComponent() {
   }
 
   return (
-    <AppShell>
-      <div className="flex flex-1 flex-col min-h-0">
-          <PageTransition key={location.pathname}>
-            <Outlet />
-          </PageTransition>
-      </div>
-      <ToastViewport />
-    </AppShell>
+    <RequireSession>
+      <AppShell>
+        <div className="flex flex-1 flex-col min-h-0">
+            <PageTransition key={location.pathname}>
+              <Outlet />
+            </PageTransition>
+        </div>
+        <ToastViewport />
+      </AppShell>
+    </RequireSession>
   )
 }
 

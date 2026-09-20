@@ -118,7 +118,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const path = location.pathname
   const unreadCount = useNotificationsStore((s) => s.notifications.filter((n) => !n.read).length)
-  const userName = useUserStore((s) => s.current.name)
+  const userName = useUserStore((s) => s.current?.name ?? '')
   const [showLogout, setShowLogout] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 

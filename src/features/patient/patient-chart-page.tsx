@@ -8,7 +8,7 @@ import { usePatientStore, derivePatientDates, type Application } from '@/feature
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { useAuditStore } from '@/shared/stores/useAuditStore'
-import { useDoctorFilter, useHasPermission, useUserStore } from '@/shared/stores/useUserStore'
+import { useCurrentUser, useDoctorFilter, useHasPermission } from '@/shared/stores/useUserStore'
 import {
   calculateNextDose,
   INDUCTION_INTERVAL,
@@ -70,7 +70,7 @@ export function PatientChartPage() {
     else navigate({ to: '/immunotherapies' })
   }, [patientId, selectedPatient, navigate, setSelectedPatient])
 
-  const currentUser = useUserStore((s) => s.current)
+  const currentUser = useCurrentUser()
   const logAccess = useAuditStore((s) => s.logAccess)
   const loggedAccessRef = useRef<string | null>(null)
   useEffect(() => {

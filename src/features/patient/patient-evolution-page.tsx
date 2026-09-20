@@ -17,7 +17,7 @@ import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardSte
 import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
 import { comparePtDateDesc, parsePtDate } from '@/shared/lib/dates'
 import { useAuditStore } from '@/shared/stores/useAuditStore'
-import { useHasPermission, useUserStore } from '@/shared/stores/useUserStore'
+import { useCurrentUser, useHasPermission } from '@/shared/stores/useUserStore'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { addDays, differenceInDays, format } from 'date-fns'
@@ -47,7 +47,7 @@ function PatientEvolutionContent() {
   const recordEvolution = usePatientStore((s) => s.recordEvolution)
   const applications = usePatientStore((s) => s.applications)
   const patientFromStore = usePatientStore((s) => s.selectedPatient)
-  const currentUser = useUserStore((s) => s.current)
+  const currentUser = useCurrentUser()
   const logAccess = useAuditStore((s) => s.logAccess)
   const immunotherapies = useImmunotherapiesStore((s) => s.immunotherapies)
   const canEvolve = useHasPermission('evolve_patient')

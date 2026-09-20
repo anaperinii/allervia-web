@@ -8,7 +8,7 @@ import { useCompletionDraftsStore } from '@/features/patient/stores/useCompletio
 import { derivePatientDates, usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
 import { formatDurationFromIsoStart } from '@/shared/lib/dates'
-import { PROFILES } from '@/shared/stores/useUserStore'
+import { MOCK_PROFESSIONAL_DIRECTORY } from '@/shared/stores/professional-directory.mock'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { format } from 'date-fns'
@@ -104,7 +104,7 @@ function PatientCompletionContent() {
 
   const doctorRegistration = useMemo(() => {
     if (!patient) return '—'
-    const doctor = PROFILES.find((profile) => profile.name === patient.responsibleDoctor)
+    const doctor = MOCK_PROFESSIONAL_DIRECTORY.find((profile) => profile.name === patient.responsibleDoctor)
     return doctor?.registration ?? '—'
   }, [patient])
 

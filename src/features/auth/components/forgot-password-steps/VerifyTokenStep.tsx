@@ -1,24 +1,52 @@
-import { VerificationCodeInput } from '@/shared/components'
+import type { CSSProperties } from 'react'
 import { useCountdown } from '@/shared/hooks/useCountdown'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faClock } from '@fortawesome/free-solid-svg-icons'
 
-const CODE_TTL_SECONDS = 10 * 60
+/** O backend emite o token de redefinição com validade de 10 minutos. */
+const TOKEN_TTL_SECONDS = 10 * 60
 
-interface VerifyCodeStepProps {
-  code: string
-  onCodeChange: (value: string) => void
-  codeError: string | null
+const fieldStyle: CSSProperties = {
+  width: '100%',
+  padding: '10px 13px',
+  fontFamily: 'inherit',
+  fontSize: '13px',
+  color: 'var(--ink)',
+  background: 'var(--field)',
+  border: '1px solid var(--field-bd)',
+  borderRadius: 12,
+}
+
+interface VerifyTokenStepProps {
+  token: string
+  onTokenChange: (value: string) => void
+  tokenError: string | null
   email: string
   resendKey: number
+  submitting: boolean
   onSubmit: () => void
   onBack: () => void
   onResend: () => void
 }
 
-export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey, onSubmit, onBack, onResend }: VerifyCodeStepProps) {
-  const { formatted, isExpired } = useCountdown(CODE_TTL_SECONDS, resendKey)
+/**
+ * O e-mail de redefinição traz um link com o token. Abrir o link preenche este
+ * campo; colar o valor manualmente também funciona. Não existe código curto de
+ * seis dígitos neste fluxo — o token é o que o servidor emitiu.
+ */
+export function VerifyTokenStep({
+  token,
+  onTokenChange,
+  tokenError,
+  email,
+  resendKey,
+  submitting,
+  onSubmit,
+  onBack,
+  onResend,
+}: VerifyTokenStepProps) {
+  const { formatted, isExpired } = useCountdown(TOKEN_TTL_SECONDS, resendKey)
 
   return (
     <>
@@ -27,31 +55,42 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
           Verificação de identidade
         </h1>
         <p className="text-[0.84rem] leading-relaxed max-w-sm" style={{ color: 'var(--ink-soft)' }}>
-          Enviamos um código para <span className="font-semibold text-[color:var(--ink)]">{email}</span>.
+          Se houver uma conta para{' '}
+          <span className="font-semibold text-[color:var(--ink)]">{email}</span>, enviamos
+          um link de redefinição.
           <br />
-          Insira-o abaixo para continuar.
+          Abra o link ou cole o código recebido abaixo.
         </p>
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col items-center gap-1.5">
-          <label className="text-xs font-medium self-start" style={{ color: 'var(--ink-soft)' }}>
-            Código de verificação
-          </label>
-          <VerificationCodeInput value={code} onChange={onCodeChange} error={codeError} autoFocus />
-          {codeError && <span className="text-[0.65rem] text-[color:var(--err)]">{codeError}</span>}
-        </div>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium" style={{ color: 'var(--ink-soft)' }}>
+            Código de redefinição
+          </span>
+          <input
+            type="text"
+            autoComplete="one-time-code"
+            placeholder="Cole aqui o código recebido por e-mail"
+            value={token}
+            maxLength={256}
+            onChange={(event) => onTokenChange(event.target.value)}
+            style={fieldStyle}
+          />
+          {tokenError && (
+            <span className="text-[0.65rem] text-[color:var(--err)]" role="alert">
+              {tokenError}
+            </span>
+          )}
+        </label>
       </div>
 
       <div className="flex flex-col gap-3">
         <button
           onClick={onSubmit}
-          disabled={isExpired}
+          disabled={isExpired || submitting || token.trim().length === 0}
           className="inline-flex w-full items-center justify-center rounded-lg h-10 text-sm font-semibold transition-[filter] duration-200 hover:brightness-95 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
-          style={{
-            background: 'var(--btn)',
-            color: 'var(--btn-ink)',
-          }}
+          style={{ background: 'var(--btn)', color: 'var(--btn-ink)' }}
         >
           Verificar código
         </button>
@@ -69,7 +108,7 @@ export function VerifyCodeStep({ code, onCodeChange, codeError, email, resendKey
             className="text-xs font-medium hover:underline bg-transparent border-none cursor-pointer"
             style={{ color: 'var(--accent)' }}
           >
-            Reenviar código
+            Reenviar e-mail
           </button>
         </div>
       </div>

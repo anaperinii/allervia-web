@@ -2,13 +2,12 @@ import userAvatar from '@/assets/user-avatar.jpg'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
 import { Button, FieldLabel, Modal, ReadOnlyField, TextInput } from '@/shared/components'
-import { cn } from '@/shared/lib/cn'
-import { PROFILES, ROLE_LABELS, useUserStore } from '@/shared/stores/useUserStore'
+import { ROLE_LABELS, useCurrentUser, useUserStore } from '@/shared/stores/useUserStore'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
-import { faCamera, faCheck, faFloppyDisk, faUserGear } from '@fortawesome/free-solid-svg-icons'
+import { faCamera, faFloppyDisk, faUserGear } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const formatBirthDate = (iso: string) => {
@@ -17,9 +16,8 @@ const formatBirthDate = (iso: string) => {
 }
 
 export function ProfilePage() {
-  const currentUser = useUserStore((s) => s.current)
+  const currentUser = useCurrentUser()
   const updateCurrentProfile = useUserStore((s) => s.updateCurrentProfile)
-  const setProfile = useUserStore((s) => s.setProfile)
 
   const [editing, setEditing] = useState(false)
   const [showSaveModal, setShowSaveModal] = useState(false)
@@ -164,33 +162,30 @@ export function ProfilePage() {
             <section className="lg:col-span-2 border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
                 <FontAwesomeIcon icon={faUserGear} className="text-(--text-muted)" style={{ fontSize: 14 }} />
-                <h2 className="text-xs font-bold text-(--text)">Trocar de profissional</h2>
+                <h2 className="text-xs font-bold text-(--text)">Acesso e papéis</h2>
               </div>
-              <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {PROFILES.map((profile) => {
-                  const active = profile.id === currentUser.id
-                  return (
-                    <button
-                      key={profile.id}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => setProfile(profile.id)}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg border p-3 text-left transition-all cursor-pointer',
-                        active ? 'border-brand bg-brand-50/40' : 'border-(--border-custom) hover:border-gray-300 hover:bg-gray-50/60',
-                      )}
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-bold text-brand">
-                        {profile.name.split(' ').filter((w) => !w.endsWith('.')).slice(0, 2).map((w) => w[0]).join('')}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-semibold text-(--text) truncate">{profile.name}</div>
-                        <div className="text-[0.65rem] text-(--text-muted) truncate">{ROLE_LABELS[profile.role]}</div>
-                      </div>
-                      {active && <FontAwesomeIcon icon={faCheck} className="shrink-0 text-brand" style={{ fontSize: 15 }} />}
-                    </button>
-                  )
-                })}
+              <div className="p-4 flex flex-col gap-3">
+                <div className="flex flex-wrap gap-2">
+                  {currentUser.roles.length > 0 ? (
+                    currentUser.roles.map((role) => (
+                      <span
+                        key={role}
+                        className="rounded-full border border-(--border-custom) bg-white px-3 py-1 text-[0.7rem] font-semibold text-(--text)"
+                      >
+                        {ROLE_LABELS[role]}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-(--text-muted)">
+                      Nenhum papel atribuído nesta organização.
+                    </span>
+                  )}
+                </div>
+                <p className="text-[0.7rem] leading-relaxed text-(--text-muted)">
+                  Os papéis são concedidos pela administração da organização e
+                  valem para todas as suas sessões. Cada ação continua sendo
+                  autorizada pelo servidor no momento em que é executada.
+                </p>
               </div>
             </section>
         </div>

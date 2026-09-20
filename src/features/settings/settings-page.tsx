@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useUserStore, ROLE_PERMISSIONS, type Permission } from '@/shared/stores/useUserStore'
+import { hasPermission, useUserStore, type Permission } from '@/shared/stores/useUserStore'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -29,9 +29,10 @@ const settingsOptions: SettingsOption[] = [
 ]
 
 export function SettingsPage() {
-  const current = useUserStore((s) => s.current)
-  const permissions = ROLE_PERMISSIONS[current.role]
-  const visibleOptions = settingsOptions.filter((o) => !o.requires || permissions.includes(o.requires))
+  const capabilities = useUserStore((s) => s.capabilities)
+  const visibleOptions = settingsOptions.filter(
+    (o) => !o.requires || hasPermission(capabilities, o.requires),
+  )
 
   return (
     <SettingsLayout>
