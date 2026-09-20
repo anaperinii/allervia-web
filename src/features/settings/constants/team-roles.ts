@@ -1,4 +1,11 @@
-export type TeamRole = 'admin' | 'doctor' | 'nurse' | 'technician'
+import type { BackendRole } from '@/shared/api/contracts/account'
+
+/**
+ * Papéis concedíveis pela administração. São exatamente os do servidor: não
+ * existe papel de técnico — `NURSING_TECHNICIAN` é profissão e não concede
+ * acesso por si só.
+ */
+export type TeamRole = BackendRole
 
 export interface RoleBadge {
   label: string
@@ -7,15 +14,27 @@ export interface RoleBadge {
 }
 
 export const ROLE_BADGES: Record<TeamRole, RoleBadge> = {
-  admin: { label: 'Administrador', color: 'text-violet-400', bg: 'bg-violet-100' },
-  doctor: { label: 'Médico', color: 'text-brand', bg: 'bg-teal-50' },
-  nurse: { label: 'Enfermeiro', color: 'text-orange-400', bg: 'bg-orange-50' },
-  technician: { label: 'Técnico', color: 'text-cyan-700', bg: 'bg-cyan-50' },
+  ADMINISTRATOR: { label: 'Administrador', color: 'text-violet-400', bg: 'bg-violet-100' },
+  PHYSICIAN: { label: 'Médico', color: 'text-brand', bg: 'bg-teal-50' },
+  NURSE: { label: 'Enfermeiro', color: 'text-orange-400', bg: 'bg-orange-50' },
+  RECEPTIONIST: { label: 'Recepção', color: 'text-cyan-700', bg: 'bg-cyan-50' },
 }
 
 export const ROLE_DESCRIPTIONS: Record<TeamRole, string> = {
-  admin: 'Acesso total ao sistema: gerenciar equipes, configurações, relatórios e todos os dados clínicos.',
-  doctor: 'Prescrever imunoterapias, acompanhar pacientes, ajustar protocolos e gerar relatórios clínicos.',
-  nurse: 'Registrar aplicações, evoluir pacientes, monitorar reações adversas e gerenciar agendamentos.',
-  technician: 'Registrar aplicações sob supervisão, consultar prontuários e auxiliar no controle de estoque.',
+  ADMINISTRATOR:
+    'Gerencia equipe, convites, papéis e o cadastro da organização. Não recebe capacidade clínica por este papel.',
+  PHYSICIAN:
+    'Prescreve imunoterapias, acompanha os próprios pacientes, configura protocolos e acompanha a evolução.',
+  NURSE:
+    'Registra aplicações e evolução das doses, consulta prontuários e a agenda da organização.',
+  RECEPTIONIST:
+    'Cadastra e atualiza pacientes e consulta a equipe. Não acessa prescrição nem aplicação.',
 }
+
+/** Profissões declaradas no cadastro; descrevem a pessoa, não o acesso. */
+export const PROFESSION_LABELS = {
+  PHYSICIAN: 'Médico(a)',
+  NURSE: 'Enfermeiro(a)',
+  NURSING_TECHNICIAN: 'Técnico(a) em Enfermagem',
+  RECEPTIONIST: 'Recepção',
+} as const
