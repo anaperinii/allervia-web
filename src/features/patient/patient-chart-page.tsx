@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { addDays, differenceInDays, format } from 'date-fns'
 import { cn } from '@/shared/lib/cn'
 import { SegmentedControl, Toast } from '@/shared/components'
 import { sendReminder } from '@/shared/lib/whatsapp'
 import { usePatientStore, derivePatientDates, type Application } from '@/features/patient/stores/usePatientStore'
-import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { buildLegacyPatient, THERAPY_STATUS_LABELS } from '@/features/patient/adapters/clinical-presentation'
+import { getPatient, updatePatient } from '@/shared/api/clinical.api'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
 import { useAuditStore } from '@/shared/stores/useAuditStore'
-import { useCurrentUser, useDoctorFilter, useHasPermission } from '@/shared/stores/useUserStore'
+import { useCurrentUser, useHasPermission } from '@/shared/stores/useUserStore'
 import {
   calculateNextDose,
   INDUCTION_INTERVAL,
@@ -39,12 +43,64 @@ const ALL_INDUCTION_STEPS = PROGRESS_INDUCTION_STEPS.flatMap((step) => step.vols
 export function PatientChartPage() {
   const navigate = useNavigate()
   const { patientId } = useParams({ from: '/patient/$patientId' })
+  const { therapy: therapyParam } = useSearch({ from: '/patient/$patientId' })
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+  const queryClient = useQueryClient()
   const selectedPatient = usePatientStore((s) => s.selectedPatient)
   const applications = usePatientStore((s) => s.applications)
   const setSelectedPatient = usePatientStore((s) => s.setSelectedPatient)
   const inactivateImmunotherapy = usePatientStore((s) => s.inactivateImmunotherapy)
   const reactivateImmunotherapy = usePatientStore((s) => s.reactivateImmunotherapy)
   const addProtocolAdjustment = usePatientStore((s) => s.addProtocolAdjustment)
+
+  // O prontuário nasce da consulta real: URL direta e reload funcionam sem
+  // depender de estado deixado por outra tela.
+  const patientQuery = useQuery({
+    queryKey: queryKeys.patient(organizationId, patientId),
+    queryFn: ({ signal }) => getPatient(patientId, signal),
+    enabled: organizationId !== '' && patientId !== '',
+  })
+  const patientDetail = patientQuery.data ?? null
+
+  // Seleção do tratamento pela URL; sem parâmetro, o mais recente.
+  const selectedTherapy = useMemo(() => {
+    if (!patientDetail) return null
+    if (therapyParam) {
+      return (
+        patientDetail.therapies.find((item) => item.id === therapyParam) ?? null
+      )
+    }
+    return patientDetail.therapies[0] ?? null
+  }, [patientDetail, therapyParam])
+
+  const savePatientMutation = useMutation({
+    mutationFn: (patch: {
+      name: string
+      phone: string
+      weight: string
+      responsibleDoctor: string
+    }) =>
+      updatePatient(patientId, {
+        fullName: patch.name,
+        phoneNumber: patch.phone.replace(/\D/g, ''),
+        weightInKg: Number(
+          patch.weight.replace(',', '.').replace(/[^0-9.]/g, ''),
+        ),
+        ...(patch.responsibleDoctor &&
+        patch.responsibleDoctor !== patientDetail?.responsiblePhysician.id
+          ? { responsiblePhysicianId: patch.responsibleDoctor }
+          : {}),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.patient(organizationId, patientId),
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['clinical', organizationId, 'patients'],
+      })
+    },
+  })
 
   const canAdjustProtocol = useHasPermission('adjust_protocol')
   const canInactivate = useHasPermission('inactivate_immunotherapy')
@@ -53,22 +109,12 @@ export function PatientChartPage() {
   const canEvolve = useHasPermission('evolve_patient')
   const canEmitReport = useHasPermission('emit_report')
   const canLgpdPortability = useHasPermission('lgpd_portability')
-  const doctorFilter = useDoctorFilter()
-
+  // O modelo legado alimenta o restante da tela e os modais enquanto cada um
+  // não migra para o contrato novo. A fonte é sempre a consulta real acima.
   useEffect(() => {
-    if (doctorFilter && selectedPatient && selectedPatient.responsibleDoctor !== doctorFilter) {
-      navigate({ to: '/immunotherapies' })
-    }
-  }, [doctorFilter, selectedPatient, navigate])
-
-  useEffect(() => {
-    if (!patientId) return
-    if (selectedPatient?.id === patientId) return
-    const { immunotherapies } = useImmunotherapiesStore.getState()
-    const immunotherapy = immunotherapies.find((item) => item.id === patientId)
-    if (immunotherapy) setSelectedPatient(buildPatientFromImmunotherapy(immunotherapy))
-    else navigate({ to: '/immunotherapies' })
-  }, [patientId, selectedPatient, navigate, setSelectedPatient])
+    if (!patientDetail) return
+    setSelectedPatient(buildLegacyPatient(patientDetail, selectedTherapy))
+  }, [patientDetail, selectedTherapy, setSelectedPatient])
 
   const currentUser = useCurrentUser()
   const logAccess = useAuditStore((s) => s.logAccess)
@@ -238,10 +284,29 @@ export function PatientChartPage() {
     }
   }, [activeInactivation])
 
-  if (!selectedPatient) {
+  if (patientQuery.isPending || (patientDetail && !selectedPatient)) {
     return (
       <div className="flex h-full items-center justify-center">
-        <span className="text-xs text-(--text-muted)">Carregando...</span>
+        <span className="text-xs text-(--text-muted)">Carregando prontuário…</span>
+      </div>
+    )
+  }
+
+  if (patientQuery.error || !patientDetail || !selectedPatient) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-2">
+        <span className="text-xs text-(--text-muted)" role="alert">
+          {patientQuery.error instanceof ApiError
+            ? patientQuery.error.message
+            : 'Não foi possível carregar o prontuário.'}
+        </span>
+        <button
+          type="button"
+          onClick={() => navigate({ to: '/immunotherapies' })}
+          className="text-xs font-semibold text-brand underline cursor-pointer bg-transparent border-none"
+        >
+          Voltar para a lista
+        </button>
       </div>
     )
   }
@@ -276,6 +341,41 @@ export function PatientChartPage() {
         />
 
         <div className="flex flex-1 flex-col gap-3 min-w-0">
+          {patientDetail.therapies.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[0.7rem] font-semibold text-(--text-muted)">
+                Tratamento:
+              </span>
+              {patientDetail.therapies.map((therapy) => {
+                const active = therapy.id === selectedTherapy?.id
+                return (
+                  <button
+                    key={therapy.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() =>
+                      navigate({
+                        to: '/patient/$patientId',
+                        params: { patientId },
+                        search: { therapy: therapy.id },
+                      })
+                    }
+                    className={cn(
+                      'rounded-full border px-3 py-1 text-[0.7rem] font-semibold transition-colors cursor-pointer',
+                      active
+                        ? 'border-brand bg-brand-50 text-brand-dark'
+                        : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50',
+                    )}
+                  >
+                    {therapy.immunoType} - {therapy.extract}
+                    <span className="ml-1.5 font-normal opacity-70">
+                      {THERAPY_STATUS_LABELS[therapy.status]}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
           <SummaryCards currentInterval={currentInterval} nextDate={nextDate} currentDose={currentDose} />
 
           <div className="flex flex-1 flex-col min-h-0 min-w-0">
@@ -390,7 +490,7 @@ export function PatientChartPage() {
         open={showEditModal}
         patient={selectedPatient}
         onClose={() => setShowEditModal(false)}
-        onSave={(patch) => setSelectedPatient({ ...selectedPatient, ...patch })}
+        onSave={(patch) => savePatientMutation.mutate(patch)}
       />
 
       <AdjustProtocolModal

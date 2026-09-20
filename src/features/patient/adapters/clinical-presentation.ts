@@ -1,0 +1,151 @@
+import type {
+  AdministrationRoute,
+  ImmunotherapyListItem,
+  PatientDetail,
+  TherapyStatus,
+  TherapySummary,
+} from '@/shared/api/contracts/clinical'
+import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import type { Patient } from '@/features/patient/stores/usePatientStore'
+
+/**
+ * Adapters de apresentação: enums do contrato viram rótulos em português e o
+ * modelo de leitura alimenta as telas legadas. Nenhuma identidade clínica é
+ * reconstruída a partir de texto — os IDs viajam junto.
+ */
+
+export const ROUTE_LABELS: Record<AdministrationRoute, string> = {
+  SUBCUTANEOUS: 'Subcutânea',
+  SUBLINGUAL: 'Sublingual',
+}
+
+export const THERAPY_STATUS_LABELS: Record<TherapyStatus, string> = {
+  IN_PROGRESS: 'Em andamento',
+  SUSPENDED: 'Suspenso',
+  COMPLETED: 'Concluído',
+}
+
+/** Modalidade do vocabulário antigo da UI, derivada do enum do contrato. */
+export function routeToLegacyModality(
+  route: AdministrationRoute,
+): Immunotherapy['modality'] {
+  return route === 'SUBCUTANEOUS' ? 'subcutaneous' : 'sublingual'
+}
+
+export function legacyModalityToRoute(
+  modality: Immunotherapy['modality'],
+): AdministrationRoute {
+  return modality === 'subcutaneous' ? 'SUBCUTANEOUS' : 'SUBLINGUAL'
+}
+
+/** Status do tratamento no vocabulário da UI legada. */
+export function therapyStatusToLegacy(
+  status: TherapyStatus,
+): Immunotherapy['status'] {
+  if (status === 'IN_PROGRESS') return 'active'
+  if (status === 'COMPLETED') return 'completed'
+  return 'inactive'
+}
+
+const dateFormat = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' })
+
+/** Data civil (nascimento) apresentada sem deslocamento de fuso. */
+export function formatCivilDate(iso: string): string {
+  return dateFormat.format(new Date(iso))
+}
+
+/** Instante (agenda) apresentado no fuso local do usuário. */
+export function formatInstantDate(iso: string): string {
+  return new Intl.DateTimeFormat('pt-BR').format(new Date(iso))
+}
+
+export function ageFromBirthDate(iso: string): number {
+  const birth = new Date(iso)
+  const now = new Date()
+  let age = now.getUTCFullYear() - birth.getUTCFullYear()
+  const monthDelta = now.getUTCMonth() - birth.getUTCMonth()
+  if (monthDelta < 0 || (monthDelta === 0 && now.getUTCDate() < birth.getUTCDate())) {
+    age -= 1
+  }
+  return age
+}
+
+interface ResolvedStep {
+  id: string
+  label?: string
+  concentration: string
+  volume: string
+  intervalDays: number
+}
+
+interface ResolvedPrescription {
+  steps?: ResolvedStep[]
+  startingStepId?: string
+  targetStepId?: string
+}
+
+/** Apresentação `1:1.000 - 0,2ml` de um passo resolvido da prescrição. */
+export function formatStepPresentation(step: ResolvedStep): string {
+  const concentration = Number(step.concentration).toLocaleString('pt-BR')
+  const volume = step.volume.replace('.', ',')
+  return `1:${concentration} - ${volume}ml`
+}
+
+export function readResolvedPrescription(
+  resolved: unknown,
+): ResolvedPrescription | null {
+  if (!resolved || typeof resolved !== 'object') return null
+  return resolved as ResolvedPrescription
+}
+
+/**
+ * Constrói o objeto `Patient` legado consumido pelo prontuário e seus modais a
+ * partir do modelo de leitura real. Transitório: cada tela migrada para o
+ * contrato novo deixa de precisar dele.
+ */
+export function buildLegacyPatient(
+  detail: PatientDetail,
+  therapy: TherapySummary | null,
+): Patient {
+  return {
+    id: detail.id,
+    name: detail.fullName,
+    birthDate: formatCivilDate(detail.birthDate),
+    age: ageFromBirthDate(detail.birthDate),
+    phone: detail.phoneNumber,
+    weight: `${detail.weightInKg.toLocaleString('pt-BR')} kg`,
+    cpf: detail.cpf ?? detail.cpfMasked ?? '—',
+    responsibleDoctor: detail.responsiblePhysician.fullName,
+    responsibleDoctorId: detail.responsiblePhysician.id,
+    status: detail.isActive ? 'active' : 'inactive',
+    immunotherapyType: therapy?.immunoType ?? '—',
+    administrationRoute: therapy
+      ? ROUTE_LABELS[therapy.administrationRoute]
+      : '—',
+    extract: therapy?.extract ?? '—',
+    targetConcentrationVolume: '',
+    targetReached: therapy?.status === 'COMPLETED',
+    currentInterval: 0,
+    nextApplicationDate: therapy?.nextDose
+      ? formatInstantDate(therapy.nextDose.scheduledAt)
+      : '',
+    currentDoseConcentration: '',
+  }
+}
+
+/** Linha da tabela de imunoterapias no vocabulário da UI legada. */
+export function buildLegacyListItem(
+  item: ImmunotherapyListItem,
+): Immunotherapy {
+  return {
+    id: item.id,
+    name: item.patient.fullName,
+    phone: '',
+    type: item.immunoType,
+    doseConcentration: '',
+    cycleInterval: { number: 1, days: 0 },
+    modality: routeToLegacyModality(item.administrationRoute),
+    status: therapyStatusToLegacy(item.status),
+    responsibleDoctor: item.responsiblePhysician.fullName,
+  }
+}

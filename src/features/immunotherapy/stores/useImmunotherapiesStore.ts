@@ -1,5 +1,11 @@
 import { create } from 'zustand'
 
+/**
+ * Vocabulário legado da UI. Dados clínicos confirmados vêm da API
+ * (`shared/api/clinical.api.ts`); este store não carrega mais seeds — telas que
+ * ainda dependem dele mostram vazio até migrarem para as consultas reais, em
+ * vez de exibirem dados simulados como se fossem prontuário.
+ */
 export interface Immunotherapy {
   id: string
   name: string
@@ -21,28 +27,9 @@ interface ImmunotherapiesState {
 }
 
 export const useImmunotherapiesStore = create<ImmunotherapiesState>((set) => ({
-  immunotherapies: [
-    { id: '1', name: 'Bárbara Sofia Diniz', phone: '(62) 98412-3076', type: 'Gramíneas', doseConcentration: '1:10.000 - 0,1ml', cycleInterval: { number: 1, days: 7 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dra. Karina Martins' },
-    { id: '2', name: 'Camilla Martins', phone: '(62) 99127-4581', type: 'Gramíneas', doseConcentration: '1:1.000 - 0,2ml', cycleInterval: { number: 1, days: 7 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dra. Karina Martins' },
-    { id: '3', name: 'Ana Clara de Souza Martins', phone: '(62) 98765-2109', type: 'Cão e Gato', doseConcentration: '1:100 - 0,4ml', cycleInterval: { number: 1, days: 7 }, modality: 'sublingual', status: 'active', responsibleDoctor: 'Dr. André Lima' },
-    { id: '4', name: 'Valentina Bittencourt Farias', phone: '(62) 99304-8612', type: 'Cândida', doseConcentration: '1:10 - 0,8ml', cycleInterval: { number: 1, days: 7 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dr. André Lima' },
-    { id: '5', name: 'Heitor Guimarães de Assis', phone: '(62) 98556-7423', type: 'Ácaros', doseConcentration: '1:10 - 0,5ml', cycleInterval: { number: 1, days: 14 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dra. Karina Martins' },
-    { id: '6', name: 'Caroline Ferreira de Abreu', phone: '(62) 99557-1423', type: 'Herpes', doseConcentration: '1:10 - 0,5ml', cycleInterval: { number: 2, days: 21 }, modality: 'sublingual', status: 'active', responsibleDoctor: 'Dr. André Lima' },
-    { id: '7', name: 'Marta Gabriela de Sousa', phone: '(62) 98213-9054', type: 'Gramíneas', doseConcentration: '1:10 - 0,5ml', cycleInterval: { number: 3, days: 28 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dr. André Lima' },
-    { id: '13', name: 'Otávio Ramires Pinto', phone: '(62) 98120-4473', type: 'Ácaros', doseConcentration: '1:1.000 - 0,4ml', cycleInterval: { number: 1, days: 14 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dra. Karina Martins' },
-    { id: '14', name: 'Beatriz Camargo Nunes', phone: '(62) 99038-6215', type: 'Gramíneas', doseConcentration: '1:100 - 0,4ml', cycleInterval: { number: 2, days: 21 }, modality: 'sublingual', status: 'active', responsibleDoctor: 'Dra. Karina Martins' },
-    { id: '15', name: 'Rafael Teixeira Barros', phone: '(62) 98744-1809', type: 'Cão e Gato', doseConcentration: '1:10.000 - 0,4ml', cycleInterval: { number: 1, days: 7 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dr. André Lima' },
-    { id: '16', name: 'Larissa Amaral Rocha', phone: '(62) 98615-7302', type: 'Ácaros', doseConcentration: '1:100 - 0,1ml', cycleInterval: { number: 1, days: 7 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dra. Karina Martins' },
-    { id: '17', name: 'Gustavo Henrique Dias', phone: '(62) 99427-6810', type: 'Gramíneas', doseConcentration: '1:100 - 0,2ml', cycleInterval: { number: 2, days: 14 }, modality: 'sublingual', status: 'active', responsibleDoctor: 'Dr. André Lima' },
-    { id: '18', name: 'Isabela Nogueira Pires', phone: '(62) 98330-5194', type: 'Cândida', doseConcentration: '1:100 - 0,5ml', cycleInterval: { number: 3, days: 28 }, modality: 'subcutaneous', status: 'active', responsibleDoctor: 'Dra. Karina Martins' },
-    { id: '8', name: 'Patrício Gomes Cardoso', phone: '(62) 99876-3148', type: 'Cândida', doseConcentration: '1:1.000 - 0,1ml', cycleInterval: { number: 1, days: 7 }, modality: 'sublingual', status: 'completed', responsibleDoctor: 'Dr. André Lima' },
-    { id: '9', name: 'Pedro Luccas Pereira', phone: '(62) 98432-5167', type: 'Gramíneas', doseConcentration: '1:100 - 0,2ml', cycleInterval: { number: 1, days: 7 }, modality: 'subcutaneous', status: 'completed', responsibleDoctor: 'Dra. Karina Martins' },
-
-    { id: '10', name: 'Lucas Ferreira Lima', phone: '(62) 99654-2018', type: 'Ácaros', doseConcentration: '1:100 - 0,4ml', cycleInterval: { number: 1, days: 7 }, modality: 'subcutaneous', status: 'inactive', responsibleDoctor: 'Dra. Karina Martins' },
-    { id: '11', name: 'Juliana Mendes Costa', phone: '(62) 98708-3592', type: 'Gramíneas', doseConcentration: '1:10 - 0,5ml', cycleInterval: { number: 2, days: 14 }, modality: 'subcutaneous', status: 'inactive', responsibleDoctor: 'Dra. Karina Martins' },
-    { id: '12', name: 'Roberto Alves Neto', phone: '(62) 99245-7081', type: 'Cândida', doseConcentration: '1:1.000 - 0,2ml', cycleInterval: { number: 1, days: 7 }, modality: 'sublingual', status: 'inactive', responsibleDoctor: 'Dr. André Lima' },
-  ],
-  addImmunotherapy: (imm) => set((state) => ({ immunotherapies: [imm, ...state.immunotherapies] })),
+  immunotherapies: [],
+  addImmunotherapy: (imm) =>
+    set((state) => ({ immunotherapies: [imm, ...state.immunotherapies] })),
 }))
 
 export function useImmunotherapyLookup() {
