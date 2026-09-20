@@ -1,23 +1,27 @@
 import { AddImmunotherapyReviewStep } from '@/features/immunotherapy/components/add-steps/AddImmunotherapyReviewStep'
 import { ImmunotherapyDataStep } from '@/features/immunotherapy/components/add-steps/ImmunotherapyDataStep'
 import { PatientDataStep } from '@/features/immunotherapy/components/add-steps/PatientDataStep'
-import { INDUCTION_INTERVAL, INITIAL_DOSE } from '@/features/immunotherapy/constants/scit-protocol'
 import {
   addImmunotherapySchema,
   STEP_1_FIELDS,
   STEP_2_FIELDS,
   type AddImmunotherapyForm,
 } from '@/features/immunotherapy/schemas/add-immunotherapy'
-import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { registerPatientProfile } from '@/features/patient/constants/patient-profiles'
-import { usePatientStore, type Application } from '@/features/patient/stores/usePatientStore'
+import {
+  listPatients,
+  registerImmunotherapy,
+} from '@/shared/api/clinical.api'
+import { listProtocols } from '@/shared/api/protocols.api'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
 import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
-import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
-import { calculateAge, isoToPtDate, tomorrowStr } from '@/shared/lib/dates'
+import { tomorrowStr } from '@/shared/lib/dates'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
 import { PageHeader } from '@/shared/components/showcase'
@@ -25,16 +29,22 @@ import { faCircleCheck, faClipboardCheck, faSyringe, faUser } from '@fortawesome
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const STEPS: WizardStep[] = [
-  { label: 'Dados do Paciente', icon: faUser, description: 'Nome, CPF, telefone, nascimento, peso e médico responsável pelo acompanhamento.' },
-  { label: 'Dados da Imunoterapia', icon: faSyringe, description: 'Tipo de alérgeno, via de administração, extrato, data de início e as metas de concentração e volume do protocolo.' },
-  { label: 'Revisão dos Dados', icon: faClipboardCheck, description: 'Revise o cadastro do paciente e do protocolo. Ao salvar, a primeira aplicação já é agendada.' },
+  { label: 'Paciente', icon: faUser, description: 'Paciente novo ou já cadastrado, vinculado ao prescritor autenticado.' },
+  { label: 'Prescrição', icon: faSyringe, description: 'Tipo, extrato, data de início e a versão publicada do protocolo com etapas, início e meta.' },
+  { label: 'Revisão', icon: faClipboardCheck, description: 'Confira os valores exatos e o fuso. Salvar grava paciente, tratamento e primeira previsão em uma única transação.' },
 ]
+
+/** Instante da prescrição: início do expediente no horário local do navegador. */
+function toStartInstant(dateStr: string): string {
+  return new Date(`${dateStr}T08:00:00`).toISOString()
+}
 
 export function AddImmunotherapyPage() {
   const navigate = useNavigate()
   const canAdd = useHasPermission('add_immunotherapy')
-  const addImmunotherapy = useImmunotherapiesStore((s) => s.addImmunotherapy)
-  const scheduleApplication = usePatientStore((s) => s.scheduleApplication)
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     if (!canAdd) navigate({ to: '/immunotherapies' })
@@ -42,18 +52,110 @@ export function AddImmunotherapyPage() {
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [failure, setFailure] = useState<string | null>(null)
+
+  // A chave de idempotência pertence à intenção: nasce com o formulário e
+  // sobrevive a reenvio por perda de resposta. Só muda em um formulário novo.
+  const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
 
   const form = useForm<AddImmunotherapyForm>({
     resolver: zodResolver(addImmunotherapySchema),
     mode: 'onBlur',
     defaultValues: {
-      name: '', cpf: '', phone: '', birthDate: '', weight: '', responsibleDoctor: '',
-      type: '', modality: '', startDate: tomorrowStr(), extract: '', targetConcentration: '', targetVolume: '',
+      patientMode: 'new',
+      name: '', cpf: '', phone: '', birthDate: '', weight: '', patientId: '',
+      type: '', startDate: tomorrowStr(), extract: '',
+      protocolVersionId: '', stepIds: [], startingStepId: '', targetStepId: '',
     },
   })
   const { handleSubmit, trigger, control } = form
 
   const values = useWatch({ control }) as AddImmunotherapyForm
+
+  // Dados de apoio para a revisão.
+  const protocolsQuery = useQuery({
+    queryKey: queryKeys.protocols(organizationId),
+    queryFn: ({ signal }) => listProtocols(signal),
+    enabled: organizationId !== '',
+  })
+  const patientsQuery = useQuery({
+    queryKey: queryKeys.patients(organizationId, { picker: true, search: undefined }),
+    queryFn: ({ signal }) => listPatients({ pageSize: 50, isActive: true }, signal),
+    enabled: organizationId !== '' && values.patientMode === 'existing',
+  })
+
+  const selectedProtocol = (protocolsQuery.data ?? []).find((protocol) =>
+    protocol.versions.some((version) => version.id === values.protocolVersionId),
+  )
+  const selectedVersion = selectedProtocol?.versions.find(
+    (version) => version.id === values.protocolVersionId,
+  )
+  const versionLabel = selectedProtocol && selectedVersion
+    ? `${selectedProtocol.name} — v${selectedVersion.number}`
+    : ''
+  const existingPatientName =
+    (patientsQuery.data?.items ?? []).find((patient) => patient.id === values.patientId)
+      ?.fullName ?? null
+
+  const registerMutation = useMutation({
+    mutationFn: (data: AddImmunotherapyForm) =>
+      registerImmunotherapy({
+        idempotencyKey: idempotencyKeyRef.current,
+        ...(data.patientMode === 'existing'
+          ? { patientId: data.patientId }
+          : {
+              patient: {
+                fullName: data.name.trim(),
+                birthDate: data.birthDate,
+                weightInKg: Number(data.weight.replace(',', '.')),
+                phoneNumber: data.phone.replace(/\D/g, ''),
+                ...(data.cpf.trim() ? { cpf: data.cpf } : {}),
+                responsiblePhysicianId: account?.professional?.id ?? '',
+              },
+            }),
+        immunoType: data.type.trim(),
+        administrationRoute: 'SUBCUTANEOUS',
+        extract: data.extract.trim(),
+        inductionStartDate: toStartInstant(data.startDate),
+        protocolVersionId: data.protocolVersionId,
+        stepIds: data.stepIds,
+        startingStepId: data.startingStepId,
+        targetStepId: data.targetStepId,
+      }),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['clinical', organizationId],
+      })
+      toast.success({
+        icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
+        title: 'Prescrição registrada!',
+        description: (
+          <>
+            Tratamento e primeira previsão foram gravados.
+            <Link
+              to="/patient/$patientId"
+              params={{ patientId: result.immunotherapy.patientId }}
+              search={{ therapy: result.immunotherapy.id }}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 mt-2 transition-colors"
+            >
+              Acessar prontuário do paciente &rarr;
+            </Link>
+          </>
+        ),
+        autoDismissMs: 8000,
+      })
+      navigate({ to: '/immunotherapies' })
+    },
+    onError: (error) => {
+      // Falha não gera sucesso local: nada foi salvo em stores; o formulário
+      // permanece para correção ou reenvio com a MESMA chave.
+      setFailure(
+        error instanceof ApiError
+          ? error.message
+          : 'Não foi possível registrar a prescrição.',
+      )
+    },
+  })
 
   const advanceStep = async () => {
     const fields = step === 1 ? STEP_1_FIELDS : STEP_2_FIELDS
@@ -61,78 +163,13 @@ export function AddImmunotherapyPage() {
     if (isValid) setStep((s) => (s + 1) as 1 | 2 | 3)
   }
 
-  const saveImmunotherapy = () => handleSubmit((data) => {
-    const newId = `new-${Date.now()}`
-    const modality = data.modality as Immunotherapy['modality']
-
-    const newImm: Immunotherapy = {
-      id: newId,
-      name: data.name.trim(),
-      phone: data.phone.trim(),
-      type: data.type.trim(),
-      doseConcentration: INITIAL_DOSE,
-      cycleInterval: { number: 1, days: INDUCTION_INTERVAL },
-      modality,
-      status: 'active',
-      responsibleDoctor: data.responsibleDoctor.trim(),
-    }
-    addImmunotherapy(newImm)
-
-    const startDatePt = isoToPtDate(data.startDate)
-    registerPatientProfile(newId, {
-      birthDate: isoToPtDate(data.birthDate),
-      age: calculateAge(data.birthDate),
-      cpf: data.cpf,
-      weight: `${data.weight} kg`,
-      extract: data.extract.trim(),
-      targetConcentrationVolume: `${data.targetConcentration} - ${data.targetVolume.replace('.', ',')}ml`,
-      targetReached: false,
-    })
-
-    const [, mm] = data.startDate.split('-')
-    const mesIdx = Math.max(0, Math.min(11, Number(mm) - 1))
-    const firstApp: Application = {
-      id: `app-${newId}-1`,
-      patientId: newId,
-      date: startDatePt,
-      startTime: '09:00',
-      endTime: '09:30',
-      status: 'scheduled',
-      dose: INITIAL_DOSE,
-      cycle: { number: 1, days: INDUCTION_INTERVAL },
-      month: MONTHS_PT_UPPER[mesIdx],
-      year: Number(data.startDate.split('-')[0]),
-      modality,
-    }
-    scheduleApplication(firstApp)
-
-    toast.success({
-      icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
-      title: 'Registro salvo com sucesso!',
-      description: (
-        <>
-          Os dados de {newImm.name} foram registrados e a próxima dose já está agendada.
-          <Link
-            to="/patient/$patientId"
-            params={{ patientId: newId }}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 mt-2 transition-colors"
-          >
-            Acessar prontuário do paciente &rarr;
-          </Link>
-        </>
-      ),
-      autoDismissMs: 8000,
-    })
-
-    navigate({ to: '/immunotherapies' })
-  })()
-
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (step < 3) {
       void advanceStep()
     } else {
-      void saveImmunotherapy()
+      setFailure(null)
+      void handleSubmit((data) => registerMutation.mutate(data))()
     }
   }
 
@@ -160,7 +197,20 @@ export function AddImmunotherapyPage() {
             <div className="w-full">
               {step === 1 && <PatientDataStep form={form} />}
               {step === 2 && <ImmunotherapyDataStep form={form} />}
-              {step === 3 && <AddImmunotherapyReviewStep form={values} />}
+              {step === 3 && (
+                <AddImmunotherapyReviewStep
+                  form={values}
+                  versionLabel={versionLabel}
+                  steps={selectedVersion?.definition.steps ?? []}
+                  existingPatientName={existingPatientName}
+                  timeZone={account?.organization?.timeZone ?? ''}
+                />
+              )}
+              {failure && (
+                <p role="alert" className="mt-3 text-[0.75rem] text-red-700">
+                  {failure}
+                </p>
+              )}
             </div>
           </div>
 
@@ -173,8 +223,13 @@ export function AddImmunotherapyPage() {
                 Voltar
               </Button>
             )}
-            <Button type="submit" tone="brand" variant="solid">
-              {step < 3 ? 'Continuar' : 'Salvar Imunoterapia'}
+            <Button
+              type="submit"
+              tone="brand"
+              variant="solid"
+              disabled={registerMutation.isPending}
+            >
+              {step < 3 ? 'Continuar' : 'Salvar Prescrição'}
             </Button>
           </div>
         </form>
@@ -190,4 +245,3 @@ export function AddImmunotherapyPage() {
     </div>
   )
 }
-
