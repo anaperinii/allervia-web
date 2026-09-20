@@ -89,3 +89,41 @@ export function listTherapiesForPatient(
 ): Promise<TherapySummary[]> {
   return apiRequest(`/immunotherapies/patients/${patientId}`, { signal })
 }
+
+export interface RegisterImmunotherapyBody {
+  idempotencyKey: string
+  patient?: {
+    fullName: string
+    birthDate: string
+    weightInKg: number
+    phoneNumber: string
+    cpf?: string
+    responsiblePhysicianId: string
+  }
+  patientId?: string
+  immunoType: string
+  administrationRoute: 'SUBCUTANEOUS'
+  extract: string
+  /** Instante RFC3339 com offset explícito. */
+  inductionStartDate: string
+  protocolVersionId: string
+  stepIds: string[]
+  startingStepId: string
+  targetStepId: string
+}
+
+export interface RegisterImmunotherapyResult {
+  patient: { id: string; fullName: string }
+  immunotherapy: { id: string; patientId: string }
+  firstDose: { id: string; scheduledAt: string }
+}
+
+/**
+ * Cadastro atômico de prescrição. A chave de idempotência pertence à intenção
+ * confirmada: reenvio por perda de resposta usa a MESMA chave e corpo.
+ */
+export function registerImmunotherapy(
+  body: RegisterImmunotherapyBody,
+): Promise<RegisterImmunotherapyResult> {
+  return apiRequest('/immunotherapies/register', { method: 'POST', body })
+}
