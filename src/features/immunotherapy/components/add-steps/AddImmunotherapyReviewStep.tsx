@@ -1,37 +1,75 @@
-import { MODALITY_LABELS, type Modality } from '@/features/immunotherapy/constants/modality'
 import { StepHeading } from '@/shared/components'
 import { formatIsoToPtOrDash } from '@/shared/lib/dates'
+import { formatStepPresentation } from '@/features/patient/adapters/clinical-presentation'
+import type { ProtocolStep } from '@/shared/api/contracts/protocols'
 import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
 
 interface AddImmunotherapyReviewStepProps {
   form: AddImmunotherapyForm
+  versionLabel: string
+  steps: ProtocolStep[]
+  existingPatientName: string | null
+  timeZone: string
 }
 
-export function AddImmunotherapyReviewStep({ form }: AddImmunotherapyReviewStepProps) {
-  const patientItems = [
-    { label: 'Nome', value: form.name || '—' },
-    { label: 'CPF', value: form.cpf || '—' },
-    { label: 'Telefone', value: form.phone || '—' },
-    { label: 'Data de Nascimento', value: formatIsoToPtOrDash(form.birthDate) },
-    { label: 'Peso', value: form.weight ? `${form.weight} kg` : '—' },
-    { label: 'Médico Responsável', value: form.responsibleDoctor || '—' },
-  ]
+/**
+ * Revisão da intenção antes do envio: valores exatos da versão fixada, fuso da
+ * prescrição e paciente resolvido. O que aparece aqui é o que o servidor grava.
+ */
+export function AddImmunotherapyReviewStep({
+  form,
+  versionLabel,
+  steps,
+  existingPatientName,
+  timeZone,
+}: AddImmunotherapyReviewStepProps) {
+  const stepById = new Map(steps.map((step) => [step.id, step]))
+  const starting = stepById.get(form.startingStepId)
+  const target = stepById.get(form.targetStepId)
 
-  const immunoItems = [
+  const patientItems =
+    form.patientMode === 'existing'
+      ? [{ label: 'Paciente', value: existingPatientName ?? '—' }]
+      : [
+          { label: 'Nome', value: form.name || '—' },
+          { label: 'CPF', value: form.cpf || 'Não informado' },
+          { label: 'Telefone', value: form.phone || '—' },
+          { label: 'Data de Nascimento', value: formatIsoToPtOrDash(form.birthDate) },
+          { label: 'Peso', value: form.weight ? `${form.weight} kg` : '—' },
+        ]
+
+  const prescriptionItems = [
     { label: 'Tipo', value: form.type || '—' },
-    { label: 'Via Cutânea', value: MODALITY_LABELS[form.modality as Modality] || '—' },
+    { label: 'Via', value: 'Subcutânea (SCIT)' },
     { label: 'Data de Início', value: formatIsoToPtOrDash(form.startDate) },
     { label: 'Extrato', value: form.extract || '—' },
-    { label: 'Meta de Concentração', value: form.targetConcentration || '—' },
-    { label: 'Meta de Volume', value: form.targetVolume ? `${form.targetVolume} ml` : '—' },
+    { label: 'Versão do protocolo', value: versionLabel || '—' },
+    { label: 'Fuso da prescrição', value: timeZone },
+    {
+      label: 'Etapa inicial',
+      value: starting
+        ? `${starting.label} — ${formatStepPresentation(starting)}`
+        : '—',
+    },
+    {
+      label: 'Etapa meta',
+      value: target ? `${target.label} — ${formatStepPresentation(target)}` : '—',
+    },
+    {
+      label: 'Etapas permitidas',
+      value:
+        form.stepIds
+          .map((id) => stepById.get(id)?.label ?? id)
+          .join(', ') || '—',
+    },
   ]
 
   return (
     <div className="space-y-3">
-      <StepHeading description="Revise o cadastro do paciente e do protocolo. Ao salvar, a primeira aplicação já é agendada." />
+      <StepHeading description="Revise a prescrição. Ao salvar, paciente, tratamento e primeira previsão são gravados juntos — ou nada é gravado." />
       <div className="grid grid-cols-1 gap-3">
-        <ReviewCard title="Dados do Paciente" items={patientItems} />
-        <ReviewCard title="Dados da Imunoterapia" items={immunoItems} />
+        <ReviewCard title="Paciente" items={patientItems} />
+        <ReviewCard title="Prescrição" items={prescriptionItems} />
       </div>
     </div>
   )
@@ -59,18 +97,6 @@ function ReviewCard({ title, items }: ReviewCardProps) {
         />
         <div className="text-[0.8rem] font-bold text-(--text)">{title}</div>
       </div>
-      <ReviewGroup items={items} />
-    </div>
-  )
-}
-
-interface ReviewGroupProps {
-  items: { label: string; value: string }[]
-}
-
-function ReviewGroup({ items }: ReviewGroupProps) {
-  return (
-    <div>
       <div className="grid grid-cols-3 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
         {items.map((item) => (
           <div key={item.label} className="bg-white px-3 py-2">
