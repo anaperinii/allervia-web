@@ -1,34 +1,29 @@
 import { Select, TextInput } from '@/shared/components'
 import { SHOWCASE } from '@/shared/components/showcase'
+import type { TherapyStatus } from '@/shared/api/contracts/clinical'
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export type ModalityTab = 'all' | 'subcutaneous' | 'sublingual'
+export type StatusFilter = TherapyStatus | 'all'
 
 interface ImmunotherapiesFilterBarProps {
   searchTerm: string
   setSearchTerm: (v: string) => void
-  typeFilter: string
-  setTypeFilter: (v: string) => void
-  intervalFilter: string
-  setIntervalFilter: (v: string) => void
-  statusFilter: string
-  setStatusFilter: (v: string) => void
-  types: string[]
-  intervals: string[]
+  statusFilter: StatusFilter
+  setStatusFilter: (v: StatusFilter) => void
 }
 
+/**
+ * Filtros resolvidos no servidor: busca por paciente/extrato/tipo e situação
+ * do tratamento. Filtros locais sobre a página atual foram removidos porque
+ * tornariam o total incoerente com o que a tabela mostra.
+ */
 export function ImmunotherapiesFilterBar({
   searchTerm,
   setSearchTerm,
-  typeFilter,
-  setTypeFilter,
-  intervalFilter,
-  setIntervalFilter,
   statusFilter,
   setStatusFilter,
-  types,
-  intervals,
 }: ImmunotherapiesFilterBarProps) {
   return (
     <div className="flex items-center gap-2">
@@ -43,7 +38,7 @@ export function ImmunotherapiesFilterBar({
         />
         <TextInput
           id="immunotherapy-search"
-          placeholder="Pesquisar paciente"
+          placeholder="Pesquisar paciente, tipo ou extrato"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="h-9 pl-9 pr-4 text-[0.78rem]"
@@ -51,34 +46,14 @@ export function ImmunotherapiesFilterBar({
       </div>
 
       <Select
-        aria-label="Filtrar por tipo"
-        value={typeFilter}
-        onChange={(e) => setTypeFilter(e.target.value)}
-        className="h-9 w-auto"
-      >
-        <option value="Todos os tipos">Todos os tipos</option>
-        {types.map((t) => <option key={t} value={t}>{t}</option>)}
-      </Select>
-
-      <Select
-        aria-label="Filtrar por intervalo"
-        value={intervalFilter}
-        onChange={(e) => setIntervalFilter(e.target.value)}
-        className="h-9 w-auto"
-      >
-        <option value="Todos os intervalos">Todos os intervalos</option>
-        {intervals.map((c) => <option key={c} value={c}>{c} dias</option>)}
-      </Select>
-
-      <Select
-        aria-label="Filtrar por status"
+        aria-label="Filtrar por situação"
         value={statusFilter}
-        onChange={(e) => setStatusFilter(e.target.value)}
+        onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
         className="h-9 w-auto"
       >
-        <option value="active">Ativas</option>
-        <option value="inactive">Inativas</option>
-        <option value="completed">Concluídas</option>
+        <option value="IN_PROGRESS">Em andamento</option>
+        <option value="SUSPENDED">Suspensas</option>
+        <option value="COMPLETED">Concluídas</option>
         <option value="all">Todas</option>
       </Select>
     </div>
