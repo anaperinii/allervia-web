@@ -5,12 +5,19 @@ import { faArrowRight, faFaceSmile } from '@fortawesome/free-solid-svg-icons'
 
 interface WelcomeStepProps {
   maskedEmail: string
-  inviterName: string
+  roleLabel: string
   organizationName: string
+  expiresAt: string
   onContinue: () => void
 }
 
-export function WelcomeStep({ maskedEmail, inviterName, organizationName, onContinue }: WelcomeStepProps) {
+export function WelcomeStep({
+  maskedEmail,
+  roleLabel,
+  organizationName,
+  expiresAt,
+  onContinue,
+}: WelcomeStepProps) {
   return (
     <>
       <div className="flex flex-col items-center text-center gap-2">
@@ -29,8 +36,8 @@ export function WelcomeStep({ maskedEmail, inviterName, organizationName, onCont
         </div>
         <div className="px-4 py-3 flex flex-col gap-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-[0.7rem] text-[color:var(--ink-soft)]">Convidado por</span>
-            <span className="text-[0.7rem] font-semibold text-[color:var(--ink)]">{inviterName}</span>
+            <span className="text-[0.7rem] text-[color:var(--ink-soft)]">Papel concedido</span>
+            <span className="text-[0.7rem] font-semibold text-[color:var(--ink)]">{roleLabel}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-[0.7rem] text-[color:var(--ink-soft)]">Organização</span>
@@ -39,6 +46,10 @@ export function WelcomeStep({ maskedEmail, inviterName, organizationName, onCont
           <div className="flex items-center justify-between">
             <span className="text-[0.7rem] text-[color:var(--ink-soft)]">E-mail vinculado</span>
             <span className="text-[0.7rem] font-semibold text-[color:var(--accent)]">{maskedEmail}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[0.7rem] text-[color:var(--ink-soft)]">Válido até</span>
+            <span className="text-[0.7rem] font-semibold text-[color:var(--ink)]">{expiresAt}</span>
           </div>
         </div>
       </div>
