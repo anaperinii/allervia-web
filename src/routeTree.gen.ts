@@ -14,6 +14,7 @@ import { Route as TeamsRouteImport } from './routes/teams'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ProtocolsRouteImport } from './routes/protocols'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PersonalizationRouteImport } from './routes/personalization'
@@ -57,6 +58,11 @@ const SecurityRoute = SecurityRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtocolsRoute = ProtocolsRouteImport.update({
+  id: '/protocols',
+  path: '/protocols',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -174,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/personalization': typeof PersonalizationRoute
   '/plans': typeof PlansRoute
   '/profile': typeof ProfileRoute
+  '/protocols': typeof ProtocolsRoute
   '/register': typeof RegisterRoute
   '/security': typeof SecurityRoute
   '/settings': typeof SettingsRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/personalization': typeof PersonalizationRoute
   '/plans': typeof PlansRoute
   '/profile': typeof ProfileRoute
+  '/protocols': typeof ProtocolsRoute
   '/register': typeof RegisterRoute
   '/security': typeof SecurityRoute
   '/settings': typeof SettingsRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/personalization': typeof PersonalizationRoute
   '/plans': typeof PlansRoute
   '/profile': typeof ProfileRoute
+  '/protocols': typeof ProtocolsRoute
   '/register': typeof RegisterRoute
   '/security': typeof SecurityRoute
   '/settings': typeof SettingsRoute
@@ -255,6 +264,7 @@ export interface FileRouteTypes {
     | '/personalization'
     | '/plans'
     | '/profile'
+    | '/protocols'
     | '/register'
     | '/security'
     | '/settings'
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/personalization'
     | '/plans'
     | '/profile'
+    | '/protocols'
     | '/register'
     | '/security'
     | '/settings'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/personalization'
     | '/plans'
     | '/profile'
+    | '/protocols'
     | '/register'
     | '/security'
     | '/settings'
@@ -334,6 +346,7 @@ export interface RootRouteChildren {
   PersonalizationRoute: typeof PersonalizationRoute
   PlansRoute: typeof PlansRoute
   ProfileRoute: typeof ProfileRoute
+  ProtocolsRoute: typeof ProtocolsRoute
   RegisterRoute: typeof RegisterRoute
   SecurityRoute: typeof SecurityRoute
   SettingsRoute: typeof SettingsRoute
@@ -377,6 +390,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/protocols': {
+      id: '/protocols'
+      path: '/protocols'
+      fullPath: '/protocols'
+      preLoaderRoute: typeof ProtocolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -534,6 +554,7 @@ const rootRouteChildren: RootRouteChildren = {
   PersonalizationRoute: PersonalizationRoute,
   PlansRoute: PlansRoute,
   ProfileRoute: ProfileRoute,
+  ProtocolsRoute: ProtocolsRoute,
   RegisterRoute: RegisterRoute,
   SecurityRoute: SecurityRoute,
   SettingsRoute: SettingsRoute,

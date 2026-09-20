@@ -3,7 +3,7 @@ import { hasPermission, useUserStore, type Permission } from '@/shared/stores/us
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowRight, faCircleInfo, faCircleQuestion, faCreditCard, faDesktop, faGear, faShield, faUser, faUsers } from '@fortawesome/free-solid-svg-icons'
+import { faArrowRight, faCircleInfo, faCircleQuestion, faCreditCard, faDesktop, faFlask, faGear, faShield, faUser, faUsers } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 // single dark teal for the right-side gradient of each card
@@ -20,6 +20,7 @@ interface SettingsOption {
 const settingsOptions: SettingsOption[] = [
   { icon: faUser, label: 'Seu Perfil', description: 'Seus dados, cargo e preferências', route: '/profile' },
   { icon: faShield, label: 'Segurança e Privacidade', description: 'Autenticação, sessões e políticas de acesso', route: '/security' },
+  { icon: faFlask, label: 'Protocolos de Imunoterapia', description: 'Catálogo, versões, publicação e automação', route: '/protocols', requires: 'view_protocols' },
   { icon: faGear, label: 'Configurações Avançadas', description: 'Parâmetros técnicos e integrações', route: '/advanced-settings', requires: 'advanced_settings' },
   { icon: faDesktop, label: 'Personalização e Acessibilidade', description: 'Temas, idioma, contraste e tamanho de fonte', route: '/personalization' },
   { icon: faCircleInfo, label: 'Sobre o Sistema', description: 'Versão, licença e informações técnicas', route: '/about' },

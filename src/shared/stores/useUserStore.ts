@@ -43,6 +43,7 @@ export type Permission =
   | 'new_appointment'
   | 'manage_team'
   | 'advanced_settings'
+  | 'view_protocols'
   | 'view_dashboard'
 
 /**
@@ -62,6 +63,7 @@ export const PERMISSION_CAPABILITIES: Record<Permission, string> = {
   new_appointment: 'doses:create',
   manage_team: 'professionals:manage',
   advanced_settings: 'protocols:manage',
+  view_protocols: 'protocols:read',
   view_dashboard: 'immunotherapies:read',
 }
 
