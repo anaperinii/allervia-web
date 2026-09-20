@@ -37,17 +37,20 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
       name: patient.name,
       phone: patient.phone,
       weight: patient.weight,
-      responsibleDoctor: patient.responsibleDoctor,
+      // O formulário trabalha com o ID; o nome é apresentação.
+      responsibleDoctor: patient.responsibleDoctorId ?? '',
     },
   })
 
 
   const values = useWatch({ control })
+  const doctorNameById = (id?: string) =>
+    doctors.find((doctor) => doctor.professionalId === id)?.fullName ?? ''
   const hasChanges =
     values.name !== patient.name ||
     values.phone !== patient.phone ||
     values.weight !== patient.weight ||
-    values.responsibleDoctor !== patient.responsibleDoctor
+    values.responsibleDoctor !== (patient.responsibleDoctorId ?? '')
 
   const closeAndReset = () => {
     onClose()
@@ -112,7 +115,7 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
                 <Select invalid={!!errors.responsibleDoctor} {...register('responsibleDoctor')}>
                   <option value="" disabled>Selecione o médico</option>
                   {doctors.map((doctor) => (
-                    <option key={doctor.professionalId} value={doctor.fullName}>
+                    <option key={doctor.professionalId} value={doctor.professionalId}>
                       {doctor.fullName}
                       {doctor.councilNumber
                         ? ` · ${doctor.councilNumber}/${doctor.councilUf ?? ''}`
@@ -138,7 +141,11 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
                   { label: 'Nome', prev: patient.name, next: values.name },
                   { label: 'Telefone', prev: patient.phone, next: values.phone },
                   { label: 'Peso', prev: patient.weight, next: values.weight },
-                  { label: 'Médico', prev: patient.responsibleDoctor, next: values.responsibleDoctor },
+                  {
+                    label: 'Médico',
+                    prev: patient.responsibleDoctor,
+                    next: doctorNameById(values.responsibleDoctor),
+                  },
                 ].filter((f) => f.prev !== f.next).map((f) => (
                   <div key={f.label} className="flex items-center justify-between gap-2">
                     <span className="text-[0.65rem] text-(--text-muted) shrink-0">{f.label}</span>
