@@ -2,7 +2,7 @@ import { Controller, type UseFormReturn } from 'react-hook-form'
 import { FieldLabel, Select, StepHeading, TextInput } from '@/shared/components'
 import { formatCPF, formatPhone, formatWeight } from '@/shared/lib/formatters'
 import { todayStr } from '@/shared/lib/dates'
-import { PROFILES } from '@/shared/stores/useUserStore'
+import { MOCK_PROFESSIONAL_DIRECTORY } from '@/shared/stores/professional-directory.mock'
 import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
 
 interface PatientDataStepProps {
@@ -74,7 +74,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
         <FieldLabel label="Médico Responsável" error={errors.responsibleDoctor?.message}>
           <Select invalid={!!errors.responsibleDoctor} {...register('responsibleDoctor')}>
             <option value="" disabled>Selecione o médico</option>
-            {PROFILES.filter((p) => p.role === 'doctor').map((p) => (
+            {MOCK_PROFESSIONAL_DIRECTORY.filter((p) => p.role === 'doctor').map((p) => (
               <option key={p.id} value={p.name}>{p.name} · {p.registration}</option>
             ))}
           </Select>

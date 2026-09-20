@@ -3,7 +3,13 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AuthLayout } from '@/features/auth/components/AuthLayout'
+import { SecondFactorStep } from '@/features/auth/components/SecondFactorStep'
+import { RecoveryCodesNotice } from '@/features/auth/components/RecoveryCodesNotice'
 import { loginSchema, type LoginForm } from '@/features/auth/schemas/login'
+import { startSession, verifySecondFactor } from '@/shared/api/auth.api'
+import { isMfaChallenge, type MfaChallenge, type SessionState } from '@/shared/api/contracts/account'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { useSession } from '@/shared/auth/useSession'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
@@ -19,9 +25,24 @@ const fieldStyle: CSSProperties = {
   borderRadius: 12,
 }
 
+const AFTER_LOGIN_ROUTE = '/immunotherapies'
+
+function describeFailure(error: unknown): string {
+  if (!(error instanceof ApiError)) {
+    return 'Não foi possível entrar. Tente novamente.'
+  }
+  return error.message
+}
+
 export function LoginPage() {
   const navigate = useNavigate()
+  const { adopt } = useSession()
   const [showPw, setShowPw] = useState(false)
+  const [challenge, setChallenge] = useState<MfaChallenge | null>(null)
+  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null)
+  const [pendingSession, setPendingSession] = useState<SessionState | null>(null)
+  const [failure, setFailure] = useState<string | null>(null)
+  const [verifying, setVerifying] = useState(false)
 
   const {
     register,
@@ -33,9 +54,83 @@ export function LoginPage() {
     defaultValues: { email: '', password: '' },
   })
 
-  const onSubmit = handleSubmit(() => {
-    navigate({ to: '/immunotherapies' })
+  const enterApplication = async (session: SessionState) => {
+    await adopt(session)
+    await navigate({ to: AFTER_LOGIN_ROUTE })
+  }
+
+  const onSubmit = handleSubmit(async (values) => {
+    setFailure(null)
+    try {
+      const result = await startSession(values)
+
+      if (isMfaChallenge(result)) {
+        setChallenge(result)
+        return
+      }
+
+      await enterApplication(result.session)
+    } catch (error) {
+      setFailure(describeFailure(error))
+    }
   })
+
+  const submitSecondFactor = async (code: string) => {
+    if (!challenge) return
+    setFailure(null)
+    setVerifying(true)
+
+    try {
+      const envelope = await verifySecondFactor({
+        challengeToken: challenge.challengeToken,
+        code,
+      })
+
+      // Os códigos de recuperação só aparecem quando o cadastro acabou de ser
+      // concluído, e apenas nesta resposta.
+      if (envelope.recoveryCodes?.length) {
+        setPendingSession(envelope.session)
+        setRecoveryCodes(envelope.recoveryCodes)
+        return
+      }
+
+      await enterApplication(envelope.session)
+    } catch (error) {
+      setFailure(describeFailure(error))
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  const restart = () => {
+    setChallenge(null)
+    setFailure(null)
+  }
+
+  if (recoveryCodes && pendingSession) {
+    return (
+      <AuthLayout>
+        <RecoveryCodesNotice
+          codes={recoveryCodes}
+          onContinue={() => void enterApplication(pendingSession)}
+        />
+      </AuthLayout>
+    )
+  }
+
+  if (challenge) {
+    return (
+      <AuthLayout>
+        <SecondFactorStep
+          challenge={challenge}
+          error={failure}
+          submitting={verifying}
+          onSubmit={(code) => void submitSecondFactor(code)}
+          onBack={restart}
+        />
+      </AuthLayout>
+    )
+  }
 
   return (
     <AuthLayout>
@@ -54,7 +149,7 @@ export function LoginPage() {
         </p>
       </div>
 
-      <form onSubmit={onSubmit} noValidate className="mt-6 flex flex-col gap-3.5">
+      <form onSubmit={(event) => void onSubmit(event)} noValidate className="mt-6 flex flex-col gap-3.5">
         <label className="flex flex-col gap-1.5">
           <span className="text-[11.5px] font-semibold tracking-[0.02em]" style={{ color: 'var(--ink)' }}>
             Email
@@ -103,6 +198,12 @@ export function LoginPage() {
             </span>
           )}
         </label>
+
+        {failure && (
+          <span className="text-[11.5px]" style={{ color: 'var(--err)' }} role="alert">
+            {failure}
+          </span>
+        )}
 
         <div className="flex items-center justify-end mt-0.5">
           <Link

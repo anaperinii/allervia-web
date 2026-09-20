@@ -2,7 +2,7 @@ import { editPatientSchema, type EditPatientForm } from '@/features/patient/sche
 import type { Patient } from '@/features/patient/stores/usePatientStore'
 import { Button, ConfirmDiscardModal, FieldLabel, Modal, ReadOnlyField, Select, TextInput } from '@/shared/components'
 import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
-import { PROFILES } from '@/shared/stores/useUserStore'
+import { MOCK_PROFESSIONAL_DIRECTORY } from '@/shared/stores/professional-directory.mock'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -10,7 +10,7 @@ import { useForm, useWatch } from 'react-hook-form'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-const DOCTORS = PROFILES.filter((p) => p.role === 'doctor')
+const DOCTORS = MOCK_PROFESSIONAL_DIRECTORY.filter((p) => p.role === 'doctor')
 
 interface EditPatientModalProps {
   open: boolean

@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { PatientCompletionPage } from '@/features/patient/patient-completion-page'
-import { ROLE_PERMISSIONS, useUserStore } from '@/shared/stores/useUserStore'
+import { hasPermission, useUserStore } from '@/shared/stores/useUserStore'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
@@ -14,8 +14,10 @@ export const Route = createFileRoute('/patient-completion')({
     patientId: search.patientId as string | undefined,
   }),
   beforeLoad: ({ search }) => {
-    const role = useUserStore.getState().current.role
-    if (!ROLE_PERMISSIONS[role].includes('inactivate_immunotherapy')) {
+    // A capacidade vem do servidor; a rota apenas evita abrir uma tela que o
+    // comando seria recusado de qualquer forma.
+    const { capabilities } = useUserStore.getState()
+    if (!hasPermission(capabilities, 'inactivate_immunotherapy')) {
       throw redirect({ to: '/immunotherapies' })
     }
     const { selectedPatient } = usePatientStore.getState()
