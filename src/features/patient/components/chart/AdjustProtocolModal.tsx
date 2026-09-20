@@ -1,20 +1,20 @@
-import { useEffect } from 'react'
-import { Controller, useForm, useWatch } from 'react-hook-form'
+import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
+import {
+  ADJUST_PROTOCOL_DEFAULTS,
+  adjustProtocolSchema,
+  type AdjustProtocolForm,
+} from '@/features/patient/schemas/adjust-protocol'
+import type { Patient, ProtocolAdjustment, ProtocolAdjustmentType } from '@/features/patient/stores/usePatientStore'
+import { Button, ConfirmDiscardModal, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Button, ConfirmDiscardModal, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
-import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
-import {
-  adjustProtocolSchema,
-  ADJUST_PROTOCOL_DEFAULTS,
-  type AdjustProtocolForm,
-} from '@/features/patient/schemas/adjust-protocol'
-import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
-import type { Patient, ProtocolAdjustment, ProtocolAdjustmentType } from '@/features/patient/stores/usePatientStore'
+import { useEffect } from 'react'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface AdjustProtocolModalProps {
   open: boolean
@@ -67,7 +67,7 @@ export function AdjustProtocolModal({ open, patient, onClose, onConfirm }: Adjus
     }
   }, [open, patient, reset])
 
-  const submit = handleSubmit((v) => {
+  const submit = () => handleSubmit((v) => {
     const justificationFinal =
       v.type === 'other' && v.otherReason.trim()
         ? `[${v.otherReason.trim()}] ${v.justification.trim()}`
@@ -85,7 +85,7 @@ export function AdjustProtocolModal({ open, patient, onClose, onConfirm }: Adjus
     }
     onConfirm(adjustment, { newType: v.newType, newRoute: v.newRoute, newExtract: v.newExtract })
     onClose()
-  })
+  })()
 
   return (
     <>

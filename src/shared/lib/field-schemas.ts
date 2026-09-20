@@ -117,17 +117,18 @@ export const volumeSchema = z
   .min(1, 'Volume é obrigatório')
   .superRefine((value, ctx) => {
     const normalized = value.replace(',', '.')
-    if (!/^\d+(\.\d{1,3})?$/.test(normalized)) {
+    if (!/^\d+(\.\d+)?$/.test(normalized)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Formato inválido (máx. 3 casas decimais, ex: 0.5)',
+        message: 'Formato decimal inválido (ex: 0.5)',
       })
       return
     }
-    const n = parseFloat(normalized)
-    if (n <= 0) {
+    const [integer, fraction = ''] = normalized.split('.')
+    const whole = BigInt(integer)
+    if (!/[1-9]/.test(normalized)) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Volume deve ser maior que 0' })
-    } else if (n > 10) {
+    } else if (whole > 10n || (whole === 10n && /[1-9]/.test(fraction))) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Volume inválido (máx. 10 ml)' })
     }
   })

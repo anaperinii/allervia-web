@@ -1,20 +1,16 @@
-import { useEffect } from 'react'
-import { Controller, useForm, useWatch } from 'react-hook-form'
+import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
+import { INACTIVATE_DEFAULTS, inactivateSchema, type InactivateForm } from '@/features/patient/schemas/inactivate'
+import type { Inactivation, InactivationCategory, Patient } from '@/features/patient/stores/usePatientStore'
+import { Button, ConfirmDiscardModal, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Button, ConfirmDiscardModal, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
-import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
-import {
-  inactivateSchema,
-  INACTIVATE_DEFAULTS,
-  type InactivateForm,
-} from '@/features/patient/schemas/inactivate'
-import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
-import type { Inactivation, InactivationCategory, Patient } from '@/features/patient/stores/usePatientStore'
+import { useEffect } from 'react'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface InactivateModalProps {
   open: boolean
@@ -52,7 +48,7 @@ export function InactivateModal({ open, patient, onClose, onConfirm }: Inactivat
     if (open) reset(INACTIVATE_DEFAULTS)
   }, [open, reset])
 
-  const submit = handleSubmit((v) => {
+  const submit = () => handleSubmit((v) => {
     const expectedReturn = v.expectedReturnDate
       ? format(new Date(v.expectedReturnDate + 'T00:00:00'), 'dd/MM/yyyy')
       : null
@@ -71,7 +67,7 @@ export function InactivateModal({ open, patient, onClose, onConfirm }: Inactivat
       snapshotInterval: patient.currentInterval,
     })
     onClose()
-  })
+  })()
 
   return (
     <>

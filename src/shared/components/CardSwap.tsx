@@ -1,17 +1,17 @@
-import React, {
-  Children,
-  cloneElement,
-  forwardRef,
-  isValidElement,
-  type ReactElement,
-  type ReactNode,
-  type RefObject,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react'
-import gsap from 'gsap'
 import { cn } from '@/shared/lib/cn'
+import gsap from 'gsap'
+import React,{
+Children,
+cloneElement,
+forwardRef,
+isValidElement,
+type ReactElement,
+type ReactNode,
+type RefObject,
+useEffect,
+useMemo,
+useRef,
+} from 'react'
 
 export interface CardSwapProps {
   width?: number | string
@@ -82,10 +82,10 @@ export const CardSwap: React.FC<CardSwapProps> = ({
   children,
 }) => {
   const childArr = useMemo(() => Children.toArray(children) as ReactElement<CardProps>[], [children])
+  const childCount = childArr.length
   const refs = useMemo<CardRef[]>(
-    () => childArr.map(() => React.createRef<HTMLDivElement>()),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [childArr.length],
+    () => Array.from({ length: childCount }, () => React.createRef<HTMLDivElement>()),
+    [childCount],
   )
 
   const order = useRef<number[]>(Array.from({ length: childArr.length }, (_, i) => i))
@@ -129,7 +129,6 @@ export const CardSwap: React.FC<CardSwapProps> = ({
       tl.set(el, { zIndex: slot.zIndex }, at)
       tl.to(el, { x: slot.x, y: slot.y, z: slot.z, duration: 0.6, ease: 'power3.out' }, at)
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, refs, cardDistance, verticalDistance])
 
   const rendered = childArr.map((child, i) =>

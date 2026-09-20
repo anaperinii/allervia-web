@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react'
-import { Link } from '@tanstack/react-router'
 import allerviaMarkWhite from '@/assets/allervia-mark-dark.png'
 import allerviaMarkBlack from '@/assets/allervia-mark-light.png'
-import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { ThemeSwitch } from '@/features/landing-page/components/ThemeSwitch'
-import { useLandingTheme } from '@/features/landing-page/theme-context'
+import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
+import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { cn } from '@/shared/lib/cn'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Link } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
 
 const navLinks = [
   { label: 'Funcionalidades', href: '#features' },

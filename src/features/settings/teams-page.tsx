@@ -1,18 +1,17 @@
-import { useEffect, useMemo, useState } from 'react'
-import { cn } from '@/shared/lib/cn'
-import { useHasPermission } from '@/shared/stores/useUserStore'
-import { Button, Select, TextInput } from '@/shared/components'
+import { InviteMemberModal } from '@/features/settings/components/InviteMemberModal'
+import { InvitesTable } from '@/features/settings/components/InvitesTable'
+import { MembersTable } from '@/features/settings/components/MembersTable'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
+import { TeamConfirmModal, type TeamConfirmState } from '@/features/settings/components/TeamConfirmModal'
 import type { TeamRole } from '@/features/settings/constants/team-roles'
 import { useTeamsStore, type Invite, type TeamMember } from '@/features/settings/stores/useTeamsStore'
-import { MembersTable } from '@/features/settings/components/MembersTable'
-import { InvitesTable } from '@/features/settings/components/InvitesTable'
-import { InviteMemberModal } from '@/features/settings/components/InviteMemberModal'
-import { TeamConfirmModal, type TeamConfirmState } from '@/features/settings/components/TeamConfirmModal'
-import { TablePagination } from '@/shared/components'
+import { Button, Select, TablePagination, TextInput } from '@/shared/components'
+import { cn } from '@/shared/lib/cn'
+import { useHasPermission } from '@/shared/stores/useUserStore'
+import { useMemo, useState } from 'react'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 type StatusFilter = TeamMember['status'] | 'all'
 type RoleFilter = TeamRole | 'all'
@@ -48,7 +47,14 @@ export function TeamsPage() {
     return filteredMembers.slice(start, start + itemsPerPage)
   }, [filteredMembers, currentPage, itemsPerPage])
 
-  useEffect(() => { setCurrentPage(1) }, [search, statusFilter, roleFilter, itemsPerPage])
+  const filterKey = JSON.stringify([search, statusFilter, roleFilter, itemsPerPage])
+  const [previousFilterKey, setPreviousFilterKey] = useState(filterKey)
+  if (previousFilterKey !== filterKey) {
+    setPreviousFilterKey(filterKey)
+    setCurrentPage(1)
+  } else if (currentPage > totalPages) {
+    setCurrentPage(totalPages)
+  }
 
   const handleConfirm = () => {
     if (!confirmState) return

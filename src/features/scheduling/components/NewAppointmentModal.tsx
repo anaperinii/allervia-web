@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Modal, Button, Select, TextInput } from '@/shared/components'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { PROTOCOL_DOSES, PROTOCOL_INTERVAL_PRESETS } from '@/features/immunotherapy/constants/scit-protocol'
+import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import {
-  newAppointmentSchema,
   NEW_APPOINTMENT_DEFAULTS,
+  newAppointmentSchema,
   type NewAppointmentForm,
 } from '@/features/scheduling/schemas/new-appointment'
+import { Button, Modal, Select, TextInput } from '@/shared/components'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMemo, useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendar } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface NewAppointmentModalProps {
   open: boolean
@@ -20,7 +20,11 @@ interface NewAppointmentModalProps {
   onSubmit: (data: NewAppointmentForm) => void
 }
 
-export function NewAppointmentModal({ open, googleConnected, onClose, onSubmit }: NewAppointmentModalProps) {
+export function NewAppointmentModal(props: NewAppointmentModalProps) {
+  return props.open ? <NewAppointmentModalForm key={'appointment'} {...props} /> : null
+}
+
+function NewAppointmentModalForm({ open, googleConnected, onClose, onSubmit }: NewAppointmentModalProps) {
   const { immunotherapies } = useImmunotherapiesStore()
   const [isCustomIntervalMode, setIsCustomIntervalMode] = useState(false)
 
@@ -28,8 +32,7 @@ export function NewAppointmentModal({ open, googleConnected, onClose, onSubmit }
     register,
     handleSubmit,
     setValue,
-    watch,
-    reset,
+    control,
     formState: { errors },
   } = useForm<NewAppointmentForm>({
     resolver: zodResolver(newAppointmentSchema),
@@ -37,14 +40,8 @@ export function NewAppointmentModal({ open, googleConnected, onClose, onSubmit }
     defaultValues: NEW_APPOINTMENT_DEFAULTS,
   })
 
-  useEffect(() => {
-    if (open) {
-      reset(NEW_APPOINTMENT_DEFAULTS)
-      setIsCustomIntervalMode(false)
-    }
-  }, [open, reset])
 
-  const intervalValue = watch('interval')
+  const intervalValue = useWatch({ control, name: 'interval' })
   const selectIntervalValue = isCustomIntervalMode ? 'outro' : intervalValue
 
   const handleIntervalSelectChange = (value: string) => {

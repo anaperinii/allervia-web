@@ -1,12 +1,12 @@
-import { Link } from '@tanstack/react-router'
 import allerviaMarkWhite from '@/assets/allervia-mark-dark.png'
 import allerviaMarkBlack from '@/assets/allervia-mark-light.png'
-import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
-import { useLandingTheme } from '@/features/landing-page/theme-context'
 import { FOOTER_COLUMNS } from '@/features/landing-page/constants/footer-columns'
+import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
+import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
+import { Link } from '@tanstack/react-router'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHeart } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export function Footer() {
   const { theme } = useLandingTheme()

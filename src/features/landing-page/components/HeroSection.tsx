@@ -1,9 +1,10 @@
-import type { CSSProperties } from 'react'
+import { Aurora } from '@/shared/components/Aurora'
+import { AURORA_STOPS } from '@/shared/constants/aurora'
 import { Link } from '@tanstack/react-router'
-import { Aurora, AURORA_STOPS } from '@/shared/components/Aurora'
+import type { CSSProperties } from 'react'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const heroRiseStyle = (delay: number): CSSProperties => ({
   opacity: 0,

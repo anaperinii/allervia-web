@@ -1,14 +1,14 @@
-import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
-import { cn } from '@/shared/lib/cn'
-import { CardSwap, Card } from '@/shared/components/CardSwap'
-import { Reveal } from './Reveal'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
-import { useLandingTheme } from '@/features/landing-page/theme-context'
 import { PRODUCT_TABS, type TabId } from '@/features/landing-page/constants/tabs'
+import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
+import { Card, CardSwap } from '@/shared/components/CardSwap'
+import { cn } from '@/shared/lib/cn'
+import { Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import { Reveal } from './Reveal'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export function TabsSection() {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard')

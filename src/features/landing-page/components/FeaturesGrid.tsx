@@ -1,9 +1,9 @@
-import { Reveal } from './Reveal'
+import featuresArt from '@/assets/features-art.jpg'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
 import { FEATURES } from '@/features/landing-page/constants/features'
-import { useLandingTheme } from '@/features/landing-page/theme-context'
-import featuresArt from '@/assets/features-art.jpg'
+import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Reveal } from './Reveal'
 
 const CARD_SPANS = [
   'lg:col-span-2',

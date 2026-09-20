@@ -1,25 +1,16 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import proArt from '@/assets/pro-art.jpg'
+import { weekKey, weekRangeFromKey } from '@/features/dashboard/hooks/useChartWindow'
+import { formatWeek } from '@/features/dashboard/lib/format-week'
+import { SHOWCASE } from '@/shared/components/showcase'
 import { faCalendar } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { DayPicker } from 'react-day-picker'
 import { ptBR } from 'react-day-picker/locale'
-import { format } from 'date-fns'
-import { ptBR as ptBRDateFns } from 'date-fns/locale'
-import proArt from '@/assets/pro-art.jpg'
-import { SHOWCASE } from '@/shared/components/showcase'
-import { weekKey, weekRangeFromKey } from '@/features/dashboard/hooks/useChartWindow'
 import 'react-day-picker/style.css'
+import { createPortal } from 'react-dom'
 
 const POPOVER_WIDTH = 340
-
-export function formatWeek(value: string) {
-  const range = weekRangeFromKey(value)
-  if (!range) return 'Semana'
-  const from = format(range.from, 'dd/MM', { locale: ptBRDateFns })
-  const to = format(range.to, 'dd/MM', { locale: ptBRDateFns })
-  return `${from} – ${to}`
-}
 
 export function WeekPicker({
   value,

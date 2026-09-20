@@ -1,15 +1,9 @@
 import { Select, TextInput } from '@/shared/components'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 import { SHOWCASE } from '@/shared/components/showcase'
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export type ModalityTab = 'all' | 'subcutaneous' | 'sublingual'
-
-export const MODALITY_OPTIONS: { value: ModalityTab; label: string }[] = [
-  { value: 'all', label: 'Todas' },
-  { value: 'subcutaneous', label: 'Subcutânea' },
-  { value: 'sublingual', label: 'Sublingual' },
-]
 
 interface ImmunotherapiesFilterBarProps {
   searchTerm: string

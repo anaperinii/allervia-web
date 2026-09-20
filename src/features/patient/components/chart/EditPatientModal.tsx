@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Button, ConfirmDiscardModal, FieldLabel, Modal, ReadOnlyField, Select, TextInput } from '@/shared/components'
-import { PROFILES } from '@/shared/stores/useUserStore'
 import { editPatientSchema, type EditPatientForm } from '@/features/patient/schemas/edit-patient'
-import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
+import { Button, ConfirmDiscardModal, FieldLabel, Modal, ReadOnlyField, Select, TextInput } from '@/shared/components'
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
+import { PROFILES } from '@/shared/stores/useUserStore'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const DOCTORS = PROFILES.filter((p) => p.role === 'doctor')
 
@@ -19,7 +19,11 @@ interface EditPatientModalProps {
   onSave: (patch: EditPatientForm) => void
 }
 
-export function EditPatientModal({ open, patient, onClose, onSave }: EditPatientModalProps) {
+export function EditPatientModal(props: EditPatientModalProps) {
+  return props.open ? <EditPatientModalForm key={JSON.stringify([props.patient.id, props.patient.name, props.patient.phone, props.patient.weight, props.patient.responsibleDoctor])} {...props} /> : null
+}
+
+function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientModalProps) {
   const [step, setStep] = useState<'form' | 'review'>('form')
   const {
     control,
@@ -38,17 +42,6 @@ export function EditPatientModal({ open, patient, onClose, onSave }: EditPatient
     },
   })
 
-  useEffect(() => {
-    if (open) {
-      reset({
-        name: patient.name,
-        phone: patient.phone,
-        weight: patient.weight,
-        responsibleDoctor: patient.responsibleDoctor,
-      })
-      setStep('form')
-    }
-  }, [open, patient.name, patient.phone, patient.weight, patient.responsibleDoctor, reset])
 
   const values = useWatch({ control })
   const hasChanges =

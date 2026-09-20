@@ -1,7 +1,7 @@
-import { useLandingTheme } from '@/features/landing-page/theme-context'
+import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMoon, faSun } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface ThemeSwitchProps {
   overHero?: boolean

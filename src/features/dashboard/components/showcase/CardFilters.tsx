@@ -1,10 +1,10 @@
+import type { CardFilter } from '@/features/dashboard/hooks/useChartWindow'
+import { CircleButton, SelectPill, SHOWCASE } from '@/shared/components/showcase'
+import { cn } from '@/shared/lib/cn'
+import { faSliders } from '@fortawesome/free-solid-svg-icons'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { faSliders } from '@fortawesome/free-solid-svg-icons'
-import { CircleButton, SelectPill, SHOWCASE } from '@/shared/components/showcase'
-import type { CardFilter } from '@/features/dashboard/hooks/useChartWindow'
 import { WeekPicker } from './WeekPickerPopover'
-import { cn } from '@/shared/lib/cn'
 
 const PANEL_WIDTH = 208
 
@@ -53,7 +53,7 @@ export function CardFilters({
       window.removeEventListener('scroll', place, true)
       window.removeEventListener('resize', place)
     }
-  }, [open])
+  }, [open, inline])
 
   useEffect(() => {
     if (!open) return

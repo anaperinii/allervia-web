@@ -1,32 +1,32 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { addDays, differenceInDays, format } from 'date-fns'
-import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
-import { usePatientStore, derivePatientDates } from '@/features/patient/stores/usePatientStore'
-import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { useHasPermission, useUserStore } from '@/shared/stores/useUserStore'
-import { useAuditStore } from '@/shared/stores/useAuditStore'
 import { calculateNextDose, parseDose } from '@/features/immunotherapy/constants/scit-protocol'
-import { comparePtDateDesc, parsePtDate } from '@/shared/lib/dates'
-import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
+import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { EvolutionReviewStep } from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
+import { PostApplicationStep } from '@/features/patient/components/treatment-evolution/PostApplicationStep'
+import { PreApplicationStep } from '@/features/patient/components/treatment-evolution/PreApplicationStep'
+import { SelectPatientStep } from '@/features/patient/components/treatment-evolution/SelectPatientStep'
+import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import {
+  EVOLUTION_DEFAULTS,
   evolutionSchema,
-  type EvolutionForm,
   STEP_1_FIELDS,
   STEP_2_FIELDS,
-  EVOLUTION_DEFAULTS,
+  type EvolutionForm,
 } from '@/features/patient/schemas/evolution'
-import { SelectPatientStep } from '@/features/patient/components/treatment-evolution/SelectPatientStep'
-import { PreApplicationStep } from '@/features/patient/components/treatment-evolution/PreApplicationStep'
-import { PostApplicationStep } from '@/features/patient/components/treatment-evolution/PostApplicationStep'
-import { EvolutionReviewStep } from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
+import { derivePatientDates, usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
+import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
+import { comparePtDateDesc, parsePtDate } from '@/shared/lib/dates'
+import { useAuditStore } from '@/shared/stores/useAuditStore'
+import { useHasPermission, useUserStore } from '@/shared/stores/useUserStore'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { addDays, differenceInDays, format } from 'date-fns'
+import { useEffect, useMemo, useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleCheck, faClipboardCheck, faNotesMedical, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
 import { PageHeader } from '@/shared/components/showcase'
+import { faCircleCheck, faClipboardCheck, faNotesMedical, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const STEPS: WizardStep[] = [
   { label: 'Paciente', icon: faUser, description: 'Escolha a imunoterapia a evoluir e confira a última aplicação, a dose atual e o que o protocolo prevê como próxima.' },
@@ -36,6 +36,11 @@ const STEPS: WizardStep[] = [
 ]
 
 export function PatientEvolutionPage() {
+  const { patientId } = useSearch({ from: '/patient-evolution' })
+  return <PatientEvolutionContent key={patientId ?? 'selection'} />
+}
+
+function PatientEvolutionContent() {
   const navigate = useNavigate()
   const { patientId: preselectedId } = useSearch({ from: '/patient-evolution' })
   const setStorePatient = usePatientStore((s) => s.setSelectedPatient)
@@ -53,14 +58,16 @@ export function PatientEvolutionPage() {
 
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0)
   const [showCancelModal, setShowCancelModal] = useState(false)
-  const [selectedImmunotherapy, setSelectedImmunotherapy] = useState<Immunotherapy | null>(null)
+  const [chosenImmunotherapy, setSelectedImmunotherapy] = useState<Immunotherapy | null>(null)
+
+  const selectedImmunotherapy = chosenImmunotherapy ?? immunotherapies.find((item) => item.id === preselectedId) ?? null
 
   const form = useForm<EvolutionForm>({
     resolver: zodResolver(evolutionSchema),
     mode: 'onBlur',
     defaultValues: EVOLUTION_DEFAULTS,
   })
-  const { handleSubmit, trigger, watch, getValues, setValue, formState: { errors } } = form
+  const { handleSubmit, trigger, control, getValues, setValue, formState: { errors } } = form
 
   const handleSelect = (item: Immunotherapy) => {
     setSelectedImmunotherapy(item)
@@ -68,11 +75,8 @@ export function PatientEvolutionPage() {
   }
 
   useEffect(() => {
-    if (preselectedId && !selectedImmunotherapy) {
-      const found = immunotherapies.find((immunotherapy) => immunotherapy.id === preselectedId)
-      if (found) handleSelect(found)
-    }
-  }, [preselectedId, immunotherapies])
+    if (selectedImmunotherapy) setStorePatient(buildPatientFromImmunotherapy(selectedImmunotherapy))
+  }, [selectedImmunotherapy, setStorePatient])
 
   const applicationsForPatient = useMemo(() => {
     if (!selectedImmunotherapy) return []
@@ -107,7 +111,7 @@ export function PatientEvolutionPage() {
     }
   }, [lastApplication, selectedImmunotherapy, doseNumber])
 
-  const formValues = watch()
+  const formValues = useWatch({ control }) as EvolutionForm
 
   const plannedNext = useMemo(() => {
     if (!formValues.applicationDate || !formValues.nextInterval || !formValues.nextInterval.trim()) return null
@@ -158,7 +162,7 @@ export function PatientEvolutionPage() {
     setStep((s) => (s + 1) as 0 | 1 | 2 | 3)
   }
 
-  const onSaveEvolution = handleSubmit((data) => {
+  const onSaveEvolution = () => handleSubmit((data) => {
     if (!selectedImmunotherapy || !plannedNext) return
     const [y, m, d] = data.applicationDate.split('-')
     const dataRealizada = `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`
@@ -237,7 +241,7 @@ export function PatientEvolutionPage() {
     })
 
     navigate({ to: '/immunotherapies' })
-  })
+  })()
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
