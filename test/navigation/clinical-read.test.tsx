@@ -121,6 +121,21 @@ function stubClinicalApi() {
         ),
       )
     }
+    if (url.includes('/treatment-protocols/automation')) {
+      return Promise.resolve(
+        jsonResponse({
+          enabled: true,
+          timeZone: 'America/Sao_Paulo',
+          defaults: [
+            {
+              organizationId: 'organization-1',
+              route: 'SUBCUTANEOUS',
+              versionId: 'version-1',
+            },
+          ],
+        }),
+      )
+    }
     if (url.includes('/professionals')) {
       return Promise.resolve(
         jsonResponse({ items: [], page: 1, pageSize: 100, total: 0 }),

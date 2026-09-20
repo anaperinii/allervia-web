@@ -108,8 +108,9 @@ describe('adapters de apresentação clínica', () => {
   })
 
   it('usa a máscara quando o documento completo não veio', () => {
-    const { cpf: _cpf, ...restricted } = DETAIL
-    const legacy = buildLegacyPatient(restricted as PatientDetail, null)
+    const restricted: PatientDetail = { ...DETAIL }
+    delete restricted.cpf
+    const legacy = buildLegacyPatient(restricted, null)
 
     expect(legacy.cpf).toBe('***.***.*47-25')
     expect(legacy.immunotherapyType).toBe('—')
