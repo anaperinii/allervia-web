@@ -201,6 +201,155 @@ export interface AdministerDoseResult {
   therapyRevision: number
 }
 
+export type LifecycleEventType = 'SUSPENSION' | 'RESUMPTION' | 'COMPLETION'
+export type LifecycleAction = 'SUSPEND' | 'RESUME' | 'COMPLETE'
+
+export interface LifecycleRecommendations {
+  retesting?: boolean
+  rescueMedication?: boolean
+  environmentalControl?: boolean
+  custom?: string[]
+  monitoringSchedule?: string
+  warningSigns?: string
+  note?: string
+}
+
+export interface TherapyLifecycleBody {
+  action: LifecycleAction
+  expectedRevision: number
+  reason: string
+  category?: string
+  expectedReturnAt?: string
+  recommendations?: LifecycleRecommendations
+}
+
+export interface TherapyLifecycleEvent {
+  id: string
+  type: LifecycleEventType
+  category: string | null
+  reason: string
+  expectedReturnAt: string | null
+  recommendations: LifecycleRecommendations | null
+  archivedDoseIds: string[]
+  createdAt: string
+  createdBy: {
+    id: string
+    professional: { id: string; fullName: string } | null
+  }
+}
+
+export interface TherapyLifecycleHistory {
+  therapy: { id: string; status: TherapyStatus; revision: number }
+  events: TherapyLifecycleEvent[]
+}
+
+export interface TherapyLifecycleResult {
+  event: { id: string; type: LifecycleEventType }
+  status: TherapyStatus
+  revision: number
+  archivedDoseIds: string[]
+}
+
+export interface RevisePrescriptionBody {
+  targetVersionId: string
+  prescription: {
+    protocolId: string
+    protocolVersionId: string
+    route: 'SUBCUTANEOUS'
+    stepIds: string[]
+    startingStepId: string
+    targetStepId: string
+  }
+  pendingStepId: string
+  reason: string
+  expectedRevision: number
+  dryRun?: boolean
+}
+
+export type RevisePrescriptionResult =
+  | {
+      dryRun: true
+      therapyId: string
+      pendingDoseId: string
+      previousVersionId: string
+      targetVersionId: string
+      pendingStep: {
+        id: string
+        label: string
+        concentration: string
+        volume: string
+        intervalDays: number
+      }
+      scheduledAtUnchanged: string
+      historicalDosesUnchanged: true
+    }
+  | {
+      dryRun: false
+      prescriptionId: string
+      previousPrescriptionId: string
+      pendingDose: DoseRecord
+      therapyRevision: number
+    }
+
+export interface RetractDoseBody {
+  reason: string
+  expectedRevision: number
+  expectedTherapyRevision: number
+}
+
+export interface RetractDoseResult {
+  dose: DoseRecord
+  archivedSuccessorId: string | null
+  reissuedDose: DoseRecord
+  therapyRevision: number
+}
+
+export interface LateObservationBody {
+  reportedSideEffects: string[]
+  administeredMedications: string[]
+  notes?: string
+  observedAt: string
+  conduct?: { type: DoseImmediateConduct; justification?: string }
+  expectedTherapyRevision: number
+}
+
+export interface DoseObservationAddendum {
+  id: string
+  reportedSideEffects: string[]
+  administeredMedications: string[]
+  notes: string | null
+  observedAt: string
+  conduct: DoseImmediateConduct | null
+  conductJustification: string | null
+  createdAt: string
+}
+
+export type AppointmentStatus =
+  | 'SCHEDULED'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'MISSED'
+
+export interface Appointment {
+  id: string
+  organizationId: string
+  patientId: string
+  doseId: string | null
+  title: string | null
+  startsAt: string
+  endsAt: string
+  status: AppointmentStatus
+  notes: string | null
+  statusReason: string | null
+  revision: number
+  createdAt: string
+  updatedAt: string
+  patient: { id: string; fullName: string; phoneNumber: string }
+  dose: { id: string; scheduledAt: string; status: DoseStatus } | null
+}
+
+export type AppointmentPage = Page<Appointment>
+
 /** Linha da consulta agregada de agenda: dose + resumo de paciente/terapia. */
 export interface ScheduleDoseItem {
   id: string

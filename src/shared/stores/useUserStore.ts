@@ -63,7 +63,7 @@ export const PERMISSION_CAPABILITIES: Record<Permission, string> = {
   emit_report: 'immunotherapies:read',
   lgpd_portability: 'patients:read',
   add_immunotherapy: 'immunotherapies:create',
-  new_appointment: 'doses:create',
+  new_appointment: 'appointments:manage',
   manage_team: 'professionals:manage',
   advanced_settings: 'protocols:manage',
   view_protocols: 'protocols:read',

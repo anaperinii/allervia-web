@@ -60,6 +60,8 @@ export function buildAccountContext(
       'doses:read',
       'doses:create',
       'doses:update',
+      'appointments:read',
+      'appointments:manage',
       'protocols:manage',
     ],
     security: { mfaEnabled: true, mfaRequired: true, sessionBased: true },

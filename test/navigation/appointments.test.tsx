@@ -118,6 +118,60 @@ function stubApi() {
     if (url.includes('/doses/dose-1')) {
       return Promise.resolve(jsonResponse(DOSE_DETAIL))
     }
+    if (url.includes('/appointments') && method === 'POST') {
+      return Promise.resolve(
+        jsonResponse(
+          {
+            id: 'appointment-1',
+            organizationId: 'organization-1',
+            patientId: 'patient-1',
+            doseId: null,
+            title: 'Avaliação',
+            startsAt: isoAt(1, 10),
+            endsAt: isoAt(1, 10),
+            status: 'SCHEDULED',
+            notes: null,
+            statusReason: null,
+            revision: 0,
+            createdAt: isoAt(0, 9),
+            updatedAt: isoAt(0, 9),
+            patient: { id: 'patient-1', fullName: 'Paula Andrade', phoneNumber: '62911112222' },
+            dose: null,
+          },
+          201,
+        ),
+      )
+    }
+    if (url.includes('/appointments')) {
+      return Promise.resolve(jsonResponse({ items: [], page: 1, pageSize: 100, total: 0 }))
+    }
+    if (url.includes('/immunotherapies/patients/')) {
+      return Promise.resolve(jsonResponse([]))
+    }
+    if (url.includes('/patients')) {
+      return Promise.resolve(
+        jsonResponse({
+          items: [
+            {
+              id: 'patient-1',
+              fullName: 'Paula Andrade',
+              cpfMasked: null,
+              birthDate: '1988-02-10',
+              weightInKg: 61,
+              phoneNumber: '62911112222',
+              isActive: true,
+              responsiblePhysician: { id: 'professional-1', fullName: 'Dra. Karina Martins' },
+              therapyCount: 1,
+              therapyStatuses: ['IN_PROGRESS'],
+              createdAt: isoAt(-30, 9),
+            },
+          ],
+          page: 1,
+          pageSize: 50,
+          total: 1,
+        }),
+      )
+    }
     if (url.includes('/doses?') || url.match(/\/doses$/)) {
       return Promise.resolve(
         jsonResponse({
@@ -217,19 +271,41 @@ describe('agenda alimentada por doses persistidas', () => {
     })
   })
 
-  it('nova aplicação vira seleção de previsão existente, sem criação livre', async () => {
-    stubApi()
+  it('cria compromisso próprio de agenda, distinto da dose clínica', async () => {
+    const fetchMock = stubApi()
     const user = userEvent.setup()
     await renderAt('/appointments', AppointmentsPage)
 
     await screen.findByText('Paula Andrade')
-    await user.click(screen.getByRole('button', { name: /nova aplicação/i }))
-    expect(
-      await screen.findByText(/não existe compromisso livre/i),
-    ).toBeInTheDocument()
-    // Apenas a previsão pendente é oferecida; a administrada não.
-    const picker = screen.getByText('Selecionar previsão existente').closest('[role="dialog"]')
-    expect(picker).not.toBeNull()
+    await user.click(screen.getByRole('button', { name: /novo compromisso/i }))
+    expect(await screen.findByText('Novo compromisso')).toBeInTheDocument()
+
+    const patientLabel = screen.getByText(/^paciente$/i, { selector: 'label' })
+    await user.selectOptions(
+      patientLabel.parentElement!.querySelector('select')!,
+      'patient-1',
+    )
+    const dateLabel = screen.getByText(/^data$/i, { selector: 'label' })
+    const dateInput = dateLabel.parentElement!.querySelector('input')!
+    await user.clear(dateInput)
+    await user.type(dateInput, '2026-12-01')
+    const startLabel = screen.getByText(/^início$/i, { selector: 'label' })
+    await user.type(startLabel.parentElement!.querySelector('input')!, '10:00')
+    await user.click(screen.getByRole('button', { name: /agendar compromisso/i }))
+
+    await waitFor(() => {
+      const post = fetchMock.mock.calls.find(
+        ([url, init]) =>
+          String(url).endsWith('/appointments') &&
+          (init as RequestInit | undefined)?.method === 'POST',
+      )
+      expect(post).toBeDefined()
+      const body = JSON.parse((post![1] as RequestInit).body as string)
+      expect(body.patientId).toBe('patient-1')
+      expect(body.startsAt).toMatch(/^2026-12-01T10:00:00[+-]\d{2}:\d{2}$/)
+      expect(body.endsAt).toMatch(/^2026-12-01T10:30:00[+-]\d{2}:\d{2}$/)
+      expect(body.doseId).toBeUndefined()
+    })
   })
 })
 

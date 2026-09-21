@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
@@ -8,8 +8,12 @@ import { getApplicationEventColor } from '@/features/scheduling/constants/applic
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 import { scheduleItemToApplication } from '@/features/patient/adapters/clinical-presentation'
-import { getDose, listDoseSchedule } from '@/shared/api/clinical.api'
-import type { ScheduleDoseItem } from '@/shared/api/contracts/clinical'
+import { getDose, listAppointments, listDoseSchedule } from '@/shared/api/clinical.api'
+import type { Appointment, ScheduleDoseItem } from '@/shared/api/contracts/clinical'
+import {
+  AppointmentActionModal,
+  NewAppointmentModal,
+} from '@/features/scheduling/components/AppointmentModals'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
@@ -79,8 +83,9 @@ export function AppointmentsPage() {
   const navigate = useNavigate()
   const calendar = useCalendarNav()
 
-  const [showPickerModal, setShowPickerModal] = useState(false)
+  const [showNewModal, setShowNewModal] = useState(false)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [patientSearch, setPatientSearch] = useState('')
   const [dayModal, setDayModal] = useState<{ date: Date; apps: Application[] } | null>(null)
   const [rescheduleDoseId, setRescheduleDoseId] = useState<string | null>(null)
@@ -116,10 +121,52 @@ export function AppointmentsPage() {
     scheduleQuery.data !== undefined &&
     scheduleQuery.data.items.length < scheduleQuery.data.total
 
-  const applications = useMemo(
-    () => scheduleItems.map(scheduleItemToApplication),
-    [scheduleItems],
+  // Compromissos da agenda no mesmo período; entidade própria da recepção.
+  const appointmentsQuery = useQuery({
+    queryKey: queryKeys.schedule(organizationId, {
+      appointments: true,
+      ...range,
+      search: search || undefined,
+    }),
+    queryFn: ({ signal }) =>
+      listAppointments({ ...range!, pageSize: 100 }, signal),
+    enabled: organizationId !== '' && range !== null,
+  })
+  const appointmentItems = useMemo(() => {
+    const items = appointmentsQuery.data?.items ?? []
+    const term = search.toLowerCase()
+    return term
+      ? items.filter((item) => item.patient.fullName.toLowerCase().includes(term))
+      : items
+  }, [appointmentsQuery.data, search])
+  const appointmentById = useMemo(
+    () => new Map(appointmentItems.map((item) => [item.id, item])),
+    [appointmentItems],
   )
+  const linkedDoseIds = useMemo(
+    () =>
+      new Set(
+        appointmentItems
+          .filter((item) => item.doseId && item.status === 'SCHEDULED')
+          .map((item) => item.doseId!),
+      ),
+    [appointmentItems],
+  )
+
+  const applications = useMemo(() => {
+    // Compromisso agendado representa a previsão vinculada no calendário; a
+    // dose correspondente não aparece duplicada. Cancelados ficam fora.
+    const doseApplications = scheduleItems
+      .filter(
+        (item) =>
+          !(item.status === 'SCHEDULED' && linkedDoseIds.has(item.id)),
+      )
+      .map(scheduleItemToApplication)
+    const appointmentApplications = appointmentItems
+      .filter((item) => item.status !== 'CANCELLED')
+      .map((item) => appointmentToApplication(item))
+    return [...doseApplications, ...appointmentApplications]
+  }, [scheduleItems, appointmentItems, linkedDoseIds])
 
   const applicationsByDate = useMemo(() => {
     const map = new Map<string, Application[]>()
@@ -131,11 +178,6 @@ export function AppointmentsPage() {
     return map
   }, [applications])
 
-  const pendingApplications = useMemo(
-    () => applications.filter((application) => application.status === 'scheduled'),
-    [applications],
-  )
-
   // Reagendar = editar a dose pendente com motivo e revisões atuais.
   const rescheduleDoseQuery = useQuery({
     queryKey: queryKeys.dose(organizationId, rescheduleDoseId ?? ''),
@@ -146,6 +188,12 @@ export function AppointmentsPage() {
   const openPatient = (patientId: string) => {
     setSelectedApplication(null)
     navigate({ to: '/patient/$patientId', params: { patientId } })
+  }
+
+  const handleSelect = (application: Application) => {
+    const appointment = appointmentById.get(application.id)
+    if (appointment) setSelectedAppointment(appointment)
+    else setSelectedApplication(application)
   }
 
   return (
@@ -194,8 +242,8 @@ export function AppointmentsPage() {
               aria-label="Modo de visualização"
             />
             {canNewAppointment && (
-              <Pill active icon={faPlus} onClick={() => setShowPickerModal(true)}>
-                Nova Aplicação
+              <Pill active icon={faPlus} onClick={() => setShowNewModal(true)}>
+                Novo Compromisso
               </Pill>
             )}
           </>
@@ -230,7 +278,7 @@ export function AppointmentsPage() {
               selectedDate={calendar.selectedDate}
               onSelectDate={calendar.setSelectedDate}
               applicationsByDate={applicationsByDate}
-              onSelectApplication={setSelectedApplication}
+              onSelectApplication={handleSelect}
             />
           ) : (
             <MonthView
@@ -239,7 +287,7 @@ export function AppointmentsPage() {
               selectedDate={calendar.selectedDate}
               onSelectDate={calendar.setSelectedDate}
               applicationsByDate={applicationsByDate}
-              onSelectApplication={setSelectedApplication}
+              onSelectApplication={handleSelect}
               onOpenDay={(date, apps) => setDayModal({ date, apps })}
             />
           )}
@@ -266,7 +314,7 @@ export function AppointmentsPage() {
               <button
                 key={app.id}
                 type="button"
-                onClick={() => { setSelectedApplication(app); setDayModal(null) }}
+                onClick={() => { handleSelect(app); setDayModal(null) }}
                 className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:brightness-95 cursor-pointer"
                 style={{ backgroundColor: c.bg, backgroundImage: c.grad, color: c.text }}
               >
@@ -308,41 +356,17 @@ export function AppointmentsPage() {
         onSaved={() => setShowRescheduledToast(true)}
       />
 
-      <Modal
-        open={showPickerModal}
-        onClose={() => setShowPickerModal(false)}
-        size="sm"
-        title="Selecionar previsão existente"
-      >
-        <p className="text-[0.68rem] text-(--text-muted) leading-relaxed">
-          Toda aplicação nasce de uma previsão criada pelo servidor na prescrição
-          ou na administração anterior. Selecione a previsão do período para ver
-          detalhes ou reagendar; não existe compromisso livre.
-        </p>
-        <div className="space-y-2 max-h-72 overflow-y-auto">
-          {pendingApplications.length === 0 && (
-            <p className="text-xs text-(--text-muted) py-4 text-center">
-              Nenhuma previsão pendente no período visível.
-            </p>
-          )}
-          {pendingApplications.map((app) => (
-            <button
-              key={app.id}
-              type="button"
-              onClick={() => { setSelectedApplication(app); setShowPickerModal(false) }}
-              className="w-full flex items-center justify-between gap-3 rounded-lg border border-(--border-custom) bg-white px-3 py-2.5 text-left transition hover:border-brand/50 cursor-pointer"
-            >
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-(--text) truncate">{app.patientName}</div>
-                <div className="text-[0.65rem] text-(--text-muted)">{app.dose}</div>
-              </div>
-              <div className="text-[0.65rem] font-semibold text-(--text-muted) shrink-0">
-                {app.date} · {app.startTime}
-              </div>
-            </button>
-          ))}
-        </div>
-      </Modal>
+      <NewAppointmentModal
+        open={showNewModal}
+        onClose={() => setShowNewModal(false)}
+        onCreated={() => {}}
+      />
+
+      <AppointmentActionModal
+        appointment={selectedAppointment}
+        organizationId={organizationId}
+        onClose={() => setSelectedAppointment(null)}
+      />
 
       <Toast
         open={showRescheduledToast}
@@ -355,3 +379,36 @@ export function AppointmentsPage() {
     </div>
   )
 }
+
+function localTime(iso: string): string {
+  const date = new Date(iso)
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+const MONTHS_UPPER = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO']
+
+/** Compromisso no vocabulário do calendário; a identidade viaja pelo id real. */
+function appointmentToApplication(item: Appointment): Application {
+  const starts = new Date(item.startsAt)
+  return {
+    id: item.id,
+    patientId: item.patientId,
+    date: `${String(starts.getDate()).padStart(2, '0')}/${String(starts.getMonth() + 1).padStart(2, '0')}/${starts.getFullYear()}`,
+    startTime: localTime(item.startsAt),
+    endTime: localTime(item.endsAt),
+    status:
+      item.status === 'MISSED'
+        ? 'missed'
+        : item.status === 'COMPLETED'
+          ? 'completed'
+          : 'scheduled',
+    dose: item.title ?? (item.dose ? 'Aplicação prevista' : 'Compromisso'),
+    cycle: { number: 1, days: 0 },
+    month: MONTHS_UPPER[starts.getMonth()],
+    year: starts.getFullYear(),
+    patientName: item.patient.fullName,
+    patientPhone: item.patient.phoneNumber,
+    modality: 'subcutaneous',
+  }
+}
+

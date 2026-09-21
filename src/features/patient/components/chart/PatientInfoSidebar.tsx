@@ -30,12 +30,14 @@ interface PatientInfoSidebarProps {
   canComplete: boolean
   completeDisabled: boolean
   canLgpdPortability: boolean
+  /** Revisão de prescrição entre versões publicadas (I9). */
+  canRevisePrescription: boolean
+  onRevisePrescription: () => void
+  onShowLifecycleHistory: () => void
   onReactivate: () => void
   onEditPatient: () => void
   onAdjustProtocol: () => void
-  onShowAdjustHistory: () => void
   onInactivate: () => void
-  onShowInactivationHistory: () => void
   onPortability: () => void
   onComplete: () => void
 }
@@ -58,12 +60,13 @@ export function PatientInfoSidebar({
   canComplete,
   completeDisabled,
   canLgpdPortability,
+  canRevisePrescription,
+  onRevisePrescription,
+  onShowLifecycleHistory,
   onReactivate,
   onEditPatient,
   onAdjustProtocol,
-  onShowAdjustHistory,
   onInactivate,
-  onShowInactivationHistory,
   onPortability,
   onComplete,
 }: PatientInfoSidebarProps) {
@@ -91,6 +94,8 @@ export function PatientInfoSidebar({
 
   const showImmunoActions =
     canAdjustProtocol ||
+    canRevisePrescription ||
+    therapyStatus !== null ||
     (patient.protocolAdjustments?.length ?? 0) > 0 ||
     inactivationCount > 0
 
@@ -241,35 +246,37 @@ export function PatientInfoSidebar({
               </div>
               {showImmunoActions && (
                 <div className="pt-2 mt-1 border-t border-(--border-custom) space-y-1.5">
-                  {(canAdjustProtocol || (patient.protocolAdjustments?.length ?? 0) > 0) && (
-                    <div className="flex gap-2">
-                      {canAdjustProtocol && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={therapyStatus !== 'IN_PROGRESS'}
-                          onClick={onAdjustProtocol}
-                          className="flex-1"
-                        >
-                          Editar previsão pendente
-                        </Button>
-                      )}
-                      {(patient.protocolAdjustments?.length ?? 0) > 0 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          leftIcon={<FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 11 }} />}
-                          onClick={onShowAdjustHistory}
-                          className={cn(!canAdjustProtocol && 'flex-1')}
-                        >
-                          {canAdjustProtocol ? String(patient.protocolAdjustments!.length) : `Histórico de ajustes (${patient.protocolAdjustments!.length})`}
-                        </Button>
-                      )}
-                    </div>
+                  {canAdjustProtocol && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      fullWidth
+                      disabled={therapyStatus !== 'IN_PROGRESS'}
+                      onClick={onAdjustProtocol}
+                    >
+                      Editar previsão pendente
+                    </Button>
                   )}
-                  {inactivationCount > 0 && (
-                    <Button variant="outline" size="sm" fullWidth leftIcon={<FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 10 }} />} onClick={onShowInactivationHistory}>
-                      Histórico de inativações ({inactivationCount})
+                  {canRevisePrescription && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      fullWidth
+                      disabled={therapyStatus !== 'IN_PROGRESS'}
+                      onClick={onRevisePrescription}
+                    >
+                      Revisar prescrição
+                    </Button>
+                  )}
+                  {therapyStatus !== null && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      fullWidth
+                      leftIcon={<FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 10 }} />}
+                      onClick={onShowLifecycleHistory}
+                    >
+                      Histórico do tratamento
                     </Button>
                   )}
                 </div>

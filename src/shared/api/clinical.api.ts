@@ -3,17 +3,29 @@ import type {
   AdministerDoseBody,
   AdministerDoseResult,
   AdministrationRoute,
+  Appointment,
+  AppointmentPage,
+  AppointmentStatus,
   ClinicalMetrics,
   DoseDetail,
   DoseRecord,
   DoseStatus,
   ImmunotherapyDetail,
   ImmunotherapyPage,
+  LateObservationBody,
+  DoseObservationAddendum,
   PatientDetail,
   PatientPage,
   PreviewDoseBody,
   PreviewDoseResult,
+  RetractDoseBody,
+  RetractDoseResult,
+  RevisePrescriptionBody,
+  RevisePrescriptionResult,
   SchedulePage,
+  TherapyLifecycleBody,
+  TherapyLifecycleHistory,
+  TherapyLifecycleResult,
   TherapyStatus,
   TherapySummary,
   UpdateScheduledDoseBody,
@@ -138,15 +150,101 @@ export function registerImmunotherapy(
   return apiRequest('/immunotherapies/register', { method: 'POST', body })
 }
 
-/** Status simples do tratamento; motivos estruturados são extensão da I9. */
-export function updateTherapyStatus(
+/**
+ * Ciclo de vida clínico: suspensão, retomada e encerramento com motivo,
+ * autoria e efeitos explícitos. O status é consequência do evento.
+ */
+export function executeTherapyLifecycle(
   immunotherapyId: string,
-  body: { expectedRevision: number; status: TherapyStatus },
-): Promise<unknown> {
-  return apiRequest(`/immunotherapies/${immunotherapyId}/status`, {
-    method: 'PATCH',
+  body: TherapyLifecycleBody,
+): Promise<TherapyLifecycleResult> {
+  return apiRequest(`/immunotherapies/${immunotherapyId}/lifecycle`, {
+    method: 'POST',
     body,
   })
+}
+
+export function getTherapyLifecycle(
+  immunotherapyId: string,
+  signal?: AbortSignal,
+): Promise<TherapyLifecycleHistory> {
+  return apiRequest(`/immunotherapies/${immunotherapyId}/lifecycle`, { signal })
+}
+
+/**
+ * Revisão individual de prescrição entre versões publicadas: snapshot novo,
+ * histórico preservado e previsão pendente reancorada. Ensaio por padrão.
+ */
+export function revisePrescription(
+  immunotherapyId: string,
+  body: RevisePrescriptionBody,
+): Promise<RevisePrescriptionResult> {
+  return apiRequest(`/immunotherapies/${immunotherapyId}/prescription/revision`, {
+    method: 'POST',
+    body,
+  })
+}
+
+/**
+ * Retratação auditada: a aplicação vira ENTERED_IN_ERROR com valores
+ * preservados; a sucessora pendente é arquivada e a previsão original volta.
+ */
+export function retractDose(
+  doseId: string,
+  body: RetractDoseBody,
+): Promise<RetractDoseResult> {
+  return apiRequest(`/doses/${doseId}/retract`, { method: 'POST', body })
+}
+
+/** Observação pós-aplicação tardia: registro adicional imutável. */
+export function addLateObservation(
+  doseId: string,
+  body: LateObservationBody,
+): Promise<{ addendum: DoseObservationAddendum; suspensionEventId: string | null }> {
+  return apiRequest(`/doses/${doseId}/observations`, { method: 'POST', body })
+}
+
+export interface AppointmentsQuery {
+  from: string
+  to: string
+  status?: AppointmentStatus
+  patientId?: string
+  page?: number
+  pageSize?: number
+}
+
+/** Compromissos de agenda: entidade própria, distinta da dose clínica. */
+export function listAppointments(
+  query: AppointmentsQuery,
+  signal?: AbortSignal,
+): Promise<AppointmentPage> {
+  return apiRequest(`/appointments${toQueryString({ ...query })}`, { signal })
+}
+
+export function createAppointment(body: {
+  patientId: string
+  doseId?: string
+  title?: string
+  startsAt: string
+  endsAt: string
+  notes?: string
+}): Promise<Appointment> {
+  return apiRequest('/appointments', { method: 'POST', body })
+}
+
+export function updateAppointment(
+  appointmentId: string,
+  body: {
+    expectedRevision: number
+    status?: AppointmentStatus
+    statusReason?: string
+    startsAt?: string
+    endsAt?: string
+    title?: string
+    notes?: string
+  },
+): Promise<Appointment> {
+  return apiRequest(`/appointments/${appointmentId}`, { method: 'PATCH', body })
 }
 
 export interface ScheduleQuery {
