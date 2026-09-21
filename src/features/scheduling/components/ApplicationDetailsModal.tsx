@@ -1,18 +1,19 @@
 import { Modal, Button } from '@/shared/components'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
-import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { openWhatsApp, sendReminder } from '@/shared/lib/whatsapp'
 import { APPLICATION_STATUS_DISPLAY } from '@/features/scheduling/constants/application-display'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowUpRightFromSquare, faCalendar, faClock, faPhone, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
+import { faArrowUpRightFromSquare, faCalendar, faClock, faPencil, faPhone, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
 
 interface ApplicationDetailsModalProps {
   application: Application | null
   googleConnected: boolean
   onClose: () => void
   onOpenPatient: (patientId: string) => void
+  /** Reagendamento é edição da dose pendente; ausente para realizadas. */
+  onReschedule?: (doseId: string) => void
 }
 
 export function ApplicationDetailsModal({
@@ -20,9 +21,8 @@ export function ApplicationDetailsModal({
   googleConnected,
   onClose,
   onOpenPatient,
+  onReschedule,
 }: ApplicationDetailsModalProps) {
-  const { getFullName, getPhone } = useImmunotherapyLookup()
-
   return (
     <Modal
       open={!!application}
@@ -35,8 +35,8 @@ export function ApplicationDetailsModal({
             <button
               onClick={() =>
                 sendReminder(
-                  getPhone(application.patientId),
-                  getFullName(application.patientId).split(' ')[0],
+                  application.patientPhone ?? '',
+                  (application.patientName ?? '').split(' ')[0],
                   application.date,
                   application.startTime,
                 )
@@ -46,6 +46,15 @@ export function ApplicationDetailsModal({
               <FontAwesomeIcon icon={faPhone} style={{ fontSize: 11 }} />
               Enviar lembrete via WhatsApp
             </button>
+            {application.status === 'scheduled' && onReschedule && (
+              <Button
+                variant="outline"
+                onClick={() => onReschedule(application.id)}
+                leftIcon={<FontAwesomeIcon icon={faPencil} style={{ fontSize: 11 }} />}
+              >
+                Reagendar previsão
+              </Button>
+            )}
             <Button variant="outline" onClick={onClose}>
               Fechar
             </Button>
@@ -66,7 +75,7 @@ export function ApplicationDetailsModal({
                   'inset 0 1px 0 rgba(255,255,255,0.5), inset 0 0 12px rgba(255,255,255,0.15), 0 4px 12px rgba(0,0,0,0.15)',
               }}
             >
-              {getFullName(application.patientId)
+              {(application.patientName ?? '')
                 .split(' ')
                 .map((part) => part[0])
                 .slice(0, 2)
@@ -78,12 +87,12 @@ export function ApplicationDetailsModal({
                 onClick={() => onOpenPatient(application.patientId)}
                 className="text-sm font-bold text-(--text) hover:text-brand hover:underline transition-colors text-left truncate"
               >
-                {getFullName(application.patientId)}
+                {application.patientName ?? ''}
               </button>
-              <div className="text-[0.65rem] text-(--text-muted)">{getPhone(application.patientId)}</div>
+              <div className="text-[0.65rem] text-(--text-muted)">{application.patientPhone ?? ''}</div>
             </div>
             <button
-              onClick={() => openWhatsApp(getPhone(application.patientId))}
+              onClick={() => openWhatsApp(application.patientPhone ?? '')}
               className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-[#25D366] text-white text-[0.65rem] font-semibold hover:bg-[#20BD5A] transition-all shrink-0"
             >
               <FontAwesomeIcon icon={faPhone} style={{ fontSize: 12 }} />
@@ -105,7 +114,8 @@ export function ApplicationDetailsModal({
                 Horário
               </div>
               <div className="text-xs font-medium text-(--text)">
-                {application.startTime} – {application.endTime}
+                {application.startTime}
+                {application.endTime ? ` – ${application.endTime}` : ''}
               </div>
             </div>
             <div className="bg-white px-3.5 py-2.5">

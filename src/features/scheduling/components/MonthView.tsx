@@ -1,7 +1,6 @@
 import { format, isSameDay, isToday } from 'date-fns'
 import { cn } from '@/shared/lib/cn'
 import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
-import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
@@ -25,8 +24,6 @@ export function MonthView({
   onSelectApplication,
   onOpenDay,
 }: MonthViewProps) {
-  const { getName } = useImmunotherapyLookup()
-
   return (
     <div>
       <div className="grid grid-cols-7 border-b border-(--border-custom)">
@@ -93,7 +90,7 @@ export function MonthView({
                         color: color.text,
                       }}
                     >
-                      {application.startTime} · {getName(application.patientId)}
+                      {application.startTime} · {application.patientName ?? ''}
                     </div>
                   )
                 })}
