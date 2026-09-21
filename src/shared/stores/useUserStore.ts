@@ -33,6 +33,7 @@ export type EditableProfileFields =
 
 export type Permission =
   | 'adjust_protocol'
+  | 'edit_scheduled_dose'
   | 'inactivate_immunotherapy'
   | 'reactivate_patient'
   | 'edit_patient_data'
@@ -53,8 +54,10 @@ export type Permission =
  */
 export const PERMISSION_CAPABILITIES: Record<Permission, string> = {
   adjust_protocol: 'protocols:manage',
+  // Ajustar a sessão prevista é comando de dose, não de catálogo.
+  edit_scheduled_dose: 'doses:update',
   inactivate_immunotherapy: 'immunotherapies:update',
-  reactivate_patient: 'patients:update',
+  reactivate_patient: 'immunotherapies:update',
   edit_patient_data: 'patients:update',
   evolve_patient: 'doses:create',
   emit_report: 'immunotherapies:read',

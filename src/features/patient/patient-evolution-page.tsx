@@ -1,10 +1,7 @@
-import { calculateNextDose, parseDose } from '@/features/immunotherapy/constants/scit-protocol'
-import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { EvolutionReviewStep } from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
 import { PostApplicationStep } from '@/features/patient/components/treatment-evolution/PostApplicationStep'
 import { PreApplicationStep } from '@/features/patient/components/treatment-evolution/PreApplicationStep'
 import { SelectPatientStep } from '@/features/patient/components/treatment-evolution/SelectPatientStep'
-import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
 import {
   EVOLUTION_DEFAULTS,
   evolutionSchema,
@@ -12,16 +9,29 @@ import {
   STEP_2_FIELDS,
   type EvolutionForm,
 } from '@/features/patient/schemas/evolution'
-import { derivePatientDates, usePatientStore } from '@/features/patient/stores/usePatientStore'
+import {
+  administerDose,
+  getDose,
+  getImmunotherapy,
+  listDosesForTherapy,
+  previewDose,
+} from '@/shared/api/clinical.api'
+import type {
+  AdministerDoseBody,
+  ImmunotherapyListItem,
+  PreviewDoseBody,
+} from '@/shared/api/contracts/clinical'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
 import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
-import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
-import { comparePtDateDesc, parsePtDate } from '@/shared/lib/dates'
-import { useAuditStore } from '@/shared/stores/useAuditStore'
-import { useCurrentUser, useHasPermission } from '@/shared/stores/useUserStore'
+import { todayStr, toOffsetIso } from '@/shared/lib/dates'
+import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
+import { useHasPermission } from '@/shared/stores/useUserStore'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { addDays, differenceInDays, format } from 'date-fns'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
 import { PageHeader } from '@/shared/components/showcase'
@@ -29,28 +39,33 @@ import { faCircleCheck, faClipboardCheck, faNotesMedical, faSyringe, faUser } fr
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const STEPS: WizardStep[] = [
-  { label: 'Paciente', icon: faUser, description: 'Escolha a imunoterapia a evoluir e confira a última aplicação, a dose atual e o que o protocolo prevê como próxima.' },
+  { label: 'Paciente', icon: faUser, description: 'Escolha a imunoterapia a evoluir e confira a última aplicação e a previsão pendente persistida.' },
   { label: 'Pré-Aplicação', icon: faSyringe, description: 'Relate como o paciente passou no intervalo: efeitos colaterais, necessidade de medicação e o que foi observado.' },
-  { label: 'Pós-Aplicação', icon: faNotesMedical, description: 'Registre a aplicação realizada com data, horário, responsável, concentração e volume, e defina o intervalo até a próxima dose.' },
-  { label: 'Revisão dos Dados', icon: faClipboardCheck, description: 'Confira o que será gravado no prontuário e a próxima aplicação que será agendada automaticamente.' },
+  { label: 'Pós-Aplicação', icon: faNotesMedical, description: 'Registre o valor permitido administrado, a janela de horário, o executor e a conduta imediata quando houver reação.' },
+  { label: 'Revisão dos Dados', icon: faClipboardCheck, description: 'Confira previsto, realizado e a recomendação do servidor. Salvar grava tudo em uma única transação.' },
 ]
 
+/** Texto livre vira lista para o contrato de observações. */
+function toList(text: string): string[] {
+  return text
+    .split(/[;,\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
 export function PatientEvolutionPage() {
-  const { patientId } = useSearch({ from: '/patient-evolution' })
-  return <PatientEvolutionContent key={patientId ?? 'selection'} />
+  const { therapy } = useSearch({ from: '/patient-evolution' })
+  return <PatientEvolutionContent key={therapy ?? 'selection'} />
 }
 
 function PatientEvolutionContent() {
   const navigate = useNavigate()
-  const { patientId: preselectedId } = useSearch({ from: '/patient-evolution' })
-  const setStorePatient = usePatientStore((s) => s.setSelectedPatient)
-  const recordEvolution = usePatientStore((s) => s.recordEvolution)
-  const applications = usePatientStore((s) => s.applications)
-  const patientFromStore = usePatientStore((s) => s.selectedPatient)
-  const currentUser = useCurrentUser()
-  const logAccess = useAuditStore((s) => s.logAccess)
-  const immunotherapies = useImmunotherapiesStore((s) => s.immunotherapies)
+  const { therapy: preselectedId } = useSearch({ from: '/patient-evolution' })
   const canEvolve = useHasPermission('evolve_patient')
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+  const queryClient = useQueryClient()
+  const { members: professionals } = useProfessionalDirectory()
 
   useEffect(() => {
     if (!canEvolve) navigate({ to: '/immunotherapies' })
@@ -58,190 +73,225 @@ function PatientEvolutionContent() {
 
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0)
   const [showCancelModal, setShowCancelModal] = useState(false)
-  const [chosenImmunotherapy, setSelectedImmunotherapy] = useState<Immunotherapy | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(preselectedId ?? null)
+  const [failure, setFailure] = useState<string | null>(null)
 
-  const selectedImmunotherapy = chosenImmunotherapy ?? immunotherapies.find((item) => item.id === preselectedId) ?? null
+  // Uma chave por intenção de formulário; reenvio por perda de resposta reutiliza a mesma.
+  const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
+
+  const therapyQuery = useQuery({
+    queryKey: queryKeys.immunotherapy(organizationId, selectedId ?? ''),
+    queryFn: ({ signal }) => getImmunotherapy(selectedId!, signal),
+    enabled: organizationId !== '' && selectedId !== null,
+  })
+  const therapy = therapyQuery.data ?? null
+
+  const pendingDoseId =
+    therapy?.nextDose && therapy.nextDose.status === 'SCHEDULED'
+      ? therapy.nextDose.id
+      : null
+
+  const doseQuery = useQuery({
+    queryKey: queryKeys.dose(organizationId, pendingDoseId ?? ''),
+    queryFn: ({ signal }) => getDose(pendingDoseId!, signal),
+    enabled: organizationId !== '' && pendingDoseId !== null,
+  })
+  const dose = doseQuery.data ?? null
+
+  const historyQuery = useQuery({
+    queryKey: queryKeys.doses(organizationId, selectedId ?? ''),
+    queryFn: ({ signal }) => listDosesForTherapy(selectedId!, signal),
+    enabled: organizationId !== '' && selectedId !== null,
+  })
+  const administeredDoses = (historyQuery.data ?? []).filter(
+    (record) => record.administeredAt !== null,
+  )
+  const lastAdministered =
+    administeredDoses.length > 0
+      ? [...administeredDoses].sort((a, b) =>
+          (b.administeredAt ?? '').localeCompare(a.administeredAt ?? ''),
+        )[0]
+      : null
 
   const form = useForm<EvolutionForm>({
     resolver: zodResolver(evolutionSchema),
     mode: 'onBlur',
-    defaultValues: EVOLUTION_DEFAULTS,
+    defaultValues: { ...EVOLUTION_DEFAULTS, applicationDate: todayStr() },
   })
-  const { handleSubmit, trigger, control, getValues, setValue, formState: { errors } } = form
-
-  const handleSelect = (item: Immunotherapy) => {
-    setSelectedImmunotherapy(item)
-    setStorePatient(buildPatientFromImmunotherapy(item))
-  }
-
-  useEffect(() => {
-    if (selectedImmunotherapy) setStorePatient(buildPatientFromImmunotherapy(selectedImmunotherapy))
-  }, [selectedImmunotherapy, setStorePatient])
-
-  const applicationsForPatient = useMemo(() => {
-    if (!selectedImmunotherapy) return []
-    return applications.filter((application) => application.patientId === selectedImmunotherapy.id)
-  }, [applications, selectedImmunotherapy])
-
-  const lastApplication = useMemo(() => {
-    const realized = applicationsForPatient.filter((application) => application.status === 'completed')
-    if (!realized.length) return null
-    return [...realized].sort((a, b) => comparePtDateDesc(a.date, b.date))[0]
-  }, [applicationsForPatient])
-
-  const doseNumber = useMemo(
-    () => applicationsForPatient.filter((application) => application.status === 'completed').length,
-    [applicationsForPatient],
-  )
-
-  const nextDose = useMemo(() => {
-    if (!lastApplication || !selectedImmunotherapy) return null
-    const [d, m, y] = lastApplication.date.split('/')
-    const currentDose = `${lastApplication.extractConcentration || lastApplication.dose.split(' - ')[0]} - ${lastApplication.appliedVolume || lastApplication.dose.split(' - ')[1]}`
-    const currentInterval = lastApplication.cycle.days
-    const calc = calculateNextDose(currentDose, currentInterval)
-    const nextDate = addDays(new Date(+y, +m - 1, +d), calc.interval)
-    const next = parseDose(calc.dose)
-    return {
-      date: format(nextDate, 'dd/MM/yyyy'),
-      conc: next?.conc ?? calc.dose,
-      vol: next?.vol ?? '',
-      dose: doseNumber + 1,
-      interval: calc.interval,
-    }
-  }, [lastApplication, selectedImmunotherapy, doseNumber])
-
+  const { handleSubmit, trigger, control, getValues, setValue, setError } = form
   const formValues = useWatch({ control }) as EvolutionForm
 
-  const plannedNext = useMemo(() => {
-    if (!formValues.applicationDate || !formValues.nextInterval || !formValues.nextInterval.trim()) return null
-    const [y, m, d] = formValues.applicationDate.split('-')
-    if (!y || !m || !d) return null
-    const applicationDate = new Date(+y, +m - 1, +d)
-    if (isNaN(applicationDate.getTime())) return null
-    const intervalDays = parseInt(formValues.nextInterval.trim(), 10)
-    if (isNaN(intervalDays) || intervalDays <= 0) return null
-    const nextDate = addDays(applicationDate, intervalDays)
-    return { date: format(nextDate, 'dd/MM/yyyy'), interval: intervalDays, applicationDate }
-  }, [formValues.applicationDate, formValues.nextInterval])
-
-  const treatmentTime = useMemo(() => {
-    if (!patientFromStore) return null
-    const { inductionStart } = derivePatientDates(applications, patientFromStore.id)
-    if (!inductionStart) return null
-    try {
-      const start = parsePtDate(inductionStart)
-      const days = differenceInDays(new Date(), start)
-      const years = Math.floor(days / 365)
-      if (years > 0) return `${years} ${years === 1 ? 'ano' : 'anos'}`
-      const months = Math.floor(days / 30)
-      if (months > 0) return `${months} ${months === 1 ? 'mês' : 'meses'}`
-      return `${days} ${days === 1 ? 'dia' : 'dias'}`
-    } catch {
-      return null
+  // O valor previsto pela prescrição entra como seleção inicial.
+  useEffect(() => {
+    if (dose?.plannedStepId && !getValues('stepId')) {
+      setValue('stepId', dose.plannedStepId)
     }
-  }, [patientFromStore, applications])
+  }, [dose, getValues, setValue])
+
+  const allowedValues = dose?.allowedValues ?? []
+  const plannedStep =
+    allowedValues.find((candidate) => candidate.id === dose?.plannedStepId) ?? null
+  const selectedStep =
+    allowedValues.find((candidate) => candidate.id === formValues.stepId) ?? null
+  const performerName =
+    professionals.find((member) => member.professionalId === formValues.performerId)
+      ?.fullName ?? null
+
+  function previewBody(): PreviewDoseBody | null {
+    if (!dose || !selectedStep || !formValues.applicationDate || !formValues.startTime)
+      return null
+    return {
+      values: {
+        concentration: selectedStep.concentration,
+        volume: selectedStep.volume,
+        intervalDays: selectedStep.intervalDays,
+        stepId: selectedStep.id,
+      },
+      administeredAt: toOffsetIso(formValues.applicationDate, formValues.startTime),
+      expectedRevision: dose.revision,
+      expectedTherapyRevision: dose.therapyRevision,
+    }
+  }
+  const bodyForPreview = previewBody()
+
+  // A prévia é do corpo exato: dose, valor, instante e revisões na chave fazem
+  // respostas fora de ordem serem descartadas pelo próprio cache.
+  const previewQuery = useQuery({
+    queryKey: [
+      ...queryKeys.dose(organizationId, dose?.id ?? ''),
+      'preview',
+      bodyForPreview?.values.stepId,
+      bodyForPreview?.administeredAt,
+      bodyForPreview?.expectedRevision,
+      bodyForPreview?.expectedTherapyRevision,
+    ],
+    queryFn: ({ signal }) => previewDose(dose!.id, bodyForPreview!, signal),
+    enabled: step === 3 && dose !== null && bodyForPreview !== null,
+    retry: false,
+    staleTime: 0,
+  })
+
+  const administerMutation = useMutation({
+    mutationFn: (body: AdministerDoseBody) => administerDose(dose!.id, body),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
+      toast.success({
+        icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
+        title: 'Evolução registrada!',
+        description: (
+          <>
+            Aplicação, observações e a próxima previsão foram gravadas juntas.
+            {therapy && (
+              <Link
+                to="/patient/$patientId"
+                params={{ patientId: therapy.patient.id }}
+                search={{ therapy: therapy.id }}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 mt-2 transition-colors"
+              >
+                Acessar prontuário do paciente &rarr;
+              </Link>
+            )}
+          </>
+        ),
+        autoDismissMs: 8000,
+      })
+      navigate({ to: '/immunotherapies' })
+    },
+    onError: async (error) => {
+      // Falha não gera sucesso local. Revisão desatualizada recarrega a dose
+      // para nova confirmação clínica — nunca reenvia com revisões trocadas.
+      if (error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION') {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.dose(organizationId, dose?.id ?? ''),
+        })
+        setFailure(
+          'O tratamento mudou desde que você abriu este formulário. Os dados foram recarregados; revise e confirme novamente.',
+        )
+        return
+      }
+      setFailure(
+        error instanceof ApiError
+          ? error.message
+          : 'Não foi possível registrar a evolução. O estado da dose foi reconsultado; verifique antes de reenviar.',
+      )
+    },
+  })
 
   const advanceStep = async () => {
-    if (step === 0 && (!selectedImmunotherapy || selectedImmunotherapy.status === 'inactive')) return
+    if (step === 0) {
+      if (!therapy || therapy.status !== 'IN_PROGRESS' || !dose || dose.migrationRequired) return
+    }
     if (step === 1) {
       const ok = await trigger([...STEP_1_FIELDS])
       if (!ok) return
-      if (nextDose) {
-        const p = getValues()
-        if (!p.applicationDate) setValue('applicationDate', nextDose.date.split('/').reverse().join('-'))
-        if (!p.appliedVolume) setValue('appliedVolume', nextDose.vol.replace('ml', '').replace(',', '.'))
-        if (!p.concentration) setValue('concentration', nextDose.conc)
-        if (!p.nextInterval) setValue('nextInterval', String(nextDose.interval))
-      }
     }
     if (step === 2) {
       const ok = await trigger([...STEP_2_FIELDS])
       if (!ok) return
+      const values = getValues()
+      if (
+        dose?.plannedStepId &&
+        values.stepId !== dose.plannedStepId &&
+        !values.adjustmentReason.trim()
+      ) {
+        setError('adjustmentReason', {
+          type: 'custom',
+          message: 'Justifique o valor diferente do previsto',
+        })
+        return
+      }
     }
     setStep((s) => (s + 1) as 0 | 1 | 2 | 3)
   }
 
-  const onSaveEvolution = () => handleSubmit((data) => {
-    if (!selectedImmunotherapy || !plannedNext) return
-    const [y, m, d] = data.applicationDate.split('-')
-    const dataRealizada = `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`
-    const mesRealizada = MONTHS_PT_UPPER[parseInt(m, 10) - 1]
-    const volStr = data.appliedVolume.replace('.', ',') + 'ml'
-    const doseStr = `${data.concentration} - ${volStr}`
-    const interval = plannedNext.interval
-    const ciclo = interval === 7 ? 1 : interval === 14 ? 1 : interval === 21 ? 2 : interval === 28 ? 3 : 1
-    const nextDateParts = plannedNext.date.split('/')
-    const nextMonth = MONTHS_PT_UPPER[parseInt(nextDateParts[1], 10) - 1]
-
-    const completed = {
-      id: `evo-${Date.now()}-r`,
-      patientId: selectedImmunotherapy.id,
-      date: dataRealizada,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      status: 'completed' as const,
-      dose: doseStr,
-      cycle: { number: ciclo, days: interval },
-      month: mesRealizada,
-      year: parseInt(y, 10),
-      appliedVolume: volStr,
-      extractConcentration: data.concentration,
-      sideEffect: data.sideEffectPost,
-      reportedEffects: data.sideEffectPost === 'yes' ? data.reportedEffectsPost : undefined,
-      medicationNeeded: data.medicationNeededPost,
-      medications: data.medicationNeededPost === 'yes' ? data.medicationsPost : undefined,
-      administrator: data.administrator,
-      administratorNote: data.notesPost || '-',
-    }
-
-    const nextCalc = calculateNextDose(doseStr, interval)
-    const next = {
-      id: `evo-${Date.now()}-n`,
-      patientId: selectedImmunotherapy.id,
-      date: plannedNext.date,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      status: 'scheduled' as const,
-      dose: nextCalc.dose,
-      cycle: { number: ciclo, days: nextCalc.interval },
-      month: nextMonth,
-      year: parseInt(nextDateParts[2], 10),
-    }
-
-    recordEvolution({ completed, next })
-
-    logAccess({
-      userId: currentUser.id,
-      userName: currentUser.name,
-      userRole: currentUser.role,
-      userRegistration: currentUser.registration,
-      patientId: selectedImmunotherapy.id,
-      patientName: selectedImmunotherapy.name,
-      action: 'apply_dose',
-      description: `Aplicou ${doseStr} em ${dataRealizada} (ciclo ${ciclo} · intervalo ${interval} dias) · responsável: ${data.administrator}`,
-    })
-
-    toast.success({
-      icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
-      title: 'Evolução registrada com sucesso!',
-      description: (
-        <>
-          A aplicação de {selectedImmunotherapy.name} foi registrada e a próxima dose já está agendada.
-          <Link
-            to="/patient/$patientId"
-            params={{ patientId: selectedImmunotherapy.id }}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 mt-2 transition-colors"
-          >
-            Acessar prontuário do paciente &rarr;
-          </Link>
-        </>
-      ),
-      autoDismissMs: 8000,
-    })
-
-    navigate({ to: '/immunotherapies' })
-  })()
+  const onSaveEvolution = () =>
+    handleSubmit((data) => {
+      if (!dose || !selectedStep) return
+      setFailure(null)
+      const observations: AdministerDoseBody['observations'] = [
+        {
+          phase: 'PRE_ADMINISTRATION',
+          reportedSideEffects: data.sideEffect === 'yes' ? toList(data.reportedEffects) : [],
+          administeredMedications: data.medicationNeeded === 'yes' ? toList(data.medications) : [],
+          ...(data.notesPre.trim() ? { notes: data.notesPre.trim() } : {}),
+        },
+        {
+          phase: 'POST_ADMINISTRATION',
+          reportedSideEffects: data.sideEffectPost === 'yes' ? toList(data.reportedEffectsPost) : [],
+          administeredMedications: data.medicationNeededPost === 'yes' ? toList(data.medicationsPost) : [],
+          ...(data.notesPost.trim() ? { notes: data.notesPost.trim() } : {}),
+        },
+      ]
+      administerMutation.mutate({
+        idempotencyKey: idempotencyKeyRef.current,
+        values: {
+          concentration: selectedStep.concentration,
+          volume: selectedStep.volume,
+          intervalDays: selectedStep.intervalDays,
+          stepId: selectedStep.id,
+        },
+        administeredAt: toOffsetIso(data.applicationDate, data.startTime),
+        ...(data.endTime
+          ? { administrationEndedAt: toOffsetIso(data.applicationDate, data.endTime) }
+          : {}),
+        expectedRevision: dose.revision,
+        expectedTherapyRevision: dose.therapyRevision,
+        betweenDosesReport: data.intervalReport.trim(),
+        performedById: data.performerId,
+        ...(data.stepId !== dose.plannedStepId && data.adjustmentReason.trim()
+          ? { reason: data.adjustmentReason.trim() }
+          : {}),
+        observations,
+        ...(data.conduct
+          ? {
+              immediateConduct: {
+                type: data.conduct,
+                justification: data.conductJustification.trim(),
+              },
+            }
+          : {}),
+      })
+    })()
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -252,17 +302,23 @@ function PatientEvolutionContent() {
     }
   }
 
-  const continueDisabled = step === 0 && (!selectedImmunotherapy || selectedImmunotherapy.status === 'inactive')
+  const continueDisabled =
+    step === 0 &&
+    (!therapy ||
+      therapy.status !== 'IN_PROGRESS' ||
+      !dose ||
+      dose.migrationRequired ||
+      doseQuery.isPending)
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
       <PageHeader
-        key={selectedImmunotherapy?.id ?? 'root'}
+        key={therapy?.id ?? 'root'}
         breadcrumb={[
           preselectedId ? 'Prontuário' : 'Imunoterapias',
-          ...(selectedImmunotherapy ? ['Evolução do Paciente'] : []),
+          ...(therapy ? ['Evolução do Paciente'] : []),
         ]}
-        title={selectedImmunotherapy ? selectedImmunotherapy.name : 'Evolução do Paciente'}
+        title={therapy ? therapy.patient.fullName : 'Evolução do Paciente'}
       />
 
       <div className="mb-2">
@@ -276,32 +332,44 @@ function PatientEvolutionContent() {
 
       <div className="wizard-fields flex flex-1 min-h-0 flex-col overflow-hidden">
         <form onSubmit={handleFormSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
-          <div
-            className="flex flex-1 min-h-0 flex-col justify-start px-2 pt-1 pb-10 overflow-y-auto"
-          >
+          <div className="flex flex-1 min-h-0 flex-col justify-start px-2 pt-1 pb-10 overflow-y-auto">
             <div className="w-full">
               {step === 0 && (
                 <SelectPatientStep
-                  selected={selectedImmunotherapy}
-                  patient={patientFromStore}
-                  applicationsForPatient={applicationsForPatient}
-                  lastApplication={lastApplication}
-                  doseNumber={doseNumber}
-                  nextDose={nextDose}
-                  treatmentTime={treatmentTime}
-                  immunotherapies={immunotherapies}
-                  preselectedLocked={!!preselectedId && !!selectedImmunotherapy}
-                  onSelect={handleSelect}
+                  selected={therapy}
+                  pendingDose={dose}
+                  lastAdministered={lastAdministered}
+                  administeredCount={administeredDoses.length}
+                  isLoadingDose={
+                    therapyQuery.isPending || (pendingDoseId !== null && doseQuery.isPending)
+                  }
+                  preselectedLocked={!!preselectedId}
+                  onSelect={(item: ImmunotherapyListItem) => setSelectedId(item.id)}
                 />
               )}
               {step === 1 && <PreApplicationStep form={form} />}
-              {step === 2 && <PostApplicationStep form={form} />}
+              {step === 2 && <PostApplicationStep form={form} dose={dose} />}
               {step === 3 && (
                 <EvolutionReviewStep
                   form={formValues}
-                  plannedNextDate={plannedNext?.date ?? null}
-                  plannedNextInterval={plannedNext?.interval ?? null}
+                  plannedStep={plannedStep}
+                  selectedStep={selectedStep}
+                  performerName={performerName}
+                  preview={previewQuery.data ?? null}
+                  previewPending={previewQuery.isPending && previewQuery.fetchStatus !== 'idle'}
+                  previewError={
+                    previewQuery.error
+                      ? previewQuery.error instanceof ApiError
+                        ? previewQuery.error.message
+                        : 'Não foi possível consultar a recomendação.'
+                      : null
+                  }
                 />
+              )}
+              {failure && (
+                <p role="alert" className="mt-3 text-[0.75rem] text-red-700">
+                  {failure}
+                </p>
               )}
             </div>
           </div>
@@ -315,7 +383,12 @@ function PatientEvolutionContent() {
                 Voltar
               </Button>
             )}
-            <Button type="submit" tone="brand" variant="solid" disabled={step < 3 && continueDisabled}>
+            <Button
+              type="submit"
+              tone="brand"
+              variant="solid"
+              disabled={(step < 3 && continueDisabled) || administerMutation.isPending}
+            >
               {step < 3 ? 'Continuar' : 'Salvar Evolução'}
             </Button>
           </div>
@@ -329,10 +402,6 @@ function PatientEvolutionContent() {
         onClose={() => setShowCancelModal(false)}
         onConfirm={() => navigate({ to: '/immunotherapies' })}
       />
-
-      {errors && Object.keys(errors).length > 0 && step === 3 && (
-        <p className="sr-only" role="alert">Existem erros no formulário. Revise as etapas anteriores.</p>
-      )}
     </div>
   )
 }

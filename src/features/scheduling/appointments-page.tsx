@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
+import { Modal, SegmentedControl, TextInput } from '@/shared/components'
 import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
 import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { useHasPermission, useDoctorFilter } from '@/shared/stores/useUserStore'
@@ -15,11 +15,9 @@ import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolba
 import { WeekView } from '@/features/scheduling/components/WeekView'
 import { MonthView } from '@/features/scheduling/components/MonthView'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
-import { NewAppointmentModal } from '@/features/scheduling/components/NewAppointmentModal'
-import type { NewAppointmentForm } from '@/features/scheduling/schemas/new-appointment'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { PageHeader, Pill, SelectPill, SHOWCASE } from '@/shared/components/showcase'
 
 const MONTH_OPTIONS = [
@@ -41,7 +39,7 @@ const CURRENT_YEAR = new Date().getFullYear()
 const YEAR_OPTIONS = Array.from({ length: 7 }, (_, i) => CURRENT_YEAR - 2 + i)
 
 export function AppointmentsPage() {
-  const { applications: allApplications, scheduleApplication } = usePatientStore()
+  const allApplications = usePatientStore((s) => s.applications)
   const { immunotherapies } = useImmunotherapiesStore()
   const googleCalendarConnected = useSettingsStore((state) => state.googleCalendarConnected)
   const canNewAppointment = useHasPermission('new_appointment')
@@ -50,7 +48,6 @@ export function AppointmentsPage() {
   const calendar = useCalendarNav()
 
   const [showAddModal, setShowAddModal] = useState(false)
-  const [showToast, setShowToast] = useState(false)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
   const [patientSearch, setPatientSearch] = useState('')
   const [dayModal, setDayModal] = useState<{ date: Date; apps: Application[] } | null>(null)
@@ -90,32 +87,6 @@ export function AppointmentsPage() {
   const openPatient = (patientId: string) => {
     setSelectedApplication(null)
     navigate({ to: '/patient/$patientId', params: { patientId } })
-  }
-
-  const handleNewAppointmentSubmit = (data: NewAppointmentForm) => {
-    const immunotherapy = immunotherapies.find((candidate) => candidate.id === data.patientId)
-    if (!immunotherapy) return
-
-    const [yyyy, mm, dd] = data.date.split('-')
-    const parsedDate = new Date(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10))
-    const monthName = format(parsedDate, 'MMMM', { locale: ptBR }).toUpperCase()
-
-    scheduleApplication({
-      id: `app-new-${Date.now()}`,
-      patientId: data.patientId,
-      date: `${dd}/${mm}/${yyyy}`,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      status: 'scheduled',
-      dose: data.dose,
-      cycle: { number: 1, days: parseInt(data.interval.trim(), 10) },
-      month: monthName,
-      year: parseInt(yyyy, 10),
-      modality: immunotherapy.modality,
-    })
-
-    setShowAddModal(false)
-    setShowToast(true)
   }
 
   return (
@@ -250,25 +221,20 @@ export function AppointmentsPage() {
         onOpenPatient={openPatient}
       />
 
-      <NewAppointmentModal
+      <Modal
         open={showAddModal}
-        googleConnected={googleCalendarConnected}
         onClose={() => setShowAddModal(false)}
-        onSubmit={handleNewAppointmentSubmit}
-      />
-
-      <Toast
-        open={showToast}
-        onClose={() => setShowToast(false)}
-        variant="success"
-        icon={<FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />}
-        title="Agendamento criado com sucesso!"
-        description={
-          googleCalendarConnected
-            ? 'O agendamento foi registrado e sincronizado automaticamente com o Google Agenda.'
-            : 'O agendamento foi registrado. O paciente será notificado conforme as configurações definidas.'
-        }
-      />
+        size="sm"
+        title="Agendamento nasce da prescrição"
+      >
+        <p className="text-xs text-(--text) leading-relaxed">
+          Compromissos livres não existem mais: cada aplicação prevista é criada
+          pelo servidor ao registrar a prescrição ou administrar uma dose. Para
+          reagendar, use &quot;Editar previsão pendente&quot; no prontuário do paciente.
+          O calendário passa a ser alimentado pelas doses persistidas na próxima
+          etapa da integração.
+        </p>
+      </Modal>
     </div>
   )
 }

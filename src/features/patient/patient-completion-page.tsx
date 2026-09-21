@@ -44,7 +44,6 @@ function PatientCompletionContent() {
   const { patientId } = useSearch({ from: '/patient-completion' })
   const selectedPatient = usePatientStore((s) => s.selectedPatient)
   const applications = usePatientStore((s) => s.applications)
-  const inactivateImmunotherapy = usePatientStore((s) => s.inactivateImmunotherapy)
   const immunotherapies = useImmunotherapiesStore((s) => s.immunotherapies)
 
   const [showCancelModal, setShowCancelModal] = useState(false)
@@ -153,21 +152,16 @@ function PatientCompletionContent() {
       data.note?.trim() ? `Nota: ${data.note.trim()}.` : null,
     ].filter(Boolean) as string[]
 
-    inactivateImmunotherapy({
-      id: `complete-${Date.now()}`,
-      category: 'treatment_completion',
-      detail: detailParts.join(' '),
-      startDate: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
-      expectedReturnDate: null,
-      responsibleDoctor: patient.responsibleDoctor,
-      snapshotConcentration: patient.currentDoseConcentration,
-      snapshotInterval: patient.currentInterval,
-    })
+    // Encerramento estruturado (recomendações finais, retornos, sinais de
+    // alerta) exige o contrato próprio de ciclo de vida; nada é gravado
+    // localmente como se fosse prontuário.
+    void detailParts
 
     toast.success({
       icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
-      title: 'Tratamento concluído',
-      description: 'O protocolo foi encerrado com desfecho de sucesso e o registro está disponível no prontuário.',
+      title: 'Encerramento ainda não disponível',
+      description:
+        'O registro estruturado da conclusão chega com o fluxo de ciclo de vida clínico. Nenhum dado foi gravado.',
       autoDismissMs: 8000,
     })
 

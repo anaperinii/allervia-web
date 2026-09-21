@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { useDoctorFilter } from '@/shared/stores/useUserStore'
-import { getPhase } from '@/features/immunotherapy/constants/scit-protocol'
 import { DEFAULT_IMMUNOTHERAPY_TYPES, VOLUME_KEYS } from '@/features/dashboard/constants/chart-colors'
 
 type Modality = 'subcutaneous' | 'sublingual'
@@ -38,10 +37,10 @@ export function useDashboardAnalytics({ modality, typeFilter }: UseDashboardAnal
   )
 
   const totalActive = activeFiltered.length
-  const inductionCount = activeFiltered.filter(
-    (immunotherapy) => getPhase(immunotherapy.doseConcentration, immunotherapy.cycleInterval.days) === 'induction',
-  ).length
-  const maintenanceCount = totalActive - inductionCount
+  // Fase clínica não é derivada localmente: os indicadores por fase passam a
+  // existir com as agregações persistidas da I7. Sem base, ficam zerados.
+  const inductionCount = 0
+  const maintenanceCount = 0
 
   const availableTypes = useMemo(
     () => Array.from(new Set(filtered.map((immunotherapy) => immunotherapy.type))),

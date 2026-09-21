@@ -1,6 +1,4 @@
 import { create } from 'zustand'
-import { isMaintenanceDose } from '@/features/immunotherapy/constants/scit-protocol'
-import { comparePtDateAsc } from '@/shared/lib/dates'
 
 export type ProtocolAdjustmentType =
   | 'dose_reduction'
@@ -76,6 +74,11 @@ export interface Patient {
   inactivations?: Inactivation[]
 }
 
+/**
+ * Vocabulário de apresentação das telas legadas. Desde a I6 as aplicações vêm
+ * exclusivamente da API (doses persistidas) via adapters; este store não grava
+ * nem deriva dados clínicos — guarda apenas a seleção de interface.
+ */
 export interface Application {
   id: string
   patientId: string
@@ -100,109 +103,26 @@ export interface Application {
 
 interface PatientState {
   selectedPatient: Patient | null
+  /**
+   * Sempre vazio: aplicações são doses persistidas consultadas por tela. As
+   * telas ainda não migradas (relatórios, agenda, dashboard) leem esta lista e
+   * mostram estado vazio até receberem suas consultas nas próximas etapas.
+   */
   applications: Application[]
   setSelectedPatient: (patient: Patient | null) => void
-  addProtocolAdjustment: (adjustment: ProtocolAdjustment) => void
-  inactivateImmunotherapy: (inactivation: Inactivation) => void
-  reactivateImmunotherapy: (payload: {
-    note: string
-    reactivatedBy: string
-    reactivateConcentration: string
-    reactivateInterval: number
-    justification: string
-  }) => void
-  scheduleApplication: (app: Application) => void
-  recordEvolution: (payload: { completed: Application; next: Application }) => void
 }
 
-export function seedInactivationsFor(): Inactivation[] | undefined {
-  // Suspensões reais chegam com o contrato da I9; nenhum seed é recuperado.
-  return undefined
-}
-
-export function derivePatientDates(applications: Application[], patientId: string): {
-  inductionStart: string | null
-  maintenanceStart: string | null
-} {
-  const ofPatient = applications
-    .filter((a) => a.patientId === patientId)
-    .sort((a, b) => comparePtDateAsc(a.date, b.date))
-  const inductionStart = ofPatient[0]?.date ?? null
-  const firstMaintenance = ofPatient.find((a) => a.status === 'completed' && isMaintenanceDose(a.dose))
-  return { inductionStart, maintenanceStart: firstMaintenance?.date ?? null }
+/** Datas derivadas do histórico exibido; sem histórico local, sem derivação. */
+export function derivePatientDates(
+  applications: Application[],
+  patientId: string,
+): { inductionStart: string | null; maintenanceStart: string | null } {
+  const ofPatient = applications.filter((a) => a.patientId === patientId)
+  return { inductionStart: ofPatient[0]?.date ?? null, maintenanceStart: null }
 }
 
 export const usePatientStore = create<PatientState>((set) => ({
   selectedPatient: null,
-  // Histórico de aplicações vem da API na I6; sem consulta, a lista fica
-  // vazia em vez de exibir dados simulados como prontuário.
   applications: [],
   setSelectedPatient: (patient) => set({ selectedPatient: patient }),
-  scheduleApplication: (app) => set((s) => ({ applications: [...s.applications, app] })),
-  recordEvolution: ({ completed, next }) => set((s) => {
-
-    const patientScheduled = s.applications
-      .filter((a) => a.patientId === completed.patientId && a.status === 'scheduled')
-      .sort((a, b) => comparePtDateAsc(a.date, b.date))
-    const nextToReplace = patientScheduled[0]?.id
-    const filtered = nextToReplace
-      ? s.applications.filter((a) => a.id !== nextToReplace)
-      : s.applications
-    return {
-      applications: [...filtered, completed, next],
-      selectedPatient: s.selectedPatient && s.selectedPatient.id === completed.patientId ? {
-        ...s.selectedPatient,
-        currentDoseConcentration: completed.dose,
-        currentInterval: next.cycle.days,
-        nextApplicationDate: next.date,
-      } : s.selectedPatient,
-    }
-  }),
-  addProtocolAdjustment: (adjustment) => set((s) => {
-    if (!s.selectedPatient) return s
-    return {
-      selectedPatient: {
-        ...s.selectedPatient,
-        currentDoseConcentration: adjustment.newConcentration,
-        currentInterval: adjustment.newInterval,
-        protocolAdjustments: [...(s.selectedPatient.protocolAdjustments || []), adjustment],
-      },
-    }
-  }),
-  inactivateImmunotherapy: (inactivation) => set((s) => {
-    if (!s.selectedPatient) return s
-    return {
-      selectedPatient: {
-        ...s.selectedPatient,
-        status: 'inactive',
-        inactivations: [...(s.selectedPatient.inactivations || []), inactivation],
-      },
-    }
-  }),
-  reactivateImmunotherapy: ({ note, reactivatedBy, reactivateConcentration, reactivateInterval, justification }) => set((s) => {
-    if (!s.selectedPatient) return s
-    const list = s.selectedPatient.inactivations || []
-    if (list.length === 0) return s
-    const updated = [...list]
-    const lastIdx = updated.length - 1
-    const reactivatedAt = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' às')
-    updated[lastIdx] = {
-      ...updated[lastIdx],
-      reactivatedAt,
-      reactivateNote: note,
-      reactivatedBy,
-      reactivateConcentration,
-      reactivateInterval,
-      reactivateJustification: justification,
-    }
-    return {
-      selectedPatient: {
-        ...s.selectedPatient,
-        status: 'active',
-        currentDoseConcentration: reactivateConcentration,
-        currentInterval: reactivateInterval,
-        inactivations: updated,
-      },
-    }
-  }),
 }))
