@@ -1,16 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Button, Modal } from '@/shared/components'
-import { usePatientStore } from '@/features/patient/stores/usePatientStore'
-import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { useHasPermission, useDoctorFilter } from '@/shared/stores/useUserStore'
-import { comparePtDateDesc } from '@/shared/lib/dates'
+import { getPatient, listDosesForTherapy } from '@/shared/api/clinical.api'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
+import {
+  buildLegacyPatient,
+  doseToLegacyApplication,
+} from '@/features/patient/adapters/clinical-presentation'
+import { useHasPermission } from '@/shared/stores/useUserStore'
 import {
   exportCsv,
-  exportExcel,
   exportPdf,
   type ReportData,
   type ReportFileFormat,
@@ -26,12 +30,15 @@ import { PageHeader, Pill } from '@/shared/components/showcase'
 
 const DEFAULT_SECTIONS: ReportSectionId[] = ['personal', 'immunotherapy', 'applications', 'progress']
 
+/**
+ * Relatório individual sobre os registros persistidos: paciente, tratamento e
+ * doses vêm do servidor no momento da geração — nada sai de stores locais.
+ */
 export function PatientReportPage() {
   const navigate = useNavigate()
-  const { patientId } = useSearch({ from: '/patient-report' })
-  const selectedPatient = usePatientStore((s) => s.selectedPatient)
-  const applications = usePatientStore((s) => s.applications)
-  const immunotherapies = useImmunotherapiesStore((s) => s.immunotherapies)
+  const { patientId, therapy: therapyParam } = useSearch({ from: '/patient-report' })
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
 
   const [fileFormat, setFileFormat] = useState<ReportFileFormat>('pdf')
   const [selectedSections, setSelectedSections] = useState<ReportSectionId[]>(DEFAULT_SECTIONS)
@@ -40,49 +47,82 @@ export function PatientReportPage() {
   const [justification, setJustification] = useState('')
   const [showExportModal, setShowExportModal] = useState(false)
   const canEmitReport = useHasPermission('emit_report')
-  const doctorFilter = useDoctorFilter()
 
   useEffect(() => {
     if (!canEmitReport) navigate({ to: '/immunotherapies' })
   }, [canEmitReport, navigate])
 
-  useEffect(() => {
-    if (!doctorFilter) return
-    const targetId = selectedPatient?.id ?? patientId
-    if (!targetId) return
-    const patientDoctor = selectedPatient?.responsibleDoctor
-      ?? immunotherapies.find((immunotherapy) => immunotherapy.id === targetId)?.responsibleDoctor
-    if (patientDoctor && patientDoctor !== doctorFilter) navigate({ to: '/immunotherapies' })
-  }, [doctorFilter, selectedPatient, patientId, immunotherapies, navigate])
+  const patientQuery = useQuery({
+    queryKey: queryKeys.patient(organizationId, patientId ?? ''),
+    queryFn: ({ signal }) => getPatient(patientId!, signal),
+    enabled: organizationId !== '' && !!patientId,
+  })
+  const detail = patientQuery.data ?? null
+  const selectedTherapy = useMemo(() => {
+    if (!detail) return null
+    if (therapyParam)
+      return detail.therapies.find((item) => item.id === therapyParam) ?? null
+    return detail.therapies[0] ?? null
+  }, [detail, therapyParam])
 
-  const patient = useMemo(() => {
-    if (selectedPatient && (!patientId || selectedPatient.id === patientId)) return selectedPatient
-    if (!patientId) return null
-    const immunotherapy = immunotherapies.find((item) => item.id === patientId)
-    return immunotherapy ? buildPatientFromImmunotherapy(immunotherapy) : null
-  }, [selectedPatient, patientId, immunotherapies])
+  const dosesQuery = useQuery({
+    queryKey: queryKeys.doses(organizationId, selectedTherapy?.id ?? ''),
+    queryFn: ({ signal }) => listDosesForTherapy(selectedTherapy!.id, signal),
+    enabled: organizationId !== '' && selectedTherapy !== null,
+  })
 
-  const patientApplications = useMemo(() => {
-    if (!patient) return []
-    return applications
-      .filter((application) => application.patientId === patient.id)
-      .sort((a, b) => comparePtDateDesc(a.date, b.date))
-  }, [patient, applications])
+  const patient = useMemo(
+    () => (detail ? buildLegacyPatient(detail, selectedTherapy) : null),
+    [detail, selectedTherapy],
+  )
 
   const realizedApplications = useMemo(
-    () => patientApplications.filter((application) => application.status === 'completed'),
-    [patientApplications],
+    () =>
+      (dosesQuery.data ?? [])
+        .filter((dose) => dose.administeredAt !== null)
+        .sort((a, b) => (b.administeredAt ?? '').localeCompare(a.administeredAt ?? ''))
+        .map((dose) =>
+          doseToLegacyApplication(dose, detail?.id ?? '', {
+            hasReaction: dose.immediateConduct !== null,
+          }),
+        ),
+    [dosesQuery.data, detail],
   )
-  const reactionsCount = realizedApplications.filter((application) => application.sideEffect === 'yes').length
+  // Reação = conduta imediata registrada junto da aplicação (fato persistido).
+  const reactionsCount = useMemo(
+    () =>
+      (dosesQuery.data ?? []).filter(
+        (dose) => dose.administeredAt !== null && dose.immediateConduct !== null,
+      ).length,
+    [dosesQuery.data],
+  )
 
   const toggleSection = (id: ReportSectionId) => {
     setSelectedSections((previous) => (previous.includes(id) ? previous.filter((sectionId) => sectionId !== id) : [...previous, id]))
   }
 
-  if (!patient) {
+  if (!patientId) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <span className="text-xs text-(--text-muted)">Paciente não encontrado</span>
+        <span className="text-xs text-(--text-muted)">Abra o relatório pelo prontuário do paciente.</span>
+      </div>
+    )
+  }
+  if (patientQuery.isPending) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <span className="text-xs text-(--text-muted)">Carregando dados do relatório…</span>
+      </div>
+    )
+  }
+  if (patientQuery.error || !patient) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <span className="text-xs text-(--text-muted)" role="alert">
+          {patientQuery.error instanceof ApiError
+            ? patientQuery.error.message
+            : 'Paciente não encontrado'}
+        </span>
       </div>
     )
   }
@@ -109,11 +149,10 @@ export function PatientReportPage() {
   const handleExport = () => {
     const data = buildExportData()
     if (fileFormat === 'csv') exportCsv(data)
-    else if (fileFormat === 'excel') exportExcel(data)
     else exportPdf(data)
   }
 
-  const exportDisabled = !consented || !justification.trim()
+  const exportDisabled = !consented || !justification.trim() || dosesQuery.isPending
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
@@ -164,7 +203,7 @@ export function PatientReportPage() {
           setJustification={setJustification}
           realizedApplicationsCount={realizedApplications.length}
           reactionsCount={reactionsCount}
-          intervalDays={patient.currentInterval}
+          intervalDays={realizedApplications[0]?.cycle.days ?? 0}
           patientStatus={patient.status}
         />
 
@@ -200,7 +239,8 @@ export function PatientReportPage() {
           </div>
         </div>
         <p className="text-[0.7rem] text-(--text-muted) text-center leading-relaxed">
-          Esta ação será registrada no log de auditoria do sistema conforme exigências da LGPD.
+          Os dados exportados vêm dos registros persistidos no momento da geração.
+          O registro oficial de exportações do conjunto clínico é feito pelo servidor.
         </p>
         <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5 space-y-1.5">
           <ConfirmRow label="Paciente" value={anonymized ? maskName(patient.name, true) : patient.name} />
