@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
-import { Button, Modal, SegmentedControl, Toast } from '@/shared/components'
+import { SegmentedControl, Toast } from '@/shared/components'
 import { sendReminder } from '@/shared/lib/whatsapp'
 import { usePatientStore, type Application } from '@/features/patient/stores/usePatientStore'
 import {
@@ -17,7 +17,6 @@ import {
   getPatient,
   listDosesForTherapy,
   updatePatient,
-  updateTherapyStatus,
 } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
@@ -36,6 +35,16 @@ import { TreatmentTimeline } from '@/features/patient/components/treatment-compl
 import { ApplicationDetailModal } from '@/features/patient/components/chart/ApplicationDetailModal'
 import { EditPatientModal } from '@/features/patient/components/chart/EditPatientModal'
 import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
+import {
+  LifecycleHistoryModal,
+  ResumeTherapyModal,
+  SuspendTherapyModal,
+} from '@/features/patient/components/chart/TherapyLifecycleModals'
+import { RevisePrescriptionModal } from '@/features/patient/components/chart/RevisePrescriptionModal'
+import {
+  LateObservationModal,
+  RetractDoseModal,
+} from '@/features/patient/components/chart/DoseCorrectionModals'
 import { PortabilityModal } from '@/features/patient/components/chart/PortabilityModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendarDays, faFloppyDisk, faList, faPowerOff } from '@fortawesome/free-solid-svg-icons'
@@ -130,36 +139,6 @@ export function PatientChartPage() {
     },
   })
 
-  const [statusFailure, setStatusFailure] = useState<string | null>(null)
-  const statusMutation = useMutation({
-    mutationFn: (status: 'SUSPENDED' | 'IN_PROGRESS') =>
-      updateTherapyStatus(selectedTherapy!.id, {
-        expectedRevision: selectedTherapy!.revision,
-        status,
-      }),
-    onSuccess: async (_result, status) => {
-      await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
-      setShowSuspendModal(false)
-      setShowResumeModal(false)
-      if (status === 'SUSPENDED') setShowInactivateToast(true)
-      else setShowReactivateToast(true)
-    },
-    onError: async (error) => {
-      if (error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION') {
-        await queryClient.invalidateQueries({
-          queryKey: queryKeys.patient(organizationId, patientId),
-        })
-        setStatusFailure('O tratamento mudou desde a abertura da tela. Os dados foram recarregados; confirme novamente.')
-        return
-      }
-      setStatusFailure(
-        error instanceof ApiError
-          ? error.message
-          : 'Não foi possível alterar o status do tratamento.',
-      )
-    },
-  })
-
   const canAdjustProtocol = useHasPermission('edit_scheduled_dose')
   const canInactivate = useHasPermission('inactivate_immunotherapy')
   const canReactivate = useHasPermission('reactivate_patient')
@@ -205,6 +184,10 @@ export function PatientChartPage() {
   const [showEditDoseModal, setShowEditDoseModal] = useState(false)
   const [showSuspendModal, setShowSuspendModal] = useState(false)
   const [showResumeModal, setShowResumeModal] = useState(false)
+  const [showLifecycleHistory, setShowLifecycleHistory] = useState(false)
+  const [showReviseModal, setShowReviseModal] = useState(false)
+  const [retractDoseId, setRetractDoseId] = useState<string | null>(null)
+  const [lateObsDoseId, setLateObsDoseId] = useState<string | null>(null)
   const [showPortabilityModal, setShowPortabilityModal] = useState(false)
   const [showInactivateToast, setShowInactivateToast] = useState(false)
   const [showReactivateToast, setShowReactivateToast] = useState(false)
@@ -328,17 +311,23 @@ export function PatientChartPage() {
           canEditPatient={canEditPatient}
           canAdjustProtocol={canAdjustProtocol && pendingDose !== null}
           canInactivate={canInactivate && selectedTherapy?.status === 'IN_PROGRESS'}
-          canComplete={false}
-          completeDisabled
+          canComplete={canInactivate}
+          completeDisabled={selectedTherapy?.status !== 'IN_PROGRESS'}
           canLgpdPortability={canLgpdPortability}
-          onReactivate={() => { setStatusFailure(null); setShowResumeModal(true) }}
+          canRevisePrescription={canInactivate && pendingDose !== null}
+          onRevisePrescription={() => setShowReviseModal(true)}
+          onShowLifecycleHistory={() => setShowLifecycleHistory(true)}
+          onReactivate={() => setShowResumeModal(true)}
           onEditPatient={() => setShowEditModal(true)}
           onAdjustProtocol={() => setShowEditDoseModal(true)}
-          onShowAdjustHistory={() => {}}
-          onInactivate={() => { setStatusFailure(null); setShowSuspendModal(true) }}
-          onShowInactivationHistory={() => {}}
+          onInactivate={() => setShowSuspendModal(true)}
           onPortability={() => setShowPortabilityModal(true)}
-          onComplete={() => {}}
+          onComplete={() =>
+            navigate({
+              to: '/patient-completion',
+              search: { patientId, therapy: selectedTherapy?.id },
+            })
+          }
         />
 
         <div className="flex flex-1 flex-col gap-3 min-w-0">
@@ -519,57 +508,51 @@ export function PatientChartPage() {
         onSaved={() => setShowAdjustToast(true)}
       />
 
-      <Modal
-        open={showSuspendModal}
-        onClose={() => setShowSuspendModal(false)}
-        title="Suspender tratamento?"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setShowSuspendModal(false)}>Voltar</Button>
-            <Button
-              tone="danger"
-              variant="solid"
-              disabled={statusMutation.isPending}
-              onClick={() => statusMutation.mutate('SUSPENDED')}
-            >
-              Suspender tratamento
-            </Button>
-          </>
-        }
-      >
-        <p className="text-xs text-(--text) leading-relaxed">
-          A suspensão bloqueia novos comandos clínicos até a retomada. A previsão
-          pendente é preservada para o retorno. Motivo estruturado e previsão de
-          retorno chegam com o fluxo completo de ciclo de vida.
-        </p>
-        {statusFailure && <p role="alert" className="text-[0.7rem] text-red-700 mt-2">{statusFailure}</p>}
-      </Modal>
+      {selectedTherapy && (
+        <>
+          <SuspendTherapyModal
+            open={showSuspendModal}
+            therapyId={selectedTherapy.id}
+            therapyRevision={selectedTherapy.revision}
+            organizationId={organizationId}
+            onClose={() => setShowSuspendModal(false)}
+            onDone={() => setShowInactivateToast(true)}
+          />
+          <ResumeTherapyModal
+            open={showResumeModal}
+            therapyId={selectedTherapy.id}
+            therapyRevision={selectedTherapy.revision}
+            organizationId={organizationId}
+            onClose={() => setShowResumeModal(false)}
+            onDone={() => setShowReactivateToast(true)}
+          />
+          <LifecycleHistoryModal
+            open={showLifecycleHistory}
+            therapyId={selectedTherapy.id}
+            organizationId={organizationId}
+            onClose={() => setShowLifecycleHistory(false)}
+          />
+          <RevisePrescriptionModal
+            open={showReviseModal}
+            therapyId={selectedTherapy.id}
+            therapyRevision={selectedTherapy.revision}
+            currentVersionId={selectedTherapy.prescription?.versionId ?? null}
+            organizationId={organizationId}
+            onClose={() => setShowReviseModal(false)}
+          />
+        </>
+      )}
 
-      <Modal
-        open={showResumeModal}
-        onClose={() => setShowResumeModal(false)}
-        title="Retomar tratamento?"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setShowResumeModal(false)}>Voltar</Button>
-            <Button
-              tone="success"
-              variant="solid"
-              disabled={statusMutation.isPending}
-              onClick={() => statusMutation.mutate('IN_PROGRESS')}
-            >
-              Retomar tratamento
-            </Button>
-          </>
-        }
-      >
-        <p className="text-xs text-(--text) leading-relaxed">
-          O tratamento volta a aceitar comandos clínicos. O ponto de retomada é a
-          previsão pendente preservada — use &quot;Editar previsão pendente&quot; com motivo
-          clínico se o retorno exigir outro valor ou outra data.
-        </p>
-        {statusFailure && <p role="alert" className="text-[0.7rem] text-red-700 mt-2">{statusFailure}</p>}
-      </Modal>
+      <RetractDoseModal
+        doseId={retractDoseId}
+        organizationId={organizationId}
+        onClose={() => setRetractDoseId(null)}
+      />
+      <LateObservationModal
+        doseId={lateObsDoseId}
+        organizationId={organizationId}
+        onClose={() => setLateObsDoseId(null)}
+      />
 
       <PortabilityModal
         open={showPortabilityModal}
@@ -577,7 +560,20 @@ export function PatientChartPage() {
         onClose={() => setShowPortabilityModal(false)}
       />
 
-      <ApplicationDetailModal application={selectedApplication} onClose={() => setSelectedApp(null)} />
+      <ApplicationDetailModal
+        application={selectedApplication}
+        onClose={() => setSelectedApp(null)}
+        onRetract={
+          canAdjustProtocol
+            ? (doseId) => { setSelectedApp(null); setRetractDoseId(doseId) }
+            : undefined
+        }
+        onLateObservation={
+          canAdjustProtocol
+            ? (doseId) => { setSelectedApp(null); setLateObsDoseId(doseId) }
+            : undefined
+        }
+      />
 
       <Toast
         open={showAdjustToast}

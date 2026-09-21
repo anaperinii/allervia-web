@@ -1,14 +1,22 @@
 import { useState } from 'react'
 import { cn } from '@/shared/lib/cn'
-import { Modal } from '@/shared/components'
+import { Button, Modal } from '@/shared/components'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 interface ApplicationDetailModalProps {
   application: Application | null
   onClose: () => void
+  /** Correções clínicas (I9): presentes apenas para aplicações realizadas. */
+  onRetract?: (doseId: string) => void
+  onLateObservation?: (doseId: string) => void
 }
 
-export function ApplicationDetailModal({ application, onClose }: ApplicationDetailModalProps) {
+export function ApplicationDetailModal({
+  application,
+  onClose,
+  onRetract,
+  onLateObservation,
+}: ApplicationDetailModalProps) {
   const [tab, setTab] = useState<'pre' | 'post'>('pre')
   const [hasSwitched, setHasSwitched] = useState(false)
 
@@ -24,8 +32,39 @@ export function ApplicationDetailModal({ application, onClose }: ApplicationDeta
     setTab(next)
   }
 
+  const completed = application?.status === 'completed'
   return (
-    <Modal open={!!application} onClose={handleClose} title="Dados da aplicação" size="lg">
+    <Modal
+      open={!!application}
+      onClose={handleClose}
+      title="Dados da aplicação"
+      size="lg"
+      footer={
+        completed && (onRetract || onLateObservation) ? (
+          <>
+            {onLateObservation && (
+              <Button
+                variant="outline"
+                tone="brand"
+                onClick={() => onLateObservation(application!.id)}
+              >
+                Observação tardia
+              </Button>
+            )}
+            {onRetract && (
+              <Button
+                variant="outline"
+                tone="danger"
+                onClick={() => onRetract(application!.id)}
+              >
+                Registrar em erro
+              </Button>
+            )}
+            <Button variant="outline" onClick={handleClose}>Fechar</Button>
+          </>
+        ) : undefined
+      }
+    >
       {application && (
         <>
           <div role="tablist" aria-label="Etapas da aplicação" className="flex items-center justify-center gap-2">
