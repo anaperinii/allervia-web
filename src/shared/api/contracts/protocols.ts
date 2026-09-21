@@ -75,6 +75,66 @@ export type SimulationResult =
   | { kind: 'END_OF_SEQUENCE'; protocolVersionId: string; fromStepId: string }
   | { kind: 'UNRESOLVED'; code: string }
 
+/** Prescrição resolvida enviada na vinculação de tratamento legado. */
+export interface ResolvedPrescriptionInput {
+  protocolId: string
+  protocolVersionId: string
+  route: 'SUBCUTANEOUS'
+  stepIds: string[]
+  startingStepId: string
+  targetStepId: string
+}
+
+/** Linha do inventário de migração: um tratamento sob revisão clínica. */
+export interface MigrationReportRow {
+  therapyId: string
+  revision: number
+  prescriptionId: string | null
+  patient: { id: string; fullName: string; isActive: boolean }
+  immunoType: string
+  extract: string
+  status: 'IN_PROGRESS' | 'SUSPENDED' | 'COMPLETED'
+  administrationRoute: string
+  inductionStartDate: string
+  target: { concentration: string; volume: string | null }
+  pendingDoses: {
+    id: string
+    scheduledAt: string
+    concentration: string
+    volume: string
+    intervalDays: number
+  }[]
+  pendingDoseIds: string[]
+  issues: string[]
+  decimals: {
+    doseId: string
+    storedVolumeText: string
+    decimalText: string
+    exactCandidate: boolean
+    historicalRecordUnchanged: boolean
+  }[]
+}
+
+export interface MigrationInventory {
+  report: MigrationReportRow[]
+  originDraft: ProtocolDefinitionDraft & {
+    provenance: string
+    requiresClinicalTransitionReview: boolean
+  }
+  dryRun: true
+}
+
+export type BindLegacyResult =
+  | { alreadyBound: true; prescriptionId: string }
+  | { alreadyBound: false; prescriptionId: string }
+  | {
+      dryRun: true
+      therapyId: string
+      doseId: string
+      stepId: string
+      historicalDosesUnchanged: true
+    }
+
 /** Códigos de conflito do catálogo; a UI ramifica por eles, não pelo texto. */
 export const PROTOCOL_ERROR_CODES = {
   staleRevision: 'STALE_PROTOCOL_REVISION',

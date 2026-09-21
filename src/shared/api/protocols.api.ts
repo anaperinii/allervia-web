@@ -1,8 +1,11 @@
 import { apiRequest } from '@/shared/api/client'
 import type {
   AutomationSettings,
+  BindLegacyResult,
+  MigrationInventory,
   ProtocolDefinitionDraft,
   ProtocolVersion,
+  ResolvedPrescriptionInput,
   SimulationResult,
   TreatmentProtocol,
 } from '@/shared/api/contracts/protocols'
@@ -86,6 +89,46 @@ export function simulateVersion(
   },
 ): Promise<SimulationResult> {
   return apiRequest(`/treatment-protocols/versions/${versionId}/simulate`, {
+    method: 'POST',
+    body,
+  })
+}
+
+/** Inventário de migração: leitura pura, nenhuma escrita. */
+export function readMigrationInventory(
+  signal?: AbortSignal,
+): Promise<MigrationInventory> {
+  return apiRequest('/treatment-protocols/migration/inventory', { signal })
+}
+
+/**
+ * Rascunho técnico derivado do legado. Idempotente por organização; nasce com
+ * revisão de transições obrigatória e não pode ser publicado sem revisão.
+ */
+export function createOriginDraft(): Promise<
+  TreatmentProtocol & { versions: ProtocolVersion[] }
+> {
+  return apiRequest('/treatment-protocols/migration/origin-draft', {
+    method: 'POST',
+    body: {},
+  })
+}
+
+/**
+ * Ensaio (dryRun, padrão) ou vinculação revisada de um tratamento legado.
+ * O ensaio não escreve nada; a vinculação grava a prescrição e o plano da
+ * única dose pendente, preservando datas, valores e histórico.
+ */
+export function bindLegacyTherapy(
+  therapyId: string,
+  body: {
+    versionId: string
+    prescription: ResolvedPrescriptionInput
+    expectedRevision: number
+    dryRun?: boolean
+  },
+): Promise<BindLegacyResult> {
+  return apiRequest(`/treatment-protocols/migration/therapies/${therapyId}`, {
     method: 'POST',
     body,
   })
