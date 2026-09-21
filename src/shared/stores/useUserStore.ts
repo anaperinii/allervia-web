@@ -46,6 +46,7 @@ export type Permission =
   | 'advanced_settings'
   | 'view_protocols'
   | 'view_dashboard'
+  | 'view_audit'
 
 /**
  * Cada ação da interface é habilitada por uma capacidade anunciada pelo
@@ -68,6 +69,7 @@ export const PERMISSION_CAPABILITIES: Record<Permission, string> = {
   advanced_settings: 'protocols:manage',
   view_protocols: 'protocols:read',
   view_dashboard: 'immunotherapies:read',
+  view_audit: 'auditLogs:read',
 }
 
 export const ROLE_LABELS: Record<UserRole, string> = {

@@ -6,6 +6,9 @@ import type {
   Appointment,
   AppointmentPage,
   AppointmentStatus,
+  AuditLogEntry,
+  ClinicalExportPage,
+  ClinicalHistory,
   ClinicalMetrics,
   DoseDetail,
   DoseRecord,
@@ -202,6 +205,44 @@ export function addLateObservation(
   body: LateObservationBody,
 ): Promise<{ addendum: DoseObservationAddendum; suspensionEventId: string | null }> {
   return apiRequest(`/doses/${doseId}/observations`, { method: 'POST', body })
+}
+
+export interface ClinicalExportQuery {
+  /** Corte temporal (ISO com offset): congela o conjunto exportado. */
+  asOf: string
+  status?: TherapyStatus
+  responsiblePhysicianId?: string
+  page?: number
+  pageSize?: number
+}
+
+/**
+ * Conjunto completo para exportação, paginado sobre o corte temporal. A
+ * solicitação é registrada em auditoria pelo servidor na primeira página.
+ */
+export function exportClinicalDoses(
+  query: ClinicalExportQuery,
+  signal?: AbortSignal,
+): Promise<ClinicalExportPage> {
+  return apiRequest(`/immunotherapies/export${toQueryString({ ...query })}`, {
+    signal,
+  })
+}
+
+/** Trilha clínica do tratamento, autorizada pelo escopo clínico. */
+export function getClinicalHistory(
+  immunotherapyId: string,
+  signal?: AbortSignal,
+): Promise<ClinicalHistory> {
+  return apiRequest(`/immunotherapies/${immunotherapyId}/history`, { signal })
+}
+
+/** Auditoria administrativa (capacidade auditLogs:read; hoje, administração). */
+export function listAuditLogs(
+  query: { limit?: number; cursor?: string; entityType?: string; action?: string },
+  signal?: AbortSignal,
+): Promise<AuditLogEntry[]> {
+  return apiRequest(`/audit-logs${toQueryString({ ...query })}`, { signal })
 }
 
 export interface AppointmentsQuery {
