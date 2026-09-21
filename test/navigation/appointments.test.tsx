@@ -123,11 +123,13 @@ function stubApi() {
         jsonResponse({
           items: [
             scheduleItem({}),
+            // Fora de qualquer semana visível: a lista devolve o período
+            // inteiro, mas a WeekView só materializa os dias exibidos.
             scheduleItem({
               id: 'dose-0',
               status: 'ADMINISTERED_ON_SCHEDULE',
-              scheduledAt: isoAt(-1, 11),
-              administeredAt: isoAt(-1, 11),
+              scheduledAt: isoAt(-9, 11),
+              administeredAt: isoAt(-9, 11),
               administeredStepId: 'low',
               administeredValues: VALUES,
             }),
