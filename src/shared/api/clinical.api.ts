@@ -1,12 +1,19 @@
 import { apiRequest } from '@/shared/api/client'
 import type {
+  AdministerDoseBody,
+  AdministerDoseResult,
   AdministrationRoute,
+  DoseDetail,
+  DoseRecord,
   ImmunotherapyDetail,
   ImmunotherapyPage,
   PatientDetail,
   PatientPage,
+  PreviewDoseBody,
+  PreviewDoseResult,
   TherapyStatus,
   TherapySummary,
+  UpdateScheduledDoseBody,
 } from '@/shared/api/contracts/clinical'
 
 function toQueryString(params: Record<string, unknown>): string {
@@ -126,4 +133,67 @@ export function registerImmunotherapy(
   body: RegisterImmunotherapyBody,
 ): Promise<RegisterImmunotherapyResult> {
   return apiRequest('/immunotherapies/register', { method: 'POST', body })
+}
+
+/** Status simples do tratamento; motivos estruturados são extensão da I9. */
+export function updateTherapyStatus(
+  immunotherapyId: string,
+  body: { expectedRevision: number; status: TherapyStatus },
+): Promise<unknown> {
+  return apiRequest(`/immunotherapies/${immunotherapyId}/status`, {
+    method: 'PATCH',
+    body,
+  })
+}
+
+/** Histórico persistido de doses do tratamento, previsto e realizado. */
+export function listDosesForTherapy(
+  immunotherapyId: string,
+  signal?: AbortSignal,
+): Promise<DoseRecord[]> {
+  return apiRequest(`/immunotherapies/${immunotherapyId}/doses`, { signal })
+}
+
+/** Dose com valores permitidos pela prescrição e revisões atuais. */
+export function getDose(
+  doseId: string,
+  signal?: AbortSignal,
+): Promise<DoseDetail> {
+  return apiRequest(`/doses/${doseId}`, { signal })
+}
+
+/**
+ * Prévia da sucessora a partir de um valor hipotético administrado. Depende do
+ * corpo e das revisões: mudar dose, valor ou instante invalida a prévia.
+ */
+export function previewDose(
+  doseId: string,
+  body: PreviewDoseBody,
+  signal?: AbortSignal,
+): Promise<PreviewDoseResult> {
+  return apiRequest(`/doses/${doseId}/preview`, {
+    method: 'POST',
+    body,
+    signal,
+  })
+}
+
+/** Edita a previsão pendente com motivo e revisões; nunca cria sucessora. */
+export function updateScheduledDose(
+  doseId: string,
+  body: UpdateScheduledDoseBody,
+): Promise<DoseRecord & { therapyRevision: number }> {
+  return apiRequest(`/doses/${doseId}/scheduled`, { method: 'PATCH', body })
+}
+
+/**
+ * Comando de administração: aplicação, observações, conduta imediata e a
+ * sucessora nascem em uma única transação. Reenvio por perda de resposta usa a
+ * MESMA chave e corpo.
+ */
+export function administerDose(
+  doseId: string,
+  body: AdministerDoseBody,
+): Promise<AdministerDoseResult> {
+  return apiRequest(`/doses/${doseId}/administer`, { method: 'POST', body })
 }

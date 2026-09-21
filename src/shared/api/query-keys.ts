@@ -42,4 +42,9 @@ export const queryKeys = {
       'detail',
       immunotherapyId,
     ] as const,
+
+  doses: (organizationId: string, immunotherapyId: string) =>
+    ['clinical', organizationId, 'doses', 'therapy', immunotherapyId] as const,
+  dose: (organizationId: string, doseId: string) =>
+    ['clinical', organizationId, 'doses', 'detail', doseId] as const,
 } as const

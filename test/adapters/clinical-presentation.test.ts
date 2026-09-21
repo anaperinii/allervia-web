@@ -70,21 +70,11 @@ describe('adapters de apresentação clínica', () => {
 
   it('formata o passo resolvido preservando as casas decimais', () => {
     expect(
-      formatStepPresentation({
-        id: 'low',
-        concentration: '1000',
-        volume: '0.1',
-        intervalDays: 7,
-      }),
+      formatStepPresentation({ concentration: '1000', volume: '0.1' }),
     ).toBe('1:1.000 - 0,1ml')
 
     expect(
-      formatStepPresentation({
-        id: 'high',
-        concentration: '10',
-        volume: '0.50',
-        intervalDays: 28,
-      }),
+      formatStepPresentation({ concentration: '10', volume: '0.50' }),
     ).toBe('1:10 - 0,50ml')
   })
 
