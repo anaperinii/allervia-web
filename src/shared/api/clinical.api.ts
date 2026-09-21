@@ -3,14 +3,17 @@ import type {
   AdministerDoseBody,
   AdministerDoseResult,
   AdministrationRoute,
+  ClinicalMetrics,
   DoseDetail,
   DoseRecord,
+  DoseStatus,
   ImmunotherapyDetail,
   ImmunotherapyPage,
   PatientDetail,
   PatientPage,
   PreviewDoseBody,
   PreviewDoseResult,
+  SchedulePage,
   TherapyStatus,
   TherapySummary,
   UpdateScheduledDoseBody,
@@ -144,6 +147,33 @@ export function updateTherapyStatus(
     method: 'PATCH',
     body,
   })
+}
+
+export interface ScheduleQuery {
+  /** Instante RFC3339 com offset explícito (inclusivo). */
+  from: string
+  to: string
+  status?: DoseStatus
+  search?: string
+  responsiblePhysicianId?: string
+  page?: number
+  pageSize?: number
+}
+
+/** Agenda agregada do período: uma consulta, não um histórico por tratamento. */
+export function listDoseSchedule(
+  query: ScheduleQuery,
+  signal?: AbortSignal,
+): Promise<SchedulePage> {
+  return apiRequest(`/doses${toQueryString({ ...query })}`, { signal })
+}
+
+/** Indicadores oficiais do período no fuso clínico da organização. */
+export function getClinicalMetrics(
+  query: { from: string; to: string },
+  signal?: AbortSignal,
+): Promise<ClinicalMetrics> {
+  return apiRequest(`/doses/metrics${toQueryString({ ...query })}`, { signal })
 }
 
 /** Histórico persistido de doses do tratamento, previsto e realizado. */

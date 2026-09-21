@@ -2,7 +2,6 @@ import { format, isSameDay, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/cn'
 import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
-import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 interface WeekViewProps {
@@ -20,8 +19,6 @@ export function WeekView({
   applicationsByDate,
   onSelectApplication,
 }: WeekViewProps) {
-  const { getName } = useImmunotherapyLookup()
-
   return (
     <div className="grid grid-cols-7 h-full">
       {weekDays.map((day) => {
@@ -85,9 +82,10 @@ export function WeekView({
                   >
                     <div className="space-y-0.5">
                       <div className="text-[0.72rem] font-bold">
-                        {application.startTime} – {application.endTime}
+                        {application.startTime}
+                        {application.endTime ? ` – ${application.endTime}` : ''}
                       </div>
-                      <div className="font-semibold opacity-90 truncate">{getName(application.patientId)}</div>
+                      <div className="font-semibold opacity-90 truncate">{application.patientName ?? ''}</div>
                       <div className="font-medium opacity-90 truncate">{application.dose}</div>
                     </div>
                   </div>

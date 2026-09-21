@@ -1,23 +1,29 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Modal, SegmentedControl, TextInput } from '@/shared/components'
+import { Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
 import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
-import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { useHasPermission, useDoctorFilter } from '@/shared/stores/useUserStore'
-import { usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { useHasPermission } from '@/shared/stores/useUserStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { scheduleItemToApplication } from '@/features/patient/adapters/clinical-presentation'
+import { getDose, listDoseSchedule } from '@/shared/api/clinical.api'
+import type { ScheduleDoseItem } from '@/shared/api/contracts/clinical'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
+import { toOffsetIso } from '@/shared/lib/dates'
 import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
 import { useCalendarNav } from '@/features/scheduling/hooks/useCalendarNav'
 import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolbar'
 import { WeekView } from '@/features/scheduling/components/WeekView'
 import { MonthView } from '@/features/scheduling/components/MonthView'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
+import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { PageHeader, Pill, SelectPill, SHOWCASE } from '@/shared/components/showcase'
 
 const MONTH_OPTIONS = [
@@ -38,51 +44,104 @@ const MONTH_OPTIONS = [
 const CURRENT_YEAR = new Date().getFullYear()
 const YEAR_OPTIONS = Array.from({ length: 7 }, (_, i) => CURRENT_YEAR - 2 + i)
 
+const SCHEDULE_PAGE_SIZE = 100
+const SCHEDULE_MAX_PAGES = 5
+
+function dayInput(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+/** Busca o período inteiro paginado; trunca com aviso, nunca silenciosamente. */
+async function fetchSchedule(
+  query: { from: string; to: string; search?: string },
+  signal?: AbortSignal,
+): Promise<{ items: ScheduleDoseItem[]; total: number }> {
+  const items: ScheduleDoseItem[] = []
+  let total = 0
+  for (let page = 1; page <= SCHEDULE_MAX_PAGES; page++) {
+    const result = await listDoseSchedule(
+      { ...query, page, pageSize: SCHEDULE_PAGE_SIZE },
+      signal,
+    )
+    items.push(...result.items)
+    total = result.total
+    if (items.length >= total) break
+  }
+  return { items, total }
+}
+
 export function AppointmentsPage() {
-  const allApplications = usePatientStore((s) => s.applications)
-  const { immunotherapies } = useImmunotherapiesStore()
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
   const googleCalendarConnected = useSettingsStore((state) => state.googleCalendarConnected)
   const canNewAppointment = useHasPermission('new_appointment')
-  const doctorFilter = useDoctorFilter()
+  const canReschedule = useHasPermission('edit_scheduled_dose')
   const navigate = useNavigate()
   const calendar = useCalendarNav()
 
-  const [showAddModal, setShowAddModal] = useState(false)
+  const [showPickerModal, setShowPickerModal] = useState(false)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
   const [patientSearch, setPatientSearch] = useState('')
   const [dayModal, setDayModal] = useState<{ date: Date; apps: Application[] } | null>(null)
-  const { getName } = useImmunotherapyLookup()
+  const [rescheduleDoseId, setRescheduleDoseId] = useState<string | null>(null)
+  const [showRescheduledToast, setShowRescheduledToast] = useState(false)
 
-  const applications = useMemo(() => {
-    let list = allApplications
-    if (doctorFilter) {
-      const ownedIds = new Set(
-        immunotherapies.filter((immunotherapy) => immunotherapy.responsibleDoctor === doctorFilter).map((immunotherapy) => immunotherapy.id),
-      )
-      list = list.filter((application) => ownedIds.has(application.patientId))
+  // O período visível vira uma única consulta agregada; o dia local do usuário
+  // define os instantes enviados com offset explícito.
+  const visibleDays = calendar.viewMode === 'week' ? calendar.weekDays : calendar.monthDays
+  const range = useMemo(() => {
+    if (visibleDays.length === 0) return null
+    return {
+      from: toOffsetIso(dayInput(visibleDays[0]), '00:00'),
+      to: toOffsetIso(dayInput(visibleDays[visibleDays.length - 1]), '23:59'),
     }
-    const term = patientSearch.trim().toLowerCase()
-    if (term) {
-      const nameById = new Map(immunotherapies.map((immunotherapy) => [immunotherapy.id, immunotherapy.name.toLowerCase()]))
-      list = list.filter((application) => (nameById.get(application.patientId) ?? '').includes(term))
-    }
-    return list
-  }, [allApplications, immunotherapies, doctorFilter, patientSearch])
+  }, [visibleDays])
 
-  const scheduled = useMemo(
-    () => applications.filter((application) => application.status === 'scheduled' || application.status === 'missed'),
-    [applications],
+  const search = patientSearch.trim()
+  const scheduleQuery = useQuery({
+    queryKey: queryKeys.schedule(organizationId, {
+      ...range,
+      search: search || undefined,
+    }),
+    queryFn: ({ signal }) =>
+      fetchSchedule({ ...range!, search: search || undefined }, signal),
+    enabled: organizationId !== '' && range !== null,
+  })
+
+  const scheduleItems = useMemo(
+    () => scheduleQuery.data?.items ?? [],
+    [scheduleQuery.data],
+  )
+  const truncated =
+    scheduleQuery.data !== undefined &&
+    scheduleQuery.data.items.length < scheduleQuery.data.total
+
+  const applications = useMemo(
+    () => scheduleItems.map(scheduleItemToApplication),
+    [scheduleItems],
   )
 
   const applicationsByDate = useMemo(() => {
     const map = new Map<string, Application[]>()
-    for (const application of scheduled) {
+    for (const application of applications) {
       const existing = map.get(application.date) ?? []
       existing.push(application)
       map.set(application.date, existing)
     }
     return map
-  }, [scheduled])
+  }, [applications])
+
+  const pendingApplications = useMemo(
+    () => applications.filter((application) => application.status === 'scheduled'),
+    [applications],
+  )
+
+  // Reagendar = editar a dose pendente com motivo e revisões atuais.
+  const rescheduleDoseQuery = useQuery({
+    queryKey: queryKeys.dose(organizationId, rescheduleDoseId ?? ''),
+    queryFn: ({ signal }) => getDose(rescheduleDoseId!, signal),
+    enabled: organizationId !== '' && rescheduleDoseId !== null,
+  })
 
   const openPatient = (patientId: string) => {
     setSelectedApplication(null)
@@ -135,13 +194,27 @@ export function AppointmentsPage() {
               aria-label="Modo de visualização"
             />
             {canNewAppointment && (
-              <Pill active icon={faPlus} onClick={() => setShowAddModal(true)}>
-                Novo Agendamento
+              <Pill active icon={faPlus} onClick={() => setShowPickerModal(true)}>
+                Nova Aplicação
               </Pill>
             )}
           </>
         }
       />
+
+      {scheduleQuery.error && (
+        <p role="alert" className="px-2 pb-2 text-[0.72rem] text-red-700">
+          {scheduleQuery.error instanceof ApiError
+            ? scheduleQuery.error.message
+            : 'Não foi possível carregar a agenda.'}
+        </p>
+      )}
+      {truncated && (
+        <p role="alert" className="px-2 pb-2 text-[0.72rem] text-amber-700">
+          Exibindo {scheduleQuery.data!.items.length} de {scheduleQuery.data!.total} doses do
+          período. Refine a busca ou o período para ver o restante.
+        </p>
+      )}
 
       <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-3xl border border-(--border-custom) bg-[#F6F8F8]">
         <CalendarToolbar
@@ -194,19 +267,17 @@ export function AppointmentsPage() {
                 key={app.id}
                 type="button"
                 onClick={() => { setSelectedApplication(app); setDayModal(null) }}
-                className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:brightness-95 cursor-pointer ${app.status === 'missed' ? 'opacity-60' : ''}`}
-                style={{
-                  backgroundColor: c.bg,
-                  backgroundImage:
-                    app.status === 'missed'
-                      ? `repeating-linear-gradient(45deg, rgba(100,116,139,0.22) 0 1.5px, transparent 1.5px 6px), ${c.grad}`
-                      : c.grad,
-                  color: c.text,
-                }}
+                className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:brightness-95 cursor-pointer"
+                style={{ backgroundColor: c.bg, backgroundImage: c.grad, color: c.text }}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold">{app.startTime} – {app.endTime}</div>
-                  <div className="text-[0.7rem] font-medium opacity-90 truncate">{getName(app.patientId)} · {app.dose}</div>
+                  <div className="text-xs font-bold">
+                    {app.startTime}
+                    {app.endTime ? ` – ${app.endTime}` : ''}
+                  </div>
+                  <div className="text-[0.7rem] font-medium opacity-90 truncate">
+                    {app.patientName} · {app.dose}
+                  </div>
                 </div>
               </button>
             )
@@ -219,22 +290,68 @@ export function AppointmentsPage() {
         googleConnected={googleCalendarConnected}
         onClose={() => setSelectedApplication(null)}
         onOpenPatient={openPatient}
+        onReschedule={
+          canReschedule
+            ? (doseId) => {
+                setSelectedApplication(null)
+                setRescheduleDoseId(doseId)
+              }
+            : undefined
+        }
+      />
+
+      <EditScheduledDoseModal
+        open={rescheduleDoseId !== null && rescheduleDoseQuery.data !== undefined}
+        dose={rescheduleDoseQuery.data ?? null}
+        organizationId={organizationId}
+        onClose={() => setRescheduleDoseId(null)}
+        onSaved={() => setShowRescheduledToast(true)}
       />
 
       <Modal
-        open={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        open={showPickerModal}
+        onClose={() => setShowPickerModal(false)}
         size="sm"
-        title="Agendamento nasce da prescrição"
+        title="Selecionar previsão existente"
       >
-        <p className="text-xs text-(--text) leading-relaxed">
-          Compromissos livres não existem mais: cada aplicação prevista é criada
-          pelo servidor ao registrar a prescrição ou administrar uma dose. Para
-          reagendar, use &quot;Editar previsão pendente&quot; no prontuário do paciente.
-          O calendário passa a ser alimentado pelas doses persistidas na próxima
-          etapa da integração.
+        <p className="text-[0.68rem] text-(--text-muted) leading-relaxed">
+          Toda aplicação nasce de uma previsão criada pelo servidor na prescrição
+          ou na administração anterior. Selecione a previsão do período para ver
+          detalhes ou reagendar; não existe compromisso livre.
         </p>
+        <div className="space-y-2 max-h-72 overflow-y-auto">
+          {pendingApplications.length === 0 && (
+            <p className="text-xs text-(--text-muted) py-4 text-center">
+              Nenhuma previsão pendente no período visível.
+            </p>
+          )}
+          {pendingApplications.map((app) => (
+            <button
+              key={app.id}
+              type="button"
+              onClick={() => { setSelectedApplication(app); setShowPickerModal(false) }}
+              className="w-full flex items-center justify-between gap-3 rounded-lg border border-(--border-custom) bg-white px-3 py-2.5 text-left transition hover:border-brand/50 cursor-pointer"
+            >
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-(--text) truncate">{app.patientName}</div>
+                <div className="text-[0.65rem] text-(--text-muted)">{app.dose}</div>
+              </div>
+              <div className="text-[0.65rem] font-semibold text-(--text-muted) shrink-0">
+                {app.date} · {app.startTime}
+              </div>
+            </button>
+          ))}
+        </div>
       </Modal>
+
+      <Toast
+        open={showRescheduledToast}
+        onClose={() => setShowRescheduledToast(false)}
+        variant="success"
+        icon={<FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />}
+        title="Previsão reagendada!"
+        description="A dose pendente foi atualizada com motivo registrado. Nenhuma sucessora foi criada."
+      />
     </div>
   )
 }

@@ -200,3 +200,63 @@ export interface AdministerDoseResult {
   recommendation: SimulationResult
   therapyRevision: number
 }
+
+/** Linha da consulta agregada de agenda: dose + resumo de paciente/terapia. */
+export interface ScheduleDoseItem {
+  id: string
+  immunotherapyId: string
+  status: DoseStatus
+  scheduledAt: string
+  administeredAt: string | null
+  administrationEndedAt: string | null
+  plannedStepId: string | null
+  administeredStepId: string | null
+  plannedValues: DoseValues | null
+  administeredValues: DoseValues | null
+  revision: number
+  immunotherapy: {
+    id: string
+    immunoType: string
+    extract: string
+    status: TherapyStatus
+    revision: number
+    patient: {
+      id: string
+      fullName: string
+      phoneNumber: string
+      isActive: boolean
+      responsiblePhysician: { id: string; fullName: string }
+    }
+  }
+}
+
+export type SchedulePage = Page<ScheduleDoseItem>
+
+/**
+ * Indicadores oficiais do período no fuso clínico da organização. Denominadores
+ * documentados no servidor; razão nula significa "sem base", não zero.
+ */
+export interface ClinicalMetrics {
+  from: string
+  to: string
+  timeZone: string
+  applications: {
+    total: number
+    onSchedule: number
+    offSchedule: number
+    byDay: { day: string; count: number }[]
+  }
+  scheduled: { pending: number; overdue: number }
+  adherence: {
+    numerator: number
+    denominator: number
+    ratio: number | null
+  }
+  therapies: {
+    inProgress: number
+    suspended: number
+    completed: number
+    buildUp: number
+    maintenance: number
+  }
+}

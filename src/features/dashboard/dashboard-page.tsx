@@ -1,29 +1,22 @@
-import { ConcentrationPieChart } from '@/features/dashboard/components/charts/ConcentrationPieChart'
-import { PhasesBarChart } from '@/features/dashboard/components/charts/PhasesBarChart'
-import { StatusLineChart } from '@/features/dashboard/components/charts/StatusLineChart'
-import { TypesProgressBars } from '@/features/dashboard/components/charts/TypesProgressBars'
-import { VolumeStackedBarChart } from '@/features/dashboard/components/charts/VolumeStackedBarChart'
-import { AdherenceCard, type AdherencePoint } from '@/features/dashboard/components/showcase/AdherenceCard'
-import { ApplicationsCard } from '@/features/dashboard/components/showcase/ApplicationsCard'
-import { ComparisonCard } from '@/features/dashboard/components/showcase/ComparisonCard'
 import {
   DarkChartCard,
   DarkMetricsSection,
   type DarkMetric,
 } from '@/features/dashboard/components/showcase/DarkMetricsSection'
 import { DATE_RANGE_ANCHOR_ATTR, DateRangePopover } from '@/features/dashboard/components/showcase/DateRangePopover'
+import { ApplicationsCard } from '@/features/dashboard/components/showcase/ApplicationsCard'
 import {
   TodayApplicationsCard,
   type TodayApplication,
 } from '@/features/dashboard/components/showcase/TodayApplicationsCard'
-import { useMonthlyFilters, useSnapshotFilters } from '@/features/dashboard/hooks/useChartWindow'
-import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
 import { formatRange } from '@/features/dashboard/lib/format-range'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { usePatientStore } from '@/features/patient/stores/usePatientStore'
-import { SegmentedControl } from '@/shared/components'
-import { CircleButton, PageHeader, Pill, SelectPill } from '@/shared/components/showcase'
-import { cn } from '@/shared/lib/cn'
+import { scheduleItemToApplication } from '@/features/patient/adapters/clinical-presentation'
+import { getClinicalMetrics, listDoseSchedule } from '@/shared/api/clinical.api'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
+import { CircleButton, PageHeader, Pill } from '@/shared/components/showcase'
+import { toOffsetIso } from '@/shared/lib/dates'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import {
@@ -33,27 +26,16 @@ import {
   faChartColumn,
   faGaugeHigh,
   faShieldHalved,
-  faSliders,
   faSyringe,
+  faTriangleExclamation,
   faUser,
   faUserXmark,
 } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
-
-const MONTH_FILTER_OPTIONS = [
-  { value: 'all', label: 'Todos os meses' },
-  ...['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map(
-    (label, index) => ({ value: String(index), label }),
-  ),
-]
-
-const DASHBOARD_YEAR = new Date().getFullYear()
-const YEAR_FILTER_OPTIONS = [
-  { value: 'all', label: 'Todos os anos' },
-  ...Array.from({ length: 5 }, (_, i) => String(DASHBOARD_YEAR - 2 + i)).map((year) => ({ value: year, label: year })),
-]
 
 type DashboardTab = 'panel' | 'analytics'
 
@@ -61,6 +43,23 @@ const TABS: { id: DashboardTab; label: string; icon: IconDefinition }[] = [
   { id: 'panel', label: 'Painel geral', icon: faGaugeHigh },
   { id: 'analytics', label: 'Panorama clínico', icon: faChartColumn },
 ]
+
+function dayInput(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+/** Painel sem base para o indicador: declara a ausência, não inventa número. */
+function UnavailableIndicator({ reason }: { reason: string }) {
+  return (
+    <div className="flex h-full min-h-32 flex-col items-center justify-center gap-2 px-6 text-center">
+      <FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 18, color: '#8FB4BA' }} />
+      <p className="text-[0.7rem] leading-relaxed" style={{ color: '#8FB4BA' }}>
+        Indicador indisponível: {reason}
+      </p>
+    </div>
+  )
+}
+
 export function DashboardPage() {
   const navigate = useNavigate()
   const canViewDashboard = useHasPermission('view_dashboard')
@@ -68,15 +67,12 @@ export function DashboardPage() {
     if (!canViewDashboard) navigate({ to: '/immunotherapies' })
   }, [canViewDashboard, navigate])
 
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+
   const [tab, setTab] = useState<DashboardTab>('panel')
-  const [modality, setModality] = useState<'sub' | 'sbl'>('sub')
-  const [typeFilter, setTypeFilter] = useState('all')
-  const promoDismissed = false
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
-  const [filtersOpen, setFiltersOpen] = useState(false)
-  const [monthFilter, setMonthFilter] = useState('all')
-  const [yearFilter, setYearFilter] = useState('all')
 
   const darkRef = useRef<HTMLElement>(null)
 
@@ -107,189 +103,131 @@ export function DashboardPage() {
     }
   }, [])
 
-  const applications = usePatientStore((state) => state.applications)
-  const immunotherapies = useImmunotherapiesStore((state) => state.immunotherapies)
+  // Período dos indicadores: seleção do usuário ou os últimos 30 dias.
+  const period = useMemo(() => {
+    const to = dateRange?.to ?? dateRange?.from ?? new Date()
+    const from =
+      dateRange?.from ?? new Date(to.getTime() - 29 * 24 * 60 * 60 * 1000)
+    return {
+      from: toOffsetIso(dayInput(from), '00:00'),
+      to: toOffsetIso(dayInput(to), '23:59'),
+    }
+  }, [dateRange])
 
-  const analytics = useDashboardAnalytics({
-    modality: modality === 'sub' ? 'subcutaneous' : 'sublingual',
-    typeFilter,
+  const metricsQuery = useQuery({
+    queryKey: queryKeys.clinicalMetrics(organizationId, period),
+    queryFn: ({ signal }) => getClinicalMetrics(period, signal),
+    enabled: organizationId !== '',
+  })
+  const metrics = metricsQuery.data ?? null
+
+  // Agenda de hoje: mesma consulta agregada da agenda, janela de um dia.
+  const todayKey = dayInput(new Date())
+  const todayQuery = useQuery({
+    queryKey: queryKeys.schedule(organizationId, { day: todayKey }),
+    queryFn: ({ signal }) =>
+      listDoseSchedule(
+        {
+          from: toOffsetIso(todayKey, '00:00'),
+          to: toOffsetIso(todayKey, '23:59'),
+          pageSize: 100,
+        },
+        signal,
+      ),
+    enabled: organizationId !== '',
   })
 
-  const currentYear = new Date().getFullYear()
-
-  const applicationSeries = useMemo(
-    () => analytics.timeline.map((entry) => ({ date: entry.date, label: entry.label, value: entry.applications })),
-    [analytics.timeline],
-  )
-  const adherenceSeries: AdherencePoint[] = useMemo(() => {
-    const byDate = new Map<string, { completed: number; missed: number; scheduled: number }>()
-
-    applications.forEach((application) => {
-      const [day, month, year] = application.date.split('/')
-      if (!day || !month || !year) return
-      const iso = `${year}-${month}-${day}`
-      const entry = byDate.get(iso) ?? { completed: 0, missed: 0, scheduled: 0 }
-      if (application.status === 'completed') entry.completed += 1
-      else if (application.status === 'missed') entry.missed += 1
-      else if (application.status === 'scheduled') entry.scheduled += 1
-      byDate.set(iso, entry)
-    })
-
-    return Array.from(byDate.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([iso, entry]) => {
-        const closed = entry.completed + entry.missed
-        return {
-          date: iso,
-          label: `${iso.slice(8, 10)}/${iso.slice(5, 7)}`,
-          value: closed > 0 ? Math.round((entry.completed / closed) * 100) : 100,
-          ...entry,
-        }
-      })
-  }, [applications])
-  const comparisonSeries = useMemo(
+  const todayApplications: TodayApplication[] = useMemo(
     () =>
-      analytics.timeline.map((entry) => ({
-        date: entry.date,
-        label: entry.label,
-        previous: entry.previous,
-        current: entry.current,
-      })),
-    [analytics.timeline],
-  )
-
-
-  const todayApplications: TodayApplication[] = useMemo(() => {
-    const now = new Date()
-    const key = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`
-    const byId = new Map(immunotherapies.map((immunotherapy) => [immunotherapy.id, immunotherapy]))
-
-    return applications
-      .filter((application) => application.date === key && application.status !== 'canceled')
-      .sort((a, b) => a.startTime.localeCompare(b.startTime))
-      .map((application) => {
-        const immunotherapy = byId.get(application.patientId)
-        return {
+      (todayQuery.data?.items ?? [])
+        .map(scheduleItemToApplication)
+        .sort((a, b) => a.startTime.localeCompare(b.startTime))
+        .map((application) => ({
           id: application.id,
           patientId: application.patientId,
-          name: immunotherapy?.name ?? 'Paciente',
+          name: application.patientName ?? '—',
           time: application.startTime,
           dose: application.dose,
-          status: (application.status === 'completed' ? 'completed' : application.status === 'missed' ? 'missed' : 'scheduled') as
-            | 'completed'
-            | 'missed'
-            | 'scheduled',
-        }
-      })
-  }, [applications, immunotherapies])
-
-  const activeSpark = useMemo(() => {
-    const weeks = 8
-    const recent = analytics.timeline.slice(-weeks * 7)
-    return Array.from({ length: weeks }, (_, week) => {
-      const slice = recent.slice(week * 7, week * 7 + 7)
-      if (slice.length === 0) return 0
-      return Math.round(slice.reduce((sum, entry) => sum + entry.active, 0) / slice.length)
-    })
-  }, [analytics.timeline])
-
-  const statusFilters = useMonthlyFilters(analytics.statusHistory)
-  const phaseFilters = useMonthlyFilters(analytics.phaseHistory)
-  const concentrationFilters = useSnapshotFilters(analytics.concentrationData, (entry) => entry.value)
-  const typeFilters = useSnapshotFilters(analytics.typeData, (entry) => entry.value)
-  const volumeFilters = useSnapshotFilters(analytics.volumeData, (row) =>
-    Object.entries(row).reduce((sum, [key, value]) => (key === 'conc' ? sum : sum + Number(value)), 0),
+          status: application.status === 'completed' ? 'completed' : 'scheduled',
+        })),
+    [todayQuery.data],
   )
 
-  const adherence = useMemo(() => {
-    const closedIn = (list: typeof applications) =>
-      list.filter((application) => application.status === 'completed' || application.status === 'missed')
+  const applicationSeries = useMemo(
+    () =>
+      (metrics?.applications.byDay ?? []).map((entry) => ({
+        date: entry.day,
+        label: `${entry.day.slice(8, 10)}/${entry.day.slice(5, 7)}`,
+        value: entry.count,
+      })),
+    [metrics],
+  )
 
-    const closed = closedIn(applications)
-    const completed = closed.filter((application) => application.status === 'completed').length
-    const rate = closed.length > 0 ? Math.round((completed / closed.length) * 100) : 0
+  const adherencePct =
+    metrics && metrics.adherence.ratio !== null
+      ? Math.round(metrics.adherence.ratio * 100)
+      : null
 
-    // Monthly rate over the last 8 months: weekly buckets are too sparse to plot.
-    const now = new Date()
-    const monthly = Array.from({ length: 8 }, (_, index) => {
-      const cursor = new Date(now.getFullYear(), now.getMonth() - (7 - index), 1)
-
-      const inMonth = closed.filter((application) => {
-        const [, month, year] = application.date.split('/').map(Number)
-        return month === cursor.getMonth() + 1 && year === cursor.getFullYear()
-      })
-      const done = inMonth.filter((application) => application.status === 'completed').length
-      return inMonth.length > 0 ? Math.round((done / inMonth.length) * 100) : 0
-    })
-
-    return { rate, monthly }
-  }, [applications])
-
-  const darkMetrics: DarkMetric[] = useMemo(
-    () => [
+  const darkMetrics: DarkMetric[] = useMemo(() => {
+    const byDaySeries = (metrics?.applications.byDay ?? []).map((d) => d.count)
+    const active = metrics?.therapies.inProgress ?? 0
+    return [
       {
-        label: 'Pacientes ativos',
-        value: String(analytics.totalActive),
+        label: 'Tratamentos ativos',
+        value: metrics ? String(active) : '—',
         icon: faUser,
         glow: '#257E8C',
         visual: 'spark',
-        series: activeSpark,
+        series: byDaySeries.length ? byDaySeries : [0],
       },
       {
-        label: 'Pacientes inativos',
-        value: String(analytics.inactiveFiltered.length),
+        label: 'Tratamentos suspensos',
+        value: metrics ? String(metrics.therapies.suspended) : '—',
         icon: faUserXmark,
         glow: '#12333a',
         visual: 'dots',
-        series: new Array(Math.max(analytics.totalActive + analytics.inactiveFiltered.length, 1)).fill(0),
-        filled: analytics.inactiveFiltered.length,
+        series: new Array(
+          Math.max(active + (metrics?.therapies.suspended ?? 0), 1),
+        ).fill(0),
+        filled: metrics?.therapies.suspended ?? 0,
       },
       {
-        label: 'Aplicações na semana',
-        value: String(analytics.weekly.applicationsTotal),
+        label: 'Aplicações no período',
+        value: metrics ? String(metrics.applications.total) : '—',
         icon: faSyringe,
         glow: '#3E8E86',
         visual: 'spark',
-        series: analytics.weekly.applications.map((d) => d.value),
+        series: byDaySeries.length ? byDaySeries : [0],
       },
       {
         label: 'Em indução',
-        value: String(analytics.inductionCount),
+        value: metrics ? String(metrics.therapies.buildUp) : '—',
         icon: faArrowTrendUp,
         glow: '#3E8E86',
         visual: 'dots',
-        series: new Array(Math.max(analytics.totalActive, 1)).fill(0),
-        filled: analytics.inductionCount,
+        series: new Array(Math.max(active, 1)).fill(0),
+        filled: metrics?.therapies.buildUp ?? 0,
       },
       {
         label: 'Em manutenção',
-        value: String(analytics.maintenanceCount),
+        value: metrics ? String(metrics.therapies.maintenance) : '—',
         icon: faShieldHalved,
         glow: '#257E8C',
         visual: 'dots',
-        series: new Array(Math.max(analytics.totalActive, 1)).fill(0),
-        filled: analytics.maintenanceCount,
+        series: new Array(Math.max(active, 1)).fill(0),
+        filled: metrics?.therapies.maintenance ?? 0,
       },
       {
-        label: 'Taxa de adesão',
-        value: String(adherence.rate),
-        unit: '%',
+        label: 'Adesão no período',
+        value: adherencePct !== null ? String(adherencePct) : '—',
+        unit: adherencePct !== null ? '%' : undefined,
         icon: faCalendarCheck,
         glow: '#12333a',
         visual: 'spark',
-        series: adherence.monthly,
+        series: byDaySeries.length ? byDaySeries : [0],
       },
-    ],
-    [analytics, adherence, activeSpark],
-  )
-
-  const typeOptions = useMemo(
-    () => [
-      { value: 'all', label: 'Todos os tipos' },
-      ...analytics.availableTypes.map((type) => ({ value: type, label: type })),
-    ],
-    [analytics.availableTypes],
-  )
+    ]
+  }, [metrics, adherencePct])
 
   return (
     <>
@@ -297,12 +235,9 @@ export function DashboardPage() {
         breadcrumb={['Painel de Métricas']}
         title="Painel geral"
         actions={
-          <>
-            <SelectPill value={typeFilter} onChange={setTypeFilter} options={typeOptions} aria-label="Tipo de imunoterapia" />
-            <Pill active onClick={() => navigate({ to: '/export-report' })}>
-              Gerar relatório
-            </Pill>
-          </>
+          <Pill active onClick={() => navigate({ to: '/export-report' })}>
+            Gerar relatório
+          </Pill>
         }
       />
 
@@ -330,62 +265,11 @@ export function DashboardPage() {
             className="inline-flex h-9 items-center rounded-full px-4 text-[0.78rem] font-medium whitespace-nowrap"
             style={{ background: '#FFFFFF', border: '1px solid #DDE6E6', color: '#4A6469' }}
           >
-            {formatRange(dateRange)}
+            {dateRange?.from ? formatRange(dateRange) : 'Últimos 30 dias'}
           </span>
         </div>
 
-        <div
-          className={cn(
-            'flex items-center gap-2 rounded-full backdrop-blur-md transition-all duration-500 ease-out',
-            filtersOpen ? 'p-1' : 'p-0',
-          )}
-          style={{
-            background: filtersOpen ? 'rgba(255,255,255,0.45)' : 'transparent',
-            border: filtersOpen ? '1px solid rgba(255,255,255,0.65)' : '1px solid transparent',
-          }}
-        >
-          <CircleButton
-            icon={faSliders}
-            active={filtersOpen}
-            aria-label="Filtros"
-            aria-expanded={filtersOpen}
-            onClick={() => setFiltersOpen((open) => !open)}
-          />
-
-          <div
-            className={cn(
-              'flex items-center gap-2 overflow-hidden transition-all duration-500 ease-out',
-              filtersOpen ? 'max-w-2xl translate-x-0 opacity-100' : 'max-w-0 -translate-x-8 opacity-0',
-            )}
-          >
-            <SelectPill
-              value={monthFilter}
-              onChange={setMonthFilter}
-              options={MONTH_FILTER_OPTIONS}
-              aria-label="Filtrar por mês"
-            />
-            <SelectPill
-              value={yearFilter}
-              onChange={setYearFilter}
-              options={YEAR_FILTER_OPTIONS}
-              aria-label="Filtrar por ano"
-            />
-          </div>
-        </div>
-
-        <div className="ml-auto">
-          <SegmentedControl
-            value={modality}
-            onChange={setModality}
-            aria-label="Modalidade"
-            options={[
-              { value: 'sub', label: 'Subcutânea' },
-              { value: 'sbl', label: 'Sublingual' },
-            ]}
-          />
-        </div>
-
-        <nav className="flex items-center gap-2">
+        <nav className="ml-auto flex items-center gap-2">
           {TABS.map((entry) => (
             <Pill key={entry.id} icon={entry.icon} active={tab === entry.id} onClick={() => goToTab(entry.id)}>
               {entry.label}
@@ -394,75 +278,101 @@ export function DashboardPage() {
         </nav>
       </div>
 
+      {metricsQuery.error && (
+        <p role="alert" className="mb-3 text-[0.72rem] text-red-700">
+          {metricsQuery.error instanceof ApiError
+            ? metricsQuery.error.message
+            : 'Não foi possível carregar os indicadores.'}
+        </p>
+      )}
+
       <div className="relative z-10 grid shrink-0 grid-cols-12 gap-4 auto-rows-[minmax(17.5rem,auto)]">
-          <div className={promoDismissed ? 'col-span-5' : 'col-span-4'}>
-            <AdherenceCard
-              title="Adesão às Aplicações"
-              caption="No período"
-              series={adherenceSeries}
-            />
-          </div>
-
-          <div className={promoDismissed ? 'col-span-8' : 'col-span-5'}>
-            <ComparisonCard
-              title="Comparativo de Aplicações"
-              caption="No período"
-              totalSuffix=""
-              previousYear={currentYear - 1}
-              currentYear={currentYear}
-              series={comparisonSeries}
-            />
-          </div>
-
-          {!promoDismissed && (
-            <div className="col-span-3 row-span-2 min-h-0">
-              <TodayApplicationsCard
-                applications={todayApplications}
-                onOpen={() => navigate({ to: '/appointments' })}
-                onSelectPatient={(patientId) => navigate({ to: '/patient/$patientId', params: { patientId } })}
-              />
+        <div className="col-span-4">
+          <div
+            className="flex h-full flex-col rounded-xl border border-(--border-custom) bg-white p-5"
+          >
+            <div className="text-xs font-semibold text-(--text-muted)">Adesão às Aplicações</div>
+            <div className="text-[0.65rem] text-(--text-muted) mb-4">
+              Aplicações no dia local previsto ÷ aplicações do período
             </div>
-          )}
-
-          <div className={promoDismissed ? 'col-span-12' : 'col-span-9'}>
-            <ApplicationsCard
-              title="Aplicações Registradas"
-              caption="No período"
-              series={applicationSeries}
-              modalityMix={analytics.modalityMix}
-              doseMix={analytics.doseMix}
-            />
+            {metricsQuery.isPending ? (
+              <div className="flex-1 flex items-center justify-center text-xs text-(--text-muted)">Carregando…</div>
+            ) : adherencePct !== null && metrics ? (
+              <div className="flex flex-1 flex-col justify-center gap-2">
+                <div className="text-5xl font-semibold text-(--text)">{adherencePct}%</div>
+                <div className="text-[0.7rem] text-(--text-muted)">
+                  {metrics.adherence.numerator} de {metrics.adherence.denominator} aplicações no dia previsto
+                </div>
+                <div className="mt-2 flex gap-4 text-[0.7rem]">
+                  <span className="text-(--text-muted)">
+                    Previstas pendentes: <span className="font-semibold text-(--text)">{metrics.scheduled.pending}</span>
+                  </span>
+                  <span className="text-(--text-muted)">
+                    Vencidas: <span className="font-semibold text-amber-700">{metrics.scheduled.overdue}</span>
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-center text-[0.72rem] text-(--text-muted) px-4">
+                Sem aplicações registradas no período — adesão indisponível, não zero.
+              </div>
+            )}
           </div>
+        </div>
+
+        <div className="col-span-5">
+          <ApplicationsCard
+            title="Aplicações Registradas"
+            caption="No período"
+            series={applicationSeries}
+            modalityMix={{
+              subcutaneous: metrics?.therapies.inProgress ?? 0,
+              sublingual: 0,
+              total: metrics?.therapies.inProgress ?? 0,
+            }}
+            doseMix={[]}
+          />
+        </div>
+
+        <div className="col-span-3 row-span-2 min-h-0">
+          <TodayApplicationsCard
+            applications={todayApplications}
+            onOpen={() => navigate({ to: '/appointments' })}
+            onSelectPatient={(patientId) => navigate({ to: '/patient/$patientId', params: { patientId } })}
+          />
+        </div>
+
+        <div className="col-span-9">
+          <div className="flex h-full flex-col rounded-xl border border-(--border-custom) bg-white p-5">
+            <div className="text-xs font-semibold text-(--text-muted)">Comparativo de Aplicações</div>
+            <UnavailableIndicator reason="a comparação entre períodos exige histórico agregado acumulado, entregue com os relatórios oficiais." />
+          </div>
+        </div>
       </div>
 
       <DarkMetricsSection
         sectionRef={darkRef}
         eyebrow="Painel de Métricas"
-          title="Panorama clínico"
-          subtitle="Adesão, evolução e resposta dos pacientes em tratamento, em continuidade ao painel."
-          metrics={darkMetrics}
-        >
-          <DarkChartCard title="Status de Imunoterapias" fullWidth filters={statusFilters.filters} filtersActive={statusFilters.active}>
-            <StatusLineChart data={statusFilters.slice} />
-          </DarkChartCard>
-          <DarkChartCard
-            title="Ciclos de Tratamento por Concentração"
-            filters={concentrationFilters.filters}
-            filtersActive={concentrationFilters.active}
-          >
-            <ConcentrationPieChart data={concentrationFilters.slice} />
-          </DarkChartCard>
-          <DarkChartCard title="Volume vs Concentração" filters={volumeFilters.filters} filtersActive={volumeFilters.active}>
-            <VolumeStackedBarChart data={volumeFilters.slice} />
-          </DarkChartCard>
-          <DarkChartCard title="Imunoterapias Ativas por Tipo" filters={typeFilters.filters} filtersActive={typeFilters.active}>
-            <TypesProgressBars data={typeFilters.slice} />
-          </DarkChartCard>
-          <DarkChartCard title="Distribuição de Fases" fullWidth filters={phaseFilters.filters} filtersActive={phaseFilters.active}>
-            <PhasesBarChart data={phaseFilters.slice} />
-          </DarkChartCard>
+        title="Panorama clínico"
+        subtitle="Indicadores oficiais do período no fuso clínico da organização; denominadores documentados no contrato."
+        metrics={darkMetrics}
+      >
+        <DarkChartCard title="Status de Imunoterapias" fullWidth>
+          <UnavailableIndicator reason="a evolução mensal de status exige série histórica própria." />
+        </DarkChartCard>
+        <DarkChartCard title="Ciclos de Tratamento por Concentração">
+          <UnavailableIndicator reason="a distribuição por concentração chega com as agregações de relatório." />
+        </DarkChartCard>
+        <DarkChartCard title="Volume vs Concentração">
+          <UnavailableIndicator reason="a matriz de valores administrados chega com as agregações de relatório." />
+        </DarkChartCard>
+        <DarkChartCard title="Imunoterapias Ativas por Tipo">
+          <UnavailableIndicator reason="a distribuição por tipo de alérgeno chega com as agregações de relatório." />
+        </DarkChartCard>
+        <DarkChartCard title="Distribuição de Fases" fullWidth>
+          <UnavailableIndicator reason="a série histórica de fases exige agregação acumulada própria." />
+        </DarkChartCard>
       </DarkMetricsSection>
-
     </>
   )
 }
