@@ -22,6 +22,7 @@ import { Route as PatientReportRouteImport } from './routes/patient-report'
 import { Route as PatientEvolutionRouteImport } from './routes/patient-evolution'
 import { Route as PatientCompletionRouteImport } from './routes/patient-completion'
 import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImmunotherapiesRouteImport } from './routes/immunotherapies'
 import { Route as HelpRouteImport } from './routes/help'
@@ -100,6 +101,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MigrationRoute = MigrationRouteImport.update({
+  id: '/migration',
+  path: '/migration',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/help': typeof HelpRoute
   '/immunotherapies': typeof ImmunotherapiesRoute
   '/login': typeof LoginRoute
+  '/migration': typeof MigrationRoute
   '/notifications': typeof NotificationsRoute
   '/patient-completion': typeof PatientCompletionRoute
   '/patient-evolution': typeof PatientEvolutionRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/help': typeof HelpRoute
   '/immunotherapies': typeof ImmunotherapiesRoute
   '/login': typeof LoginRoute
+  '/migration': typeof MigrationRoute
   '/notifications': typeof NotificationsRoute
   '/patient-completion': typeof PatientCompletionRoute
   '/patient-evolution': typeof PatientEvolutionRoute
@@ -228,6 +236,7 @@ export interface FileRoutesById {
   '/help': typeof HelpRoute
   '/immunotherapies': typeof ImmunotherapiesRoute
   '/login': typeof LoginRoute
+  '/migration': typeof MigrationRoute
   '/notifications': typeof NotificationsRoute
   '/patient-completion': typeof PatientCompletionRoute
   '/patient-evolution': typeof PatientEvolutionRoute
@@ -257,6 +266,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/immunotherapies'
     | '/login'
+    | '/migration'
     | '/notifications'
     | '/patient-completion'
     | '/patient-evolution'
@@ -284,6 +294,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/immunotherapies'
     | '/login'
+    | '/migration'
     | '/notifications'
     | '/patient-completion'
     | '/patient-evolution'
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/immunotherapies'
     | '/login'
+    | '/migration'
     | '/notifications'
     | '/patient-completion'
     | '/patient-evolution'
@@ -339,6 +351,7 @@ export interface RootRouteChildren {
   HelpRoute: typeof HelpRoute
   ImmunotherapiesRoute: typeof ImmunotherapiesRoute
   LoginRoute: typeof LoginRoute
+  MigrationRoute: typeof MigrationRoute
   NotificationsRoute: typeof NotificationsRoute
   PatientCompletionRoute: typeof PatientCompletionRoute
   PatientEvolutionRoute: typeof PatientEvolutionRoute
@@ -448,6 +461,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/migration': {
+      id: '/migration'
+      path: '/migration'
+      fullPath: '/migration'
+      preLoaderRoute: typeof MigrationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -547,6 +567,7 @@ const rootRouteChildren: RootRouteChildren = {
   HelpRoute: HelpRoute,
   ImmunotherapiesRoute: ImmunotherapiesRoute,
   LoginRoute: LoginRoute,
+  MigrationRoute: MigrationRoute,
   NotificationsRoute: NotificationsRoute,
   PatientCompletionRoute: PatientCompletionRoute,
   PatientEvolutionRoute: PatientEvolutionRoute,
