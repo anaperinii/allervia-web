@@ -1,43 +1,51 @@
-import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
+import type { DoseDetail } from '@/shared/api/contracts/clinical'
 import { FieldLabel, Select, StepHeading, TextArea, TextInput } from '@/shared/components'
 import { GLASS_CARD_SHADOW } from '@/shared/constants/glass-card'
 import { cn } from '@/shared/lib/cn'
 import { addMinutesToTime } from '@/shared/lib/dates'
-import { formatConcentration, formatVolume } from '@/shared/lib/formatters'
 import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
+import { formatStepPresentation } from '@/features/patient/adapters/clinical-presentation'
 import { Controller, type UseFormReturn } from 'react-hook-form'
 
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-const REACTION_OPTIONS = [
-  { value: 'reduce_dose', label: 'Reduzir dose', desc: 'Retornar ao volume anterior' },
-  { value: 'increase_interval', label: 'Aumentar intervalo', desc: 'Ampliar espaçamento entre doses' },
-  { value: 'suspend', label: 'Suspender temporariamente', desc: 'Pausar até avaliação médica' },
-  { value: 'maintain', label: 'Manter protocolo', desc: 'Mantém dose e intervalo' },
+const CONDUCT_OPTIONS = [
+  { value: 'MAINTAIN', label: 'Manter protocolo', desc: 'Mantém a previsão recomendada' },
+  { value: 'REQUEST_PHYSICIAN_REVIEW', label: 'Solicitar avaliação médica', desc: 'Encaminha a decisão ao prescritor' },
+  { value: 'SUSPEND_TREATMENT', label: 'Suspender tratamento', desc: 'Exige poder de revisão clínica' },
 ] as const
 
 interface PostApplicationStepProps {
   form: UseFormReturn<EvolutionForm>
+  dose: DoseDetail | null
 }
 
-export function PostApplicationStep({ form }: PostApplicationStepProps) {
-  const { control, register, watch, getValues, setValue, formState: { errors } } = form
-  // Quem pode figurar como executor da aplicação vem da equipe real; a autoria
-  // do registro continua sendo o ator autenticado no servidor.
-  const { members: administrators } = useProfessionalDirectory('NURSE')
-  const nextInterval = watch('nextInterval')
+/**
+ * Registro da aplicação: o valor administrado é uma opção permitida pela
+ * prescrição (repetir/reduzir inclusive) e a próxima dose é recomendação do
+ * servidor — não há campo de intervalo livre. Valor diferente do previsto exige
+ * motivo clínico.
+ */
+export function PostApplicationStep({ form, dose }: PostApplicationStepProps) {
+  const { control, register, getValues, setValue, watch, formState: { errors } } = form
+  // Executor selecionável vem da equipe real; o registrador continua sendo o
+  // ator autenticado no servidor.
+  const { members: executors } = useProfessionalDirectory()
+  const stepId = watch('stepId')
   const sideEffectPost = watch('sideEffectPost')
   const medicationNeededPost = watch('medicationNeededPost')
-  const reactionAdjustment = watch('reactionAdjustment')
+  const conduct = watch('conduct')
 
-  const isCustomInterval = nextInterval && !PROTOCOL_INTERVAL_PRESET_STRINGS.includes(nextInterval)
-  const selectIntervalValue = isCustomInterval ? 'outro' : nextInterval
+  const allowedValues = dose?.allowedValues ?? []
+  const plannedStepId = dose?.plannedStepId ?? null
+  const selectedStep = allowedValues.find((step) => step.id === stepId) ?? null
+  const isAdjusted = plannedStepId !== null && stepId !== '' && stepId !== plannedStepId
 
   return (
     <div className="space-y-5">
-      <StepHeading description="Registre a aplicação realizada com data, horário, responsável, concentração e volume, e defina o intervalo até a próxima dose." />
+      <StepHeading description="Registre a aplicação realizada: valor permitido pela prescrição, janela de horário e executor. A sucessora é gravada pelo servidor na confirmação." />
       <div className="grid grid-cols-2 gap-4">
         <FieldLabel label="Data da aplicação" error={errors.applicationDate?.message}>
           <TextInput type="date" invalid={!!errors.applicationDate} {...register('applicationDate')} />
@@ -66,105 +74,62 @@ export function PostApplicationStep({ form }: PostApplicationStepProps) {
             <TextInput type="time" invalid={!!errors.endTime} {...register('endTime')} />
           </FieldLabel>
         </div>
-        <FieldLabel label="Volume aplicado" error={errors.appliedVolume?.message}>
-          <div className="relative">
-            <Controller
-              control={control}
-              name="appliedVolume"
-              render={({ field }) => (
-                <TextInput
-                  placeholder="Ex: 0.5"
-                  invalid={!!errors.appliedVolume}
-                  className="pr-10"
-                  value={field.value}
-                  onBlur={field.onBlur}
-                  onChange={(e) => field.onChange(formatVolume(e.target.value))}
-                />
-              )}
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">ml</span>
-          </div>
-        </FieldLabel>
-        <FieldLabel label="Concentração do extrato" error={errors.concentration?.message}>
-          <Controller
-            control={control}
-            name="concentration"
-            render={({ field }) => (
-              <TextInput
-                placeholder="1:10"
-                invalid={!!errors.concentration}
-                value={field.value}
-                onBlur={field.onBlur}
-                onChange={(e) => field.onChange(formatConcentration(e.target.value))}
-              />
-            )}
-          />
-        </FieldLabel>
-        <div>
-          <FieldLabel label="Intervalo próxima aplicação" error={errors.nextInterval?.message}>
-            <Controller
-              control={control}
-              name="nextInterval"
-              render={({ field }) => (
-                <Select
-                  value={selectIntervalValue}
-                  onChange={(e) => field.onChange(e.target.value === 'outro' ? ' ' : e.target.value)}
-                  onBlur={field.onBlur}
-                  invalid={!!errors.nextInterval}
-                >
-                  <option value="" disabled>Selecione</option>
-                  <option value="7">7 dias</option>
-                  <option value="14">14 dias</option>
-                  <option value="21">21 dias</option>
-                  <option value="28">28 dias</option>
-                  <option value="outro">Outro</option>
-                </Select>
-              )}
-            />
-          </FieldLabel>
-          {isCustomInterval && (
-            <div className="mt-2 space-y-2">
-              <div className="flex items-center gap-2">
-                <Controller
-                  control={control}
-                  name="nextInterval"
-                  render={({ field }) => (
-                    <TextInput
-                      type="number"
-                      min={1}
-                      placeholder="Ex: 35"
-                      value={field.value.trim()}
-                      onChange={(e) => field.onChange(e.target.value.replace(/[^0-9]/g, ''))}
-                      invalid={!!errors.nextInterval}
-                      className="flex-1"
-                    />
-                  )}
-                />
-                <span className="text-[0.65rem] text-(--text-muted) shrink-0">dias</span>
-              </div>
-              <CustomIntervalWarning value={nextInterval} />
-              <FieldLabel label="Justificativa do intervalo personalizado" required error={errors.intervalJustification?.message}>
-                <TextArea
-                  rows={2}
-                  placeholder="Descreva o motivo clínico para um intervalo fora do protocolo padrão"
-                  invalid={!!errors.intervalJustification}
-                  className="focus:ring-amber-400"
-                  {...register('intervalJustification')}
-                />
-              </FieldLabel>
-            </div>
-          )}
-        </div>
-        <FieldLabel label="Responsável" error={errors.administrator?.message}>
-          <Select invalid={!!errors.administrator} {...register('administrator')}>
-            <option value="" disabled>Selecione o responsável pela aplicação</option>
-            {administrators.map((person) => (
-              <option key={person.professionalId} value={person.fullName}>
-                {person.fullName}
+        <FieldLabel
+          label="Valor administrado"
+          hint={
+            plannedStepId
+              ? '(previsto pela prescrição já selecionado)'
+              : undefined
+          }
+          error={errors.stepId?.message}
+        >
+          <Select invalid={!!errors.stepId} {...register('stepId')}>
+            <option value="" disabled>
+              {allowedValues.length === 0 ? 'Sem valores permitidos' : 'Selecione o valor'}
+            </option>
+            {allowedValues.map((step) => (
+              <option key={step.id} value={step.id}>
+                {step.label} — {formatStepPresentation(step)} · {step.intervalDays}d
+                {step.id === plannedStepId ? ' (previsto)' : ''}
               </option>
             ))}
           </Select>
         </FieldLabel>
+        <FieldLabel label="Executor da aplicação" error={errors.performerId?.message}>
+          <Select invalid={!!errors.performerId} {...register('performerId')}>
+            <option value="" disabled>Selecione o executor</option>
+            {executors
+              .filter((member) =>
+                member.roles.some((role) => role === 'PHYSICIAN' || role === 'NURSE'),
+              )
+              .map((member) => (
+                <option key={member.professionalId} value={member.professionalId}>
+                  {member.fullName}
+                </option>
+              ))}
+          </Select>
+        </FieldLabel>
+        {isAdjusted && (
+          <div className="col-span-2" style={{ animation: 'slide-up-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
+            <FieldLabel
+              label="Motivo clínico do valor diferente do previsto"
+              required
+              error={errors.adjustmentReason?.message}
+            >
+              <TextArea
+                rows={2}
+                placeholder={
+                  selectedStep
+                    ? `Justifique administrar ${formatStepPresentation(selectedStep)} no lugar do previsto`
+                    : 'Justifique o valor escolhido'
+                }
+                invalid={!!errors.adjustmentReason}
+                className="focus:ring-amber-400"
+                {...register('adjustmentReason')}
+              />
+            </FieldLabel>
+          </div>
+        )}
         <FieldLabel label="Efeito colateral">
           <Select {...register('sideEffectPost')}>
             <option value="no">Não</option>
@@ -180,82 +145,95 @@ export function PostApplicationStep({ form }: PostApplicationStepProps) {
         {sideEffectPost === 'yes' && (
           <div className="col-start-1" style={{ animation: 'slide-up-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
             <FieldLabel label="Efeitos colaterais relatados" error={errors.reportedEffectsPost?.message}>
-              <TextInput placeholder="Insira aqui" invalid={!!errors.reportedEffectsPost} {...register('reportedEffectsPost')} />
+              <TextInput
+                placeholder="Separe múltiplos efeitos por vírgula"
+                invalid={!!errors.reportedEffectsPost}
+                {...register('reportedEffectsPost')}
+              />
             </FieldLabel>
           </div>
         )}
         {medicationNeededPost === 'yes' && (
           <div className="col-start-2" style={{ animation: 'slide-up-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
             <FieldLabel label="Medicações administradas" error={errors.medicationsPost?.message}>
-              <TextInput placeholder="Insira aqui" invalid={!!errors.medicationsPost} {...register('medicationsPost')} />
+              <TextInput
+                placeholder="Separe múltiplas medicações por vírgula"
+                invalid={!!errors.medicationsPost}
+                {...register('medicationsPost')}
+              />
             </FieldLabel>
           </div>
         )}
         {sideEffectPost === 'yes' && medicationNeededPost === 'yes' && (
           <div className="col-span-2" style={{ animation: 'slide-up-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
-          <div
-            className="rounded-2xl bg-white/25 backdrop-blur-xl p-3.5 space-y-2.5"
-            style={{
-              boxShadow: GLASS_CARD_SHADOW,
-              backdropFilter: 'blur(20px) saturate(150%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(150%)',
-              backgroundImage:
-                'linear-gradient(105deg, rgba(245,158,11,0.18) 0%, rgba(252,211,77,0.10) 25%, rgba(254,243,199,0.04) 55%, transparent 80%)',
-            }}
-          >
-            <div className="flex items-start gap-2">
-              <FontAwesomeIcon icon={faCircleInfo} className="text-amber-700 shrink-0 mt-0.5" style={{ fontSize: 16 }} />
-              <div className="leading-relaxed">
-                <div className="text-[0.78rem] font-bold text-amber-800">Reação adversa com uso de medicação registrada</div>
-                <div className="text-[0.68rem] text-amber-800/80 mt-0.5">Selecione a conduta a ser aplicada no protocolo antes de concluir a evolução. A escolha fica vinculada a esta aplicação no histórico clínico.</div>
-              </div>
-            </div>
-            <Controller
-              control={control}
-              name="reactionAdjustment"
-              render={({ field }) => (
-                <div role="radiogroup" aria-label="Conduta para o protocolo" className="grid grid-cols-2 gap-2">
-                  {REACTION_OPTIONS.map((opt) => {
-                    const selected = field.value === opt.value
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        role="radio"
-                        aria-checked={selected}
-                        onClick={() => field.onChange(opt.value as EvolutionForm['reactionAdjustment'])}
-                        className={cn(
-                          'text-left px-2.5 py-2 rounded-lg border-[1.5px] transition-all cursor-pointer',
-                          selected
-                            ? 'border-amber-500 bg-gray-50/60'
-                            : 'border-amber-200 bg-gray-50/60 hover:border-amber-400',
-                        )}
-                      >
-                        <div className="text-[0.75rem] font-bold text-(--text)">{opt.label}</div>
-                        <div className="text-[0.65rem] text-(--text-muted) mt-0.5">{opt.desc}</div>
-                      </button>
-                    )
-                  })}
+            <div
+              className="rounded-2xl bg-white/25 backdrop-blur-xl p-3.5 space-y-2.5"
+              style={{
+                boxShadow: GLASS_CARD_SHADOW,
+                backdropFilter: 'blur(20px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+                backgroundImage:
+                  'linear-gradient(105deg, rgba(245,158,11,0.18) 0%, rgba(252,211,77,0.10) 25%, rgba(254,243,199,0.04) 55%, transparent 80%)',
+              }}
+            >
+              <div className="flex items-start gap-2">
+                <FontAwesomeIcon icon={faCircleInfo} className="text-amber-700 shrink-0 mt-0.5" style={{ fontSize: 16 }} />
+                <div className="leading-relaxed">
+                  <div className="text-[0.78rem] font-bold text-amber-800">Reação adversa com uso de medicação registrada</div>
+                  <div className="text-[0.68rem] text-amber-800/80 mt-0.5">
+                    Selecione a conduta imediata gravada junto da aplicação. Suspender exige poder de revisão clínica;
+                    ajustar a próxima previsão é um comando próprio feito no prontuário.
+                  </div>
                 </div>
+              </div>
+              <Controller
+                control={control}
+                name="conduct"
+                render={({ field }) => (
+                  <div role="radiogroup" aria-label="Conduta imediata" className="grid grid-cols-3 gap-2">
+                    {CONDUCT_OPTIONS.map((opt) => {
+                      const selected = field.value === opt.value
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => field.onChange(opt.value as EvolutionForm['conduct'])}
+                          className={cn(
+                            'text-left px-2.5 py-2 rounded-lg border-[1.5px] transition-all cursor-pointer',
+                            selected
+                              ? 'border-amber-500 bg-gray-50/60'
+                              : 'border-amber-200 bg-gray-50/60 hover:border-amber-400',
+                          )}
+                        >
+                          <div className="text-[0.75rem] font-bold text-(--text)">{opt.label}</div>
+                          <div className="text-[0.65rem] text-(--text-muted) mt-0.5">{opt.desc}</div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              />
+              {errors.conduct?.message && (
+                <span className="text-[0.6rem] text-red-500 block">{errors.conduct.message}</span>
               )}
-            />
-            {reactionAdjustment && (
-              <FieldLabel
-                label="Justificativa clínica"
-                required={reactionAdjustment === 'maintain'}
-                error={errors.reactionAdjustmentJustification?.message}
-              >
-                <TextArea
-                  rows={2}
-                  placeholder={reactionAdjustment === 'maintain'
-                    ? 'Justifique por que o protocolo será mantido mesmo com reação adversa'
-                    : 'Contexto clínico da conduta (opcional)'}
-                  className="focus:ring-amber-400"
-                  {...register('reactionAdjustmentJustification')}
-                />
-              </FieldLabel>
-            )}
-          </div>
+              {conduct && (
+                <FieldLabel
+                  label="Justificativa clínica"
+                  required
+                  error={errors.conductJustification?.message}
+                >
+                  <TextArea
+                    rows={2}
+                    placeholder="Contexto clínico da conduta escolhida"
+                    invalid={!!errors.conductJustification}
+                    className="focus:ring-amber-400"
+                    {...register('conductJustification')}
+                  />
+                </FieldLabel>
+              )}
+            </div>
           </div>
         )}
         <div className="col-span-2">
@@ -266,24 +244,4 @@ export function PostApplicationStep({ form }: PostApplicationStepProps) {
       </div>
     </div>
   )
-}
-
-function CustomIntervalWarning({ value }: { value: string }) {
-  const n = parseInt(value.trim(), 10)
-  if (isNaN(n) || n <= 0) return null
-  if (n < 4) {
-    return (
-      <div className="text-[0.65rem] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
-        Intervalo muito curto desrespeita o tempo mínimo de segurança entre doses. Reavalie o protocolo.
-      </div>
-    )
-  }
-  if (n > 15) {
-    return (
-      <div className="text-[0.65rem] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
-        Intervalo muito longo na indução pode comprometer a progressão. Confirme a conduta clínica.
-      </div>
-    )
-  }
-  return null
 }

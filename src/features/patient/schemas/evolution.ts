@@ -1,14 +1,23 @@
 import { z } from 'zod'
 import type { FieldPath } from 'react-hook-form'
-import { volumeSchema, concentrationSchema } from '@/shared/lib/field-schemas'
-import { PROTOCOL_INTERVAL_PRESET_STRINGS } from '@/features/immunotherapy/constants/scit-protocol'
 
 const yesNo = z.enum(['yes', 'no'])
-const reactionAdjustmentValues = z.enum(['', 'reduce_dose', 'increase_interval', 'suspend', 'maintain'])
+const conductValues = z.enum([
+  '',
+  'MAINTAIN',
+  'REQUEST_PHYSICIAN_REVIEW',
+  'SUSPEND_TREATMENT',
+])
 
+/**
+ * Evolução sobre o contrato real: o valor administrado é uma etapa permitida
+ * pela prescrição (não números livres), o executor é um profissional vinculado
+ * e a sucessora é decisão do servidor — o formulário não calcula próxima dose
+ * nem intervalo.
+ */
 export const evolutionSchema = z
   .object({
-
+    // Pré-aplicação (observação PRE_ADMINISTRATION + relato do intervalo)
     intervalReport: z.string().min(1, 'Relato do intervalo é obrigatório'),
     sideEffect: yesNo,
     reportedEffects: z.string(),
@@ -16,21 +25,20 @@ export const evolutionSchema = z
     medications: z.string(),
     notesPre: z.string(),
 
+    // Pós-aplicação
     applicationDate: z.string().min(1, 'Data é obrigatória'),
     startTime: z.string().min(1, 'Hora de início é obrigatória'),
-    endTime: z.string().min(1, 'Hora de fim é obrigatória'),
-    appliedVolume: volumeSchema,
-    concentration: concentrationSchema,
-    nextInterval: z.string(),
-    intervalJustification: z.string(),
-    administrator: z.string().min(1, 'Responsável é obrigatório'),
+    endTime: z.string(),
+    stepId: z.string().min(1, 'Selecione o valor aplicado'),
+    adjustmentReason: z.string(),
+    performerId: z.string().min(1, 'Selecione o executor da aplicação'),
     sideEffectPost: yesNo,
     reportedEffectsPost: z.string(),
     medicationNeededPost: yesNo,
     medicationsPost: z.string(),
     notesPost: z.string(),
-    reactionAdjustment: reactionAdjustmentValues,
-    reactionAdjustmentJustification: z.string(),
+    conduct: conductValues,
+    conductJustification: z.string(),
   })
   .superRefine((data, ctx) => {
     if (data.sideEffect === 'yes' && !data.reportedEffects.trim()) {
@@ -56,30 +64,6 @@ export const evolutionSchema = z
       })
     }
 
-    const interval = data.nextInterval.trim()
-    if (!interval) {
-      ctx.addIssue({
-        path: ['nextInterval'],
-        code: z.ZodIssueCode.custom,
-        message: 'Intervalo é obrigatório',
-      })
-    } else if (!PROTOCOL_INTERVAL_PRESET_STRINGS.includes(interval)) {
-      const just = data.intervalJustification.trim()
-      if (!just) {
-        ctx.addIssue({
-          path: ['intervalJustification'],
-          code: z.ZodIssueCode.custom,
-          message: 'Justifique o intervalo personalizado',
-        })
-      } else if (just.length < 10) {
-        ctx.addIssue({
-          path: ['intervalJustification'],
-          code: z.ZodIssueCode.custom,
-          message: 'Justificativa deve ter ao menos 10 caracteres',
-        })
-      }
-    }
-
     if (data.sideEffectPost === 'yes' && !data.reportedEffectsPost.trim()) {
       ctx.addIssue({
         path: ['reportedEffectsPost'],
@@ -97,19 +81,19 @@ export const evolutionSchema = z
     if (
       data.sideEffectPost === 'yes' &&
       data.medicationNeededPost === 'yes' &&
-      !data.reactionAdjustment
+      !data.conduct
     ) {
       ctx.addIssue({
-        path: ['reactionAdjustment'],
+        path: ['conduct'],
         code: z.ZodIssueCode.custom,
-        message: 'Selecione a conduta para o protocolo',
+        message: 'Selecione a conduta imediata',
       })
     }
-    if (data.reactionAdjustment === 'maintain' && !data.reactionAdjustmentJustification.trim()) {
+    if (data.conduct && !data.conductJustification.trim()) {
       ctx.addIssue({
-        path: ['reactionAdjustmentJustification'],
+        path: ['conductJustification'],
         code: z.ZodIssueCode.custom,
-        message: 'Justifique por que manter o protocolo',
+        message: 'Justifique a conduta escolhida',
       })
     }
   })
@@ -129,18 +113,16 @@ export const STEP_2_FIELDS = [
   'applicationDate',
   'startTime',
   'endTime',
-  'appliedVolume',
-  'concentration',
-  'nextInterval',
-  'intervalJustification',
-  'administrator',
+  'stepId',
+  'adjustmentReason',
+  'performerId',
   'sideEffectPost',
   'reportedEffectsPost',
   'medicationNeededPost',
   'medicationsPost',
   'notesPost',
-  'reactionAdjustment',
-  'reactionAdjustmentJustification',
+  'conduct',
+  'conductJustification',
 ] as const satisfies readonly FieldPath<EvolutionForm>[]
 
 export const EVOLUTION_DEFAULTS: EvolutionForm = {
@@ -153,16 +135,14 @@ export const EVOLUTION_DEFAULTS: EvolutionForm = {
   applicationDate: '',
   startTime: '',
   endTime: '',
-  appliedVolume: '',
-  concentration: '',
-  nextInterval: '',
-  intervalJustification: '',
-  administrator: '',
+  stepId: '',
+  adjustmentReason: '',
+  performerId: '',
   sideEffectPost: 'no',
   reportedEffectsPost: '',
   medicationNeededPost: 'no',
   medicationsPost: '',
   notesPost: '',
-  reactionAdjustment: '',
-  reactionAdjustmentJustification: '',
+  conduct: '',
+  conductJustification: '',
 }
