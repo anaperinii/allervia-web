@@ -377,6 +377,23 @@ export function PatientChartPage() {
               })}
             </div>
           )}
+          {pendingDose?.migrationRequired && (
+            <div className="flex items-center gap-2.5 bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-2.5">
+              <span className="text-xs text-amber-800">
+                Tratamento legado sem prescrição vinculada: novos comandos clínicos
+                ficam bloqueados até a migração assistida.
+              </span>
+              {canAdjustProtocol && (
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: '/migration' })}
+                  className="ml-auto text-xs font-semibold text-amber-800 underline cursor-pointer bg-transparent border-none shrink-0"
+                >
+                  Abrir migração
+                </button>
+              )}
+            </div>
+          )}
           <SummaryCards currentInterval={currentInterval} nextDate={nextDate} currentDose={currentDose} />
 
           <div className="flex flex-1 flex-col min-h-0 min-w-0">
