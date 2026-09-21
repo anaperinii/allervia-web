@@ -99,6 +99,9 @@ export interface Application {
   administrator?: string
   administratorNote?: string
   modality?: 'subcutaneous' | 'sublingual'
+  /** Resolvidos pela consulta agregada; telas não reconstroem identidade. */
+  patientName?: string
+  patientPhone?: string
 }
 
 interface PatientState {

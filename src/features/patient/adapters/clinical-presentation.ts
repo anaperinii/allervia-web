@@ -3,6 +3,7 @@ import type {
   DoseRecord,
   ImmunotherapyListItem,
   PatientDetail,
+  ScheduleDoseItem,
   TherapyStatus,
   TherapySummary,
 } from '@/shared/api/contracts/clinical'
@@ -182,6 +183,37 @@ export function doseToLegacyApplication(
       ? `1:${Number(values.concentration).toLocaleString('pt-BR')}`
       : undefined,
     sideEffect: observations?.hasReaction ? 'yes' : undefined,
+  }
+}
+
+/**
+ * Linha da agenda agregada no vocabulário do calendário legado. `patientId` é
+ * o paciente real (navegação ao prontuário) e a dose viaja pelo `id`.
+ */
+export function scheduleItemToApplication(
+  item: ScheduleDoseItem,
+): Application {
+  const base = doseToLegacyApplication(
+    {
+      ...item,
+      immediateConduct: null,
+      immediateConductJustification: null,
+      administeredById: null,
+      performedById: null,
+      betweenDosesReport: '',
+      recommendation: null,
+      sourceDoseId: null,
+      isArchived: false,
+      createdAt: item.scheduledAt,
+      updatedAt: item.scheduledAt,
+    },
+    item.immunotherapy.patient.id,
+  )
+  return {
+    ...base,
+    patientName: item.immunotherapy.patient.fullName,
+    patientPhone: item.immunotherapy.patient.phoneNumber,
+    modality: 'subcutaneous',
   }
 }
 
