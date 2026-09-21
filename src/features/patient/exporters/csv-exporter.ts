@@ -1,4 +1,4 @@
-import { format } from 'date-fns'
+﻿import { format } from 'date-fns'
 import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
@@ -6,10 +6,9 @@ import {
 import { derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import type { ReportData } from './types'
 import { downloadFile } from '@/shared/lib/file-download'
+import { csvCell } from '@/shared/lib/csv'
 
-function escapeCsv(value: unknown): string {
-  return `"${String(value ?? '').replace(/"/g, '""')}"`
-}
+const escapeCsv = csvCell
 
 export function exportCsv(data: ReportData) {
   const { patient, realizedApplications, sections } = data
@@ -136,3 +135,4 @@ export function exportCsv(data: ReportData) {
   const filename = `relatorio_${patient.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`
   downloadFile('﻿' + lines.join('\n'), filename, 'text/csv;charset=utf-8')
 }
+
