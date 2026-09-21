@@ -5,12 +5,17 @@ import { Button } from '@/shared/components'
 import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
 import { PatientActionsMenu } from '@/features/patient/components/chart/PatientActionsMenu'
 import type { Inactivation, Patient } from '@/features/patient/stores/usePatientStore'
+import type { TherapyStatus } from '@/shared/api/contracts/clinical'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronDown, faChevronUp, faCircleInfo, faClockRotateLeft, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 
 interface PatientInfoSidebarProps {
   patient: Patient
+  /** Status do tratamento selecionado; null sem tratamento. */
+  therapyStatus: TherapyStatus | null
+  /** Tratamento levado ao wizard de evolução. */
+  evolutionTherapyId: string | null
   treatmentTime: string | null
   inductionStart: string | null
   maintenanceStart: string | null
@@ -37,6 +42,8 @@ interface PatientInfoSidebarProps {
 
 export function PatientInfoSidebar({
   patient,
+  therapyStatus,
+  evolutionTherapyId,
   treatmentTime,
   inductionStart,
   maintenanceStart,
@@ -95,10 +102,14 @@ export function PatientInfoSidebar({
           <div className="min-w-0">
             <h1 className="text-base font-bold text-(--text) leading-tight">{patient.name}</h1>
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-              {patient.status === 'active' ? (
-                <StatusBadge tone="emerald" dot>Tratamento Ativo</StatusBadge>
+              {therapyStatus === 'IN_PROGRESS' ? (
+                <StatusBadge tone="emerald" dot>Tratamento em andamento</StatusBadge>
+              ) : therapyStatus === 'SUSPENDED' ? (
+                <StatusBadge tone="yellow" dot>Tratamento suspenso</StatusBadge>
+              ) : therapyStatus === 'COMPLETED' ? (
+                <StatusBadge tone="gray" dot>Tratamento concluído</StatusBadge>
               ) : (
-                <StatusBadge tone="yellow" dot>Tratamento Inativo</StatusBadge>
+                <StatusBadge tone="gray" dot>Sem tratamento selecionado</StatusBadge>
               )}
               {treatmentTime && (
                 <StatusBadge tone="gray">{treatmentTime}</StatusBadge>
@@ -130,20 +141,22 @@ export function PatientInfoSidebar({
         )}
 
         <div className="mt-3 flex gap-1.5">
-          {patient.status === 'inactive' ? (
+          {therapyStatus === 'SUSPENDED' ? (
             canReactivate && (
               <Button tone="brand" variant="solid" fullWidth onClick={onReactivate}>
-                Reativar paciente
+                Retomar tratamento
               </Button>
             )
           ) : (
-            canEvolve && (
+            canEvolve &&
+            evolutionTherapyId !== null &&
+            therapyStatus === 'IN_PROGRESS' && (
               <Button
                 tone="brand"
                 variant="solid"
                 fullWidth
                 to="/patient-evolution"
-                search={{ patientId: patient.id }}
+                search={{ therapy: evolutionTherapyId }}
               >
                 Evoluir Paciente
               </Button>
@@ -234,11 +247,11 @@ export function PatientInfoSidebar({
                         <Button
                           variant="outline"
                           size="sm"
-                          disabled={patient.status === 'inactive'}
+                          disabled={therapyStatus !== 'IN_PROGRESS'}
                           onClick={onAdjustProtocol}
                           className="flex-1"
                         >
-                          Ajustar protocolo
+                          Editar previsão pendente
                         </Button>
                       )}
                       {(patient.protocolAdjustments?.length ?? 0) > 0 && (

@@ -6,13 +6,13 @@ const withSmallMl = (value: string) =>
   )
 
 interface SummaryCardsProps {
-  currentInterval: number
+  currentInterval: string
   nextDate: string
   currentDose: string
 }
 
 const CARDS: { key: string; label: string; render: (props: SummaryCardsProps) => string }[] = [
-  { key: 'interval', label: 'Intervalo Atual', render: (p) => `${p.currentInterval} dias` },
+  { key: 'interval', label: 'Intervalo Atual', render: (p) => p.currentInterval },
   { key: 'next', label: 'Próxima Aplicação', render: (p) => p.nextDate },
   { key: 'dose', label: 'Última Concentração e Volume', render: (p) => p.currentDose },
 ]

@@ -1,55 +1,83 @@
 import { cn } from '@/shared/lib/cn'
-
-const INDUCTION_STEPS = [
-  { conc: '1:10.000', vols: ['0,1ml', '0,2ml', '0,4ml', '0,8ml'] },
-  { conc: '1:1.000', vols: ['0,1ml', '0,2ml', '0,4ml', '0,8ml'] },
-  { conc: '1:100', vols: ['0,1ml', '0,2ml', '0,4ml', '0,8ml'] },
-  { conc: '1:10', vols: ['0,1ml', '0,2ml', '0,4ml', '0,5ml'] },
-] as const
+import type { ProtocolStep } from '@/shared/api/contracts/protocols'
 
 interface ProgressIndicatorProps {
-  currentStepIndex: number
-  progressPct: number
+  /** Etapas permitidas pela prescrição fixada, na ordem da definição. */
+  steps: ProtocolStep[]
+  /** Última etapa administrada; null antes da primeira aplicação. */
+  currentStepId: string | null
 }
 
-export function ProgressIndicator({ currentStepIndex, progressPct }: ProgressIndicatorProps) {
-  return <InductionProgress currentStepIndex={currentStepIndex} progressPct={progressPct} />
-}
+/**
+ * Progressão sobre a prescrição real: as etapas vêm da versão fixada no
+ * tratamento, não de uma sequência fixa no código.
+ */
+export function ProgressIndicator({ steps, currentStepId }: ProgressIndicatorProps) {
+  if (steps.length === 0) {
+    return (
+      <div className="bg-gray-50 rounded-lg px-4 py-3 text-[0.7rem] text-(--text-muted)">
+        Este tratamento não tem prescrição configurada vinculada; a progressão fica
+        disponível após a migração assistida.
+      </div>
+    )
+  }
 
-function InductionProgress({ currentStepIndex, progressPct }: { currentStepIndex: number; progressPct: number }) {
-  const safeIdx = currentStepIndex >= 0 ? currentStepIndex : 0
+  const currentIndex = currentStepId
+    ? steps.findIndex((step) => step.id === currentStepId)
+    : -1
+  const progressPct =
+    currentIndex >= 0 ? Math.round(((currentIndex + 1) / steps.length) * 100) : 0
+
+  // Agrupa por concentração para leitura, preservando a ordem da definição.
+  const groups: { concentration: string; steps: { step: ProtocolStep; index: number }[] }[] = []
+  steps.forEach((step, index) => {
+    const label = `1:${Number(step.concentration).toLocaleString('pt-BR')}`
+    const last = groups[groups.length - 1]
+    if (last && last.concentration === label) {
+      last.steps.push({ step, index })
+    } else {
+      groups.push({ concentration: label, steps: [{ step, index }] })
+    }
+  })
+
   return (
     <div className="bg-gray-50 rounded-lg px-4 py-3">
       <div className="mb-4">
-        <div className="text-sm font-bold text-(--text)">Progressão da fase de indução</div>
+        <div className="text-sm font-bold text-(--text)">Progressão da prescrição</div>
         <div className="text-[0.65rem] text-(--text-muted) mt-0.5">
-          Escalonamento da concentração e do volume até atingir a dose meta de manutenção
+          Etapas permitidas pela versão fixada do protocolo, do início à meta
         </div>
       </div>
       <div className="flex items-center gap-2.5 mb-3">
         <div className="h-1.5 flex-1 bg-gray-200 rounded-full overflow-hidden">
-          <div className="h-full bg-linear-to-r from-brand to-brand-dark rounded-full transition-all duration-1000 ease-out" style={{ width: `${progressPct}%` }} />
+          <div
+            className="h-full bg-linear-to-r from-brand to-brand-dark rounded-full transition-all duration-1000 ease-out"
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
         <span className="text-[0.7rem] font-bold text-brand shrink-0">{progressPct}%</span>
       </div>
-      <div className="flex gap-0">
-        {INDUCTION_STEPS.map((group, groupIndex) => {
-          const startIdx = INDUCTION_STEPS.slice(0, groupIndex).reduce((accumulator, step) => accumulator + step.vols.length, 0)
-          const blockActive = safeIdx >= startIdx && safeIdx < startIdx + group.vols.length
-          const blockFuture = safeIdx < startIdx
+      <div className="flex gap-0 flex-wrap">
+        {groups.map((group, groupIndex) => {
+          const firstIndex = group.steps[0].index
+          const lastIndex = group.steps[group.steps.length - 1].index
+          const blockActive = currentIndex >= firstIndex && currentIndex <= lastIndex
+          const blockFuture = currentIndex < firstIndex
           return (
-            <div key={group.conc} className="flex items-center flex-1 min-w-0">
-              <div className={cn('flex-1 rounded-md px-2 py-1.5 transition-all', blockFuture && 'opacity-30')}>
-                <div className={cn('text-[0.6rem] font-bold mb-1 truncate', blockActive ? 'text-brand' : 'text-(--text-muted)')}>{group.conc}</div>
+            <div key={`${group.concentration}-${firstIndex}`} className="flex items-center flex-1 min-w-24">
+              <div className={cn('flex-1 rounded-md px-2 py-1.5 transition-all', blockFuture && currentIndex >= 0 && 'opacity-30')}>
+                <div className={cn('text-[0.6rem] font-bold mb-1 truncate', blockActive ? 'text-brand' : 'text-(--text-muted)')}>
+                  {group.concentration}
+                </div>
                 <div className="flex gap-0.5 flex-wrap">
-                  {group.vols.map((volume, volumeIndex) => {
-                    const stepIdx = startIdx + volumeIndex
-                    const isCurrent = stepIdx === safeIdx
-                    const isDone = stepIdx < safeIdx
-                    const isLast = groupIndex === INDUCTION_STEPS.length - 1 && volumeIndex === group.vols.length - 1
+                  {group.steps.map(({ step, index }) => {
+                    const isCurrent = index === currentIndex
+                    const isDone = currentIndex >= 0 && index < currentIndex
+                    const isLast = index === steps.length - 1
                     return (
                       <span
-                        key={volumeIndex}
+                        key={step.id}
+                        title={step.label}
                         className={cn(
                           'text-[0.55rem] px-1 py-px rounded font-semibold',
                           isCurrent ? 'bg-brand text-white outline outline-offset-1 outline-brand' :
@@ -57,13 +85,13 @@ function InductionProgress({ currentStepIndex, progressPct }: { currentStepIndex
                           'bg-slate-100 text-slate-400 opacity-40',
                         )}
                       >
-                        {volume}{isLast ? ' ★' : ''}
+                        {step.volume.replace('.', ',')}ml{isLast ? ' ★' : ''}
                       </span>
                     )
                   })}
                 </div>
               </div>
-              {groupIndex < INDUCTION_STEPS.length - 1 && <div className="w-px h-8 bg-gray-300 mx-1 shrink-0" />}
+              {groupIndex < groups.length - 1 && <div className="w-px h-8 bg-gray-300 mx-1 shrink-0" />}
             </div>
           )
         })}
@@ -71,5 +99,3 @@ function InductionProgress({ currentStepIndex, progressPct }: { currentStepIndex
     </div>
   )
 }
-
-export const PROGRESS_INDUCTION_STEPS = INDUCTION_STEPS
