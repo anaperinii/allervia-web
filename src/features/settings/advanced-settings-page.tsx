@@ -17,6 +17,7 @@ import {
 } from '@/shared/components'
 import { MediaRow } from '@/features/settings/components/MediaRow'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
+import { AuditTrailPanel } from '@/features/settings/components/AuditTrailPanel'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowUpRightFromSquare, faBell, faCalendar, faCheck, faCircleCheck, faDatabase, faLock, faPalette, faPencil, faPlus, faServer, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
@@ -25,6 +26,7 @@ const FIXED_EVENT_IDS = ['subcutaneous', 'sublingual', 'missed']
 
 export function AdvancedSettingsPage() {
   const canAdvanced = useHasPermission('advanced_settings')
+  const canViewAudit = useHasPermission('view_audit')
   const autoBackup = useSettingsStore((s) => s.autoBackup)
   const setAutoBackup = useSettingsStore((s) => s.setAutoBackup)
   const emailNotifications = useSettingsStore((s) => s.emailNotifications)
@@ -385,6 +387,21 @@ export function AdvancedSettingsPage() {
                 />
               </div>
         </section>
+
+            {canViewAudit && (
+              <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+                <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
+                  <h2 className="text-xs font-bold text-(--text)">Auditoria administrativa</h2>
+                  <p className="text-[0.62rem] text-(--text-muted) mt-0.5">
+                    Trilha oficial do servidor. O histórico clínico de cada tratamento
+                    tem leitura própria no prontuário.
+                  </p>
+                </div>
+                <div className="p-4">
+                  <AuditTrailPanel />
+                </div>
+              </section>
+            )}
       </div>
     </SettingsLayout>
   )
