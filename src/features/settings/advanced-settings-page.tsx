@@ -12,41 +12,36 @@ import {
   FieldLabel,
   IconButton,
   Select,
-  Switch,
   TextInput,
 } from '@/shared/components'
 import { MediaRow } from '@/features/settings/components/MediaRow'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { AuditTrailPanel } from '@/features/settings/components/AuditTrailPanel'
+import { NotificationPreferencesPanel } from '@/features/settings/components/NotificationPreferencesPanel'
+
+/** Capacidade bloqueada por dependência externa — declarada, não simulada. */
+function UnavailableBadge() {
+  return (
+    <span className="text-[0.6rem] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
+      Indisponível
+    </span>
+  )
+}
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowUpRightFromSquare, faBell, faCalendar, faCheck, faCircleCheck, faDatabase, faLock, faPalette, faPencil, faPlus, faServer, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faBell, faCalendar, faCheck, faDatabase, faLock, faPalette, faPencil, faPlus, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 
 const FIXED_EVENT_IDS = ['subcutaneous', 'sublingual', 'missed']
 
 export function AdvancedSettingsPage() {
   const canAdvanced = useHasPermission('advanced_settings')
   const canViewAudit = useHasPermission('view_audit')
-  const autoBackup = useSettingsStore((s) => s.autoBackup)
-  const setAutoBackup = useSettingsStore((s) => s.setAutoBackup)
-  const emailNotifications = useSettingsStore((s) => s.emailNotifications)
-  const setEmailNotifications = useSettingsStore((s) => s.setEmailNotifications)
-  const pushNotifications = useSettingsStore((s) => s.pushNotifications)
-  const setPushNotifications = useSettingsStore((s) => s.setPushNotifications)
   const timezone = useSettingsStore((s) => s.timezone)
   const setTimezone = useSettingsStore((s) => s.setTimezone)
   const sessionTimeout = useSettingsStore((s) => s.sessionTimeout)
   const setSessionTimeout = useSettingsStore((s) => s.setSessionTimeout)
   const language = useSettingsStore((s) => s.language)
   const setLanguage = useSettingsStore((s) => s.setLanguage)
-  const googleConnected = useSettingsStore((s) => s.googleCalendarConnected)
-  const setGoogleConnected = useSettingsStore((s) => s.setGoogleCalendarConnected)
-  const autoSync = useSettingsStore((s) => s.autoSync)
-  const setAutoSync = useSettingsStore((s) => s.setAutoSync)
-  const reminderWhatsapp = useSettingsStore((s) => s.reminderWhatsapp)
-  const setReminderWhatsapp = useSettingsStore((s) => s.setReminderWhatsapp)
-  const reminderHours = useSettingsStore((s) => s.reminderHours)
-  const setReminderHours = useSettingsStore((s) => s.setReminderHours)
   const eventColors = useSettingsStore((s) => s.eventColors)
   const setEventColors = useSettingsStore((s) => s.setEventColors)
 
@@ -93,9 +88,11 @@ export function AdvancedSettingsPage() {
     ])
   }
 
-  const notificationToggles = [
-    { label: 'Notificações por e-mail', desc: 'Receba alertas de aplicações, reações e agendamentos por e-mail', value: emailNotifications, set: setEmailNotifications },
-    { label: 'Notificações push', desc: 'Receba notificações em tempo real no navegador', value: pushNotifications, set: setPushNotifications },
+  // Canais externos sem provedor definido são declarados indisponíveis; a
+  // notificação interna persistida é a capacidade real entregue.
+  const unavailableChannels = [
+    { label: 'Notificações por e-mail', desc: 'Entrega automática requer provedor de e-mail definido para notificações' },
+    { label: 'Notificações push', desc: 'Entrega em tempo real requer serviço de push contratado' },
   ] as const
 
   if (!canAdvanced) {
@@ -123,21 +120,20 @@ export function AdvancedSettingsPage() {
                 <h2 className="text-xs font-bold text-(--text)">Notificações</h2>
               </div>
               <div className="p-4 space-y-3">
-                {notificationToggles.map((item, i) => (
-                  <div key={item.label}>
-                    {i > 0 && <div className="border-t border-(--border-custom) mb-3" />}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                          <FontAwesomeIcon icon={faBell} className="text-brand" style={{ fontSize: 14 }} />
-                        </div>
-                        <div>
-                          <div className="text-xs font-semibold text-(--text)">{item.label}</div>
-                          <div className="text-[0.65rem] text-(--text-muted)">{item.desc}</div>
-                        </div>
+                <NotificationPreferencesPanel />
+                <div className="border-t border-(--border-custom)" />
+                {unavailableChannels.map((item) => (
+                  <div key={item.label} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 shrink-0">
+                        <FontAwesomeIcon icon={faBell} className="text-gray-400" style={{ fontSize: 14 }} />
                       </div>
-                      <Switch checked={item.value} onChange={item.set} aria-label={item.label} />
+                      <div>
+                        <div className="text-xs font-semibold text-(--text-muted)">{item.label}</div>
+                        <div className="text-[0.65rem] text-(--text-muted)">{item.desc}</div>
+                      </div>
                     </div>
+                    <UnavailableBadge />
                   </div>
                 ))}
               </div>
@@ -186,66 +182,19 @@ export function AdvancedSettingsPage() {
                     className="mb-3"
                     icon={<FontAwesomeIcon icon={faCalendar} style={{ fontSize: 14 }} />}
                     title="Google Agenda"
-                    description="Sincronize agendamentos automaticamente"
-                    trailing={googleConnected ? (
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-1 text-[0.6rem] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 10 }} />
-                          Conectado
-                        </span>
-                        <Button tone="danger" variant="ghost" size="sm" onClick={() => setGoogleConnected(false)}>
-                          Desconectar
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button variant="outline" onClick={() => setGoogleConnected(true)}>
-                        Conectar conta Google
-                      </Button>
-                    )}
+                    description="Sincronização exige OAuth com credenciais no servidor, vínculo de evento e reconciliação — capacidade bloqueada até o provedor ser configurado"
+                    trailing={<UnavailableBadge />}
                   />
-
-                  {googleConnected && (
-                    <div className="bg-gray-50 rounded-lg p-3 space-y-3 ml-11">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-[0.7rem] font-medium text-(--text)">Sincronização automática</div>
-                          <div className="text-[0.55rem] text-(--text-muted)">Novos agendamentos são enviados ao Google Agenda</div>
-                        </div>
-                        <Switch checked={autoSync} onChange={setAutoSync} aria-label="Sincronização automática" />
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[0.6rem] text-(--text-muted)">
-                        <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ fontSize: 10 }} />
-                        <span>Conta vinculada: <span className="font-medium text-(--text)">clinica@allervia.com.br</span></span>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <div className="border-t border-(--border-custom)" />
 
                 <MediaRow
                   icon={<FontAwesomeIcon icon={faBell} style={{ fontSize: 14 }} />}
-                  title="Lembrete via WhatsApp"
-                  description="Enviar lembrete automático ao paciente antes da consulta"
-                  trailing={<Switch checked={reminderWhatsapp} onChange={setReminderWhatsapp} aria-label="Lembrete via WhatsApp" />}
+                  title="Lembrete automático via WhatsApp"
+                  description="Envio automático exige canal/provedor definido; o lembrete manual pelo link do WhatsApp continua disponível na agenda"
+                  trailing={<UnavailableBadge />}
                 />
-
-                {reminderWhatsapp && (
-                  <div className="ml-11 w-40">
-                    <FieldLabel label="Antecedência do lembrete">
-                      <Select
-                        value={reminderHours}
-                        onChange={(e) => setReminderHours(e.target.value as typeof reminderHours)}
-                      >
-                        <option value="2">2 horas antes</option>
-                        <option value="6">6 horas antes</option>
-                        <option value="12">12 horas antes</option>
-                        <option value="24">24 horas antes</option>
-                        <option value="48">48 horas antes</option>
-                      </Select>
-                    </FieldLabel>
-                  </div>
-                )}
 
                 <div className="border-t border-(--border-custom)" />
 
@@ -374,16 +323,9 @@ export function AdvancedSettingsPage() {
               <div className="p-4 space-y-3">
                 <MediaRow
                   icon={<FontAwesomeIcon icon={faDatabase} style={{ fontSize: 14 }} />}
-                  title="Backup automático"
-                  description="Backup diário dos dados clínicos às 03:00"
-                  trailing={<Switch checked={autoBackup} onChange={setAutoBackup} aria-label="Backup automático" />}
-                />
-                <div className="border-t border-(--border-custom)" />
-                <MediaRow
-                  icon={<FontAwesomeIcon icon={faServer} style={{ fontSize: 14 }} />}
-                  title="Último backup"
-                  description="10/04/2026 às 03:00 — 42.3 MB"
-                  trailing={<span className="text-[0.65rem] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Sucesso</span>}
+                  title="Backup"
+                  description="Backup é operação real de infraestrutura com evidência de restauração — não uma preferência desta tela; capacidade bloqueada até a operação existir"
+                  trailing={<UnavailableBadge />}
                 />
               </div>
         </section>
