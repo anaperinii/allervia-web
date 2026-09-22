@@ -1,5 +1,4 @@
 import { format } from 'date-fns'
-import { ACTION_LABELS } from '@/shared/stores/useAuditStore'
 import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
@@ -7,6 +6,7 @@ import {
 import { derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import type { LgpdExportData, LgpdFileFormat } from './types'
 import { downloadFile } from '@/shared/lib/file-download'
+import { csvCell } from '@/shared/lib/csv'
 
 function buildPayload(data: LgpdExportData) {
   const { patient, applications, accessLogs, exportedAt, justification, exportedBy } = data
@@ -67,13 +67,12 @@ function buildPayload(data: LgpdExportData) {
       reativadoPor: inact.reactivatedBy ?? null,
     })),
     aplicacoes: applications,
-    historicoDeAcessos: accessLogs.map((l) => ({
-      data: l.timestamp,
-      profissional: l.userName,
-      perfil: l.userRole,
-      registro: l.userRegistration,
-      acao: ACTION_LABELS[l.action],
-      descricao: l.description,
+    // Trilha clínica real do servidor, não um store local.
+    historicoClinico: accessLogs.map((entry) => ({
+      data: entry.timestamp,
+      profissional: entry.user.professional?.fullName ?? entry.user.id,
+      acao: entry.action,
+      entidade: `${entry.entityType}:${entry.entityId}`,
     })),
   }
 }
@@ -89,7 +88,7 @@ export function exportLgpd(data: LgpdExportData, fileFormat: LgpdFileFormat) {
 
   const lines: string[] = ['Categoria,Campo,Valor']
   const pushPair = (category: string, key: string, value: unknown) => {
-    lines.push(`"${category}","${key}","${String(value ?? '').replace(/"/g, '""')}"`)
+    lines.push(`${csvCell(category)},${csvCell(key)},${csvCell(value)}`)
   }
   Object.entries(payload.patient).forEach(([k, v]) => pushPair('Paciente', k, v))
   Object.entries(payload.imunoterapia).forEach(([k, v]) => pushPair('Imunoterapia', k, v))
@@ -98,6 +97,6 @@ export function exportLgpd(data: LgpdExportData, fileFormat: LgpdFileFormat) {
   payload.aplicacoes.forEach((a, i) =>
     Object.entries(a).forEach(([k, v]) => pushPair(`Aplicacao ${i + 1}`, k, typeof v === 'object' ? JSON.stringify(v) : v)),
   )
-  payload.historicoDeAcessos.forEach((l, i) => Object.entries(l).forEach(([k, v]) => pushPair(`Acesso ${i + 1}`, k, v)))
-  downloadFile(lines.join('\n'), filename, 'text/csv;charset=utf-8')
+  payload.historicoClinico.forEach((l, i) => Object.entries(l).forEach(([k, v]) => pushPair(`Acesso ${i + 1}`, k, v)))
+  downloadFile('﻿' + lines.join('\n'), filename, 'text/csv;charset=utf-8')
 }

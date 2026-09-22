@@ -168,7 +168,13 @@ export function PatientInfoSidebar({
             )
           )}
           {canEmitReport && (
-            <Button tone="brand" variant="outline" fullWidth to="/patient-report" search={{ patientId: patient.id }}>
+            <Button
+              tone="brand"
+              variant="outline"
+              fullWidth
+              to="/patient-report"
+              search={{ patientId: patient.id, therapy: evolutionTherapyId ?? undefined }}
+            >
               Emitir Relatório
             </Button>
           )}

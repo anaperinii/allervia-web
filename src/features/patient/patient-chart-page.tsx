@@ -557,6 +557,7 @@ export function PatientChartPage() {
       <PortabilityModal
         open={showPortabilityModal}
         patient={selectedPatient}
+        therapyId={selectedTherapy?.id ?? null}
         onClose={() => setShowPortabilityModal(false)}
       />
 

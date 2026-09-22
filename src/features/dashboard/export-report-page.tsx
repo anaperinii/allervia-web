@@ -1,23 +1,35 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useHasPermission } from '@/shared/stores/useUserStore'
-import { useDashboardAnalytics } from '@/features/dashboard/hooks/useDashboardAnalytics'
-import { ExportConfigPanel, type ChartOption } from '@/features/dashboard/components/export/ConfigPanel'
-import { ExportPreview } from '@/features/dashboard/components/export/preview'
-import { ConfirmExportModal } from '@/features/dashboard/components/export/ConfirmExportModal'
-import { CancelExportModal } from '@/features/dashboard/components/export/CancelExportModal'
-
+import { exportClinicalDoses } from '@/shared/api/clinical.api'
+import type { ClinicalExportRow, TherapyStatus } from '@/shared/api/contracts/clinical'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { exportClinicalDatasetCsv } from '@/features/patient/exporters'
+import { downloadFile } from '@/shared/lib/file-download'
+import { Button, FieldLabel, Modal, Select, TextArea, toast } from '@/shared/components'
 import { PageHeader, Pill } from '@/shared/components/showcase'
-import { faDownload } from '@fortawesome/free-solid-svg-icons'
 
-const CHART_OPTIONS: readonly ChartOption[] = [
-  { id: 'concentration', label: 'Ciclos de Tratamento por Concentração' },
-  { id: 'phases', label: 'Distribuição de Fases' },
-  { id: 'status', label: 'Status de Imunoterapias' },
-  { id: 'types', label: 'Imunoterapias Ativas por Tipo' },
-  { id: 'volume', label: 'Volume vs Concentração' },
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleCheck, faCircleInfo, faDownload } from '@fortawesome/free-solid-svg-icons'
+
+const PAGE_SIZE = 100
+const MAX_PAGES = 20
+
+type ExportFormat = 'csv' | 'json'
+
+const STATUS_OPTIONS: { value: '' | TherapyStatus; label: string }[] = [
+  { value: '', label: 'Todos os tratamentos' },
+  { value: 'IN_PROGRESS', label: 'Em andamento' },
+  { value: 'SUSPENDED', label: 'Suspensos' },
+  { value: 'COMPLETED', label: 'Concluídos' },
 ]
 
+/**
+ * Exportação do conjunto clínico persistido. O corte temporal nasce no clique
+ * e congela o conjunto; as páginas são buscadas do servidor uma a uma — nunca
+ * dependem de todos os pacientes carregados na memória do navegador de
+ * antemão. A solicitação é registrada em auditoria pelo servidor.
+ */
 export function ExportReportPage() {
   const navigate = useNavigate()
   const canViewDashboard = useHasPermission('view_dashboard')
@@ -25,32 +37,62 @@ export function ExportReportPage() {
     if (!canViewDashboard) navigate({ to: '/immunotherapies' })
   }, [canViewDashboard, navigate])
 
-  const [modality, setModality] = useState<'sub' | 'sbl'>('sub')
-  const [fileName, setFileName] = useState('relatorio-allervia')
-  const [format, setFormat] = useState('pdf')
-  const [interval, setInterval] = useState<string>('Este Mês')
-  const [monthFilter, setMonthFilter] = useState('all')
-  const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString())
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [selectedCharts, setSelectedCharts] = useState<string[]>(['concentration', 'phases', 'status'])
-  const [anonymize, setAnonymize] = useState(false)
-  const [consent, setConsent] = useState(false)
+  const [format, setFormat] = useState<ExportFormat>('csv')
+  const [status, setStatus] = useState<'' | TherapyStatus>('')
   const [justification, setJustification] = useState('')
-  const [showCancelModal, setShowCancelModal] = useState(false)
-  const [showExportModal, setShowExportModal] = useState(false)
+  const [consent, setConsent] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [progress, setProgress] = useState<string | null>(null)
+  const [failure, setFailure] = useState<string | null>(null)
 
-  const analytics = useDashboardAnalytics({
-    modality: modality === 'sub' ? 'subcutaneous' : 'sublingual',
-  })
+  const exportDisabled = !consent || !justification.trim() || progress !== null
 
-  const toggleChart = (id: string) => {
-    setSelectedCharts((prev) => (prev.includes(id) ? prev.filter((chartId) => chartId !== id) : [...prev, id]))
+  async function runExport() {
+    setFailure(null)
+    const asOf = new Date().toISOString()
+    const rows: ClinicalExportRow[] = []
+    let total = 0
+    try {
+      for (let page = 1; page <= MAX_PAGES; page++) {
+        setProgress(`Buscando página ${page}…`)
+        const result = await exportClinicalDoses({
+          asOf,
+          page,
+          pageSize: PAGE_SIZE,
+          ...(status ? { status } : {}),
+        })
+        rows.push(...result.items)
+        total = result.total
+        if (rows.length >= total) break
+      }
+      if (rows.length < total) {
+        setFailure(
+          `O conjunto tem ${total} linhas e o limite do navegador é ${MAX_PAGES * PAGE_SIZE}. Exportado parcialmente até a linha ${rows.length}; volumes maiores exigem o job de exportação (pendência declarada).`,
+        )
+      }
+      if (format === 'csv') {
+        exportClinicalDatasetCsv(rows, asOf)
+      } else {
+        downloadFile(
+          JSON.stringify({ asOf, total: rows.length, rows }, null, 2),
+          `allervia_export_${asOf.replace(/[:.]/g, '-')}.json`,
+          'application/json',
+        )
+      }
+      toast.success({
+        icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
+        title: 'Exportação gerada',
+        description: `Corte temporal ${asOf}; ${rows.length} linha(s). A solicitação foi registrada na auditoria do servidor.`,
+        autoDismissMs: 8000,
+      })
+    } catch (error) {
+      setFailure(
+        error instanceof ApiError ? error.message : 'Não foi possível gerar a exportação.',
+      )
+    } finally {
+      setProgress(null)
+    }
   }
-
-  const exportDisabled = !consent || !justification.trim()
-
-  void fileName 
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
@@ -62,7 +104,7 @@ export function ExportReportPage() {
             <Pill
               icon={faDownload}
               active
-              onClick={() => !exportDisabled && setShowExportModal(true)}
+              onClick={() => !exportDisabled && setShowConfirm(true)}
               disabled={exportDisabled}
               className={exportDisabled ? 'opacity-50 cursor-not-allowed' : undefined}
             >
@@ -77,67 +119,79 @@ export function ExportReportPage() {
         }
       />
 
-      <div className="flex flex-1 min-h-0 overflow-hidden gap-4">
-          <ExportConfigPanel
-            modality={modality}
-            onModalityChange={setModality}
-            fileName={fileName}
-            onFileNameChange={setFileName}
-            format={format}
-            onFormatChange={setFormat}
-            interval={interval}
-            onIntervalChange={setInterval}
-            monthFilter={monthFilter}
-            onMonthFilterChange={setMonthFilter}
-            yearFilter={yearFilter}
-            onYearFilterChange={setYearFilter}
-            startDate={startDate}
-            onStartDateChange={setStartDate}
-            endDate={endDate}
-            onEndDateChange={setEndDate}
-            chartOptions={CHART_OPTIONS}
-            selectedCharts={selectedCharts}
-            onToggleChart={toggleChart}
-            anonymize={anonymize}
-            onAnonymizeChange={setAnonymize}
-            consent={consent}
-            onConsentChange={setConsent}
-            justification={justification}
-            onJustificationChange={setJustification}
-            onExport={() => setShowExportModal(true)}
-          />
+      <div className="flex-1 overflow-y-auto max-w-2xl space-y-4 px-1 pb-8">
+        <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
+          <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
+          <p className="text-[0.68rem] text-brand-dark leading-relaxed">
+            O arquivo descreve o conjunto clínico persistido no instante da geração
+            (corte temporal explícito), com previsto e realizado separados, versão
+            fixada e fuso da prescrição em cada linha. Cada geração fica registrada
+            na auditoria do servidor com autor, filtros e corte.
+          </p>
+        </div>
 
-          <ExportPreview
-            modality={modality}
-            interval={interval}
-            monthFilter={monthFilter}
-            yearFilter={yearFilter}
-            startDate={startDate}
-            endDate={endDate}
-            anonymize={anonymize}
-            selectedCharts={selectedCharts}
-            chartOptions={CHART_OPTIONS}
-            analytics={analytics}
-          />
+        <div className="rounded-xl border border-(--border-custom) bg-white px-4 py-3 space-y-3">
+          <FieldLabel label="Formato">
+            <Select value={format} onChange={(e) => setFormat(e.target.value as ExportFormat)}>
+              <option value="csv">CSV (com proteção de células-fórmula)</option>
+              <option value="json">JSON estruturado</option>
+            </Select>
+          </FieldLabel>
+          <FieldLabel label="Filtro por situação do tratamento">
+            <Select value={status} onChange={(e) => setStatus(e.target.value as '' | TherapyStatus)}>
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </Select>
+          </FieldLabel>
+          <FieldLabel label="Justificativa" required>
+            <TextArea
+              rows={2}
+              placeholder="Motivo desta exportação (LGPD)"
+              value={justification}
+              onChange={(e) => setJustification(e.target.value)}
+            />
+          </FieldLabel>
+          <label className="flex items-start gap-2 text-[0.7rem] text-(--text) cursor-pointer">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-0.5"
+            />
+            Declaro ciência da LGPD: os dados exportados permanecem sob
+            responsabilidade da organização e desta solicitação registrada.
+          </label>
+        </div>
+
+        {progress && <p className="text-xs text-(--text-muted)">{progress}</p>}
+        {failure && <p role="alert" className="text-[0.72rem] text-amber-700 leading-relaxed">{failure}</p>}
       </div>
 
-      <ConfirmExportModal
-        open={showExportModal}
-        format={format}
-        anonymize={anonymize}
-        justification={justification}
-        onClose={() => setShowExportModal(false)}
-        onConfirm={() => {
-          setShowExportModal(false)
-          navigate({ to: '/dashboard' })
-        }}
-      />
-
-      <CancelExportModal
-        open={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
-        onConfirmCancel={() => navigate({ to: '/dashboard' })}
-      />
+      <Modal
+        open={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        title="Confirmar exportação"
+        size="sm"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setShowConfirm(false)}>Cancelar</Button>
+            <Button
+              tone="brand"
+              variant="solid"
+              onClick={() => { setShowConfirm(false); void runExport() }}
+            >
+              Confirmar e exportar
+            </Button>
+          </>
+        }
+      >
+        <p className="text-[0.7rem] text-(--text-muted) leading-relaxed">
+          A geração define o corte temporal e registra a solicitação na auditoria do
+          servidor com autor e filtros. Formato: {format.toUpperCase()}
+          {status ? ` · Filtro: ${STATUS_OPTIONS.find((o) => o.value === status)?.label}` : ''}.
+        </p>
+      </Modal>
     </div>
   )
 }

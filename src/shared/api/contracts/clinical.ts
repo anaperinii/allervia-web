@@ -201,6 +201,74 @@ export interface AdministerDoseResult {
   therapyRevision: number
 }
 
+/** Linha do conjunto de exportação: previsto e realizado separados. */
+export interface ClinicalExportRow {
+  doseId: string
+  status: DoseStatus
+  scheduledAt: string
+  administeredAt: string | null
+  administrationEndedAt: string | null
+  planned: DoseValues | null
+  administered: DoseValues | null
+  immediateConduct: DoseImmediateConduct | null
+  performedBy: { id: string; fullName: string } | null
+  prescription: {
+    versionId: string
+    protocolName: string
+    versionNumber: number
+    timeZone: string | null
+  } | null
+  therapy: {
+    id: string
+    immunoType: string
+    extract: string
+    status: TherapyStatus
+    administrationRoute: AdministrationRoute
+    inductionStartDate: string
+  }
+  patient: {
+    id: string
+    fullName: string
+    isActive: boolean
+    responsiblePhysician: { id: string; fullName: string }
+  }
+}
+
+export interface ClinicalExportPage extends Page<ClinicalExportRow> {
+  asOf: string
+}
+
+export interface ClinicalHistoryEntry {
+  id: string
+  action: string
+  entityType: string
+  entityId: string
+  oldValues: Record<string, unknown> | null
+  newValues: Record<string, unknown> | null
+  timestamp: string
+  user: {
+    id: string
+    professional: { id: string; fullName: string } | null
+  }
+}
+
+export interface ClinicalHistory {
+  therapyId: string
+  entries: ClinicalHistoryEntry[]
+}
+
+export interface AuditLogEntry {
+  id: string
+  userId: string
+  entityType: string
+  entityId: string
+  action: string
+  oldValues: Record<string, unknown> | null
+  newValues: Record<string, unknown> | null
+  changedFields: string[]
+  timestamp: string
+}
+
 export type LifecycleEventType = 'SUSPENSION' | 'RESUMPTION' | 'COMPLETION'
 export type LifecycleAction = 'SUSPEND' | 'RESUME' | 'COMPLETE'
 
