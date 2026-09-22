@@ -13,5 +13,9 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     maxWorkers: 1,
+    // Interações de userEvent sobre árvores grandes estouram os 5s padrão em
+    // máquinas carregadas; o limite maior elimina flakes sem mascarar erros.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
   },
 })
