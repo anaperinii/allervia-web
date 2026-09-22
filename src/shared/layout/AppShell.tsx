@@ -25,7 +25,8 @@ import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { Button, Modal } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
 import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
-import { useNotificationsStore } from '@/features/notification/stores/useNotificationsStore'
+import { useQuery } from '@tanstack/react-query'
+import { listNotifications } from '@/shared/api/notifications.api'
 import { useHasPermission, useUserStore, type Permission } from '@/shared/stores/useUserStore'
 
 const DARK_INK = '#DCE1E5'
@@ -117,7 +118,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const path = location.pathname
-  const unreadCount = useNotificationsStore((s) => s.notifications.filter((n) => !n.read).length)
+  // Contador real de não lidas; o servidor é a única fonte de notificações.
+  const unreadQuery = useQuery({
+    queryKey: ['notifications', 'unread-badge'],
+    queryFn: ({ signal }) =>
+      listNotifications({ page: 1, pageSize: 1, unreadOnly: true }, signal),
+    refetchInterval: 60_000,
+    retry: false,
+  })
+  const unreadCount = unreadQuery.data?.unread ?? 0
   const userName = useUserStore((s) => s.current?.name ?? '')
   const [showLogout, setShowLogout] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
