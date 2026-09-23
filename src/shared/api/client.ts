@@ -46,6 +46,8 @@ export function setUnauthenticatedHandler(
 }
 
 export interface RequestOptions {
+  /** Public intake does not use browser session cookies or its CSRF token. */
+  anonymous?: boolean
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
   body?: unknown
   signal?: AbortSignal
@@ -93,7 +95,7 @@ export async function apiRequest<T>(
     headers['Content-Type'] = 'application/json'
   }
 
-  if (!SAFE_METHODS.has(method) && csrfToken) {
+  if (!options.anonymous && !SAFE_METHODS.has(method) && csrfToken) {
     headers[CSRF_HEADER] = csrfToken
   }
 
@@ -103,7 +105,7 @@ export async function apiRequest<T>(
       method,
       headers,
       // O cookie de sessão só acompanha a requisição com `include`.
-      credentials: 'include',
+      credentials: options.anonymous ? 'omit' : 'include',
       signal: options.signal,
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
     })
@@ -127,7 +129,7 @@ export async function apiRequest<T>(
 
   if (!response.ok) {
     const error = new ApiError(await parseEnvelope(response))
-    if (error.isUnauthenticated) onUnauthenticated?.(error)
+    if (error.isUnauthenticated && !options.anonymous) onUnauthenticated?.(error)
     throw error
   }
 
