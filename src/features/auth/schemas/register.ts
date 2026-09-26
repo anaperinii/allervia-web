@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { passwordSchema, nameSchema, phoneSchema } from '@/shared/lib/field-schemas'
 
-/** Profissões aceitas pelo servidor; descrevem a pessoa, não o acesso. */
 export const PROFESSION_OPTIONS = [
   { value: 'PHYSICIAN', label: 'Médico(a)' },
   { value: 'NURSE', label: 'Enfermeiro(a)' },

@@ -49,7 +49,6 @@ export interface PatientListItem {
 }
 
 export interface PatientDetail extends PatientListItem {
-  /** Documento completo; presente apenas para quem pode editar o cadastro. */
   cpf?: string | null
   therapies: TherapySummary[]
   updatedAt: string
@@ -89,7 +88,6 @@ export type DoseImmediateConduct =
   | 'REQUEST_PHYSICIAN_REVIEW'
   | 'SUSPEND_TREATMENT'
 
-/** Valores clínicos como o motor os grava: decimais exatos em string. */
 export interface DoseValues {
   concentration: string
   volume: string
@@ -109,7 +107,6 @@ export interface DoseObservation {
   createdAt: string
 }
 
-/** Registro persistido de uma dose: previsto e realizado são campos distintos. */
 export interface DoseRecord {
   id: string
   immunotherapyId: string
@@ -200,7 +197,6 @@ export interface AdministerDoseResult {
   therapyRevision: number
 }
 
-/** Linha do conjunto de exportação: previsto e realizado separados. */
 export interface ClinicalExportRow {
   doseId: string
   status: DoseStatus
@@ -417,7 +413,6 @@ export interface Appointment {
 
 export type AppointmentPage = Page<Appointment>
 
-/** Linha da consulta agregada de agenda: dose + resumo de paciente/terapia. */
 export interface ScheduleDoseItem {
   id: string
   immunotherapyId: string
@@ -448,10 +443,6 @@ export interface ScheduleDoseItem {
 
 export type SchedulePage = Page<ScheduleDoseItem>
 
-/**
- * Indicadores oficiais do período no fuso clínico da organização. Denominadores
- * documentados no servidor; razão nula significa "sem base", não zero.
- */
 export interface ClinicalMetrics {
   from: string
   to: string

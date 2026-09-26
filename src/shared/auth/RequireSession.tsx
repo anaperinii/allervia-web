@@ -32,11 +32,6 @@ function CenteredMessage({
   )
 }
 
-/**
- * Porta de entrada das áreas privadas. Enquanto a sessão é restaurada nada do
- * prontuário é montado; sem sessão, o acesso direto por URL vai para o login.
- * Indisponibilidade do servidor é mostrada como erro, não como logout.
- */
 export function RequireSession({ children }: { children: ReactNode }) {
   const { status, account, error, refresh } = useSession()
   const navigate = useNavigate()

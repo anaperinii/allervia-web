@@ -1,8 +1,3 @@
-/**
- * Tipos derivados do contrato público de conta e sessão. São escritos à mão a
- * partir do OpenAPI publicado pelo backend; nenhum código do servidor é
- * importado aqui.
- */
 
 export type UserType = 'PROFESSIONAL' | 'PATIENT'
 
@@ -53,7 +48,6 @@ export interface AccountContext {
   professional: AccountProfessional | null
   organization: AccountOrganization | null
   roles: BackendRole[]
-  /** Capacidades gerais; cada comando continua sendo autorizado no servidor. */
   capabilities: string[]
   security: AccountSecurity
 }
@@ -71,7 +65,6 @@ export interface SessionEnvelope {
   authenticated: true
   csrfToken: string
   session: SessionState
-  /** Presente uma única vez, quando o segundo fator acabou de ser cadastrado. */
   recoveryCodes?: string[]
 }
 

@@ -86,8 +86,6 @@ export function LoginPage() {
         code,
       })
 
-      // Os códigos de recuperação só aparecem quando o cadastro acabou de ser
-      // concluído, e apenas nesta resposta.
       if (envelope.recoveryCodes?.length) {
         setPendingSession(envelope.session)
         setRecoveryCodes(envelope.recoveryCodes)

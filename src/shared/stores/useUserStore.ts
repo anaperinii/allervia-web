@@ -1,10 +1,6 @@
 import { create } from 'zustand'
 import type { AccountContext, BackendRole } from '@/shared/api/contracts/account'
 
-/**
- * Papéis do produto. Não existe papel de técnico: no servidor,
- * `NURSING_TECHNICIAN` é profissão e não concede autorização por si só.
- */
 export type UserRole = 'admin' | 'doctor' | 'nurse' | 'receptionist'
 
 export interface UserProfile {
@@ -18,7 +14,6 @@ export interface UserProfile {
   phone: string
   specialty: string
   institution: string
-  /** Campos de perfil ainda sem persistência no servidor ficam vazios. */
   birthDate: string
   cpf: string
 }
@@ -48,14 +43,8 @@ export type Permission =
   | 'view_dashboard'
   | 'view_audit'
 
-/**
- * Cada ação da interface é habilitada por uma capacidade anunciada pelo
- * servidor. O mapa traduz o vocabulário das telas para o do contrato; nenhuma
- * permissão é decidida localmente.
- */
 export const PERMISSION_CAPABILITIES: Record<Permission, string> = {
   adjust_protocol: 'protocols:manage',
-  // Ajustar a sessão prevista é comando de dose, não de catálogo.
   edit_scheduled_dose: 'doses:update',
   inactivate_immunotherapy: 'immunotherapies:update',
   reactivate_patient: 'immunotherapies:update',
@@ -86,7 +75,6 @@ const ROLE_BY_BACKEND: Record<BackendRole, UserRole> = {
   RECEPTIONIST: 'receptionist',
 }
 
-/** Ordem de alcance, usada só para escolher o rótulo principal exibido. */
 const ROLE_PRECEDENCE: UserRole[] = ['admin', 'doctor', 'nurse', 'receptionist']
 
 const PROFESSION_TITLES: Record<string, string> = {
@@ -126,7 +114,6 @@ function toProfile(context: AccountContext): UserProfile {
 }
 
 interface UserState {
-  /** Nulo até a sessão ser restaurada; áreas privadas só renderizam depois. */
   current: UserProfile | null
   capabilities: string[]
   syncFromAccount: (context: AccountContext | null) => void
@@ -148,10 +135,6 @@ export const useUserStore = create<UserState>((set) => ({
     ),
 }))
 
-/**
- * Perfil do usuário autenticado. Só pode ser usado dentro da área privada, onde
- * a sessão já foi verificada.
- */
 export function useCurrentUser(): UserProfile {
   const current = useUserStore((s) => s.current)
   if (!current) {
@@ -172,10 +155,6 @@ export function hasPermission(
   return capabilities.includes(PERMISSION_CAPABILITIES[permission])
 }
 
-/**
- * Médicos veem o próprio recorte das listas. O filtro por nome é transitório:
- * as consultas passam a receber o escopo do servidor nas etapas de prontuário.
- */
 export function useDoctorFilter(): string | null {
   const current = useUserStore((s) => s.current)
   if (!current) return null

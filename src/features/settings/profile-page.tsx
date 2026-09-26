@@ -64,8 +64,6 @@ export function ProfilePage() {
       await queryClient.invalidateQueries({
         queryKey: queryKeys.professionalProfile(),
       })
-      // O nome exibido na aplicação vem de /account/me: recarregar mantém a
-      // identidade coerente em toda a interface.
       await refresh()
     },
     onError: (error) => {

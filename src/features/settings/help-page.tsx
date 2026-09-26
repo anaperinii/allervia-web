@@ -16,8 +16,6 @@ import { formatInstantDate } from '@/features/patient/adapters/clinical-presenta
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBook, faChevronDown, faEnvelope } from '@fortawesome/free-solid-svg-icons'
 
-// Conteúdo estático (FAQ/documentação) é distinto da solicitação de suporte
-// persistida abaixo; nenhum chat ao vivo é anunciado sem existir.
 const quickLinks = [
   { icon: faBook, label: 'Documentação', desc: 'Guias e tutoriais', color: '#6C9EA5' },
   { icon: faEnvelope, label: 'E-mail', desc: CONTACT_SUPPORT_EMAIL, color: '#F4845F' },

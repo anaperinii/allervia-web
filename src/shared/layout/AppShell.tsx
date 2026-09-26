@@ -118,7 +118,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const path = location.pathname
-  // Contador real de não lidas; o servidor é a única fonte de notificações.
   const unreadQuery = useQuery({
     queryKey: ['notifications', 'unread-badge'],
     queryFn: ({ signal }) =>

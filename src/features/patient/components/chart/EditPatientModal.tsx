@@ -37,7 +37,6 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
       name: patient.name,
       phone: patient.phone,
       weight: patient.weight,
-      // O formulário trabalha com o ID; o nome é apresentação.
       responsibleDoctor: patient.responsibleDoctorId ?? '',
     },
   })

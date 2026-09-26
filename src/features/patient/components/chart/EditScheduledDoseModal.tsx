@@ -28,13 +28,7 @@ function localTimeInput(iso: string): string {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
-/**
- * Edição da previsão pendente: opção permitida pela prescrição, nova data e
- * motivo obrigatório, com as revisões atuais no corpo. Nunca cria sucessora;
- * 409 recarrega a dose e pede nova confirmação — sem reenvio silencioso.
- */
 export function EditScheduledDoseModal(props: EditScheduledDoseModalProps) {
-  // Remontagem por dose/revisão: o formulário nasce do estado atual do servidor.
   if (!props.open || !props.dose) return null
   return (
     <EditScheduledDoseForm

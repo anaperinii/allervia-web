@@ -203,7 +203,6 @@ describe('prontuário de leitura', () => {
     const router = await renderAt('/immunotherapies')
 
     expect(await screen.findByText('Carla Mendes')).toBeInTheDocument()
-    // O rótulo também existe na opção do filtro; a célula da tabela basta.
     expect(screen.getAllByText('Em andamento').length).toBeGreaterThan(0)
     expect(screen.getByText('Dra. Karina Martins')).toBeInTheDocument()
 
@@ -227,13 +226,11 @@ describe('prontuário de leitura', () => {
 
     expect(await screen.findByText('Carla Mendes')).toBeInTheDocument()
 
-    // O seletor mostra os dois tratamentos; o da URL está ativo.
     const selected = screen
       .getAllByRole('button', { pressed: true })
       .find((button) => button.textContent?.includes('SCIT'))
     expect(selected).toHaveTextContent('Der f 100%')
 
-    // Dois tratamentos não se misturam: o estado publicado é o do selecionado.
     expect(usePatientStore.getState().selectedPatient?.extract).toBe(
       'Der f 100%',
     )

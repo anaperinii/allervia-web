@@ -19,11 +19,6 @@ interface ProtocolEditorProps {
   onChange: (draft: ProtocolDefinitionDraft) => void
 }
 
-/**
- * Editor de etapas e transições. O sucessor é explícito por etapa: apontar para
- * a própria etapa significa permanência; "Fim da sequência" encerra a
- * recomendação automática — nenhum percentual de progresso é prometido aqui.
- */
 export function ProtocolEditor({ draft, readOnly, onChange }: ProtocolEditorProps) {
   const [nextIndex, setNextIndex] = useState(draft.steps.length + 1)
 

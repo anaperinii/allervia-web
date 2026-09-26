@@ -1,6 +1,5 @@
 import type { BackendRole, Profession } from '@/shared/api/contracts/account'
 
-/** Envelope de listagem paginada usado pelas consultas administrativas. */
 export interface Page<T> {
   items: T[]
   page: number
@@ -36,7 +35,6 @@ export interface Invite {
   createdBy?: { id: string; email: string }
 }
 
-/** Contexto mínimo mostrado a quem abre o link do convite. */
 export interface InviteContext {
   email: string
   fullName: string

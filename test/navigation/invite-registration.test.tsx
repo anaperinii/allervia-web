@@ -27,7 +27,6 @@ const INVITE_CONTEXT = {
   expiresAt: '2026-09-26T12:00:00.000Z',
 }
 
-/** A tela final usa um link do router para voltar ao login. */
 async function renderRegister(token?: string) {
   const root = createRootRoute()
   const register = createRoute({

@@ -21,11 +21,6 @@ interface RevisePrescriptionModalProps {
   onClose: () => void
 }
 
-/**
- * Revisão de prescrição entre versões publicadas: ensaio obrigatório mostrando
- * o impacto na previsão pendente antes da confirmação. Snapshot novo; o
- * histórico permanece na versão em que cada dose foi decidida.
- */
 export function RevisePrescriptionModal(props: RevisePrescriptionModalProps) {
   if (!props.open) return null
   return (

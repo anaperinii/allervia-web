@@ -22,12 +22,6 @@ interface PublishedOption {
   isDefault: boolean
 }
 
-/**
- * Prescrição a partir de uma versão publicada. Os valores das etapas vêm da
- * definição — não há metas numéricas livres — e a via é subcutânea: a
- * automação atual não cobre SLIT, e o histórico legado de SLIT continua
- * legível no prontuário.
- */
 export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
   const { control, register, setValue, watch, formState: { errors } } = form
   const customTypes = useCustomTypesStore((s) => s.types)
@@ -73,7 +67,7 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
   const toggleStep = (stepId: string) => {
     const next = selectedStepIds.includes(stepId)
       ? selectedStepIds.filter((id) => id !== stepId)
-      : // Preserva a ordem da definição, não a ordem do clique.
+      :
         steps.map((step) => step.id).filter(
           (id) => id === stepId || selectedStepIds.includes(id),
         )
@@ -111,7 +105,6 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
                 value={field.value}
                 onChange={(e) => {
                   field.onChange(e.target.value)
-                  // Troca de versão zera a seleção: etapas pertencem à versão.
                   setValue('stepIds', [])
                   setValue('startingStepId', '')
                   setValue('targetStepId', '')

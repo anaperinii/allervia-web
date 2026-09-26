@@ -17,7 +17,6 @@ const KIND_LABELS: Record<ServerNotificationKind, { label: string; desc: string 
   },
 }
 
-/** Preferências persistidas por usuário; ausência de registro = habilitado. */
 export function NotificationPreferencesPanel() {
   const queryClient = useQueryClient()
   const query = useQuery({

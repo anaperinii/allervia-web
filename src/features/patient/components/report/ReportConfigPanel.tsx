@@ -9,8 +9,6 @@ import type {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faFileArrowDown, faFileLines } from '@fortawesome/free-solid-svg-icons'
 
-// Só formatos verdadeiros: CSV com BOM e PDF real. Planilha nativa exige
-// gerador XLSX de fato — arquivo textual não recebe esse nome.
 const REPORT_FORMATS: { id: ReportFileFormat; label: string; icon: IconDefinition }[] = [
   { id: 'pdf', label: 'PDF', icon: faFileLines },
   { id: 'csv', label: 'CSV', icon: faFileArrowDown },

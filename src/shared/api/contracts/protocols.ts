@@ -3,11 +3,6 @@ import type { AdministrationRoute } from '@/shared/api/contracts/clinical'
 export type ProtocolVersionStatus = 'DRAFT' | 'PUBLISHED' | 'RETIRED'
 export type ProtocolPhase = 'BUILD_UP' | 'MAINTENANCE'
 
-/**
- * Etapa do protocolo como o motor a entende: valores exatos em string com
- * ponto, intervalo inteiro em dias e sucessor explícito. O sucessor pode
- * apontar para a própria etapa (permanência) ou ser nulo (fim de sequência).
- */
 export interface ProtocolStep {
   id: string
   label: string
@@ -18,7 +13,6 @@ export interface ProtocolStep {
   nextStepId: string | null
 }
 
-/** Rascunho editável; identidade de versão é atribuída pelo servidor. */
 export interface ProtocolDefinitionDraft {
   schemaVersion: 1
   engineVersion: '1'
@@ -75,7 +69,6 @@ export type SimulationResult =
   | { kind: 'END_OF_SEQUENCE'; protocolVersionId: string; fromStepId: string }
   | { kind: 'UNRESOLVED'; code: string }
 
-/** Prescrição resolvida enviada na vinculação de tratamento legado. */
 export interface ResolvedPrescriptionInput {
   protocolId: string
   protocolVersionId: string
@@ -85,7 +78,6 @@ export interface ResolvedPrescriptionInput {
   targetStepId: string
 }
 
-/** Linha do inventário de migração: um tratamento sob revisão clínica. */
 export interface MigrationReportRow {
   therapyId: string
   revision: number
@@ -135,7 +127,6 @@ export type BindLegacyResult =
       historicalDosesUnchanged: true
     }
 
-/** Códigos de conflito do catálogo; a UI ramifica por eles, não pelo texto. */
 export const PROTOCOL_ERROR_CODES = {
   staleRevision: 'STALE_PROTOCOL_REVISION',
   publishedImmutable: 'PUBLISHED_VERSION_IMMUTABLE',

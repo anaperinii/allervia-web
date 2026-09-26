@@ -285,7 +285,6 @@ describe('ciclo de vida clínico no web', () => {
     expect(await screen.findByText(/ensaio aprovado sem gravar nada/i)).toBeInTheDocument()
     expect(confirm).toBeEnabled()
 
-    // Mudança após o ensaio invalida a confirmação.
     await user.type(reason.parentElement!.querySelector('textarea')!, ' Ajuste.')
     expect(confirm).toBeDisabled()
   })

@@ -12,10 +12,6 @@ interface AddImmunotherapyReviewStepProps {
   timeZone: string
 }
 
-/**
- * Revisão da intenção antes do envio: valores exatos da versão fixada, fuso da
- * prescrição e paciente resolvido. O que aparece aqui é o que o servidor grava.
- */
 export function AddImmunotherapyReviewStep({
   form,
   versionLabel,

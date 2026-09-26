@@ -10,32 +10,22 @@ import {
 } from '@/shared/lib/field-schemas'
 import type { FieldPath } from 'react-hook-form'
 
-/**
- * Prescrição sobre o contrato real: paciente novo ou existente, versão
- * publicada explícita e seleção de etapas/início/meta. Não existem metas
- * numéricas livres — os valores vêm da definição da versão escolhida — e o
- * fluxo é exclusivamente SCIT: a automação atual não cobre SLIT.
- */
 export const addImmunotherapySchema = z
   .object({
     patientMode: z.enum(['new', 'existing']),
 
-    // Paciente novo
     name: z.string(),
     cpf: z.string(),
     phone: z.string(),
     birthDate: z.string(),
     weight: z.string(),
 
-    // Paciente existente
     patientId: z.string(),
 
-    // Prescrição
     type: z.string().min(1, 'Tipo é obrigatório'),
     startDate: futureDateSchema,
     extract: extratoSchema,
 
-    // Protocolo: versão publicada e seleção de etapas
     protocolVersionId: z.string().min(1, 'Selecione a versão do protocolo'),
     stepIds: z.array(z.string()).min(1, 'Selecione ao menos uma etapa'),
     startingStepId: z.string().min(1, 'Selecione a etapa inicial'),
@@ -75,8 +65,6 @@ export const addImmunotherapySchema = z
           message: weightResult.error.issues[0].message,
         })
       }
-      // CPF é opcional: pessoa sem CPF conhecido é um fato registrável, não um
-      // campo a inventar. Quando informado, precisa ser válido.
       if (data.cpf.trim().length > 0) {
         const cpfResult = cpfSchema.safeParse(data.cpf)
         if (!cpfResult.success) {

@@ -57,7 +57,6 @@ export function TabsSection() {
       </Reveal>
 
       <div className="relative grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-14 items-center">
-        {/* Left — numbered step list */}
         <Reveal className="relative lg:max-w-lg lg:justify-self-end">
           <div
             aria-hidden="true"

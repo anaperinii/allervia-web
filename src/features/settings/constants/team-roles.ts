@@ -1,10 +1,5 @@
 import type { BackendRole } from '@/shared/api/contracts/account'
 
-/**
- * Papéis concedíveis pela administração. São exatamente os do servidor: não
- * existe papel de técnico — `NURSING_TECHNICIAN` é profissão e não concede
- * acesso por si só.
- */
 export type TeamRole = BackendRole
 
 export interface RoleBadge {
@@ -31,7 +26,6 @@ export const ROLE_DESCRIPTIONS: Record<TeamRole, string> = {
     'Cadastra e atualiza pacientes e consulta a equipe. Não acessa prescrição nem aplicação.',
 }
 
-/** Profissões declaradas no cadastro; descrevem a pessoa, não o acesso. */
 export const PROFESSION_LABELS = {
   PHYSICIAN: 'Médico(a)',
   NURSE: 'Enfermeiro(a)',

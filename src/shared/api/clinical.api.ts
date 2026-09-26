@@ -129,7 +129,6 @@ export interface RegisterImmunotherapyBody {
   immunoType: string
   administrationRoute: 'SUBCUTANEOUS'
   extract: string
-  /** Instante RFC3339 com offset explícito. */
   inductionStartDate: string
   protocolVersionId: string
   stepIds: string[]
@@ -143,20 +142,12 @@ export interface RegisterImmunotherapyResult {
   firstDose: { id: string; scheduledAt: string }
 }
 
-/**
- * Cadastro atômico de prescrição. A chave de idempotência pertence à intenção
- * confirmada: reenvio por perda de resposta usa a MESMA chave e corpo.
- */
 export function registerImmunotherapy(
   body: RegisterImmunotherapyBody,
 ): Promise<RegisterImmunotherapyResult> {
   return apiRequest('/immunotherapies/register', { method: 'POST', body })
 }
 
-/**
- * Ciclo de vida clínico: suspensão, retomada e encerramento com motivo,
- * autoria e efeitos explícitos. O status é consequência do evento.
- */
 export function executeTherapyLifecycle(
   immunotherapyId: string,
   body: TherapyLifecycleBody,
@@ -174,10 +165,6 @@ export function getTherapyLifecycle(
   return apiRequest(`/immunotherapies/${immunotherapyId}/lifecycle`, { signal })
 }
 
-/**
- * Revisão individual de prescrição entre versões publicadas: snapshot novo,
- * histórico preservado e previsão pendente reancorada. Ensaio por padrão.
- */
 export function revisePrescription(
   immunotherapyId: string,
   body: RevisePrescriptionBody,
@@ -188,10 +175,6 @@ export function revisePrescription(
   })
 }
 
-/**
- * Retratação auditada: a aplicação vira ENTERED_IN_ERROR com valores
- * preservados; a sucessora pendente é arquivada e a previsão original volta.
- */
 export function retractDose(
   doseId: string,
   body: RetractDoseBody,
@@ -199,7 +182,6 @@ export function retractDose(
   return apiRequest(`/doses/${doseId}/retract`, { method: 'POST', body })
 }
 
-/** Observação pós-aplicação tardia: registro adicional imutável. */
 export function addLateObservation(
   doseId: string,
   body: LateObservationBody,
@@ -208,7 +190,6 @@ export function addLateObservation(
 }
 
 export interface ClinicalExportQuery {
-  /** Corte temporal (ISO com offset): congela o conjunto exportado. */
   asOf: string
   status?: TherapyStatus
   responsiblePhysicianId?: string
@@ -216,10 +197,6 @@ export interface ClinicalExportQuery {
   pageSize?: number
 }
 
-/**
- * Conjunto completo para exportação, paginado sobre o corte temporal. A
- * solicitação é registrada em auditoria pelo servidor na primeira página.
- */
 export function exportClinicalDoses(
   query: ClinicalExportQuery,
   signal?: AbortSignal,
@@ -229,7 +206,6 @@ export function exportClinicalDoses(
   })
 }
 
-/** Trilha clínica do tratamento, autorizada pelo escopo clínico. */
 export function getClinicalHistory(
   immunotherapyId: string,
   signal?: AbortSignal,
@@ -237,7 +213,6 @@ export function getClinicalHistory(
   return apiRequest(`/immunotherapies/${immunotherapyId}/history`, { signal })
 }
 
-/** Auditoria administrativa (capacidade auditLogs:read; hoje, administração). */
 export function listAuditLogs(
   query: { limit?: number; cursor?: string; entityType?: string; action?: string },
   signal?: AbortSignal,
@@ -254,7 +229,6 @@ export interface AppointmentsQuery {
   pageSize?: number
 }
 
-/** Compromissos de agenda: entidade própria, distinta da dose clínica. */
 export function listAppointments(
   query: AppointmentsQuery,
   signal?: AbortSignal,
@@ -289,7 +263,6 @@ export function updateAppointment(
 }
 
 export interface ScheduleQuery {
-  /** Instante RFC3339 com offset explícito (inclusivo). */
   from: string
   to: string
   status?: DoseStatus
@@ -299,7 +272,6 @@ export interface ScheduleQuery {
   pageSize?: number
 }
 
-/** Agenda agregada do período: uma consulta, não um histórico por tratamento. */
 export function listDoseSchedule(
   query: ScheduleQuery,
   signal?: AbortSignal,
@@ -307,7 +279,6 @@ export function listDoseSchedule(
   return apiRequest(`/doses${toQueryString({ ...query })}`, { signal })
 }
 
-/** Indicadores oficiais do período no fuso clínico da organização. */
 export function getClinicalMetrics(
   query: { from: string; to: string },
   signal?: AbortSignal,
@@ -315,7 +286,6 @@ export function getClinicalMetrics(
   return apiRequest(`/doses/metrics${toQueryString({ ...query })}`, { signal })
 }
 
-/** Histórico persistido de doses do tratamento, previsto e realizado. */
 export function listDosesForTherapy(
   immunotherapyId: string,
   signal?: AbortSignal,
@@ -323,7 +293,6 @@ export function listDosesForTherapy(
   return apiRequest(`/immunotherapies/${immunotherapyId}/doses`, { signal })
 }
 
-/** Dose com valores permitidos pela prescrição e revisões atuais. */
 export function getDose(
   doseId: string,
   signal?: AbortSignal,
@@ -331,10 +300,6 @@ export function getDose(
   return apiRequest(`/doses/${doseId}`, { signal })
 }
 
-/**
- * Prévia da sucessora a partir de um valor hipotético administrado. Depende do
- * corpo e das revisões: mudar dose, valor ou instante invalida a prévia.
- */
 export function previewDose(
   doseId: string,
   body: PreviewDoseBody,
@@ -347,7 +312,6 @@ export function previewDose(
   })
 }
 
-/** Edita a previsão pendente com motivo e revisões; nunca cria sucessora. */
 export function updateScheduledDose(
   doseId: string,
   body: UpdateScheduledDoseBody,
@@ -355,11 +319,6 @@ export function updateScheduledDose(
   return apiRequest(`/doses/${doseId}/scheduled`, { method: 'PATCH', body })
 }
 
-/**
- * Comando de administração: aplicação, observações, conduta imediata e a
- * sucessora nascem em uma única transação. Reenvio por perda de resposta usa a
- * MESMA chave e corpo.
- */
 export function administerDose(
   doseId: string,
   body: AdministerDoseBody,

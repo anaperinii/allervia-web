@@ -32,8 +32,6 @@ export function ImmunotherapiesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
-  // Filtros e paginação resolvidos no servidor; o escopo por médico responsável
-  // é aplicado pela autorização, não por comparação de nome no cliente.
   const filters = {
     page: currentPage,
     pageSize: itemsPerPage,
@@ -49,9 +47,6 @@ export function ImmunotherapiesPage() {
     enabled: organizationId !== '',
   })
 
-  // Estado de configuração da organização: sem versão padrão publicada, novas
-  // prescrições ficam bloqueadas — a pendência aparece para todos, com o
-  // responsável pela configuração indicado, sem impedir a consulta ao histórico.
   const automationQuery = useQuery({
     queryKey: queryKeys.automation(organizationId),
     queryFn: ({ signal }) => readAutomation(signal),
@@ -71,7 +66,6 @@ export function ImmunotherapiesPage() {
   }
 
   const handleSelect = (item: ImmunotherapyListItem) => {
-    // Paciente e tratamento são identidades distintas: a URL carrega as duas.
     navigate({
       to: '/patient/$patientId',
       params: { patientId: item.patient.id },

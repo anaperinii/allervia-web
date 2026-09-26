@@ -8,11 +8,9 @@ export interface SessionValue {
   status: SessionStatus
   account: AccountContext | null
   session: SessionState | null
-  /** Preenchido quando a restauração falhou por motivo diferente de 401. */
   error: ApiError | null
   refresh: () => Promise<void>
   signOut: () => Promise<void>
-  /** Adota a sessão recém-criada pelo login, sem esperar um novo reload. */
   adopt: (session: SessionState) => Promise<void>
 }
 

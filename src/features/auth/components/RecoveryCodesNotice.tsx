@@ -3,10 +3,6 @@ interface RecoveryCodesNoticeProps {
   onContinue: () => void
 }
 
-/**
- * Códigos de recuperação são exibidos uma única vez: o servidor guarda apenas o
- * hash e não consegue mostrá-los de novo.
- */
 export function RecoveryCodesNotice({ codes, onContinue }: RecoveryCodesNoticeProps) {
   return (
     <div>

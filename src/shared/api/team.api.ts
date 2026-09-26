@@ -112,7 +112,6 @@ export function cancelInvite(inviteId: string): Promise<void> {
   })
 }
 
-/** Aberto pelo link do e-mail; ainda não há sessão neste momento. */
 export function readInviteContext(
   token: string,
   signal?: AbortSignal,

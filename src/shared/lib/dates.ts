@@ -54,10 +54,6 @@ export function parseIsoDate(value: string): Date | null {
   return parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day ? parsed : null
 }
 
-/**
- * Instante RFC3339 com o offset local explícito do navegador. O contrato exige
- * offset porque agenda e aplicação são instantes, não datas civis.
- */
 export function toOffsetIso(date: string, time: string): string {
   const local = new Date(`${date}T${time}:00`)
   const offsetMinutes = -local.getTimezoneOffset()

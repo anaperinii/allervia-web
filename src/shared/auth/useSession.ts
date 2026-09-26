@@ -9,7 +9,6 @@ export function useSession(): SessionValue {
   return value
 }
 
-/** Capacidade geral concedida pelo servidor; o comando é reavaliado lá. */
 export function useCapability(capability: string): boolean {
   const { account } = useSession()
   return account?.capabilities.includes(capability) ?? false

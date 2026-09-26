@@ -59,8 +59,6 @@ export function PatientChartPage() {
   const selectedPatient = usePatientStore((s) => s.selectedPatient)
   const setSelectedPatient = usePatientStore((s) => s.setSelectedPatient)
 
-  // O prontuário nasce da consulta real: URL direta e reload funcionam sem
-  // depender de estado deixado por outra tela.
   const patientQuery = useQuery({
     queryKey: queryKeys.patient(organizationId, patientId),
     queryFn: ({ signal }) => getPatient(patientId, signal),
@@ -68,7 +66,6 @@ export function PatientChartPage() {
   })
   const patientDetail = patientQuery.data ?? null
 
-  // Seleção do tratamento pela URL; sem parâmetro, o mais recente.
   const selectedTherapy = useMemo(() => {
     if (!patientDetail) return null
     if (therapyParam) {
@@ -79,7 +76,6 @@ export function PatientChartPage() {
     return patientDetail.therapies[0] ?? null
   }, [patientDetail, therapyParam])
 
-  // Histórico persistido de doses: previsto e realizado vêm do servidor.
   const dosesQuery = useQuery({
     queryKey: queryKeys.doses(organizationId, selectedTherapy?.id ?? ''),
     queryFn: ({ signal }) => listDosesForTherapy(selectedTherapy!.id, signal),
@@ -103,7 +99,6 @@ export function PatientChartPage() {
     [doseRecords],
   )
 
-  // Detalhe da pendente: valores permitidos e revisões para edição/progresso.
   const pendingDoseQuery = useQuery({
     queryKey: queryKeys.dose(organizationId, pendingRecord?.id ?? ''),
     queryFn: ({ signal }) => getDose(pendingRecord!.id, signal),
@@ -147,8 +142,6 @@ export function PatientChartPage() {
   const canEmitReport = useHasPermission('emit_report')
   const canLgpdPortability = useHasPermission('lgpd_portability')
 
-  // O modelo legado alimenta os modais ainda não migrados (edição de dados,
-  // portabilidade). A fonte é sempre a consulta real acima.
   useEffect(() => {
     if (!patientDetail) return
     setSelectedPatient(buildLegacyPatient(patientDetail, selectedTherapy))

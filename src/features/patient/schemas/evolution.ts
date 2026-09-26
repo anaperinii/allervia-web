@@ -9,15 +9,8 @@ const conductValues = z.enum([
   'SUSPEND_TREATMENT',
 ])
 
-/**
- * Evolução sobre o contrato real: o valor administrado é uma etapa permitida
- * pela prescrição (não números livres), o executor é um profissional vinculado
- * e a sucessora é decisão do servidor — o formulário não calcula próxima dose
- * nem intervalo.
- */
 export const evolutionSchema = z
   .object({
-    // Pré-aplicação (observação PRE_ADMINISTRATION + relato do intervalo)
     intervalReport: z.string().min(1, 'Relato do intervalo é obrigatório'),
     sideEffect: yesNo,
     reportedEffects: z.string(),
@@ -25,7 +18,6 @@ export const evolutionSchema = z
     medications: z.string(),
     notesPre: z.string(),
 
-    // Pós-aplicação
     applicationDate: z.string().min(1, 'Data é obrigatória'),
     startTime: z.string().min(1, 'Hora de início é obrigatória'),
     endTime: z.string(),

@@ -8,12 +8,6 @@
 @import "@fontsource/manrope/latin-700.css";
 @import "@fontsource/manrope/latin-800.css";
 
-/*
- * Inter restrita aos algarismos. A family "InterNumerals" e declarada com
- * unicode-range U+0030-0039, entao o navegador so a usa para digitos e cai em
- * Manrope para todo o resto. Para estender a outros glifos (ex. ponto, virgula,
- * cifrao, sinal de porcentagem), adicione os codepoints ao unicode-range.
- */
 @font-face {
   font-family: "InterNumerals";
   font-style: normal;
@@ -100,7 +94,6 @@
   --color-allervia-ink-muted: #7FA6AC;
   --color-allervia-dot: #9BC1C4;
   --color-allervia-foot: #0a181b;
-  /* InterNumerals cobre apenas os digitos; Manrope cobre o resto. */
   --font-family-sans: "InterNumerals", "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-family-heading: "InterNumerals", "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }

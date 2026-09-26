@@ -44,10 +44,6 @@ function toPresentation(item: ServerNotification): Notification {
   }
 }
 
-/**
- * Notificações internas persistidas: derivadas de eventos reais (outbox do
- * servidor), com leitura e paginação. Nenhum seed local.
- */
 export function NotificationsPage() {
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)

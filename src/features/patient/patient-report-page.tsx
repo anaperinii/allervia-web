@@ -30,10 +30,6 @@ import { PageHeader, Pill } from '@/shared/components/showcase'
 
 const DEFAULT_SECTIONS: ReportSectionId[] = ['personal', 'immunotherapy', 'applications', 'progress']
 
-/**
- * Relatório individual sobre os registros persistidos: paciente, tratamento e
- * doses vêm do servidor no momento da geração — nada sai de stores locais.
- */
 export function PatientReportPage() {
   const navigate = useNavigate()
   const { patientId, therapy: therapyParam } = useSearch({ from: '/patient-report' })
@@ -88,7 +84,6 @@ export function PatientReportPage() {
         ),
     [dosesQuery.data, detail],
   )
-  // Reação = conduta imediata registrada junto da aplicação (fato persistido).
   const reactionsCount = useMemo(
     () =>
       (dosesQuery.data ?? []).filter(

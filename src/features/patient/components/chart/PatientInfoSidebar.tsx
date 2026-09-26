@@ -12,9 +12,7 @@ import { faChevronDown, faChevronUp, faCircleInfo, faClockRotateLeft, faTriangle
 
 interface PatientInfoSidebarProps {
   patient: Patient
-  /** Status do tratamento selecionado; null sem tratamento. */
   therapyStatus: TherapyStatus | null
-  /** Tratamento levado ao wizard de evolução. */
   evolutionTherapyId: string | null
   treatmentTime: string | null
   inductionStart: string | null
@@ -30,7 +28,6 @@ interface PatientInfoSidebarProps {
   canComplete: boolean
   completeDisabled: boolean
   canLgpdPortability: boolean
-  /** Revisão de prescrição entre versões publicadas (I9). */
   canRevisePrescription: boolean
   onRevisePrescription: () => void
   onShowLifecycleHistory: () => void

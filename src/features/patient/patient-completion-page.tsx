@@ -20,11 +20,6 @@ import { cn } from '@/shared/lib/cn'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
-/**
- * Encerramento do tratamento: recomendações finais estruturadas persistidas no
- * evento de ciclo de vida — nunca reduzidas ao status COMPLETED. As previsões
- * pendentes são arquivadas explicitamente pelo servidor.
- */
 export function PatientCompletionPage() {
   const navigate = useNavigate()
   const { patientId, therapy: therapyParam } = useSearch({

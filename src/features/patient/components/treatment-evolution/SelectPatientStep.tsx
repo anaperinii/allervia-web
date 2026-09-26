@@ -29,10 +29,6 @@ interface SelectPatientStepProps {
   onSelect: (item: ImmunotherapyListItem) => void
 }
 
-/**
- * Seleção do tratamento a evoluir. A "dose prevista" é a previsão persistida no
- * servidor, não um cálculo local; sem previsão pendente não há o que administrar.
- */
 export function SelectPatientStep({
   selected,
   pendingDose,

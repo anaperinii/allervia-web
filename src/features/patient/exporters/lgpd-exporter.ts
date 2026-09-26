@@ -67,7 +67,6 @@ function buildPayload(data: LgpdExportData) {
       reativadoPor: inact.reactivatedBy ?? null,
     })),
     aplicacoes: applications,
-    // Trilha clínica real do servidor, não um store local.
     historicoClinico: accessLogs.map((entry) => ({
       data: entry.timestamp,
       profissional: entry.user.professional?.fullName ?? entry.user.id,

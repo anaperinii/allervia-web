@@ -1,8 +1,3 @@
-/**
- * Vocabulário de apresentação das notificações. Desde a I11 as notificações
- * vêm exclusivamente do servidor (outbox → notificações internas); nenhum
- * seed local existe. Este módulo guarda apenas os tipos usados pela UI.
- */
 export type NotificationType =
   | 'upcoming_application'
   | 'missed_appointment'

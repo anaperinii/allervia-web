@@ -26,7 +26,6 @@ interface SliceLabelProps {
   value?: number
 }
 
-// place the count at the middle of each donut slice
 function renderSliceLabel({ cx, cy, midAngle, innerRadius, outerRadius, value }: SliceLabelProps) {
   if (cx == null || cy == null || midAngle == null || innerRadius == null || outerRadius == null || !value) return null
   const RAD = Math.PI / 180

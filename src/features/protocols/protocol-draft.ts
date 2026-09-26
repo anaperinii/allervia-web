@@ -11,10 +11,6 @@ export const EMPTY_DRAFT: ProtocolDefinitionDraft = {
   steps: [],
 }
 
-/**
- * Validações locais que espelham as do motor: elas orientam o formulário, mas
- * a decisão final é sempre do servidor na publicação.
- */
 export function validateDraft(draft: ProtocolDefinitionDraft): string[] {
   const problems: string[] = []
   const ids = new Set<string>()

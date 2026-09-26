@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { RegisterRoute } from '@/features/auth/register-route'
 
 type SearchParams = {
-  /** Token do convite enviado por e-mail. */
   token?: string
 }
 

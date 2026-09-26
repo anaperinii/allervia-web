@@ -31,12 +31,6 @@ const HEADER = [
   'executor',
 ]
 
-/**
- * CSV do conjunto clínico persistido: previsto e realizado em colunas
- * separadas, versão fixada e fuso da prescrição em cada linha, valores
- * decimais exatos como texto (sem conversão numérica). O corte temporal viaja
- * no nome do arquivo e na primeira linha.
- */
 export function exportClinicalDatasetCsv(
   rows: ClinicalExportRow[],
   asOf: string,

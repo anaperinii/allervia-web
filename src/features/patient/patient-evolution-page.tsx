@@ -45,7 +45,6 @@ const STEPS: WizardStep[] = [
   { label: 'Revisão dos Dados', icon: faClipboardCheck, description: 'Confira previsto, realizado e a recomendação do servidor. Salvar grava tudo em uma única transação.' },
 ]
 
-/** Texto livre vira lista para o contrato de observações. */
 function toList(text: string): string[] {
   return text
     .split(/[;,\n]/)
@@ -76,7 +75,6 @@ function PatientEvolutionContent() {
   const [selectedId, setSelectedId] = useState<string | null>(preselectedId ?? null)
   const [failure, setFailure] = useState<string | null>(null)
 
-  // Uma chave por intenção de formulário; reenvio por perda de resposta reutiliza a mesma.
   const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
 
   const therapyQuery = useQuery({
@@ -121,7 +119,6 @@ function PatientEvolutionContent() {
   const { handleSubmit, trigger, control, getValues, setValue, setError } = form
   const formValues = useWatch({ control }) as EvolutionForm
 
-  // O valor previsto pela prescrição entra como seleção inicial.
   useEffect(() => {
     if (dose?.plannedStepId && !getValues('stepId')) {
       setValue('stepId', dose.plannedStepId)
@@ -154,8 +151,6 @@ function PatientEvolutionContent() {
   }
   const bodyForPreview = previewBody()
 
-  // A prévia é do corpo exato: dose, valor, instante e revisões na chave fazem
-  // respostas fora de ordem serem descartadas pelo próprio cache.
   const previewQuery = useQuery({
     queryKey: [
       ...queryKeys.dose(organizationId, dose?.id ?? ''),
@@ -198,8 +193,6 @@ function PatientEvolutionContent() {
       navigate({ to: '/immunotherapies' })
     },
     onError: async (error) => {
-      // Falha não gera sucesso local. Revisão desatualizada recarrega a dose
-      // para nova confirmação clínica — nunca reenvia com revisões trocadas.
       if (error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION') {
         await queryClient.invalidateQueries({
           queryKey: queryKeys.dose(organizationId, dose?.id ?? ''),

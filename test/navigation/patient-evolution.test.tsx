@@ -208,18 +208,15 @@ function controlByLabel(labelText: RegExp): HTMLElement {
 }
 
 async function fillToReview(user: ReturnType<typeof userEvent.setup>) {
-  // Passo 0: previsão pendente persistida visível.
   expect(await screen.findByText('Previsão pendente')).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Continuar' }))
 
-  // Passo 1: pré-aplicação.
   await user.type(
     await screen.findByPlaceholderText('Descreva aqui'),
     'Sem intercorrências no intervalo.',
   )
   await user.click(screen.getByRole('button', { name: 'Continuar' }))
 
-  // Passo 2: valor previsto já selecionado; executor da equipe real.
   const stepSelect = (await screen.findByText(/valor administrado/i, { selector: 'label' }))
     .parentElement!.querySelector('select') as HTMLSelectElement
   expect(stepSelect.value).toBe('low')
@@ -240,7 +237,6 @@ describe('wizard de evolução sobre o contrato de doses', () => {
 
     await fillToReview(user)
 
-    // Revisão: recomendação vem do servidor, não de cálculo local.
     expect(await screen.findByText(/o servidor recomenda como próxima dose/i)).toBeInTheDocument()
     expect(screen.getByText(/Meta — 1:1\.000 - 0,4ml/)).toBeInTheDocument()
 
@@ -268,7 +264,6 @@ describe('wizard de evolução sobre o contrato de doses', () => {
       expect(body.observations[1].phase).toBe('POST_ADMINISTRATION')
       expect(body.immediateConduct).toBeUndefined()
       expect(body.reason).toBeUndefined()
-      // Nenhum campo de intervalo livre viaja no comando.
       expect(body.nextInterval).toBeUndefined()
     })
   })
