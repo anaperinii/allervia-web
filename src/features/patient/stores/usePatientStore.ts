@@ -59,7 +59,6 @@ export interface Patient {
   weight: string
   cpf: string
   responsibleDoctor: string
-  /** ID real do médico responsável; presente quando veio da API. */
   responsibleDoctorId?: string
   status: 'active' | 'inactive'
   immunotherapyType: string
@@ -74,11 +73,6 @@ export interface Patient {
   inactivations?: Inactivation[]
 }
 
-/**
- * Vocabulário de apresentação das telas legadas. Desde a I6 as aplicações vêm
- * exclusivamente da API (doses persistidas) via adapters; este store não grava
- * nem deriva dados clínicos — guarda apenas a seleção de interface.
- */
 export interface Application {
   id: string
   patientId: string
@@ -99,23 +93,16 @@ export interface Application {
   administrator?: string
   administratorNote?: string
   modality?: 'subcutaneous' | 'sublingual'
-  /** Resolvidos pela consulta agregada; telas não reconstroem identidade. */
   patientName?: string
   patientPhone?: string
 }
 
 interface PatientState {
   selectedPatient: Patient | null
-  /**
-   * Sempre vazio: aplicações são doses persistidas consultadas por tela. As
-   * telas ainda não migradas (relatórios, agenda, dashboard) leem esta lista e
-   * mostram estado vazio até receberem suas consultas nas próximas etapas.
-   */
   applications: Application[]
   setSelectedPatient: (patient: Patient | null) => void
 }
 
-/** Datas derivadas do histórico exibido; sem histórico local, sem derivação. */
 export function derivePatientDates(
   applications: Application[],
   patientId: string,

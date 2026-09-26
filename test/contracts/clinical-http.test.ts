@@ -54,7 +54,6 @@ it('returns only public account fields over HTTP', async () => {
     'capabilities', 'organization', 'professional', 'roles', 'security', 'user',
   ])
   expect(Object.keys(body.user).sort()).toEqual(['createdAt', 'email', 'id', 'isActive', 'type'])
-  // A resposta pública não pode carregar credencial, versão de token ou segredo de MFA.
   expect(JSON.stringify(body)).not.toMatch(/password|tokenVersion|secretHash|secretCiphertext/)
   expect(body.security.sessionBased).toBe(false)
   expect(Array.isArray(body.capabilities)).toBe(true)
@@ -83,8 +82,6 @@ it('refuses a cookie-borne command without the synchronizer token', async () => 
 })
 
 it('requires the dedicated password-change flow', async () => {
-  // A rota genérica de atualização de usuário foi retirada: perfil e senha têm
-  // contratos próprios.
   const retired = await fetch(`${base}/account/update/me`, {
     method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ password: 'ShouldNotBeAccepted1!' }),
@@ -107,7 +104,6 @@ it('paginates the team listing within the caller organization', async () => {
   const page = await response.json()
   expect(page).toMatchObject({ page: 1, pageSize: 5, total: expect.any(Number) })
   expect(Array.isArray(page.items)).toBe(true)
-  // A listagem descreve o vínculo; ela não devolve credencial nem segredo.
   expect(JSON.stringify(page)).not.toMatch(/password|tokenVersion|secretHash/)
 })
 

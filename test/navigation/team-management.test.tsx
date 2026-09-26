@@ -11,7 +11,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { TeamsPage } from '@/features/settings/teams-page'
 import { withSession, buildAccountContext, type SessionOverrides } from '../helpers/session'
 
-/** A página usa links do router; montá-la exige um roteador real. */
 async function renderTeams(session?: SessionOverrides) {
   const root = createRootRoute()
   const teams = createRoute({
@@ -150,7 +149,6 @@ describe('gestão de equipe', () => {
 
     expect(await screen.findByText('Dra. Karina Martins')).toBeInTheDocument()
     expect(screen.getByText('Rafael Mendes')).toBeInTheDocument()
-    // Técnico em enfermagem é profissão, não papel: aparece sem papel atribuído.
     expect(screen.getByText('Sem papel')).toBeInTheDocument()
     expect(screen.getByText('Técnico(a) em Enfermagem')).toBeInTheDocument()
 

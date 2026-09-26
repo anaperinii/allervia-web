@@ -20,7 +20,6 @@ import { ROLE_BADGES } from '@/features/settings/constants/team-roles'
 type Step = 'welcome' | 'form' | 'done'
 
 interface RegisterPageProps {
-  /** Token do link enviado por e-mail; sem ele não há convite a completar. */
   token?: string
 }
 

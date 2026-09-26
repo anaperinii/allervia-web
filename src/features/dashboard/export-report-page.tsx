@@ -24,12 +24,6 @@ const STATUS_OPTIONS: { value: '' | TherapyStatus; label: string }[] = [
   { value: 'COMPLETED', label: 'Concluídos' },
 ]
 
-/**
- * Exportação do conjunto clínico persistido. O corte temporal nasce no clique
- * e congela o conjunto; as páginas são buscadas do servidor uma a uma — nunca
- * dependem de todos os pacientes carregados na memória do navegador de
- * antemão. A solicitação é registrada em auditoria pelo servidor.
- */
 export function ExportReportPage() {
   const navigate = useNavigate()
   const canViewDashboard = useHasPermission('view_dashboard')

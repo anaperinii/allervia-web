@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { PatientChartPage } from '@/features/patient/patient-chart-page'
 
 type SearchParams = {
-  /** Tratamento selecionado; ausente, o prontuário abre o mais recente. */
   therapy?: string
 }
 

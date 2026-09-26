@@ -84,10 +84,6 @@ export function buildSessionValue(
   }
 }
 
-/**
- * Envolve a árvore com os provedores que a aplicação real monta, sem fazer
- * chamadas de rede: a sessão é fornecida diretamente pelo teste.
- */
 export type SessionOverrides = Partial<SessionValue>
 
 export function withSession(children: ReactNode, value?: SessionOverrides) {
@@ -96,8 +92,6 @@ export function withSession(children: ReactNode, value?: SessionOverrides) {
   })
 
   const session = buildSessionValue(value)
-  // Na aplicação real quem publica identidade e capacidades é a guarda de
-  // sessão; aqui o mesmo passo é feito para que as telas leiam o mesmo estado.
   useUserStore.getState().syncFromAccount(session.account)
 
   return (

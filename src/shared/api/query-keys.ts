@@ -1,8 +1,3 @@
-/**
- * Chaves de consulta. Todas carregam o contexto de sessão e organização: dados
- * de uma organização nunca podem ser reaproveitados por outra, nem sobreviver a
- * uma troca de usuário.
- */
 export const queryKeys = {
   session: () => ['session'] as const,
   account: () => ['account', 'me'] as const,
@@ -18,7 +13,6 @@ export const queryKeys = {
     ['invites', organizationId, filters] as const,
   inviteContext: (token: string) => ['invites', 'context', token] as const,
 
-  /** Prefixo dos dados clínicos, sempre escopados por organização. */
   clinical: (organizationId: string) => ['clinical', organizationId] as const,
 
   patients: (organizationId: string, filters: Record<string, unknown>) =>

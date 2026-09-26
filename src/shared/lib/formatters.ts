@@ -30,6 +30,5 @@ export function formatConcentration(value: string): string {
 }
 
 export function formatVolume(value: string): string {
-  // Preserve every decimal digit. Validation, rather than the input mask, rejects invalid values.
   return value.replace(',', '.')
 }

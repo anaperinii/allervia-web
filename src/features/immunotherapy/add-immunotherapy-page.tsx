@@ -34,7 +34,6 @@ const STEPS: WizardStep[] = [
   { label: 'Revisão', icon: faClipboardCheck, description: 'Confira os valores exatos e o fuso. Salvar grava paciente, tratamento e primeira previsão em uma única transação.' },
 ]
 
-/** Instante da prescrição: início do expediente no horário local do navegador. */
 function toStartInstant(dateStr: string): string {
   return new Date(`${dateStr}T08:00:00`).toISOString()
 }
@@ -54,8 +53,6 @@ export function AddImmunotherapyPage() {
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
 
-  // A chave de idempotência pertence à intenção: nasce com o formulário e
-  // sobrevive a reenvio por perda de resposta. Só muda em um formulário novo.
   const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
 
   const form = useForm<AddImmunotherapyForm>({
@@ -72,7 +69,6 @@ export function AddImmunotherapyPage() {
 
   const values = useWatch({ control }) as AddImmunotherapyForm
 
-  // Dados de apoio para a revisão.
   const protocolsQuery = useQuery({
     queryKey: queryKeys.protocols(organizationId),
     queryFn: ({ signal }) => listProtocols(signal),
@@ -147,8 +143,6 @@ export function AddImmunotherapyPage() {
       navigate({ to: '/immunotherapies' })
     },
     onError: (error) => {
-      // Falha não gera sucesso local: nada foi salvo em stores; o formulário
-      // permanece para correção ou reenvio com a MESMA chave.
       setFailure(
         error instanceof ApiError
           ? error.message

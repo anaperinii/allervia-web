@@ -7,10 +7,6 @@ import type {
   StartSessionResult,
 } from '@/shared/api/contracts/account'
 
-/**
- * Prepara o formulário de entrada: o servidor emite o cookie de pré-sessão e
- * devolve o desafio que acompanha o comando de login.
- */
 async function requestPreAuthCsrfToken(): Promise<string> {
   const { csrfToken } = await apiRequest<{ csrfToken: string }>('/auth/csrf')
   setCsrfToken(csrfToken)
@@ -47,7 +43,6 @@ export async function verifySecondFactor(input: {
   return envelope
 }
 
-/** Restaura a sessão após reload. Devolve `null` quando não há sessão válida. */
 export async function readSession(
   signal?: AbortSignal,
 ): Promise<SessionEnvelope> {
@@ -78,7 +73,6 @@ export function revokeDevice(sessionId: string): Promise<void> {
   return apiRequest<void>(`/auth/sessions/${sessionId}`, { method: 'DELETE' })
 }
 
-/** Renova a inatividade por atividade real do usuário, não por polling. */
 export function registerActivity(): Promise<void> {
   return apiRequest<void>('/auth/session/activity', { method: 'POST' })
 }

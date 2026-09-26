@@ -55,7 +55,6 @@ function dayInput(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-/** Busca o período inteiro paginado; trunca com aviso, nunca silenciosamente. */
 async function fetchSchedule(
   query: { from: string; to: string; search?: string },
   signal?: AbortSignal,
@@ -91,8 +90,6 @@ export function AppointmentsPage() {
   const [rescheduleDoseId, setRescheduleDoseId] = useState<string | null>(null)
   const [showRescheduledToast, setShowRescheduledToast] = useState(false)
 
-  // O período visível vira uma única consulta agregada; o dia local do usuário
-  // define os instantes enviados com offset explícito.
   const visibleDays = calendar.viewMode === 'week' ? calendar.weekDays : calendar.monthDays
   const range = useMemo(() => {
     if (visibleDays.length === 0) return null
@@ -121,7 +118,6 @@ export function AppointmentsPage() {
     scheduleQuery.data !== undefined &&
     scheduleQuery.data.items.length < scheduleQuery.data.total
 
-  // Compromissos da agenda no mesmo período; entidade própria da recepção.
   const appointmentsQuery = useQuery({
     queryKey: queryKeys.schedule(organizationId, {
       appointments: true,
@@ -154,8 +150,6 @@ export function AppointmentsPage() {
   )
 
   const applications = useMemo(() => {
-    // Compromisso agendado representa a previsão vinculada no calendário; a
-    // dose correspondente não aparece duplicada. Cancelados ficam fora.
     const doseApplications = scheduleItems
       .filter(
         (item) =>
@@ -178,7 +172,6 @@ export function AppointmentsPage() {
     return map
   }, [applications])
 
-  // Reagendar = editar a dose pendente com motivo e revisões atuais.
   const rescheduleDoseQuery = useQuery({
     queryKey: queryKeys.dose(organizationId, rescheduleDoseId ?? ''),
     queryFn: ({ signal }) => getDose(rescheduleDoseId!, signal),
@@ -387,7 +380,6 @@ function localTime(iso: string): string {
 
 const MONTHS_UPPER = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO']
 
-/** Compromisso no vocabulário do calendário; a identidade viaja pelo id real. */
 function appointmentToApplication(item: Appointment): Application {
   const starts = new Date(item.startsAt)
   return {

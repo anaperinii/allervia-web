@@ -22,16 +22,8 @@ interface PostApplicationStepProps {
   dose: DoseDetail | null
 }
 
-/**
- * Registro da aplicação: o valor administrado é uma opção permitida pela
- * prescrição (repetir/reduzir inclusive) e a próxima dose é recomendação do
- * servidor — não há campo de intervalo livre. Valor diferente do previsto exige
- * motivo clínico.
- */
 export function PostApplicationStep({ form, dose }: PostApplicationStepProps) {
   const { control, register, getValues, setValue, watch, formState: { errors } } = form
-  // Executor selecionável vem da equipe real; o registrador continua sendo o
-  // ator autenticado no servidor.
   const { members: executors } = useProfessionalDirectory()
   const stepId = watch('stepId')
   const sideEffectPost = watch('sideEffectPost')

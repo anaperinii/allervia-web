@@ -33,7 +33,6 @@ function issueLabel(issue: string): string {
   return ISSUE_LABELS[issue] ?? issue
 }
 
-/** Vinculável: só falta a prescrição e existe exatamente uma previsão pendente. */
 function isBindable(row: MigrationReportRow): boolean {
   return (
     row.prescriptionId === null &&
@@ -42,11 +41,6 @@ function isBindable(row: MigrationReportRow): boolean {
   )
 }
 
-/**
- * Migração assistida: inventário somente leitura, rascunho técnico sob revisão
- * obrigatória e vinculação por tratamento com ensaio explícito. Nenhum valor é
- * aproximado — incompatibilidade é decisão clínica, não arredondamento.
- */
 export function MigrationPage() {
   const navigate = useNavigate()
   const canManage = useHasPermission('adjust_protocol')

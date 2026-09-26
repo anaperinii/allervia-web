@@ -219,14 +219,12 @@ describe('catálogo de protocolos', () => {
 
     await user.click(screen.getByRole('button', { name: /salvar rascunho/i }))
 
-    // Conflito: aviso aparece, rascunho local intacto, salvar bloqueado até decidir.
     expect(
       await screen.findByText(/outra pessoa salvou este rascunho/i),
     ).toBeInTheDocument()
     expect(screen.getByDisplayValue('Início editado')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /salvar rascunho/i })).toBeDisabled()
 
-    // Decidir manter o local reassume a revisão nova e libera o salvar.
     await user.click(
       screen.getByRole('button', { name: /manter o meu e sobrescrever/i }),
     )

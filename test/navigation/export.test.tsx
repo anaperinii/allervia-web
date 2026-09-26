@@ -40,7 +40,7 @@ function exportRow(id: string, patientName: string) {
       phase: 'BUILD_UP', route: 'SUBCUTANEOUS', volumeUnit: 'mL', concentrationUnit: 'DILUTION_DENOMINATOR',
     },
     immediateConduct: null,
-    performedBy: { id: 'professional-1', fullName: 'Dra. Karina Martins' },
+    administeredBy: { id: 'professional-1', fullName: 'Dra. Karina Martins' },
     prescription: {
       versionId: 'version-1',
       protocolName: 'SCIT ácaros',
@@ -136,9 +136,7 @@ describe('exportação do conjunto clínico', () => {
     expect(mime).toContain('text/csv')
     expect(content).toContain('corte temporal')
     expect(content).toContain('"Paula Andrade"')
-    // Valor iniciado por "=" degradado a texto: sem injeção de fórmula.
     expect(content).toContain('"\'=HACK(A1)"')
-    // Decimais exatos preservados como texto.
     expect(content).toContain('"0.1"')
     expect(content).toContain('America/Sao_Paulo')
   })

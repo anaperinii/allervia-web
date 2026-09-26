@@ -27,11 +27,6 @@ interface ReviewStepProps {
   previewError: string | null
 }
 
-/**
- * Revisão antes do comando: previsto e realizado lado a lado e a prévia da
- * sucessora calculada pelo servidor sobre este exato corpo. A prévia não grava
- * nada; a confirmação grava tudo em uma transação.
- */
 export function EvolutionReviewStep({
   form,
   plannedStep,

@@ -14,8 +14,6 @@ export const Route = createFileRoute('/patient-completion')({
     therapy: typeof search.therapy === 'string' ? search.therapy : undefined,
   }),
   beforeLoad: () => {
-    // A capacidade vem do servidor; a rota apenas evita abrir uma tela cujo
-    // comando seria recusado de qualquer forma.
     const { capabilities } = useUserStore.getState()
     if (!hasPermission(capabilities, 'inactivate_immunotherapy')) {
       throw redirect({ to: '/immunotherapies' })

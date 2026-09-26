@@ -24,7 +24,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 interface PortabilityModalProps {
   open: boolean
   patient: Patient
-  /** Tratamento cujo histórico persistido compõe o pacote. */
   therapyId: string | null
   onClose: () => void
 }
@@ -38,7 +37,6 @@ function PortabilityModalForm({ open, patient, therapyId, onClose }: Portability
   const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
 
-  // O pacote LGPD sai dos registros persistidos, não de stores locais.
   const dosesQuery = useQuery({
     queryKey: queryKeys.doses(organizationId, therapyId ?? ''),
     queryFn: ({ signal }) => listDosesForTherapy(therapyId!, signal),

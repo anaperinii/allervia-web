@@ -2,15 +2,6 @@ import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunothe
 import { MODALITY_LABELS } from '@/features/immunotherapy/constants/modality'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
 
-/**
- * PENDÊNCIA DE INTEGRAÇÃO — ponte legada.
- *
- * O prontuário já é alimentado por `GET /patients/:id` (ver
- * `patient-chart-page`). Estas funções sobrevivem apenas para as telas de
- * evolução, relatório e conclusão, que migram nas etapas I6/I9/I10. Os perfis
- * demográficos inventados (CPF, nascimento, peso) foram removidos: um item sem
- * consulta real produz campos vazios, nunca dados falsos.
- */
 interface PatientProfile {
   birthDate: string
   age: number

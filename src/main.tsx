@@ -13,11 +13,6 @@ config.autoAddCss = false
 
 const router = createRouter({ routeTree })
 
-/**
- * Estado remoto único da aplicação. Comandos clínicos não têm retry automático:
- * repetir um comando sem saber o resultado do primeiro envio pode duplicar um
- * fato clínico. O cache também não é persistido no navegador.
- */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

@@ -2,16 +2,10 @@ import { cn } from '@/shared/lib/cn'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
 
 interface ProgressIndicatorProps {
-  /** Etapas permitidas pela prescrição fixada, na ordem da definição. */
   steps: ProtocolStep[]
-  /** Última etapa administrada; null antes da primeira aplicação. */
   currentStepId: string | null
 }
 
-/**
- * Progressão sobre a prescrição real: as etapas vêm da versão fixada no
- * tratamento, não de uma sequência fixa no código.
- */
 export function ProgressIndicator({ steps, currentStepId }: ProgressIndicatorProps) {
   if (steps.length === 0) {
     return (
@@ -28,7 +22,6 @@ export function ProgressIndicator({ steps, currentStepId }: ProgressIndicatorPro
   const progressPct =
     currentIndex >= 0 ? Math.round(((currentIndex + 1) / steps.length) * 100) : 0
 
-  // Agrupa por concentração para leitura, preservando a ordem da definição.
   const groups: { concentration: string; steps: { step: ProtocolStep; index: number }[] }[] = []
   steps.forEach((step, index) => {
     const label = `1:${Number(step.concentration).toLocaleString('pt-BR')}`

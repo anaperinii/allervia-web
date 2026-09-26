@@ -14,11 +14,6 @@ interface ImmunotherapiesFilterBarProps {
   setStatusFilter: (v: StatusFilter) => void
 }
 
-/**
- * Filtros resolvidos no servidor: busca por paciente/extrato/tipo e situação
- * do tratamento. Filtros locais sobre a página atual foram removidos porque
- * tornariam o total incoerente com o que a tabela mostra.
- */
 export function ImmunotherapiesFilterBar({
   searchTerm,
   setSearchTerm,

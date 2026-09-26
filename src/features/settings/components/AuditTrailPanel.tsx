@@ -9,11 +9,6 @@ import { formatInstantDate } from '@/features/patient/adapters/clinical-presenta
 
 const PAGE = 25
 
-/**
- * Auditoria administrativa da organização (capacidade auditLogs:read).
- * Paginação por cursor; a trilha clínica por tratamento tem leitura própria no
- * prontuário e não passa por aqui.
- */
 export function AuditTrailPanel() {
   const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''

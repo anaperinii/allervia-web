@@ -12,11 +12,6 @@ interface PatientDataStepProps {
   form: UseFormReturn<AddImmunotherapyForm>
 }
 
-/**
- * Paciente novo ou existente. O médico responsável é sempre o prescritor
- * autenticado — o contrato atual não permite prescrever em nome de terceiro —
- * e por isso aparece como leitura, não como escolha.
- */
 export function PatientDataStep({ form }: PatientDataStepProps) {
   const { control, register, setValue, watch, formState: { errors } } = form
   const { account } = useSession()

@@ -70,7 +70,6 @@ function scheduleItem(overrides: Record<string, unknown>) {
 const DOSE_DETAIL = {
   ...scheduleItem({}),
   administeredById: null,
-  performedById: null,
   immediateConduct: null,
   immediateConductJustification: null,
   betweenDosesReport: '',
@@ -177,8 +176,6 @@ function stubApi() {
         jsonResponse({
           items: [
             scheduleItem({}),
-            // Fora de qualquer semana visível: a lista devolve o período
-            // inteiro, mas a WeekView só materializa os dias exibidos.
             scheduleItem({
               id: 'dose-0',
               status: 'ADMINISTERED_ON_SCHEDULE',
@@ -248,7 +245,6 @@ describe('agenda alimentada por doses persistidas', () => {
       await screen.findByRole('button', { name: /reagendar previsão/i }),
     )
 
-    // Modal de edição carregado do GET /doses/:id com valores permitidos.
     expect(await screen.findByText('Editar previsão pendente')).toBeInTheDocument()
     const reasonLabel = screen.getByText(/motivo clínico/i, { selector: 'label' })
     const reason = reasonLabel.parentElement!.querySelector('textarea')!

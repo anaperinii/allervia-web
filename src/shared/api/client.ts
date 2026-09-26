@@ -4,22 +4,12 @@ import {
   type ApiErrorEnvelope,
 } from '@/shared/api/contracts/errors'
 
-/**
- * Caminho público da API. Em desenvolvimento o Vite encaminha `/backend` ao
- * NestJS; em produção UI e API ficam na mesma origem pelo gateway. Nunca
- * contém segredo.
- */
 const API_BASE_URL = (
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '/backend'
 ).replace(/\/+$/, '')
 
 const CSRF_HEADER = 'X-CSRF-Token'
 
-/**
- * Token sincronizador da sessão. Fica apenas em memória: gravá-lo em
- * `localStorage` o exporia a qualquer script da origem e não traria benefício,
- * já que a credencial de sessão viaja no cookie `HttpOnly`.
- */
 let csrfToken: string | null = null
 
 export function setCsrfToken(token: string | null): void {
@@ -34,11 +24,6 @@ type UnauthenticatedHandler = (error: ApiError) => void
 
 let onUnauthenticated: UnauthenticatedHandler | null = null
 
-/**
- * Tratamento único de 401. A aplicação registra uma vez o que fazer quando a
- * sessão cai — limpar cache e voltar para o login — em vez de espalhar essa
- * decisão por cada chamada.
- */
 export function setUnauthenticatedHandler(
   handler: UnauthenticatedHandler | null,
 ): void {
@@ -46,12 +31,10 @@ export function setUnauthenticatedHandler(
 }
 
 export interface RequestOptions {
-  /** Public intake does not use browser session cookies or its CSRF token. */
   anonymous?: boolean
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
   body?: unknown
   signal?: AbortSignal
-  /** Cabeçalhos extras; nunca usar para credencial. */
   headers?: Record<string, string>
 }
 
@@ -80,10 +63,6 @@ async function parseEnvelope(response: Response): Promise<ApiErrorEnvelope> {
   }
 }
 
-/**
- * Chamada autenticada por cookie de sessão. O corpo é sempre JSON, o token CSRF
- * acompanha todo comando e a resposta de erro chega normalizada como `ApiError`.
- */
 export async function apiRequest<T>(
   path: string,
   options: RequestOptions = {},
@@ -104,7 +83,6 @@ export async function apiRequest<T>(
     response = await fetch(buildUrl(path), {
       method,
       headers,
-      // O cookie de sessão só acompanha a requisição com `include`.
       credentials: options.anonymous ? 'omit' : 'include',
       signal: options.signal,
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
@@ -114,8 +92,6 @@ export async function apiRequest<T>(
       throw cause
     }
 
-    // Falha de rede não prova que o servidor deixou de gravar: quem chama
-    // decide entre reconsultar o estado e repetir o mesmo comando.
     throw new ApiError({
       statusCode: 0,
       code: API_ERROR_CODES.network,

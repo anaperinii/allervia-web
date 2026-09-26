@@ -4,7 +4,6 @@ import { useCountdown } from '@/shared/hooks/useCountdown'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faClock } from '@fortawesome/free-solid-svg-icons'
 
-/** O backend emite o token de redefinição com validade de 10 minutos. */
 const TOKEN_TTL_SECONDS = 10 * 60
 
 const fieldStyle: CSSProperties = {
@@ -30,11 +29,6 @@ interface VerifyTokenStepProps {
   onResend: () => void
 }
 
-/**
- * O e-mail de redefinição traz um link com o token. Abrir o link preenche este
- * campo; colar o valor manualmente também funciona. Não existe código curto de
- * seis dígitos neste fluxo — o token é o que o servidor emitiu.
- */
 export function VerifyTokenStep({
   token,
   onTokenChange,

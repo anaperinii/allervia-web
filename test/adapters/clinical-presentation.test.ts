@@ -64,7 +64,6 @@ describe('adapters de apresentação clínica', () => {
   })
 
   it('apresenta data civil sem deslocamento de fuso', () => {
-    // Meia-noite UTC não pode virar o dia anterior no fuso local.
     expect(formatCivilDate('1990-06-15T00:00:00.000Z')).toBe('15/06/1990')
   })
 

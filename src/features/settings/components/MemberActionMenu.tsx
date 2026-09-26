@@ -14,10 +14,6 @@ interface MemberActionMenuProps {
   onActivate: () => void
 }
 
-/**
- * Ações disponíveis sobre um membro. Remover não existe: a conta é encerrada,
- * nunca apagada, para preservar a autoria de prescrições e aplicações.
- */
 export function MemberActionMenu({
   member,
   open,

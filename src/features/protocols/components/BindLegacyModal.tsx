@@ -15,7 +15,6 @@ import { cn } from '@/shared/lib/cn'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faFlaskVial } from '@fortawesome/free-solid-svg-icons'
 
-/** Explicações por código: a decisão é clínica, nunca uma aproximação. */
 const BIND_ERROR_EXPLANATIONS: Record<string, string> = {
   VALUE_NOT_CONFIGURED:
     'O valor legado não corresponde a nenhuma etapa selecionada. Não escolhemos o valor mais próximo: ajuste a seleção de etapas ou revise a versão publicada para conter o valor exato.',
@@ -64,7 +63,6 @@ function BindLegacyForm({
   const [startingStepId, setStartingStepId] = useState('')
   const [targetStepId, setTargetStepId] = useState('')
   const [failure, setFailure] = useState<string | null>(null)
-  // A vinculação só habilita após um ensaio bem-sucedido deste exato corpo.
   const [rehearsed, setRehearsed] = useState<{ body: string; stepLabel: string } | null>(null)
 
   const publishedOptions = useMemo(

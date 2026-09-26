@@ -11,11 +11,6 @@ import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunothe
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
 import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
 
-/**
- * Adapters de apresentação: enums do contrato viram rótulos em português e o
- * modelo de leitura alimenta as telas legadas. Nenhuma identidade clínica é
- * reconstruída a partir de texto — os IDs viajam junto.
- */
 
 export const ROUTE_LABELS: Record<AdministrationRoute, string> = {
   SUBCUTANEOUS: 'Subcutânea',
@@ -28,7 +23,6 @@ export const THERAPY_STATUS_LABELS: Record<TherapyStatus, string> = {
   COMPLETED: 'Concluído',
 }
 
-/** Modalidade do vocabulário antigo da UI, derivada do enum do contrato. */
 export function routeToLegacyModality(
   route: AdministrationRoute,
 ): Immunotherapy['modality'] {
@@ -41,7 +35,6 @@ export function legacyModalityToRoute(
   return modality === 'subcutaneous' ? 'SUBCUTANEOUS' : 'SUBLINGUAL'
 }
 
-/** Status do tratamento no vocabulário da UI legada. */
 export function therapyStatusToLegacy(
   status: TherapyStatus,
 ): Immunotherapy['status'] {
@@ -52,12 +45,10 @@ export function therapyStatusToLegacy(
 
 const dateFormat = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' })
 
-/** Data civil (nascimento) apresentada sem deslocamento de fuso. */
 export function formatCivilDate(iso: string): string {
   return dateFormat.format(new Date(iso))
 }
 
-/** Instante (agenda) apresentado no fuso local do usuário. */
 export function formatInstantDate(iso: string): string {
   return new Intl.DateTimeFormat('pt-BR').format(new Date(iso))
 }
@@ -87,7 +78,6 @@ interface ResolvedPrescription {
   targetStepId?: string
 }
 
-/** Apresentação `1:1.000 - 0,2ml` de valores clínicos exatos. */
 export function formatStepPresentation(step: {
   concentration: string
   volume: string
@@ -104,11 +94,6 @@ export function readResolvedPrescription(
   return resolved as ResolvedPrescription
 }
 
-/**
- * Constrói o objeto `Patient` legado consumido pelo prontuário e seus modais a
- * partir do modelo de leitura real. Transitório: cada tela migrada para o
- * contrato novo deixa de precisar dele.
- */
 export function buildLegacyPatient(
   detail: PatientDetail,
   therapy: TherapySummary | null,
@@ -149,11 +134,6 @@ function localPtDate(iso: string): string {
   return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
 }
 
-/**
- * Dose persistida no vocabulário da timeline legada. Previsto e realizado
- * continuam distintos: a aplicação realizada mostra os valores administrados;
- * a pendente mostra os planejados. Nada aqui recalcula identidade clínica.
- */
 export function doseToLegacyApplication(
   record: DoseRecord,
   patientId: string,
@@ -186,10 +166,6 @@ export function doseToLegacyApplication(
   }
 }
 
-/**
- * Linha da agenda agregada no vocabulário do calendário legado. `patientId` é
- * o paciente real (navegação ao prontuário) e a dose viaja pelo `id`.
- */
 export function scheduleItemToApplication(
   item: ScheduleDoseItem,
 ): Application {
@@ -199,7 +175,6 @@ export function scheduleItemToApplication(
       immediateConduct: null,
       immediateConductJustification: null,
       administeredById: null,
-      performedById: null,
       betweenDosesReport: '',
       recommendation: null,
       sourceDoseId: null,
@@ -217,7 +192,6 @@ export function scheduleItemToApplication(
   }
 }
 
-/** Linha da tabela de imunoterapias no vocabulário da UI legada. */
 export function buildLegacyListItem(
   item: ImmunotherapyListItem,
 ): Immunotherapy {

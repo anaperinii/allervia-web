@@ -19,7 +19,6 @@ import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { AuditTrailPanel } from '@/features/settings/components/AuditTrailPanel'
 import { NotificationPreferencesPanel } from '@/features/settings/components/NotificationPreferencesPanel'
 
-/** Capacidade bloqueada por dependência externa — declarada, não simulada. */
 function UnavailableBadge() {
   return (
     <span className="text-[0.6rem] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
@@ -88,8 +87,6 @@ export function AdvancedSettingsPage() {
     ])
   }
 
-  // Canais externos sem provedor definido são declarados indisponíveis; a
-  // notificação interna persistida é a capacidade real entregue.
   const unavailableChannels = [
     { label: 'Notificações por e-mail', desc: 'Entrega automática requer provedor de e-mail definido para notificações' },
     { label: 'Notificações push', desc: 'Entrega em tempo real requer serviço de push contratado' },

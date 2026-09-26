@@ -6,7 +6,6 @@ import type { Application } from '@/features/patient/stores/usePatientStore'
 interface ApplicationDetailModalProps {
   application: Application | null
   onClose: () => void
-  /** Correções clínicas (I9): presentes apenas para aplicações realizadas. */
   onRetract?: (doseId: string) => void
   onLateObservation?: (doseId: string) => void
 }

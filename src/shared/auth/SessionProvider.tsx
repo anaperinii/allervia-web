@@ -12,17 +12,11 @@ import {
   type SessionValue,
 } from '@/shared/auth/session-context'
 
-/** 401 é resposta esperada de "sem sessão"; não é erro a repetir. */
 function shouldRetry(failureCount: number, error: unknown): boolean {
   if (error instanceof ApiError && error.statusCode > 0) return false
   return failureCount < 1
 }
 
-/**
- * Restaura a sessão no carregamento e mantém identidade e capacidades vindas do
- * servidor. Nada de identidade é inferido no cliente: sem `/auth/session`
- * válido, o usuário é anônimo.
- */
 export function SessionProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
 
@@ -43,8 +37,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: false,
   })
 
-  // Tratamento único de 401: qualquer chamada que perca a sessão devolve a
-  // aplicação ao estado anônimo, sem cada tela decidir por conta própria.
   useEffect(() => {
     setUnauthenticatedHandler(() => {
       setCsrfToken(null)
@@ -62,11 +54,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     try {
       await endSession()
     } catch {
-      // O servidor pode já ter encerrado a sessão; o estado local cai de todo jeito.
     }
     setCsrfToken(null)
-    // Nenhum dado de uma sessão sobrevive para a próxima: organizações e
-    // usuários diferentes não compartilham cache.
     queryClient.clear()
   }, [queryClient])
 

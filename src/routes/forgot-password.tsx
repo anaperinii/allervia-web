@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { ForgotPasswordRoute } from '@/features/auth/forgot-password-route'
 
 type SearchParams = {
-  /** Token do link enviado por e-mail; preenche o passo de verificação. */
   token?: string
 }
 

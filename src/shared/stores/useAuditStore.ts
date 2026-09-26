@@ -6,11 +6,6 @@ export interface AccessLog {
   id: string
   userId: string
   userName: string
-  /**
-   * Papel registrado no momento do acesso. É texto histórico, não o papel atual
-   * do usuário: registros antigos preservam rótulos que o produto já não usa.
-   * A trilha oficial passa a vir do servidor na etapa de auditoria.
-   */
   userRole: string
   userRegistration: string
   patientId: string

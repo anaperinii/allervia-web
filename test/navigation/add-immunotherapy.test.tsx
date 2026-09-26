@@ -145,7 +145,6 @@ async function renderWizard() {
   return router
 }
 
-/** FieldLabel não vincula label/controle via htmlFor; resolve pelo texto. */
 function controlByLabel(labelText: RegExp): HTMLElement {
   const label = screen.getByText(labelText, { selector: 'label' })
   const control = label.parentElement?.querySelector('select, input, textarea')
@@ -193,22 +192,18 @@ describe('wizard de prescrição', () => {
     const user = userEvent.setup()
     await renderWizard()
 
-    // Passo 1: prescritor autenticado aparece como leitura, não como escolha.
     expect(screen.getByDisplayValue(/Dra\. Karina Martins · 24815\/GO/)).toBeInTheDocument()
     await fillPatientStep(user)
 
-    // Passo 2: via fixa SCIT; sem metas numéricas livres.
     expect(await screen.findByDisplayValue('Subcutânea (SCIT)')).toBeInTheDocument()
     expect(screen.queryByText(/meta de concentração/i)).toBeNull()
     expect(screen.queryByText(/meta de volume/i)).toBeNull()
 
-    // Versão publicada com marcação de padrão vinda da automação.
     expect(
       await screen.findByRole('option', { name: 'SCIT ácaros — v1 (padrão)' }),
     ).toBeInTheDocument()
     await fillPrescriptionStep(user)
 
-    // Passo 3: revisão com versão e fuso fixados.
     expect(await screen.findByText('SCIT ácaros — v1')).toBeInTheDocument()
     expect(screen.getByText('America/Sao_Paulo')).toBeInTheDocument()
 
@@ -286,7 +281,6 @@ describe('wizard de prescrição', () => {
     await user.click(await screen.findByRole('button', { name: /salvar prescrição/i }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('AUTOMATION_DISABLED')
-    // Permanece no wizard: nenhum sucesso local, nenhuma navegação.
     expect(router.state.location.pathname).toBe('/add-immunotherapy')
     expect(screen.getByText('SCIT ácaros — v1')).toBeInTheDocument()
   })

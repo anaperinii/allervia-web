@@ -12,7 +12,6 @@ interface ApplicationDetailsModalProps {
   googleConnected: boolean
   onClose: () => void
   onOpenPatient: (patientId: string) => void
-  /** Reagendamento é edição da dose pendente; ausente para realizadas. */
   onReschedule?: (doseId: string) => void
 }
 

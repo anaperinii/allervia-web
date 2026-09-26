@@ -59,7 +59,6 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
 
   const handleLogout = async () => {
     setOpen(false)
-    // A sessão é encerrada no servidor; a navegação só reflete o resultado.
     await signOut()
     await navigate({ to: '/login' })
   }

@@ -5,7 +5,6 @@ import type { CardFilter } from '@/features/dashboard/hooks/useChartWindow'
 import { CardFilters } from './CardFilters'
 import { smoothPath, type Point } from './smooth-path'
 
-// Same glass recipe as the landing 'Quatro pilares' cards (light theme).
 const PILLAR_TONES = ['155,193,196', '108,158,165', '37,126,140']
 const PILLAR_ANGLES = [
   '120% 90% at 22% 92%',
@@ -35,11 +34,9 @@ export interface DarkMetric {
   value: string
   unit?: string
   icon: IconDefinition
-  /** Neon tone that lights the card's corner and its chart. */
   glow: string
   visual: DarkTileVisual
   series: number[]
-  /** Filled dots for the `dots` visual. */
   filled?: number
 }
 
@@ -89,7 +86,6 @@ function Spark({ series, glow, id }: { series: number[]; glow: string; id: strin
   const max = Math.max(...series)
   const span = max - min || 1
   const step = SPARK_W / Math.max(series.length - 1, 1)
-  // A flat series would sit glued to the baseline, so it rides the middle instead.
   const flat = max === min
   const points: Point[] = series.map((value, i) => ({
     x: i * step,
@@ -132,7 +128,6 @@ function Bars({ series, glow }: { series: number[]; glow: string }) {
 }
 
 function Dots({ total, filled, glow }: { total: number; filled: number; glow: string }) {
-  // Mirrored right triangle: the bottom row is the widest, the shortage trims the top row.
   const rowCount = Math.ceil((Math.sqrt(1 + 8 * total) - 1) / 2)
   const sizes: number[] = []
   let left = total

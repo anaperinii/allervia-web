@@ -153,7 +153,6 @@ const MONTH_RANGES = [
   { value: '12', label: 'Ano inteiro' },
 ]
 
-/** Same filter contract as the light panel, applied to the monthly dark charts. */
 export function useMonthlyFilters<T extends { month: string; year?: number }>(data: T[]) {
   const defaultYear = String(new Date().getFullYear())
   const [size, setSize] = useState('12')
@@ -207,7 +206,6 @@ const ORDER_OPTIONS = [
   { value: 'asc', label: 'Menor primeiro' },
 ]
 
-/** Filters for the distribution charts, which have no time axis. */
 export function useSnapshotFilters<T>(data: T[], getValue: (item: T) => number) {
   const [top, setTop] = useState('all')
   const [order, setOrder] = useState('desc')

@@ -48,7 +48,6 @@ function dayInput(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-/** Painel sem base para o indicador: declara a ausência, não inventa número. */
 function UnavailableIndicator({ reason }: { reason: string }) {
   return (
     <div className="flex h-full min-h-32 flex-col items-center justify-center gap-2 px-6 text-center">
@@ -103,7 +102,6 @@ export function DashboardPage() {
     }
   }, [])
 
-  // Período dos indicadores: seleção do usuário ou os últimos 30 dias.
   const period = useMemo(() => {
     const to = dateRange?.to ?? dateRange?.from ?? new Date()
     const from =
@@ -121,7 +119,6 @@ export function DashboardPage() {
   })
   const metrics = metricsQuery.data ?? null
 
-  // Agenda de hoje: mesma consulta agregada da agenda, janela de um dia.
   const todayKey = dayInput(new Date())
   const todayQuery = useQuery({
     queryKey: queryKeys.schedule(organizationId, { day: todayKey }),

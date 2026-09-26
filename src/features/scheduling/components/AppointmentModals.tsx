@@ -24,7 +24,6 @@ const STATUS_LABELS: Record<Appointment['status'], string> = {
   MISSED: 'Faltou',
 }
 
-/** Compromisso de agenda: entidade própria, com vínculo opcional à previsão. */
 export function NewAppointmentModal({
   open,
   onClose,
@@ -191,7 +190,6 @@ function NewAppointmentForm({
   )
 }
 
-/** Detalhe do compromisso: cancelar, registrar falta ou concluir — com motivo. */
 export function AppointmentActionModal({
   appointment,
   organizationId,

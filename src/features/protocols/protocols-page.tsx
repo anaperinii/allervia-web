@@ -54,7 +54,6 @@ interface EditorState {
   expectedRevision: number
   name: string
   draft: ProtocolDefinitionDraft
-  /** Rascunho recarregado do servidor após um conflito, para comparação. */
   serverDraft?: ProtocolDefinitionDraft
   serverRevision?: number
 }
@@ -118,9 +117,6 @@ export function ProtocolsPage() {
       await refresh()
     },
     onError: async (error) => {
-      // Conflito de revisão: alguém salvou antes. O rascunho local é
-      // preservado; o servidor é recarregado só para comparação e para a nova
-      // revisão — nada é reenviado por cima sem confirmação.
       if (
         error instanceof ApiError &&
         error.message === PROTOCOL_ERROR_CODES.staleRevision &&
@@ -178,8 +174,6 @@ export function ProtocolsPage() {
       const definition = version.definition
       const firstStep = definition.steps[0]
       const lastStep = definition.steps[definition.steps.length - 1]
-      // Simulação de ponta a ponta: começa na primeira etapa e administra o
-      // valor configurado; o motor responde a sucessora real.
       return simulateVersion(version.id, {
         prescription: {
           protocolId: version.protocolId,
@@ -547,8 +541,6 @@ export function ProtocolsPage() {
                     variant="solid"
                     size="sm"
                     onClick={() => {
-                      // Mantém o rascunho local e assume a revisão nova: o
-                      // próximo salvar sobrescreve conscientemente.
                       setEditor({
                         ...editor,
                         expectedRevision: editor.serverRevision ?? editor.expectedRevision,

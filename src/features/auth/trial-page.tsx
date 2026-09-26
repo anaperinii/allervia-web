@@ -80,7 +80,6 @@ export function TrialPage() {
       if (!pending.current || pending.current.payload !== payload) {
         pending.current = { payload, requestId: crypto.randomUUID() }
       }
-      // Keep the same key after an uncertain network result to avoid duplicate requests.
       const result = await requestDemo(values, pending.current.requestId)
       if (result.received !== true || !result.id) throw new Error('Invalid receipt')
       setReceipt(result)

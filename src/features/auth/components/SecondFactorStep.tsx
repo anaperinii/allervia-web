@@ -20,11 +20,6 @@ interface SecondFactorStepProps {
   onBack: () => void
 }
 
-/**
- * Segundo fator do login. Quando a conta ainda não tem fator cadastrado, o
- * mesmo passo mostra o segredo para o aplicativo autenticador — a sessão
- * clínica só nasce depois que um código válido confirma o cadastro.
- */
 export function SecondFactorStep({
   challenge,
   error,

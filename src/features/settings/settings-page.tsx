@@ -6,7 +6,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowRight, faCircleInfo, faCircleQuestion, faCreditCard, faDesktop, faFlask, faGear, faShield, faUser, faUsers } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
-// single dark teal for the right-side gradient of each card
 const CARD_TEAL = '29,103,114'
 
 interface SettingsOption {

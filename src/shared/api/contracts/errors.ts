@@ -1,4 +1,3 @@
-/** Envelope público de erro da API. `code` é estável; `message` é apresentação. */
 export interface ApiErrorEnvelope {
   statusCode: number
   code: string
@@ -29,10 +28,6 @@ export const API_ERROR_CODES = {
   indeterminate: 'RESULT_INDETERMINATE',
 } as const
 
-/**
- * Erro normalizado de qualquer chamada. Componentes ramificam por `code`,
- * nunca pelo texto — que pode mudar sem aviso.
- */
 export class ApiError extends Error {
   readonly statusCode: number
   readonly code: string
@@ -48,20 +43,14 @@ export class ApiError extends Error {
     this.requestId = envelope.requestId
   }
 
-  /** Sessão ausente, expirada ou revogada: a aplicação precisa reautenticar. */
   get isUnauthenticated(): boolean {
     return this.statusCode === 401
   }
 
-  /** O servidor respondeu, mas a conta não tem permissão para a ação. */
   get isForbidden(): boolean {
     return this.statusCode === 403
   }
 
-  /**
-   * Falha de rede ou timeout: não prova que o comando deixou de ser gravado.
-   * Comandos clínicos precisam reconsultar o estado em vez de assumir falha.
-   */
   get isIndeterminate(): boolean {
     return (
       this.code === API_ERROR_CODES.network ||

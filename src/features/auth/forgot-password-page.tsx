@@ -27,7 +27,6 @@ import { faCheck } from '@fortawesome/free-solid-svg-icons'
 type Step = 'request' | 'token' | 'reset' | 'done'
 
 interface ForgotPasswordPageProps {
-  /** Token vindo do link enviado por e-mail. */
   initialToken?: string
 }
 
@@ -62,8 +61,6 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
     try {
       await requestPasswordReset(data.email)
     } catch (error) {
-      // A resposta é deliberadamente indiferente à existência da conta; apenas
-      // falhas de transporte chegam aqui.
       emailForm.setError('email', {
         message: describeFailure(error, 'Não foi possível enviar o e-mail agora.'),
       })
@@ -131,7 +128,6 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
       setStep('done')
     } catch (error) {
       const message = describeFailure(error, 'Não foi possível redefinir a senha.')
-      // Token consumido ou expirado devolve o usuário ao passo anterior.
       if (error instanceof ApiError && (error.statusCode === 404 || error.statusCode === 409)) {
         setTokenError(message)
         setStep('token')

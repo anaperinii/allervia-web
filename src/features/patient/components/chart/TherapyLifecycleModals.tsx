@@ -35,7 +35,6 @@ interface LifecycleModalProps {
   onDone: (kind: 'suspended' | 'resumed') => void
 }
 
-/** Suspensão com motivo, categoria e previsão de retorno persistidos. */
 export function SuspendTherapyModal(props: LifecycleModalProps) {
   if (!props.open) return null
   return <SuspendForm key={`${props.therapyId}-${props.therapyRevision}`} {...props} />
@@ -138,7 +137,6 @@ function SuspendForm({
   )
 }
 
-/** Retomada com motivo persistido; o ponto de retomada é a previsão preservada. */
 export function ResumeTherapyModal(props: LifecycleModalProps) {
   if (!props.open) return null
   return <ResumeForm key={`${props.therapyId}-${props.therapyRevision}`} {...props} />
@@ -208,7 +206,6 @@ function ResumeForm({
   )
 }
 
-/** Histórico legível do ciclo de vida, reconstruível após reload. */
 export function LifecycleHistoryModal({
   open,
   therapyId,

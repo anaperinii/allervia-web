@@ -26,11 +26,6 @@ interface CorrectionModalProps {
   onClose: () => void
 }
 
-/**
- * Retratação de aplicação registrada em erro: comando auditado que preserva os
- * valores administrados, arquiva a sucessora pendente e reemite a previsão
- * original. Sucessora já aplicada exige análise explícita — o servidor recusa.
- */
 export function RetractDoseModal({ doseId, organizationId, onClose }: CorrectionModalProps) {
   const queryClient = useQueryClient()
   const [reason, setReason] = useState('')
@@ -116,7 +111,6 @@ export function RetractDoseModal({ doseId, organizationId, onClose }: Correction
   )
 }
 
-/** Observação pós-aplicação tardia: registro adicional com autoria e instante próprios. */
 export function LateObservationModal({ doseId, organizationId, onClose }: CorrectionModalProps) {
   const queryClient = useQueryClient()
   const [effects, setEffects] = useState('')

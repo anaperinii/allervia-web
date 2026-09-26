@@ -103,7 +103,6 @@ export function TreatmentTimeline({ applications, inductionStart, flat }: Treatm
 
     const intervals = Array.from(new Set(realized.map((a) => a.cycle.days))).sort((a, b) => a - b)
 
-    // date label at each concentration change and, once on the target dose, at each interval change
     const labelIdx: number[] = []
     pts.forEach((p, i) => {
       if (i === 0 || p.conc !== pts[i - 1].conc || p.days !== pts[i - 1].days) labelIdx.push(i)

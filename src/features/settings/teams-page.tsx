@@ -62,8 +62,6 @@ export function TeamsPage() {
 
   const inviteFilters = { page: 1, pageSize: 50, includeExpired: true }
 
-  // A paginação e os filtros são resolvidos no servidor: a página atual entra
-  // na chave da consulta, então cada combinação tem o próprio resultado.
   const membersQuery = useQuery({
     queryKey: queryKeys.team(organizationId, memberFilters),
     queryFn: ({ signal }) => listTeamMembers(memberFilters, signal),
@@ -114,8 +112,6 @@ export function TeamsPage() {
       setActionError(describe(error, 'Não foi possível cancelar o convite.')),
   })
 
-  // Reenviar é cancelar e emitir de novo: o servidor não reaproveita um token
-  // já entregue, e o link antigo precisa parar de funcionar.
   const resendMutation = useMutation({
     mutationFn: async (invite: Invite) => {
       if (invite.status === 'ACTIVE') await cancelInvite(invite.id)
