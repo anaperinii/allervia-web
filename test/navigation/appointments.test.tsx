@@ -70,7 +70,6 @@ function scheduleItem(overrides: Record<string, unknown>) {
 const DOSE_DETAIL = {
   ...scheduleItem({}),
   administeredById: null,
-  performedById: null,
   immediateConduct: null,
   immediateConductJustification: null,
   betweenDosesReport: '',

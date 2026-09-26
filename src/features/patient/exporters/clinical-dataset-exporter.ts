@@ -71,7 +71,7 @@ export function exportClinicalDatasetCsv(
         row.administeredAt ?? '',
         row.administrationEndedAt ?? '',
         row.immediateConduct ?? '',
-        row.performedBy?.fullName ?? '',
+        row.administeredBy?.fullName ?? '',
       ]),
     )
   }

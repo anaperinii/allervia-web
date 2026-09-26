@@ -248,6 +248,11 @@ function PatientEvolutionContent() {
     handleSubmit((data) => {
       if (!dose || !selectedStep) return
       setFailure(null)
+      const executor = professionals.find((member) => member.professionalId === data.performerId)
+      if (!executor) {
+        setError('performerId', { type: 'custom', message: 'Selecione um profissional disponível.' })
+        return
+      }
       const observations: AdministerDoseBody['observations'] = [
         {
           phase: 'PRE_ADMINISTRATION',
@@ -277,7 +282,7 @@ function PatientEvolutionContent() {
         expectedRevision: dose.revision,
         expectedTherapyRevision: dose.therapyRevision,
         betweenDosesReport: data.intervalReport.trim(),
-        performedById: data.performerId,
+        administeredById: executor.userId,
         ...(data.stepId !== dose.plannedStepId && data.adjustmentReason.trim()
           ? { reason: data.adjustmentReason.trim() }
           : {}),

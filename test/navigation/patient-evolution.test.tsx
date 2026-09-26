@@ -50,7 +50,6 @@ const DOSE_DETAIL = {
   administeredAt: null,
   administrationEndedAt: null,
   administeredById: null,
-  performedById: null,
   immediateConduct: null,
   immediateConductJustification: null,
   betweenDosesReport: '',
@@ -262,7 +261,7 @@ describe('wizard de evolução sobre o contrato de doses', () => {
       expect(body.expectedTherapyRevision).toBe(3)
       expect(body.administeredAt).toMatch(/T10:00:00[+-]\d{2}:\d{2}$/)
       expect(body.administrationEndedAt).toMatch(/T10:30:00[+-]\d{2}:\d{2}$/)
-      expect(body.performedById).toBe('professional-2')
+      expect(body.administeredById).toBe('user-2')
       expect(body.betweenDosesReport).toBe('Sem intercorrências no intervalo.')
       expect(body.observations).toHaveLength(2)
       expect(body.observations[0].phase).toBe('PRE_ADMINISTRATION')

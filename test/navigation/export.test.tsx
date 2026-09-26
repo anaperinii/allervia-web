@@ -40,7 +40,7 @@ function exportRow(id: string, patientName: string) {
       phase: 'BUILD_UP', route: 'SUBCUTANEOUS', volumeUnit: 'mL', concentrationUnit: 'DILUTION_DENOMINATOR',
     },
     immediateConduct: null,
-    performedBy: { id: 'professional-1', fullName: 'Dra. Karina Martins' },
+    administeredBy: { id: 'professional-1', fullName: 'Dra. Karina Martins' },
     prescription: {
       versionId: 'version-1',
       protocolName: 'SCIT ácaros',

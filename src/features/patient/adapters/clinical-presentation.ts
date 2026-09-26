@@ -199,7 +199,6 @@ export function scheduleItemToApplication(
       immediateConduct: null,
       immediateConductJustification: null,
       administeredById: null,
-      performedById: null,
       betweenDosesReport: '',
       recommendation: null,
       sourceDoseId: null,
