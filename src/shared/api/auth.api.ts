@@ -1,4 +1,12 @@
-import { apiRequest, setCsrfToken } from '@/shared/api/client'
+import {
+  apiRequest,
+  setCsrfToken,
+  getSessionContext,
+  acceptSession,
+  clearSession,
+  withAuthLock,
+} from '@/shared/api/client'
+import { ApiError } from '@/shared/api/contracts/errors'
 import type {
   AccountContext,
   DeviceSession,
@@ -6,6 +14,16 @@ import type {
   SessionEnvelope,
   StartSessionResult,
 } from '@/shared/api/contracts/account'
+
+let pendingLogoutContext: string | null = null
+
+function adoptCredentials(envelope: SessionEnvelope): void {
+  pendingLogoutContext = null
+  if (!envelope.session?.id || !envelope.csrfToken)
+    throw new ApiError({ statusCode: 502, code: 'INVALID_AUTH_RESPONSE', message: 'Resposta de autenticação inválida.' })
+  clearSession(true)
+  acceptSession(envelope.session.id, envelope.csrfToken)
+}
 
 async function requestPreAuthCsrfToken(): Promise<string> {
   const { csrfToken } = await apiRequest<{ csrfToken: string }>('/auth/csrf')
@@ -17,37 +35,43 @@ export async function startSession(input: {
   email: string
   password: string
 }): Promise<StartSessionResult> {
-  await requestPreAuthCsrfToken()
+  return withAuthLock(async () => {
+    await requestPreAuthCsrfToken()
 
-  const result = await apiRequest<StartSessionResult>('/auth/sessions', {
-    method: 'POST',
-    body: input,
+    const result = await apiRequest<StartSessionResult>('/auth/sessions', {
+      method: 'POST',
+      body: input,
+    })
+
+    if (!('status' in result)) adoptCredentials(result)
+    return result
   })
-
-  if (!('status' in result)) setCsrfToken(result.csrfToken)
-  return result
 }
 
 export async function verifySecondFactor(input: {
   challengeToken: string
   code: string
 }): Promise<SessionEnvelope> {
-  await requestPreAuthCsrfToken()
+  return withAuthLock(async () => {
+    await requestPreAuthCsrfToken()
 
-  const envelope = await apiRequest<SessionEnvelope>('/auth/mfa/verify', {
-    method: 'POST',
-    body: input,
+    const envelope = await apiRequest<SessionEnvelope>('/auth/mfa/verify', {
+      method: 'POST',
+      body: input,
+    })
+
+    adoptCredentials(envelope)
+    return envelope
   })
-
-  setCsrfToken(envelope.csrfToken)
-  return envelope
 }
 
 export async function readSession(
   signal?: AbortSignal,
 ): Promise<SessionEnvelope> {
-  const envelope = await apiRequest<SessionEnvelope>('/auth/session', { signal })
-  setCsrfToken(envelope.csrfToken)
+  const envelope = await apiRequest<SessionEnvelope>('/auth/session', {
+    signal,
+  })
+  acceptSession(envelope.session.id, envelope.csrfToken)
   return envelope
 }
 
@@ -56,13 +80,24 @@ export function readAccount(signal?: AbortSignal): Promise<AccountContext> {
 }
 
 export async function endSession(): Promise<void> {
-  await apiRequest<void>('/auth/logout', { method: 'POST' })
-  setCsrfToken(null)
+  const expected = getSessionContext() ?? pendingLogoutContext
+  pendingLogoutContext = expected
+  clearSession(true)
+  await withAuthLock(async () => {
+    const protection = await apiRequest<{ csrfToken: string }>('/auth/csrf?scope=session')
+    setCsrfToken(protection.csrfToken)
+    await apiRequest<void>('/auth/logout', { method: 'POST', body: {}, headers: expected ? { 'X-Session-Context': expected } : {} })
+    setCsrfToken(null)
+    pendingLogoutContext = null
+  })
 }
 
 export async function endAllSessions(): Promise<void> {
-  await apiRequest<void>('/auth/logout-all', { method: 'POST' })
-  setCsrfToken(null)
+  try {
+    await apiRequest<void>('/auth/logout-all', { method: 'POST', body: {} })
+  } finally {
+    clearSession(true)
+  }
 }
 
 export function listDevices(signal?: AbortSignal): Promise<DeviceSession[]> {

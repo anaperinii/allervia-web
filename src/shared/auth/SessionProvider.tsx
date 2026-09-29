@@ -1,7 +1,12 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { endSession, readAccount, readSession } from '@/shared/api/auth.api'
+import {
+  endSession,
+  readAccount,
+  readSession,
+  registerActivity,
+} from '@/shared/api/auth.api'
 import { setCsrfToken, setUnauthenticatedHandler } from '@/shared/api/client'
 import { queryKeys } from '@/shared/api/query-keys'
 import type { SessionState } from '@/shared/api/contracts/account'
@@ -19,11 +24,14 @@ function shouldRetry(failureCount: number, error: unknown): boolean {
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
+  const [forcedAnonymous, setForcedAnonymous] = useState(false)
+  const [logoutError, setLogoutError] = useState(false)
 
   const sessionQuery = useQuery({
+    enabled: !forcedAnonymous,
     queryKey: queryKeys.session(),
     queryFn: ({ signal }) => readSession(signal),
-    retry: shouldRetry,
+    retry: false,
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   })
@@ -31,7 +39,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const accountQuery = useQuery({
     queryKey: queryKeys.account(),
     queryFn: ({ signal }) => readAccount(signal),
-    enabled: sessionQuery.isSuccess,
+    enabled: !forcedAnonymous && sessionQuery.isSuccess,
     retry: shouldRetry,
     staleTime: 60_000,
     refetchOnWindowFocus: false,
@@ -39,11 +47,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setUnauthenticatedHandler(() => {
+      setForcedAnonymous(true)
       setCsrfToken(null)
       queryClient.clear()
     })
     return () => setUnauthenticatedHandler(null)
   }, [queryClient])
+
+  useEffect(() => {
+    const check = () => {
+      if (!forcedAnonymous && document.visibilityState === 'visible')
+        void sessionQuery.refetch()
+    }
+    window.addEventListener('focus', check)
+    return () => window.removeEventListener('focus', check)
+  }, [forcedAnonymous, sessionQuery])
 
   const refresh = useCallback(async () => {
     await sessionQuery.refetch()
@@ -51,16 +69,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [sessionQuery, accountQuery])
 
   const signOut = useCallback(async () => {
+    setLogoutError(false)
+    setForcedAnonymous(true)
+    queryClient.clear()
     try {
       await endSession()
-    } catch {
+    } catch (error) {
+      setLogoutError(true)
+      throw error
+    } finally {
+      setForcedAnonymous(true)
+      setCsrfToken(null)
+      queryClient.clear()
     }
-    setCsrfToken(null)
-    queryClient.clear()
   }, [queryClient])
 
   const adopt = useCallback(
     async (session: SessionState) => {
+      setForcedAnonymous(false)
+      setLogoutError(false)
       queryClient.setQueryData(queryKeys.session(), {
         authenticated: true,
         csrfToken: '',
@@ -76,12 +103,38 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   )
 
   const status = useMemo<SessionStatus>(() => {
+    if (forcedAnonymous) return 'anonymous'
     const failure = sessionQuery.error ?? accountQuery.error
-    if (failure instanceof ApiError && failure.isUnauthenticated) return 'anonymous'
+    if (failure instanceof ApiError && failure.isUnauthenticated)
+      return 'anonymous'
     if (failure) return 'error'
     if (accountQuery.data && sessionQuery.data) return 'authenticated'
     return 'loading'
-  }, [sessionQuery.error, sessionQuery.data, accountQuery.error, accountQuery.data])
+  }, [
+    forcedAnonymous,
+    sessionQuery.error,
+    sessionQuery.data,
+    accountQuery.error,
+    accountQuery.data,
+  ])
+
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    let lastActivity = 0
+    const notify = (event: Event) => {
+      if (!event.isTrusted || document.visibilityState !== 'visible') return
+      const now = Date.now()
+      if (now - lastActivity < 60_000) return
+      lastActivity = now
+      void registerActivity().catch(() => undefined)
+    }
+    window.addEventListener('pointerdown', notify, { passive: true })
+    window.addEventListener('keydown', notify)
+    return () => {
+      window.removeEventListener('pointerdown', notify)
+      window.removeEventListener('keydown', notify)
+    }
+  }, [status])
 
   const value = useMemo<SessionValue>(() => {
     const failure = sessionQuery.error ?? accountQuery.error
@@ -89,7 +142,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       status,
       account: accountQuery.data ?? null,
       session: sessionQuery.data?.session ?? null,
-      error: failure instanceof ApiError && !failure.isUnauthenticated ? failure : null,
+      error:
+        failure instanceof ApiError && !failure.isUnauthenticated
+          ? failure
+          : null,
       refresh,
       signOut,
       adopt,
@@ -105,5 +161,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     adopt,
   ])
 
-  return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
+  return (
+    <SessionContext.Provider value={value}>
+      {logoutError && (
+        <div
+          role="alert"
+          className="fixed top-0 inset-x-0 z-50 bg-red-50 p-4 text-red-900"
+        >
+          O acesso local foi encerrado, mas a saída no servidor não foi
+          confirmada.
+          <button
+            type="button"
+            onClick={() =>
+              void endSession()
+                .then(() => setLogoutError(false))
+                .catch(() => setLogoutError(true))
+            }
+          >
+            Tentar encerrar novamente
+          </button>
+        </div>
+      )}
+      {children}
+    </SessionContext.Provider>
+  )
 }
