@@ -67,13 +67,17 @@ async function fillCredentials() {
     screen.getByPlaceholderText('seu@email.com.br'),
     'profissional@clinica.com.br',
   )
-  await user.type(screen.getByPlaceholderText('Insira aqui'), 'Senha!Forte#2026')
+  await user.type(
+    screen.getByPlaceholderText('Insira aqui'),
+    'Senha!Forte#2026',
+  )
   await user.click(screen.getByRole('button', { name: 'Entrar' }))
   return user
 }
 
 const SESSION_BODY = {
   authenticated: true,
+  accessExpiresAt: '2026-09-19T12:05:00.000Z',
   csrfToken: 'csrf-da-sessao',
   session: {
     id: 'session-1',
@@ -107,7 +111,10 @@ describe('entrada com sessão real', () => {
     await waitFor(() => expect(adopt).toHaveBeenCalledTimes(1))
 
     const [csrfUrl] = fetchMock.mock.calls[0] as [string]
-    const [loginUrl, loginInit] = fetchMock.mock.calls[1] as [string, RequestInit]
+    const [loginUrl, loginInit] = fetchMock.mock.calls[1] as [
+      string,
+      RequestInit,
+    ]
     expect(csrfUrl).toContain('/auth/csrf')
     expect(loginUrl).toContain('/auth/sessions')
     expect((loginInit.headers as Record<string, string>)['X-CSRF-Token']).toBe(
@@ -137,7 +144,9 @@ describe('entrada com sessão real', () => {
     const user = await fillCredentials()
 
     expect(
-      await screen.findByRole('heading', { name: /verificação em duas etapas/i }),
+      await screen.findByRole('heading', {
+        name: /verificação em duas etapas/i,
+      }),
     ).toBeInTheDocument()
     expect(adopt).not.toHaveBeenCalled()
 
@@ -145,7 +154,10 @@ describe('entrada com sessão real', () => {
     await user.click(screen.getByRole('button', { name: 'Verificar' }))
 
     await waitFor(() => expect(adopt).toHaveBeenCalledTimes(1))
-    const [verifyUrl, verifyInit] = fetchMock.mock.calls[3] as [string, RequestInit]
+    const [verifyUrl, verifyInit] = fetchMock.mock.calls[3] as [
+      string,
+      RequestInit,
+    ]
     expect(verifyUrl).toContain('/auth/mfa/verify')
     expect(JSON.parse(verifyInit.body as string)).toEqual({
       challengeToken: 'desafio-1',
@@ -171,7 +183,10 @@ describe('entrada com sessão real', () => {
       )
       .mockResolvedValueOnce(jsonResponse({ csrfToken: 'csrf-2' }))
       .mockResolvedValueOnce(
-        jsonResponse({ ...SESSION_BODY, recoveryCodes: ['ABCDE-12345', 'FGHIJ-67890'] }),
+        jsonResponse({
+          ...SESSION_BODY,
+          recoveryCodes: ['ABCDE-12345', 'FGHIJ-67890'],
+        }),
       )
     vi.stubGlobal('fetch', fetchMock)
 
@@ -179,12 +194,16 @@ describe('entrada com sessão real', () => {
     const user = await fillCredentials()
 
     expect(
-      await screen.findByRole('heading', { name: /configure seu segundo fator/i }),
+      await screen.findByRole('heading', {
+        name: /configure seu segundo fator/i,
+      }),
     ).toBeInTheDocument()
     expect(screen.getByText('JBSWY3DPEHPK3PXP')).toBeInTheDocument()
 
     await user.type(screen.getByPlaceholderText('000000'), '654321')
-    await user.click(screen.getByRole('button', { name: /confirmar cadastro/i }))
+    await user.click(
+      screen.getByRole('button', { name: /confirmar cadastro/i }),
+    )
 
     expect(
       await screen.findByRole('heading', { name: /guarde seus códigos/i }),
@@ -192,7 +211,9 @@ describe('entrada com sessão real', () => {
     expect(screen.getByText('ABCDE-12345')).toBeInTheDocument()
     expect(adopt).not.toHaveBeenCalled()
 
-    await user.click(screen.getByRole('button', { name: /salvei meus códigos/i }))
+    await user.click(
+      screen.getByRole('button', { name: /salvei meus códigos/i }),
+    )
     await waitFor(() => expect(adopt).toHaveBeenCalledTimes(1))
   })
 

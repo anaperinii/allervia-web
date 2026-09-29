@@ -14,3 +14,16 @@ Object.defineProperty(globalThis, 'ResizeObserver', {
   value: ResizeObserverStub,
   writable: true,
 })
+
+// Model the browser lock queue for authentication concurrency tests.
+let authLockQueue: Promise<unknown> = Promise.resolve()
+Object.defineProperty(navigator, 'locks', {
+  configurable: true,
+  value: {
+    request: (_name: string, action: () => Promise<unknown>) => {
+      const next = authLockQueue.then(action, action)
+      authLockQueue = next.catch(() => undefined)
+      return next
+    },
+  },
+})

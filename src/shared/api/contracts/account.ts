@@ -1,4 +1,3 @@
-
 export type UserType = 'PROFESSIONAL' | 'PATIENT'
 
 export type BackendRole =
@@ -62,6 +61,8 @@ export interface SessionState {
 }
 
 export interface SessionEnvelope {
+
+
   authenticated: true
   csrfToken: string
   session: SessionState

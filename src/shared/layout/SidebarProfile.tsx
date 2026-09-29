@@ -5,7 +5,10 @@ import { ROLE_LABELS, useCurrentUser } from '@/shared/stores/useUserStore'
 import { useSession } from '@/shared/auth/useSession'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRightFromBracket, faUserGear } from '@fortawesome/free-solid-svg-icons'
+import {
+  faRightFromBracket,
+  faUserGear,
+} from '@fortawesome/free-solid-svg-icons'
 
 function getInitials(name: string): string {
   return name
@@ -20,7 +23,8 @@ const GLASS_AVATAR_STYLE: React.CSSProperties = {
   background: 'linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
   color: '#ffffff',
   border: '1px solid rgba(16,113,129,0.22)',
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(16,60,68,0.18)',
+  boxShadow:
+    'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(16,60,68,0.18)',
 }
 
 interface SidebarProfileProps {
@@ -31,13 +35,17 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
   const navigate = useNavigate()
   const current = useCurrentUser()
   const { signOut } = useSession()
+  const [logoutError, setLogoutError] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setOpen(false)
       }
     }
@@ -59,12 +67,24 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
 
   const handleLogout = async () => {
     setOpen(false)
-    await signOut()
-    await navigate({ to: '/login' })
+    setLogoutError(null)
+    try {
+      await signOut()
+      await navigate({ to: '/login' })
+    } catch {
+      setLogoutError(
+        'Não foi possível confirmar a saída no servidor. Verifique a conexão e tente sair novamente.',
+      )
+    }
   }
 
   return (
     <div ref={containerRef} className="relative">
+      {logoutError && (
+        <p role="alert" className="text-sm text-red-700">
+          {logoutError}
+        </p>
+      )}
       <button
         type="button"
         aria-label="Meu perfil"
@@ -72,7 +92,9 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
           'flex items-center rounded-xl transition-all duration-200 cursor-pointer w-full',
-          isCollapsed ? 'h-10 w-10 justify-center mx-auto' : 'h-11 gap-2.5 px-2',
+          isCollapsed
+            ? 'h-10 w-10 justify-center mx-auto'
+            : 'h-11 gap-2.5 px-2',
         )}
         style={{ background: open ? 'rgba(37,126,140,0.12)' : 'transparent' }}
         onMouseEnter={(e) => {
@@ -133,7 +155,11 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
               onClick={handleOpenProfilePage}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-slate-600 hover:bg-teal-900/10 transition-colors cursor-pointer"
             >
-              <FontAwesomeIcon icon={faUserGear} className="text-slate-600" style={{ fontSize: 14 }} />
+              <FontAwesomeIcon
+                icon={faUserGear}
+                className="text-slate-600"
+                style={{ fontSize: 14 }}
+              />
               <span className="text-xs font-medium">Meu perfil</span>
             </button>
             <button
@@ -141,7 +167,10 @@ export function SidebarProfile({ isCollapsed }: SidebarProfileProps) {
               onClick={() => void handleLogout()}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-red-600 hover:bg-red-900/10 transition-colors cursor-pointer"
             >
-              <FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 14 }} />
+              <FontAwesomeIcon
+                icon={faRightFromBracket}
+                style={{ fontSize: 14 }}
+              />
               <span className="text-xs font-medium">Sair</span>
             </button>
           </div>
