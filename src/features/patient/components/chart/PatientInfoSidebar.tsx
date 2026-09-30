@@ -29,6 +29,8 @@ interface PatientInfoSidebarProps {
   completeDisabled: boolean
   canLgpdPortability: boolean
   canRevisePrescription: boolean
+  canEditTherapy: boolean
+  onEditTherapy: () => void
   onRevisePrescription: () => void
   onShowLifecycleHistory: () => void
   onReactivate: () => void
@@ -58,6 +60,8 @@ export function PatientInfoSidebar({
   completeDisabled,
   canLgpdPortability,
   canRevisePrescription,
+  canEditTherapy,
+  onEditTherapy,
   onRevisePrescription,
   onShowLifecycleHistory,
   onReactivate,
@@ -176,6 +180,8 @@ export function PatientInfoSidebar({
             </Button>
           )}
           <PatientActionsMenu
+            canEditTherapy={canEditTherapy}
+            onEditTherapy={onEditTherapy}
             canInactivate={canInactivate}
             canLgpdPortability={canLgpdPortability}
             canComplete={canComplete}

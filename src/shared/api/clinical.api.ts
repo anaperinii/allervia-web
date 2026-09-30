@@ -88,6 +88,7 @@ export interface ImmunotherapiesQuery {
   search?: string
   status?: TherapyStatus
   route?: AdministrationRoute
+  immunoType?: string
   responsiblePhysicianId?: string
   includeArchived?: boolean
 }
@@ -101,11 +102,33 @@ export function listImmunotherapies(
   })
 }
 
+/** Tipos de alérgeno presentes no acervo visível — alimenta o filtro da listagem. */
+export function listImmunotherapyTypes(
+  signal?: AbortSignal,
+): Promise<string[]> {
+  return apiRequest('/immunotherapies/types', { signal })
+}
+
 export function getImmunotherapy(
   immunotherapyId: string,
   signal?: AbortSignal,
 ): Promise<ImmunotherapyDetail> {
   return apiRequest(`/immunotherapies/${immunotherapyId}`, { signal })
+}
+
+/**
+ * O PATCH aceita apenas o tipo do alérgeno; qualquer valor clínico (etapas,
+ * versão do protocolo, meta) exige revisão de prescrição — o servidor recusa
+ * com PRESCRIPTION_REVISION_REQUIRED.
+ */
+export function updateImmunotherapy(
+  immunotherapyId: string,
+  body: { expectedRevision: number; immunoType: string },
+): Promise<ImmunotherapyDetail> {
+  return apiRequest(`/immunotherapies/${immunotherapyId}`, {
+    method: 'PATCH',
+    body,
+  })
 }
 
 export function listTherapiesForPatient(

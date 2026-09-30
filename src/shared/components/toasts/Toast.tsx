@@ -62,6 +62,35 @@ const VARIANT_CLASS: Record<ToastVariant, VariantStyle> = {
   },
 }
 
+interface AccentStyle {
+  icon: string
+  glow: string
+  border: string
+}
+
+const ACCENT: Record<ToastVariant, AccentStyle> = {
+  success: {
+    icon: '#34d399',
+    glow: 'rgba(16,185,129,0.70)',
+    border: 'rgba(255,255,255,0.10)',
+  },
+  warning: {
+    icon: '#fbbf24',
+    glow: 'rgba(245,158,11,0.70)',
+    border: 'rgba(251,191,36,0.35)',
+  },
+  info: {
+    icon: '#2dd4bf',
+    glow: 'rgba(20,184,166,0.70)',
+    border: 'rgba(255,255,255,0.10)',
+  },
+  danger: {
+    icon: '#f87171',
+    glow: 'rgba(239,68,68,0.70)',
+    border: 'rgba(248,113,113,0.35)',
+  },
+}
+
 const POSITION_CLASS: Record<ToastPosition, string> = {
   'top-right': 'top-3 right-4',
   'top-center': 'top-3 left-1/2 -translate-x-1/2',
@@ -106,6 +135,7 @@ export function Toast({
 
   if (!open) return null
   const v = VARIANT_CLASS[variant]
+  const accent = ACCENT[variant]
 
   return (
     <div
@@ -129,15 +159,15 @@ export function Toast({
           className="flex items-start gap-3 rounded-xl backdrop-blur-xl p-4 w-95"
           style={{
             background: 'linear-gradient(180deg, #0e353d 0%, #08191d 100%)',
-            border: '1px solid rgba(255,255,255,0.10)',
+            border: `1px solid ${accent.border}`,
             boxShadow: '0 12px 40px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.08)',
           }}
         >
           <span
             className="flex items-center shrink-0 mt-0.5"
             style={{
-              color: '#34d399',
-              filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.7)) drop-shadow(0 0 3px rgba(16,185,129,0.5))',
+              color: accent.icon,
+              filter: `drop-shadow(0 0 8px ${accent.glow}) drop-shadow(0 0 3px ${accent.glow})`,
             }}
           >
             {icon}

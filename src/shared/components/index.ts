@@ -20,6 +20,7 @@ export { Modal } from './modals/Modal'
 export { Toast } from './toasts/Toast'
 export type { ToastVariant } from './toasts/Toast'
 export { ToastViewport } from './toasts/ToastViewport'
+export { showApiErrorToast } from './toasts/apiErrorToast'
 export { toast,useToastStore } from './toasts/useToastStore'
 export type { ToastInput,ToastItem } from './toasts/useToastStore'
 

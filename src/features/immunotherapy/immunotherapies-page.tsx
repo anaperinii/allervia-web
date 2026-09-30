@@ -6,7 +6,10 @@ import {
 import { ImmunotherapiesTable } from '@/features/immunotherapy/components/ImmunotherapiesTable'
 import { MODALITY_OPTIONS } from '@/features/immunotherapy/constants/modality-options'
 import { legacyModalityToRoute } from '@/features/patient/adapters/clinical-presentation'
-import { listImmunotherapies } from '@/shared/api/clinical.api'
+import {
+  listImmunotherapies,
+  listImmunotherapyTypes,
+} from '@/shared/api/clinical.api'
 import { readAutomation } from '@/shared/api/protocols.api'
 import type { ImmunotherapyListItem } from '@/shared/api/contracts/clinical'
 import { ApiError } from '@/shared/api/contracts/errors'
@@ -28,6 +31,7 @@ export function ImmunotherapiesPage() {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('IN_PROGRESS')
+  const [typeFilter, setTypeFilter] = useState('all')
   const [modalityTab, setModalityTab] = useState<ModalityTab>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -37,6 +41,7 @@ export function ImmunotherapiesPage() {
     pageSize: itemsPerPage,
     search: searchTerm.trim() || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
+    immunoType: typeFilter === 'all' ? undefined : typeFilter,
     route:
       modalityTab === 'all' ? undefined : legacyModalityToRoute(modalityTab),
   }
@@ -44,6 +49,12 @@ export function ImmunotherapiesPage() {
   const listQuery = useQuery({
     queryKey: queryKeys.immunotherapies(organizationId, filters),
     queryFn: ({ signal }) => listImmunotherapies(filters, signal),
+    enabled: organizationId !== '',
+  })
+
+  const typesQuery = useQuery({
+    queryKey: queryKeys.immunotherapyTypes(organizationId),
+    queryFn: ({ signal }) => listImmunotherapyTypes(signal),
     enabled: organizationId !== '',
   })
 
@@ -83,6 +94,11 @@ export function ImmunotherapiesPage() {
             setSearchTerm={(value) => applyFilter(() => setSearchTerm(value))}
             statusFilter={statusFilter}
             setStatusFilter={(value) => applyFilter(() => setStatusFilter(value))}
+            typeFilter={typeFilter}
+            setTypeFilter={(value) => applyFilter(() => setTypeFilter(value))}
+            typeOptions={
+              Array.isArray(typesQuery.data) ? typesQuery.data : []
+            }
           />
         }
       />

@@ -6,22 +6,26 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
 
 interface PatientActionsMenuProps {
+  canEditTherapy: boolean
   canInactivate: boolean
   canLgpdPortability: boolean
   canComplete: boolean
   completeDisabled: boolean
   patientStatus: 'active' | 'inactive'
+  onEditTherapy: () => void
   onInactivate: () => void
   onPortability: () => void
   onComplete: () => void
 }
 
 export function PatientActionsMenu({
+  canEditTherapy,
   canInactivate,
   canLgpdPortability,
   canComplete,
   completeDisabled,
   patientStatus,
+  onEditTherapy,
   onInactivate,
   onPortability,
   onComplete,
@@ -70,6 +74,13 @@ export function PatientActionsMenu({
           role="menu"
           className="absolute right-0 top-full mt-1 w-56 bg-white border border-(--border-custom) rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.1)] overflow-hidden z-50 animate-in fade-in-0 slide-in-from-top-1 duration-150 divide-y divide-(--border-custom)"
         >
+          {canEditTherapy && (
+            <MenuItem
+              label="Editar imunoterapia"
+              hint="Tipo do alérgeno"
+              onClick={handle(onEditTherapy)}
+            />
+          )}
           {canComplete && (
             <MenuItem
               label="Concluir tratamento"

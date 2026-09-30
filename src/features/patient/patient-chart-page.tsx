@@ -35,6 +35,7 @@ import { TreatmentTimeline } from '@/features/patient/components/treatment-compl
 import { ApplicationDetailModal } from '@/features/patient/components/chart/ApplicationDetailModal'
 import { EditPatientModal } from '@/features/patient/components/chart/EditPatientModal'
 import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
+import { EditTherapyModal } from '@/features/patient/components/chart/EditTherapyModal'
 import {
   LifecycleHistoryModal,
   ResumeTherapyModal,
@@ -174,6 +175,7 @@ export function PatientChartPage() {
   const [calMonth, setCalMonth] = useState(new Date().getMonth())
   const [calYear, setCalYear] = useState(new Date().getFullYear())
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showEditTherapyModal, setShowEditTherapyModal] = useState(false)
   const [showEditDoseModal, setShowEditDoseModal] = useState(false)
   const [showSuspendModal, setShowSuspendModal] = useState(false)
   const [showResumeModal, setShowResumeModal] = useState(false)
@@ -322,6 +324,8 @@ export function PatientChartPage() {
           canLgpdPortability={canLgpdPortability}
           canRevisePrescription={canInactivate && pendingDose !== null}
           onRevisePrescription={() => setShowReviseModal(true)}
+          canEditTherapy={canInactivate && selectedTherapy !== null}
+          onEditTherapy={() => setShowEditTherapyModal(true)}
           onShowLifecycleHistory={() => setShowLifecycleHistory(true)}
           onReactivate={() => setShowResumeModal(true)}
           onEditPatient={() => setShowEditModal(true)}
@@ -509,6 +513,15 @@ export function PatientChartPage() {
         patient={selectedPatient}
         onClose={() => setShowEditModal(false)}
         onSave={(patch) => savePatientMutation.mutate(patch)}
+      />
+
+      <EditTherapyModal
+        open={showEditTherapyModal}
+        therapy={selectedTherapy}
+        onClose={() => setShowEditTherapyModal(false)}
+        onSaved={() =>
+          queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
+        }
       />
 
       <EditScheduledDoseModal

@@ -88,6 +88,7 @@ export function MigrationPage() {
         autoDismissMs: 8000,
       })
     },
+    meta: { suppressErrorToast: true },
     onError: (error) => {
       toast.warning({
         icon: <FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 16 }} />,

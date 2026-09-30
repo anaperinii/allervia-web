@@ -27,7 +27,10 @@ const THERAPY: TherapySummary = {
     id: 'dose-1',
     scheduledAt: '2026-01-08T13:00:00.000Z',
     status: 'SCHEDULED',
+    intervalDays: 7,
+    phase: 'BUILD_UP',
   },
+  currentPhase: 'BUILD_UP',
   createdAt: '2026-01-01T13:00:00.000Z',
 }
 

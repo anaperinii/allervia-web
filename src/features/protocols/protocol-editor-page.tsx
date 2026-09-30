@@ -154,7 +154,7 @@ export function ProtocolEditorPage({
     onError: async (error) => {
       if (
         error instanceof ApiError &&
-        error.message === PROTOCOL_ERROR_CODES.staleRevision &&
+        error.code === PROTOCOL_ERROR_CODES.staleRevision &&
         versionId
       ) {
         const fresh = await readVersion(versionId)
