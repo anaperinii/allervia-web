@@ -94,7 +94,6 @@ export function ProtocolEditorPage({
       ? { expectedRevision: 0, name: '', draft: STARTER_DRAFT }
       : null,
   )
-  const [editorError, setEditorError] = useState<string | null>(null)
   const [conflict, setConflict] = useState(false)
 
   useEffect(() => {
@@ -168,10 +167,8 @@ export function ProtocolEditorPage({
             : current,
         )
         setConflict(true)
-        setEditorError(null)
         return
       }
-      setEditorError(describe(error, 'Não foi possível salvar o rascunho.'))
     },
   })
 
@@ -291,12 +288,6 @@ export function ProtocolEditorPage({
                   <li key={problem}>{problem}</li>
                 ))}
               </ul>
-            )}
-
-            {editorError && (
-              <p role="alert" className="text-[0.7rem] text-red-700">
-                {editorError}
-              </p>
             )}
 
             <div className="flex items-center justify-end gap-2 border-t border-(--border-custom) pt-4">

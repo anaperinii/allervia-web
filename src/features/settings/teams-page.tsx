@@ -51,8 +51,6 @@ export function TeamsPage() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [confirmState, setConfirmState] = useState<TeamConfirmState | null>(null)
   const [rolesTarget, setRolesTarget] = useState<TeamMember | null>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
-  const [inviteError, setInviteError] = useState<string | null>(null)
 
   const memberFilters = {
     page: currentPage,
@@ -87,8 +85,6 @@ export function TeamsPage() {
     mutationFn: (input: { professionalId: string; isActive: boolean }) =>
       updateMemberAccess(input.professionalId, input.isActive),
     onSuccess: refreshAll,
-    onError: (error) =>
-      setActionError(describe(error, 'Não foi possível alterar o acesso.')),
   })
 
   const inviteMutation = useMutation({
@@ -100,18 +96,13 @@ export function TeamsPage() {
       }),
     onSuccess: async () => {
       setShowInviteModal(false)
-      setInviteError(null)
       await refreshAll()
     },
-    onError: (error) =>
-      setInviteError(describe(error, 'Não foi possível enviar o convite.')),
   })
 
   const cancelMutation = useMutation({
     mutationFn: (inviteId: string) => cancelInvite(inviteId),
     onSuccess: refreshAll,
-    onError: (error) =>
-      setActionError(describe(error, 'Não foi possível cancelar o convite.')),
   })
 
   const resendMutation = useMutation({
@@ -124,8 +115,6 @@ export function TeamsPage() {
       })
     },
     onSuccess: refreshAll,
-    onError: (error) =>
-      setActionError(describe(error, 'Não foi possível reenviar o convite.')),
   })
 
   const members = membersQuery.data?.items ?? []
@@ -140,7 +129,6 @@ export function TeamsPage() {
 
   const handleConfirm = () => {
     if (!confirmState) return
-    setActionError(null)
 
     switch (confirmState.type) {
       case 'deactivate':
@@ -224,22 +212,19 @@ export function TeamsPage() {
           tone="brand"
           variant="solid"
           prominent
-          onClick={() => {
-            setInviteError(null)
-            setShowInviteModal(true)
-          }}
+          onClick={() => setShowInviteModal(true)}
           className="w-44"
         >
           Convidar membro
         </Button>
       </div>
 
-      {(loadFailure || actionError) && (
+      {loadFailure && (
         <div
           role="alert"
           className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[0.7rem] text-red-700"
         >
-          {actionError ?? describe(loadFailure, 'Não foi possível carregar a equipe.')}
+          {describe(loadFailure, 'Não foi possível carregar a equipe.')}
         </div>
       )}
 
@@ -370,7 +355,6 @@ export function TeamsPage() {
       <InviteMemberModal
         open={showInviteModal}
         submitting={inviteMutation.isPending}
-        error={inviteError}
         onClose={() => setShowInviteModal(false)}
         onSubmit={(data) => inviteMutation.mutate(data)}
       />

@@ -70,24 +70,24 @@ interface AccentStyle {
 
 const ACCENT: Record<ToastVariant, AccentStyle> = {
   success: {
-    icon: '#34d399',
-    glow: 'rgba(16,185,129,0.70)',
-    border: 'rgba(255,255,255,0.10)',
+    icon: '#059669',
+    glow: 'rgba(16,185,129,0.45)',
+    border: 'rgba(16,185,129,0.22)',
   },
   warning: {
-    icon: '#fbbf24',
-    glow: 'rgba(245,158,11,0.70)',
-    border: 'rgba(251,191,36,0.35)',
+    icon: '#d97706',
+    glow: 'rgba(245,158,11,0.45)',
+    border: 'rgba(245,158,11,0.26)',
   },
   info: {
-    icon: '#2dd4bf',
-    glow: 'rgba(20,184,166,0.70)',
-    border: 'rgba(255,255,255,0.10)',
+    icon: '#0d9488',
+    glow: 'rgba(20,184,166,0.45)',
+    border: 'rgba(20,184,166,0.22)',
   },
   danger: {
-    icon: '#f87171',
-    glow: 'rgba(239,68,68,0.70)',
-    border: 'rgba(248,113,113,0.35)',
+    icon: '#dc2626',
+    glow: 'rgba(239,68,68,0.45)',
+    border: 'rgba(239,68,68,0.26)',
   },
 }
 
@@ -156,32 +156,35 @@ export function Toast({
         </div>
       ) : (
         <div
-          className="flex items-start gap-3 rounded-xl backdrop-blur-xl p-4 w-95"
+          className="relative isolate flex items-start gap-3 overflow-hidden rounded-xl p-4 w-95"
           style={{
-            background: 'linear-gradient(180deg, #0e353d 0%, #08191d 100%)',
+            background: '#ffffff',
             border: `1px solid ${accent.border}`,
-            boxShadow: '0 12px 40px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.08)',
+            boxShadow:
+              '0 12px 40px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.06)',
           }}
         >
           <span
+            aria-hidden
+            className="pointer-events-none absolute -top-12 left-1/2 -z-10 h-24 w-4/5 -translate-x-1/2 rounded-full"
+            style={{ background: accent.glow, filter: 'blur(34px)' }}
+          />
+          <span
             className="flex items-center shrink-0 mt-0.5"
-            style={{
-              color: accent.icon,
-              filter: `drop-shadow(0 0 8px ${accent.glow}) drop-shadow(0 0 3px ${accent.glow})`,
-            }}
+            style={{ color: accent.icon }}
           >
             {icon}
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold" style={{ color: '#EDF2F3' }}>{title}</p>
-            {description && <p className="text-xs mt-1" style={{ color: 'rgba(220,225,229,0.7)' }}>{description}</p>}
+            <p className="text-sm font-semibold" style={{ color: '#0f172a' }}>{title}</p>
+            {description && <p className="text-xs mt-1" style={{ color: '#475569' }}>{description}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="h-6 w-6 flex items-center justify-center rounded-md transition-all shrink-0 hover:bg-white/10"
-            style={{ color: 'rgba(220,225,229,0.6)' }}
+            className="h-6 w-6 flex items-center justify-center rounded-md transition-all shrink-0 hover:bg-slate-900/5"
+            style={{ color: '#94a3b8' }}
           >
             <FontAwesomeIcon icon={faXmark} style={{ fontSize: 14 }} />
           </button>

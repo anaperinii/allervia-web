@@ -12,8 +12,6 @@ import type { FieldPath } from 'react-hook-form'
 
 export const addImmunotherapySchema = z
   .object({
-    patientMode: z.enum(['new', 'existing']),
-
     name: z.string(),
     cpf: z.string(),
     phone: z.string(),
@@ -32,55 +30,48 @@ export const addImmunotherapySchema = z
     targetStepId: z.string().min(1, 'Selecione a etapa meta'),
   })
   .superRefine((data, ctx) => {
-    if (data.patientMode === 'new') {
-      const nameResult = nameSchema.safeParse(data.name)
-      if (!nameResult.success) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['name'],
-          message: nameResult.error.issues[0].message,
-        })
-      }
-      const phoneResult = phoneSchema.safeParse(data.phone)
-      if (!phoneResult.success) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['phone'],
-          message: phoneResult.error.issues[0].message,
-        })
-      }
-      const birthResult = birthdateSchema.safeParse(data.birthDate)
-      if (!birthResult.success) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['birthDate'],
-          message: birthResult.error.issues[0].message,
-        })
-      }
-      const weightResult = weightSchema.safeParse(data.weight)
-      if (!weightResult.success) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['weight'],
-          message: weightResult.error.issues[0].message,
-        })
-      }
-      if (data.cpf.trim().length > 0) {
-        const cpfResult = cpfSchema.safeParse(data.cpf)
-        if (!cpfResult.success) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['cpf'],
-            message: cpfResult.error.issues[0].message,
-          })
-        }
-      }
-    } else if (!data.patientId) {
+    const nameResult = nameSchema.safeParse(data.name)
+    if (!nameResult.success) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['patientId'],
-        message: 'Selecione o paciente',
+        path: ['name'],
+        message: nameResult.error.issues[0].message,
       })
+    }
+
+    const phoneResult = phoneSchema.safeParse(data.phone)
+    if (!phoneResult.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['phone'],
+        message: phoneResult.error.issues[0].message,
+      })
+    }
+    const birthResult = birthdateSchema.safeParse(data.birthDate)
+    if (!birthResult.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['birthDate'],
+        message: birthResult.error.issues[0].message,
+      })
+    }
+    const weightResult = weightSchema.safeParse(data.weight)
+    if (!weightResult.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['weight'],
+        message: weightResult.error.issues[0].message,
+      })
+    }
+    if (data.cpf.trim().length > 0) {
+      const cpfResult = cpfSchema.safeParse(data.cpf)
+      if (!cpfResult.success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['cpf'],
+          message: cpfResult.error.issues[0].message,
+        })
+      }
     }
 
     if (data.stepIds.length > 0) {
@@ -104,7 +95,6 @@ export const addImmunotherapySchema = z
 export type AddImmunotherapyForm = z.infer<typeof addImmunotherapySchema>
 
 export const STEP_1_FIELDS = [
-  'patientMode',
   'name',
   'cpf',
   'phone',

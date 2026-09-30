@@ -8,7 +8,6 @@ interface AddImmunotherapyReviewStepProps {
   form: AddImmunotherapyForm
   versionLabel: string
   steps: ProtocolStep[]
-  existingPatientName: string | null
   timeZone: string
 }
 
@@ -16,23 +15,23 @@ export function AddImmunotherapyReviewStep({
   form,
   versionLabel,
   steps,
-  existingPatientName,
   timeZone,
 }: AddImmunotherapyReviewStepProps) {
   const stepById = new Map(steps.map((step) => [step.id, step]))
   const starting = stepById.get(form.startingStepId)
   const target = stepById.get(form.targetStepId)
 
-  const patientItems =
-    form.patientMode === 'existing'
-      ? [{ label: 'Paciente', value: existingPatientName ?? '—' }]
-      : [
-          { label: 'Nome', value: form.name || '—' },
-          { label: 'CPF', value: form.cpf || 'Não informado' },
-          { label: 'Telefone', value: form.phone || '—' },
-          { label: 'Data de Nascimento', value: formatIsoToPtOrDash(form.birthDate) },
-          { label: 'Peso', value: form.weight ? `${form.weight} kg` : '—' },
-        ]
+  const patientItems = [
+    { label: 'Nome', value: form.name || '—' },
+    { label: 'CPF', value: form.cpf || 'Não informado' },
+    { label: 'Telefone', value: form.phone || '—' },
+    { label: 'Data de Nascimento', value: formatIsoToPtOrDash(form.birthDate) },
+    { label: 'Peso', value: form.weight ? `${form.weight} kg` : '—' },
+    {
+      label: 'Cadastro',
+      value: form.patientId ? 'Paciente já cadastrado' : 'Novo cadastro',
+    },
+  ]
 
   const prescriptionItems = [
     { label: 'Tipo', value: form.type || '—' },

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { Button, FieldLabel, Modal, Select } from '@/shared/components'
+import { Button, FieldLabel, Modal, Select, showApiErrorToast } from '@/shared/components'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
 import { updateImmunotherapy } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
@@ -24,7 +24,6 @@ export function EditTherapyModal({
 }: EditTherapyModalProps) {
   const customTypes = useCustomTypesStore((s) => s.types)
   const [immunoType, setImmunoType] = useState(therapy?.immunoType ?? '')
-  const [failure, setFailure] = useState<string | null>(null)
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -33,17 +32,20 @@ export function EditTherapyModal({
         immunoType,
       }),
     onSuccess: async () => {
-      setFailure(null)
       await onSaved()
       onClose()
     },
+    meta: { suppressErrorToast: true },
     onError: (error) =>
-      setFailure(
+      showApiErrorToast(
+        error,
         error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION'
-          ? 'O tratamento mudou desde a abertura desta tela. Feche e tente de novo.'
-          : error instanceof ApiError
-            ? error.message
-            : 'Não foi possível salvar o tipo do alérgeno.',
+          ? {
+              title: 'Tratamento desatualizado',
+              description:
+                'O tratamento mudou desde a abertura desta tela. Feche e tente de novo.',
+            }
+          : {},
       ),
   })
 
@@ -75,10 +77,7 @@ export function EditTherapyModal({
               immunoType.trim().length === 0 ||
               immunoType === therapy.immunoType
             }
-            onClick={() => {
-              setFailure(null)
-              mutation.mutate()
-            }}
+            onClick={() => mutation.mutate()}
           >
             Salvar
           </Button>
@@ -107,12 +106,6 @@ export function EditTherapyModal({
             <span className="font-semibold text-(--text)">Revisar prescrição</span>{' '}
             para isso.
           </p>
-
-          {failure && (
-            <p role="alert" className="text-[0.7rem] text-red-700">
-              {failure}
-            </p>
-          )}
         </div>
       )}
     </Modal>

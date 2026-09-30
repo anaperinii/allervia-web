@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
+import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, TextInput } from '@/shared/components'
 import {
   executeTherapyLifecycle,
   getTherapyLifecycle,
@@ -51,7 +51,6 @@ function SuspendForm({
   const [category, setCategory] = useState('')
   const [reason, setReason] = useState('')
   const [expectedReturnDate, setExpectedReturnDate] = useState('')
-  const [failure, setFailure] = useState<string | null>(null)
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -69,13 +68,17 @@ function SuspendForm({
       onDone('suspended')
       onClose()
     },
+    meta: { suppressErrorToast: true },
     onError: (error) => {
-      setFailure(
+      showApiErrorToast(
+        error,
         error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION'
-          ? 'O tratamento mudou desde a abertura da tela. Recarregue e confirme novamente.'
-          : error instanceof ApiError
-            ? error.message
-            : 'Não foi possível suspender o tratamento.',
+          ? {
+              title: 'Tratamento desatualizado',
+              description:
+                'O tratamento mudou desde a abertura da tela. Recarregue e confirme novamente.',
+            }
+          : {},
       )
     },
   })
@@ -90,7 +93,7 @@ function SuspendForm({
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>
-          <Button tone="danger" variant="solid" disabled={!canSubmit} onClick={() => { setFailure(null); mutation.mutate() }}>
+          <Button tone="danger" variant="solid" disabled={!canSubmit} onClick={() => mutation.mutate()}>
             Suspender tratamento
           </Button>
         </>
@@ -132,7 +135,6 @@ function SuspendForm({
           onChange={(e) => setExpectedReturnDate(e.target.value)}
         />
       </FieldLabel>
-      {failure && <p role="alert" className="text-[0.7rem] text-red-700">{failure}</p>}
     </Modal>
   )
 }
@@ -151,7 +153,6 @@ function ResumeForm({
 }: LifecycleModalProps) {
   const queryClient = useQueryClient()
   const [reason, setReason] = useState('')
-  const [failure, setFailure] = useState<string | null>(null)
   const mutation = useMutation({
     mutationFn: () =>
       executeTherapyLifecycle(therapyId, {
@@ -163,11 +164,6 @@ function ResumeForm({
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       onDone('resumed')
       onClose()
-    },
-    onError: (error) => {
-      setFailure(
-        error instanceof ApiError ? error.message : 'Não foi possível retomar o tratamento.',
-      )
     },
   })
   return (
@@ -182,7 +178,7 @@ function ResumeForm({
             tone="success"
             variant="solid"
             disabled={reason.trim().length < 5 || mutation.isPending}
-            onClick={() => { setFailure(null); mutation.mutate() }}
+            onClick={() => mutation.mutate()}
           >
             Retomar tratamento
           </Button>
@@ -201,7 +197,6 @@ function ResumeForm({
           onChange={(e) => setReason(e.target.value)}
         />
       </FieldLabel>
-      {failure && <p role="alert" className="text-[0.7rem] text-red-700">{failure}</p>}
     </Modal>
   )
 }

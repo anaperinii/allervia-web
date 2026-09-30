@@ -73,7 +73,6 @@ export function ProtocolsPage() {
 
   const [confirm, setConfirm] = useState<ConfirmAction | null>(null)
   const [progression, setProgression] = useState<ProgressionTarget | null>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
 
   const refresh = async () => {
@@ -103,21 +102,15 @@ export function ProtocolsPage() {
     },
     onSuccess: async () => {
       setConfirm(null)
-      setActionError(null)
       await refresh()
     },
-    onError: (error) => {
-      setConfirm(null)
-      setActionError(describe(error, 'Não foi possível concluir a ação.'))
-    },
+    onError: () => setConfirm(null),
   })
 
   const automationMutation = useMutation({
     mutationFn: (input: { enabled: boolean; timeZone: string }) =>
       updateAutomation(input),
     onSuccess: refresh,
-    onError: (error) =>
-      setActionError(describe(error, 'Não foi possível salvar a automação.')),
   })
 
   const allProtocols = protocolsQuery.data ?? []
@@ -177,13 +170,12 @@ export function ProtocolsPage() {
           </p>
         )}
 
-        {(protocolsQuery.error || actionError) && (
+        {protocolsQuery.error && (
           <div
             role="alert"
             className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[0.7rem] text-red-700"
           >
-            {actionError ??
-              describe(protocolsQuery.error, 'Não foi possível carregar o catálogo.')}
+            {describe(protocolsQuery.error, 'Não foi possível carregar o catálogo.')}
           </div>
         )}
 

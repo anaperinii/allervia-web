@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Button, Modal, Switch } from '@/shared/components'
+import { Button, Modal, showApiErrorToast, Switch } from '@/shared/components'
 import {
   ROLE_BADGES,
   ROLE_DESCRIPTIONS,
@@ -91,7 +91,6 @@ function RolesForm({
   const [selected, setSelected] = useState<Set<TeamRole>>(
     () => new Set(active.map((grant) => grant.role)),
   )
-  const [failure, setFailure] = useState<string | null>(null)
 
   const toGrant = ALL_ROLES.filter(
     (role) => selected.has(role) && !grantIdByRole.has(role),
@@ -114,16 +113,14 @@ function RolesForm({
       }
     },
     onSuccess: async () => {
-      setFailure(null)
       await onSaved()
       onClose()
     },
+    meta: { suppressErrorToast: true },
     onError: (error) =>
-      setFailure(
-        error instanceof ApiError
-          ? error.message
-          : 'Não foi possível salvar os papéis. As mudanças já aplicadas permanecem.',
-      ),
+      showApiErrorToast(error, {
+        title: 'Papéis salvos parcialmente',
+      }),
   })
 
   const toggle = (role: TeamRole, checked: boolean) => {
@@ -174,12 +171,6 @@ function RolesForm({
         >
           Você está removendo o seu próprio papel de Administrador. Ao salvar,
           você perde o acesso a esta tela e não conseguirá desfazer sozinho.
-        </p>
-      )}
-
-      {failure && (
-        <p role="alert" className="text-[0.7rem] text-red-700">
-          {failure}
         </p>
       )}
 

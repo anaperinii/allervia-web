@@ -22,6 +22,19 @@ export function isoToPtDate(iso: string): string {
   return `${day}/${month}/${year}`
 }
 
+/**
+ * Normaliza uma data civil da API — que pode vir como instante ISO em UTC —
+ * para o `YYYY-MM-DD` exigido por `<input type="date">`.
+ */
+export function toDateInputValue(value: string | null | undefined): string {
+  if (!value) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+  const match = /^(\d{4}-\d{2}-\d{2})T/.exec(value)
+  if (match) return match[1]
+  const parsed = new Date(value)
+  return isNaN(parsed.getTime()) ? '' : parsed.toISOString().slice(0, 10)
+}
+
 export function calculateAge(birthDateIso: string): number {
   const birth = new Date(birthDateIso + 'T12:00')
   if (isNaN(birth.getTime())) return 0

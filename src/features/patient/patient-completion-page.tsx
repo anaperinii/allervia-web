@@ -9,7 +9,7 @@ import {
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
-import { Button, FieldLabel, TextArea, TextInput, toast } from '@/shared/components'
+import { Button, FieldLabel, showApiErrorToast, TextArea, TextInput, toast } from '@/shared/components'
 import { PageHeader } from '@/shared/components/showcase'
 import {
   formatInstantDate,
@@ -56,7 +56,6 @@ export function PatientCompletionPage() {
   const [note, setNote] = useState('')
   const [reason, setReason] = useState('')
   const [confirmed, setConfirmed] = useState(false)
-  const [failure, setFailure] = useState<string | null>(null)
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -94,13 +93,17 @@ export function PatientCompletionPage() {
         search: { therapy: therapy!.id },
       })
     },
+    meta: { suppressErrorToast: true },
     onError: (error) => {
-      setFailure(
+      showApiErrorToast(
+        error,
         error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION'
-          ? 'O tratamento mudou desde a abertura da tela. Recarregue e confirme novamente.'
-          : error instanceof ApiError
-            ? error.message
-            : 'Não foi possível encerrar o tratamento.',
+          ? {
+              title: 'Tratamento desatualizado',
+              description:
+                'O tratamento mudou desde a abertura da tela. Recarregue e confirme novamente.',
+            }
+          : {},
       )
     },
   })
@@ -224,7 +227,6 @@ export function PatientCompletionPage() {
               </p>
             </div>
           )}
-          {failure && <p role="alert" className="text-[0.7rem] text-red-700">{failure}</p>}
           <div className="flex justify-end gap-2">
             <Button
               variant="outline"
@@ -238,7 +240,7 @@ export function PatientCompletionPage() {
             >
               Voltar ao prontuário
             </Button>
-            <Button tone="brand" variant="solid" disabled={!canSubmit} onClick={() => { setFailure(null); mutation.mutate() }}>
+            <Button tone="brand" variant="solid" disabled={!canSubmit} onClick={() => mutation.mutate()}>
               Encerrar tratamento
             </Button>
           </div>

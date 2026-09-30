@@ -61,23 +61,32 @@ function fieldErrorSummary(error: ApiError): string | undefined {
   return entries.length > 0 ? entries.join(' ') : undefined
 }
 
-export function showApiErrorToast(error: unknown): string | undefined {
+export interface ApiErrorToastOverride {
+  title?: string
+  description?: string
+}
+
+export function showApiErrorToast(
+  error: unknown,
+  override: ApiErrorToastOverride = {},
+): string | undefined {
   if (!(error instanceof ApiError)) {
     if (error instanceof DOMException && error.name === 'AbortError') return
     return toast.warning({
       icon: <FontAwesomeIcon icon={ATTENTION.icon} style={{ fontSize: 16 }} />,
-      title: ATTENTION.title,
-      description: FALLBACK_MESSAGE,
+      title: override.title ?? ATTENTION.title,
+      description: override.description ?? FALLBACK_MESSAGE,
       position: 'top-right',
     })
   }
 
   const { title, variant, icon } = presentation(error)
-  const description = fieldErrorSummary(error) ?? error.message
+  const description =
+    override.description ?? fieldErrorSummary(error) ?? error.message
 
   return toast[variant]({
     icon: <FontAwesomeIcon icon={icon} style={{ fontSize: 16 }} />,
-    title,
+    title: override.title ?? title,
     description: error.requestId ? (
       <>
         {description}

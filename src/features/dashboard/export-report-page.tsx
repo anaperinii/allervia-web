@@ -3,14 +3,13 @@ import { useNavigate } from '@tanstack/react-router'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { exportClinicalDoses } from '@/shared/api/clinical.api'
 import type { ClinicalExportRow, TherapyStatus } from '@/shared/api/contracts/clinical'
-import { ApiError } from '@/shared/api/contracts/errors'
 import { exportClinicalDatasetCsv } from '@/features/patient/exporters'
 import { downloadFile } from '@/shared/lib/file-download'
-import { Button, FieldLabel, Modal, Select, TextArea, toast } from '@/shared/components'
+import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, toast } from '@/shared/components'
 import { PageHeader, Pill } from '@/shared/components/showcase'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleCheck, faCircleInfo, faDownload } from '@fortawesome/free-solid-svg-icons'
+import { faCircleCheck, faCircleInfo, faDownload, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 
 const PAGE_SIZE = 100
 const MAX_PAGES = 20
@@ -37,12 +36,9 @@ export function ExportReportPage() {
   const [consent, setConsent] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
-  const [failure, setFailure] = useState<string | null>(null)
-
   const exportDisabled = !consent || !justification.trim() || progress !== null
 
   async function runExport() {
-    setFailure(null)
     const asOf = new Date().toISOString()
     const rows: ClinicalExportRow[] = []
     let total = 0
@@ -60,9 +56,13 @@ export function ExportReportPage() {
         if (rows.length >= total) break
       }
       if (rows.length < total) {
-        setFailure(
-          `O conjunto tem ${total} linhas e o limite do navegador é ${MAX_PAGES * PAGE_SIZE}. Exportado parcialmente até a linha ${rows.length}; volumes maiores exigem o job de exportação (pendência declarada).`,
-        )
+        toast.warning({
+          icon: <FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 16 }} />,
+          title: 'Exportação parcial',
+          description: `O conjunto tem ${total} linhas e o limite do navegador é ${MAX_PAGES * PAGE_SIZE}. Exportado parcialmente até a linha ${rows.length}; volumes maiores exigem o job de exportação (pendência declarada).`,
+          position: 'top-right',
+          autoDismissMs: 10000,
+        })
       }
       if (format === 'csv') {
         exportClinicalDatasetCsv(rows, asOf)
@@ -80,9 +80,7 @@ export function ExportReportPage() {
         autoDismissMs: 8000,
       })
     } catch (error) {
-      setFailure(
-        error instanceof ApiError ? error.message : 'Não foi possível gerar a exportação.',
-      )
+      showApiErrorToast(error, { title: 'Não foi possível gerar a exportação' })
     } finally {
       setProgress(null)
     }
@@ -159,7 +157,6 @@ export function ExportReportPage() {
         </div>
 
         {progress && <p className="text-xs text-(--text-muted)">{progress}</p>}
-        {failure && <p role="alert" className="text-[0.72rem] text-amber-700 leading-relaxed">{failure}</p>}
       </div>
 
       <Modal

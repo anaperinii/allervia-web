@@ -7,7 +7,6 @@ import {
   listTherapiesForPatient,
   updateAppointment,
 } from '@/shared/api/clinical.api'
-import { ApiError } from '@/shared/api/contracts/errors'
 import type { Appointment } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
@@ -55,7 +54,6 @@ function NewAppointmentForm({
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
   const [notes, setNotes] = useState('')
-  const [failure, setFailure] = useState<string | null>(null)
 
   const patientsQuery = useQuery({
     queryKey: queryKeys.patients(organizationId, {
@@ -102,15 +100,6 @@ function NewAppointmentForm({
       onCreated()
       onClose()
     },
-    onError: (error) => {
-      setFailure(
-        error instanceof ApiError && error.code === 'DOSE_ALREADY_SCHEDULED'
-          ? 'Esta previsão já tem um compromisso agendado.'
-          : error instanceof ApiError
-            ? error.message
-            : 'Não foi possível criar o compromisso.',
-      )
-    },
   })
 
   const canSubmit =
@@ -125,7 +114,7 @@ function NewAppointmentForm({
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>
-          <Button tone="brand" variant="solid" disabled={!canSubmit} onClick={() => { setFailure(null); mutation.mutate() }}>
+          <Button tone="brand" variant="solid" disabled={!canSubmit} onClick={() => mutation.mutate()}>
             Agendar compromisso
           </Button>
         </>
@@ -185,7 +174,6 @@ function NewAppointmentForm({
       <FieldLabel label="Observações" hint="(opcional)">
         <TextArea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
       </FieldLabel>
-      {failure && <p role="alert" className="text-[0.7rem] text-red-700">{failure}</p>}
     </Modal>
   )
 }
@@ -202,7 +190,6 @@ export function AppointmentActionModal({
   const queryClient = useQueryClient()
   const [action, setAction] = useState<'CANCELLED' | 'MISSED' | 'COMPLETED' | ''>('')
   const [statusReason, setStatusReason] = useState('')
-  const [failure, setFailure] = useState<string | null>(null)
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -224,15 +211,6 @@ export function AppointmentActionModal({
       })
       onClose()
     },
-    onError: (error) => {
-      setFailure(
-        error instanceof ApiError && error.code === 'MISS_BEFORE_START'
-          ? 'Falta só pode ser registrada após o horário de início.'
-          : error instanceof ApiError
-            ? error.message
-            : 'Não foi possível atualizar o compromisso.',
-      )
-    },
   })
 
   if (!appointment) return null
@@ -250,7 +228,7 @@ export function AppointmentActionModal({
         open ? (
           <>
             <Button variant="outline" onClick={onClose}>Fechar</Button>
-            <Button tone="brand" variant="solid" disabled={!canSubmit} onClick={() => { setFailure(null); mutation.mutate() }}>
+            <Button tone="brand" variant="solid" disabled={!canSubmit} onClick={() => mutation.mutate()}>
               Confirmar
             </Button>
           </>
@@ -306,7 +284,6 @@ export function AppointmentActionModal({
           )}
         </>
       )}
-      {failure && <p role="alert" className="text-[0.7rem] text-red-700">{failure}</p>}
     </Modal>
   )
 }
