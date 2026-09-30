@@ -87,6 +87,28 @@ export function formatStepPresentation(step: {
   return `1:${concentration} - ${volume}ml`
 }
 
+/** Compara ignorando caixa, espaços e pontuação de separador. */
+const normalizeStepText = (value: string) =>
+  value.toLowerCase().replace(/[^0-9a-z:]/g, '')
+
+/**
+ * Nome da etapa para listas e selects. Protocolos costumam nomear a etapa com
+ * os próprios valores ("1:10.000 - 0,2ml"); nesses casos exibir
+ * `label — valores` duplica tudo, então o label redundante é omitido.
+ */
+export function formatStepOption(step: {
+  label: string
+  concentration: string
+  volume: string
+}): string {
+  const presentation = formatStepPresentation(step)
+  const label = step.label.trim()
+  if (!label || normalizeStepText(label) === normalizeStepText(presentation)) {
+    return presentation
+  }
+  return `${label} — ${presentation}`
+}
+
 export function readResolvedPrescription(
   resolved: unknown,
 ): ResolvedPrescription | null {

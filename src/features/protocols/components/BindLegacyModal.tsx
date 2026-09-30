@@ -9,7 +9,7 @@ import type {
   ResolvedPrescriptionInput,
   TreatmentProtocol,
 } from '@/shared/api/contracts/protocols'
-import { formatStepPresentation } from '@/features/patient/adapters/clinical-presentation'
+import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
 import { cn } from '@/shared/lib/cn'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -106,7 +106,7 @@ function BindLegacyForm({
         setRehearsed({
           body: currentKey!,
           stepLabel: step
-            ? `${step.label} — ${formatStepPresentation(step)}`
+            ? formatStepOption(step)
             : result.stepId,
         })
         setFailure(null)
@@ -238,9 +238,9 @@ function BindLegacyForm({
                         : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50',
                     )}
                   >
-                    {step.label}
+                    {formatStepOption(step)}
                     <span className="ml-1.5 font-normal opacity-75">
-                      {formatStepPresentation(step)} · {step.intervalDays}d
+                      {step.intervalDays}d
                     </span>
                   </button>
                 )
@@ -258,7 +258,7 @@ function BindLegacyForm({
                   .filter((step) => stepIds.includes(step.id))
                   .map((step) => (
                     <option key={step.id} value={step.id}>
-                      {step.label} — {formatStepPresentation(step)}
+                      {formatStepOption(step)}
                     </option>
                   ))}
               </Select>
@@ -273,7 +273,7 @@ function BindLegacyForm({
                   .filter((step) => stepIds.includes(step.id))
                   .map((step) => (
                     <option key={step.id} value={step.id}>
-                      {step.label} — {formatStepPresentation(step)}
+                      {formatStepOption(step)}
                     </option>
                   ))}
               </Select>

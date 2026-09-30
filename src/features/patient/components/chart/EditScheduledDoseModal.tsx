@@ -5,7 +5,7 @@ import { updateScheduledDose } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { toOffsetIso } from '@/shared/lib/dates'
-import { formatStepPresentation } from '@/features/patient/adapters/clinical-presentation'
+import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
 import type { DoseDetail } from '@/shared/api/contracts/clinical'
 
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
@@ -126,7 +126,7 @@ function EditScheduledDoseForm({
           <option value="" disabled>Selecione o valor</option>
           {(dose?.allowedValues ?? []).map((step) => (
             <option key={step.id} value={step.id}>
-              {step.label} — {formatStepPresentation(step)} · {step.intervalDays}d
+              {formatStepOption(step)} · {step.intervalDays}d
               {step.id === dose?.plannedStepId ? ' (atual)' : ''}
             </option>
           ))}

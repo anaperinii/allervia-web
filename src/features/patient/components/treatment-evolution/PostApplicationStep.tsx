@@ -5,7 +5,7 @@ import { GLASS_CARD_SHADOW } from '@/shared/constants/glass-card'
 import { cn } from '@/shared/lib/cn'
 import { addMinutesToTime } from '@/shared/lib/dates'
 import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
-import { formatStepPresentation } from '@/features/patient/adapters/clinical-presentation'
+import { formatStepOption, formatStepPresentation } from '@/features/patient/adapters/clinical-presentation'
 import { Controller, type UseFormReturn } from 'react-hook-form'
 
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
@@ -81,7 +81,7 @@ export function PostApplicationStep({ form, dose }: PostApplicationStepProps) {
             </option>
             {allowedValues.map((step) => (
               <option key={step.id} value={step.id}>
-                {step.label} — {formatStepPresentation(step)} · {step.intervalDays}d
+                {formatStepOption(step)} · {step.intervalDays}d
                 {step.id === plannedStepId ? ' (previsto)' : ''}
               </option>
             ))}

@@ -7,7 +7,7 @@ import { cn } from '@/shared/lib/cn'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
 import { listProtocols, readAutomation } from '@/shared/api/protocols.api'
 import type { ProtocolStep, ProtocolVersion } from '@/shared/api/contracts/protocols'
-import { formatStepPresentation } from '@/features/patient/adapters/clinical-presentation'
+import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
@@ -178,9 +178,9 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
                         : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50',
                     )}
                   >
-                    {step.label}
+                    {formatStepOption(step)}
                     <span className="ml-1.5 font-normal opacity-75">
-                      {formatStepPresentation(step)} · {step.intervalDays}d
+                      {step.intervalDays}d
                     </span>
                   </button>
                 )
@@ -196,7 +196,7 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
                   .filter((step) => selectedStepIds.includes(step.id))
                   .map((step) => (
                     <option key={step.id} value={step.id}>
-                      {step.label} — {formatStepPresentation(step)}
+                      {formatStepOption(step)}
                     </option>
                   ))}
               </Select>
@@ -208,7 +208,7 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
                   .filter((step) => selectedStepIds.includes(step.id))
                   .map((step) => (
                     <option key={step.id} value={step.id}>
-                      {step.label} — {formatStepPresentation(step)}
+                      {formatStepOption(step)}
                     </option>
                   ))}
               </Select>
