@@ -8,7 +8,7 @@ import {
   faCircleInfo,
   faCircleQuestion,
   faCreditCard,
-  faDesktop,
+  faFlask,
   faGear,
   faShield,
   faSliders,
@@ -27,7 +27,7 @@ import { cn } from '@/shared/lib/cn'
 import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
 import { useQuery } from '@tanstack/react-query'
 import { listNotifications } from '@/shared/api/notifications.api'
-import { useHasPermission, useUserStore, type Permission } from '@/shared/stores/useUserStore'
+import { hasPermission, useUserStore, type Permission } from '@/shared/stores/useUserStore'
 
 const DARK_INK = '#DCE1E5'
 const RAIL_ACTIVE_BACKGROUND = 'linear-gradient(150deg, #257E8C, #12333a)'
@@ -57,8 +57,8 @@ interface SettingsLink {
 const SETTINGS_LINKS: SettingsLink[] = [
   { icon: faUser, path: '/profile', label: 'Perfil' },
   { icon: faShield, path: '/security', label: 'Segurança' },
+  { icon: faFlask, path: '/protocols', label: 'Protocolos', requires: 'adjust_protocol' },
   { icon: faSliders, path: '/advanced-settings', label: 'Avançado', requires: 'advanced_settings' },
-  { icon: faDesktop, path: '/personalization', label: 'Aparência' },
   { icon: faUsers, path: '/teams', label: 'Equipes', requires: 'manage_team' },
   { icon: faCreditCard, path: '/plans', label: 'Planos', requires: 'manage_team' },
   { icon: faCircleQuestion, path: '/help', label: 'Ajuda' },
@@ -130,10 +130,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [showLogout, setShowLogout] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  const canAdvancedSettings = useHasPermission('advanced_settings')
-  const canManageTeam = useHasPermission('manage_team')
-  const visibleSettingsLinks = SETTINGS_LINKS.filter((link) =>
-    link.requires === 'advanced_settings' ? canAdvancedSettings : link.requires === 'manage_team' ? canManageTeam : true,
+  const capabilities = useUserStore((s) => s.capabilities)
+  const visibleSettingsLinks = SETTINGS_LINKS.filter(
+    (link) => !link.requires || hasPermission(capabilities, link.requires),
   )
 
   const isActive = (item: RailItem) =>

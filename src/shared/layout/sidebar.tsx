@@ -27,7 +27,7 @@ const ITEMS: SidebarItem[] = [
     icon: faGear,
     label: 'Configurações',
     path: '/settings',
-    matchPaths: ['/security', '/teams', '/help', '/advanced-settings', '/personalization', '/about', '/plans', '/profile'],
+    matchPaths: ['/security', '/teams', '/help', '/advanced-settings', '/about', '/plans', '/profile'],
   },
 ]
 
