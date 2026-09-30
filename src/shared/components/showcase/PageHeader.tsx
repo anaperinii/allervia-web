@@ -6,7 +6,7 @@ import { SHOWCASE } from './tokens'
 
 interface PageHeaderProps {
   breadcrumb?: string[]
-  title: string
+  title: ReactNode
   actions?: ReactNode
 }
 
