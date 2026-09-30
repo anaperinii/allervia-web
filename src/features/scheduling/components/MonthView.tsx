@@ -1,6 +1,6 @@
 import { format, isSameDay, isToday } from 'date-fns'
 import { cn } from '@/shared/lib/cn'
-import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
+import { EventDots } from '@/features/scheduling/components/EventDots'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
@@ -68,32 +68,30 @@ export function MonthView({
                 {format(day, 'dd')}
               </div>
               <div className="space-y-0.5">
-                {applications.slice(0, 2).map((application) => {
-                  const color = getApplicationEventColor(application)
-                  return (
-                    <div
-                      key={application.id}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onSelectApplication(application)
-                      }}
-                      className={cn(
-                        'rounded px-1 py-0.5 text-[0.55rem] font-medium truncate backdrop-blur-md cursor-pointer hover:opacity-80 transition-opacity',
-                        application.status === 'missed' && 'opacity-70',
-                      )}
-                      style={{
-                        backgroundColor: color.bg,
-                        backgroundImage:
-                          application.status === 'missed'
-                            ? `repeating-linear-gradient(45deg, rgba(100,116,139,0.22) 0 1.5px, transparent 1.5px 6px), ${color.grad}`
-                            : color.grad,
-                        color: color.text,
-                      }}
-                    >
+                {applications.slice(0, 2).map((application) => (
+                  <div
+                    key={application.id}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelectApplication(application)
+                    }}
+                    className={cn(
+                      'flex items-center gap-1 rounded border border-(--border-custom) bg-white px-1 py-0.5 text-[0.55rem] font-medium text-(--text) cursor-pointer transition-all hover:border-brand/40',
+                      application.status === 'missed' && 'opacity-70',
+                    )}
+                    style={{
+                      backgroundImage:
+                        application.status === 'missed'
+                          ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.14) 0 1.5px, transparent 1.5px 6px)'
+                          : undefined,
+                    }}
+                  >
+                    <span className="min-w-0 flex-1 truncate">
                       {application.startTime} · {application.patientName ?? ''}
-                    </div>
-                  )
-                })}
+                    </span>
+                    <EventDots application={application} size="sm" />
+                  </div>
+                ))}
                 {applications.length > 2 && (
                   <div className="text-[0.55rem] text-(--text-muted) px-1">
                     +{applications.length - 2} mais
