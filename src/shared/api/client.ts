@@ -143,7 +143,7 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const started = generation
   const response = await send(path, options)
-  if (started !== generation)
+  if (!options.anonymous && started !== generation)
     throw new DOMException('Authentication changed', 'AbortError')
   if (!response.ok) {
     const error = new ApiError(await parseEnvelope(response))

@@ -117,6 +117,7 @@ export function readInviteContext(
   signal?: AbortSignal,
 ): Promise<InviteContext> {
   return apiRequest(`/onboarding/invites/context/${encodeURIComponent(token)}`, {
+    anonymous: true,
     signal,
   })
 }
@@ -131,6 +132,7 @@ export function completeInviteRegistration(
   },
 ): Promise<{ userId: string; professionalId: string; email: string }> {
   return apiRequest(`/onboarding/registration/${encodeURIComponent(token)}`, {
+    anonymous: true,
     method: 'POST',
     body,
   })
