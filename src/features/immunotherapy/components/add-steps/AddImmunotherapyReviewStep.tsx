@@ -3,7 +3,10 @@ import { cn } from '@/shared/lib/cn'
 import { formatIsoToPtOrDash } from '@/shared/lib/dates'
 import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
-import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
+import {
+  isMinorBirthDate,
+  type AddImmunotherapyForm,
+} from '@/features/immunotherapy/schemas/add-immunotherapy'
 
 interface AddImmunotherapyReviewStepProps {
   form: AddImmunotherapyForm
@@ -20,6 +23,8 @@ export function AddImmunotherapyReviewStep({
   const starting = stepById.get(form.startingStepId)
   const target = stepById.get(form.targetStepId)
 
+  const isMinor = isMinorBirthDate(form.birthDate)
+
   const patientItems = [
     { label: 'Nome', value: form.name || '—' },
     { label: 'CPF', value: form.cpf || '—' },
@@ -30,6 +35,12 @@ export function AddImmunotherapyReviewStep({
       label: 'Cadastro',
       value: form.patientId ? 'Paciente já cadastrado' : 'Novo cadastro',
     },
+  ]
+
+  const guardianItems = [
+    { label: 'Nome', value: form.guardianName || '—' },
+    { label: 'CPF', value: form.guardianCpf || '—' },
+    { label: 'Telefone', value: form.guardianPhone || '—' },
   ]
 
   const prescriptionItems = [
@@ -55,6 +66,7 @@ export function AddImmunotherapyReviewStep({
       <StepHeading description="Revise a prescrição. Ao salvar, paciente, tratamento e primeira previsão são gravados juntos — ou nada é gravado." />
       <div className="grid grid-cols-1 gap-3">
         <ReviewCard title="Paciente" items={patientItems} />
+        {isMinor && <ReviewCard title="Responsável Legal" items={guardianItems} />}
         <ReviewCard title="Prescrição" items={prescriptionItems} />
       </div>
     </div>

@@ -76,6 +76,13 @@ export function PatientInfoSidebar({
     ['Telefone', formatPhone(patient.phone)],
     ['Peso', patient.weight],
     ['Médico Responsável', patient.responsibleDoctor],
+    ...(patient.guardian
+      ? ([
+          ['Responsável Legal', patient.guardian.name],
+          ['CPF do Responsável', patient.guardian.cpf ? formatCPF(patient.guardian.cpf) : '—'],
+          ['Tel. do Responsável', formatPhone(patient.guardian.phone)],
+        ] as [string, string][])
+      : []),
   ]
 
   const immunoRows: [string, string][] = [
@@ -93,7 +100,7 @@ export function PatientInfoSidebar({
     inactivationCount > 0
 
   return (
-    <div className="flex w-[360px] shrink-0 flex-col rounded-xl bg-white overflow-hidden">
+    <div className="flex w-90 shrink-0 flex-col rounded-xl bg-white overflow-hidden">
       <div className="border-b border-(--border-custom) px-5 py-4">
         <div className="flex items-center gap-3">
           <PatientInitials name={patient.name} size={48} />
@@ -196,7 +203,7 @@ export function PatientInfoSidebar({
             Dados Pessoais
             {showPersonal ? <FontAwesomeIcon icon={faChevronUp} style={{ fontSize: 14 }} /> : <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 14 }} />}
           </button>
-          <div id={personalId} className={cn('overflow-hidden transition-all duration-300', showPersonal ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0')}>
+          <div id={personalId} className={cn('overflow-hidden transition-all duration-300', showPersonal ? 'max-h-120 opacity-100' : 'max-h-0 opacity-0')}>
             <div className="px-3.5 pb-3 space-y-2">
               {personalRows.map(([label, value]) => (
                 <Row key={label} label={label} value={value} />

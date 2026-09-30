@@ -112,6 +112,9 @@ export function PatientChartPage() {
       phone: string
       weight: string
       responsibleDoctor: string
+      guardianName?: string
+      guardianCpf?: string
+      guardianPhone?: string
     }) =>
       updatePatient(patientId, {
         fullName: patch.name,
@@ -122,6 +125,15 @@ export function PatientChartPage() {
         ...(patch.responsibleDoctor &&
         patch.responsibleDoctor !== patientDetail?.responsiblePhysician.id
           ? { responsiblePhysicianId: patch.responsibleDoctor }
+          : {}),
+        ...(patch.guardianName
+          ? {
+              guardian: {
+                fullName: patch.guardianName.trim(),
+                cpf: patch.guardianCpf,
+                phoneNumber: (patch.guardianPhone ?? '').replace(/\D/g, ''),
+              },
+            }
           : {}),
       }),
     onSuccess: async () => {

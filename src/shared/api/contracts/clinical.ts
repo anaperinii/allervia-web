@@ -20,6 +20,13 @@ export interface ResponsiblePhysician {
   councilUf?: string | null
 }
 
+/** Responsável legal — obrigatório no cadastro de pacientes menores de idade. */
+export interface PatientGuardian {
+  fullName: string
+  cpf: string | null
+  phoneNumber: string
+}
+
 export interface NextDoseSummary {
   id: string
   scheduledAt: string
@@ -61,6 +68,7 @@ export interface PatientListItem {
 
 export interface PatientDetail extends PatientListItem {
   cpf?: string | null
+  guardian?: PatientGuardian | null
   therapies: TherapySummary[]
   updatedAt: string
 }

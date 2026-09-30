@@ -8,7 +8,17 @@ import {
   futureDateSchema,
   extratoSchema,
 } from '@/shared/lib/field-schemas'
+import { calculateAge } from '@/shared/lib/dates'
 import type { FieldPath } from 'react-hook-form'
+
+export const ADULT_AGE = 18
+
+export function isMinorBirthDate(birthDate: string): boolean {
+  return (
+    birthdateSchema.safeParse(birthDate).success &&
+    calculateAge(birthDate) < ADULT_AGE
+  )
+}
 
 export const addImmunotherapySchema = z
   .object({
@@ -17,6 +27,10 @@ export const addImmunotherapySchema = z
     phone: z.string(),
     birthDate: z.string(),
     weight: z.string(),
+
+    guardianName: z.string(),
+    guardianCpf: z.string(),
+    guardianPhone: z.string(),
 
     patientId: z.string(),
 
@@ -72,6 +86,34 @@ export const addImmunotherapySchema = z
       })
     }
 
+    // Menor de idade: responsável legal obrigatório (nome, CPF e contato).
+    if (isMinorBirthDate(data.birthDate)) {
+      const guardianNameResult = nameSchema.safeParse(data.guardianName)
+      if (!guardianNameResult.success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guardianName'],
+          message: guardianNameResult.error.issues[0].message,
+        })
+      }
+      const guardianCpfResult = cpfSchema.safeParse(data.guardianCpf)
+      if (!guardianCpfResult.success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guardianCpf'],
+          message: guardianCpfResult.error.issues[0].message,
+        })
+      }
+      const guardianPhoneResult = phoneSchema.safeParse(data.guardianPhone)
+      if (!guardianPhoneResult.success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guardianPhone'],
+          message: guardianPhoneResult.error.issues[0].message,
+        })
+      }
+    }
+
     if (data.stepIds.length > 0) {
       if (!data.stepIds.includes(data.startingStepId)) {
         ctx.addIssue({
@@ -98,6 +140,9 @@ export const STEP_1_FIELDS = [
   'phone',
   'birthDate',
   'weight',
+  'guardianName',
+  'guardianCpf',
+  'guardianPhone',
   'patientId',
 ] as const satisfies readonly FieldPath<AddImmunotherapyForm>[]
 

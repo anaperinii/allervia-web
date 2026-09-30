@@ -9,7 +9,10 @@ import { getPatient, listPatients } from '@/shared/api/clinical.api'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import type { PatientListItem } from '@/shared/api/contracts/clinical'
-import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
+import {
+  isMinorBirthDate,
+  type AddImmunotherapyForm,
+} from '@/features/immunotherapy/schemas/add-immunotherapy'
 
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -55,6 +58,14 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
     if (detailCpf !== undefined) setValue('cpf', formatCPF(detailCpf ?? ''))
   }, [detailCpf, setValue])
 
+  const detailGuardian = patientDetailQuery.data?.guardian
+  useEffect(() => {
+    if (!patientDetailQuery.data) return
+    setValue('guardianName', detailGuardian?.fullName ?? '')
+    setValue('guardianCpf', formatCPF(detailGuardian?.cpf ?? ''))
+    setValue('guardianPhone', formatPhone(detailGuardian?.phoneNumber ?? ''))
+  }, [patientDetailQuery.data, detailGuardian, setValue])
+
   // Cadastro antigo pode não ter CPF; nesse caso o campo fica editável para o
   // prescritor completar — o valor é gravado no cadastro ao salvar.
   const cpfLocked =
@@ -82,6 +93,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
     birthDate && parseIsoDate(birthDate) && parseIsoDate(birthDate)! <= new Date()
       ? calculateAge(birthDate)
       : null
+  const isMinor = isMinorBirthDate(birthDate)
 
   const selectPatient = (patient: PatientListItem) => {
     setValue('patientId', patient.id, { shouldValidate: true })
@@ -90,6 +102,9 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
     setValue('phone', formatPhone(patient.phoneNumber))
     setValue('birthDate', toDateInputValue(patient.birthDate))
     setValue('weight', formatWeight(String(patient.weightInKg)))
+    setValue('guardianName', '')
+    setValue('guardianCpf', '')
+    setValue('guardianPhone', '')
     setShowSuggestions(false)
     setHighlightedIndex(-1)
   }
@@ -101,6 +116,9 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
     setValue('phone', '')
     setValue('birthDate', '')
     setValue('weight', '')
+    setValue('guardianName', '')
+    setValue('guardianCpf', '')
+    setValue('guardianPhone', '')
     setShowSuggestions(false)
     setHighlightedIndex(-1)
   }
@@ -132,6 +150,9 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
         setValue('phone', '')
         setValue('birthDate', '')
         setValue('weight', '')
+        setValue('guardianName', '')
+        setValue('guardianCpf', '')
+        setValue('guardianPhone', '')
       }
       setShowSuggestions(true)
     },
@@ -295,6 +316,55 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
         <FieldLabel label="Médico Responsável">
           <TextInput value={prescriberLabel} readOnly className="text-(--text-muted) bg-gray-100/60" />
         </FieldLabel>
+
+        {isMinor && (
+          <div className="col-span-2 rounded-xl border border-(--border-custom) bg-gray-50/60 p-4">
+            <div className="mb-1 text-xs font-bold text-(--text)">Responsável Legal</div>
+            <p className="mb-3 text-[0.65rem] leading-relaxed text-(--text-muted)">
+              Paciente menor de idade: informe nome, CPF e telefone de contato do
+              responsável legal.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <FieldLabel label="Nome do Responsável" error={errors.guardianName?.message}>
+                <TextInput
+                  placeholder="Nome completo"
+                  invalid={!!errors.guardianName}
+                  {...register('guardianName')}
+                />
+              </FieldLabel>
+              <FieldLabel label="CPF do Responsável" error={errors.guardianCpf?.message}>
+                <Controller
+                  control={control}
+                  name="guardianCpf"
+                  render={({ field }) => (
+                    <TextInput
+                      placeholder="000.000.000-00"
+                      invalid={!!errors.guardianCpf}
+                      value={field.value}
+                      onBlur={field.onBlur}
+                      onChange={(e) => field.onChange(formatCPF(e.target.value))}
+                    />
+                  )}
+                />
+              </FieldLabel>
+              <FieldLabel label="Telefone do Responsável" error={errors.guardianPhone?.message}>
+                <Controller
+                  control={control}
+                  name="guardianPhone"
+                  render={({ field }) => (
+                    <TextInput
+                      placeholder="(00) 00000-0000"
+                      invalid={!!errors.guardianPhone}
+                      value={field.value}
+                      onBlur={field.onBlur}
+                      onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                    />
+                  )}
+                />
+              </FieldLabel>
+            </div>
+          </div>
+        )}
 
         {isExisting && (
           <p className="col-span-2 text-[0.65rem] leading-relaxed text-(--text-muted)">

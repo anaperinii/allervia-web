@@ -28,6 +28,8 @@ export const ERROR_CATALOG: readonly ErrorCatalogEntry[] = [
   { code: 'DUPLICATE_OBSERVATION_PHASE', status: 400, message: "Já existe uma observação registrada para esta fase. Use apenas uma por fase." },
   { code: 'ENDPOINT_RETIRED', status: 410, message: "Este recurso foi descontinuado. Atualize o aplicativo." },
   { code: 'FORBIDDEN', status: 403, message: "Você não tem permissão para esta ação." },
+  { code: 'GUARDIAN_NOT_ALLOWED_FOR_ADULT', status: 400, message: "Paciente maior de idade não tem responsável legal. Remova os dados do responsável." },
+  { code: 'GUARDIAN_REQUIRED_FOR_MINOR', status: 400, message: "Paciente menor de idade exige responsável legal. Informe nome e telefone do responsável." },
   { code: 'IDEMPOTENCY_KEY_REQUIRED', status: 400, message: "Não foi possível concluir o envio. Recarregue a página e tente de novo." },
   { code: 'IDEMPOTENCY_KEY_REUSED', status: 409, message: "Este envio já foi processado com dados diferentes. Recarregue a página e confira antes de repetir." },
   { code: 'INTERNAL_ERROR', status: 500, message: "Erro interno ao processar a requisição." },

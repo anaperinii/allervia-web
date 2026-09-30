@@ -128,6 +128,13 @@ export function buildLegacyPatient(
     phone: detail.phoneNumber,
     weight: `${detail.weightInKg.toLocaleString('pt-BR')} kg`,
     cpf: detail.cpf ?? detail.cpfMasked ?? '—',
+    guardian: detail.guardian
+      ? {
+          name: detail.guardian.fullName,
+          cpf: detail.guardian.cpf ?? '',
+          phone: detail.guardian.phoneNumber,
+        }
+      : null,
     responsibleDoctor: detail.responsiblePhysician.fullName,
     responsibleDoctorId: detail.responsiblePhysician.id,
     status: detail.isActive ? 'active' : 'inactive',

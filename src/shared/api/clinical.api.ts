@@ -73,6 +73,12 @@ export interface UpdatePatientBody {
   birthDate?: string
   cpf?: string
   responsiblePhysicianId?: string
+  /** Responsável legal (menores de idade); null remove o vínculo. */
+  guardian?: {
+    fullName: string
+    cpf?: string
+    phoneNumber: string
+  } | null
 }
 
 export function updatePatient(
@@ -132,6 +138,12 @@ export interface RegisterImmunotherapyBody {
     phoneNumber: string
     cpf?: string
     responsiblePhysicianId: string
+    /** Responsável legal — obrigatório para menores de idade. */
+    guardian?: {
+      fullName: string
+      cpf?: string
+      phoneNumber: string
+    }
   }
   patientId?: string
   immunoType: string

@@ -3,6 +3,7 @@ import { ImmunotherapyDataStep } from '@/features/immunotherapy/components/add-s
 import { PatientDataStep } from '@/features/immunotherapy/components/add-steps/PatientDataStep'
 import {
   addImmunotherapySchema,
+  isMinorBirthDate,
   STEP_1_FIELDS,
   STEP_2_FIELDS,
   type AddImmunotherapyForm,
@@ -60,6 +61,7 @@ export function AddImmunotherapyPage() {
     mode: 'onBlur',
     defaultValues: {
       name: '', cpf: '', phone: '', birthDate: '', weight: '', patientId: '',
+      guardianName: '', guardianCpf: '', guardianPhone: '',
       type: '', startDate: tomorrowStr(), extract: '',
       protocolVersionId: '', stepIds: [], startingStepId: '', targetStepId: '',
     },
@@ -92,6 +94,15 @@ export function AddImmunotherapyPage() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: AddImmunotherapyForm) => {
+      const isMinor = isMinorBirthDate(data.birthDate)
+      const guardianBody = isMinor
+        ? {
+            fullName: data.guardianName.trim(),
+            cpf: data.guardianCpf,
+            phoneNumber: data.guardianPhone.replace(/\D/g, ''),
+          }
+        : undefined
+
       const current = patientDetailQuery.data
       if (data.patientId && current) {
         const changes: UpdatePatientBody = {}
@@ -110,6 +121,16 @@ export function AddImmunotherapyPage() {
         if (weightInKg !== current.weightInKg) {
           changes.weightInKg = weightInKg
         }
+        if (guardianBody) {
+          const existing = current.guardian
+          const changed =
+            !existing ||
+            existing.fullName !== guardianBody.fullName ||
+            (existing.cpf ?? '').replace(/\D/g, '') !==
+              guardianBody.cpf.replace(/\D/g, '') ||
+            existing.phoneNumber.replace(/\D/g, '') !== guardianBody.phoneNumber
+          if (changed) changes.guardian = guardianBody
+        }
         if (Object.keys(changes).length > 0) {
           await updatePatient(data.patientId, changes)
         }
@@ -127,6 +148,7 @@ export function AddImmunotherapyPage() {
                 phoneNumber: data.phone.replace(/\D/g, ''),
                 cpf: data.cpf,
                 responsiblePhysicianId: account?.professional?.id ?? '',
+                ...(guardianBody ? { guardian: guardianBody } : {}),
               },
             }),
         immunoType: data.type.trim(),
