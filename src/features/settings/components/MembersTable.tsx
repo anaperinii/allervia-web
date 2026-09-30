@@ -13,6 +13,7 @@ interface MembersTableProps {
   onCloseMenu: () => void
   onDeactivate: (member: TeamMember) => void
   onActivate: (member: TeamMember) => void
+  onManageRoles: (member: TeamMember) => void
 }
 
 const monthYear = new Intl.DateTimeFormat('pt-BR', {
@@ -28,6 +29,7 @@ export function MembersTable({
   onCloseMenu,
   onDeactivate,
   onActivate,
+  onManageRoles,
 }: MembersTableProps) {
   if (members.length === 0) {
     return (
@@ -115,6 +117,7 @@ export function MembersTable({
                 onClose={onCloseMenu}
                 onDeactivate={() => onDeactivate(member)}
                 onActivate={() => onActivate(member)}
+                onManageRoles={() => onManageRoles(member)}
               />
             </td>
           </tr>

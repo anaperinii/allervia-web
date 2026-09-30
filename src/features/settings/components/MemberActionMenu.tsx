@@ -3,7 +3,7 @@ import { IconButton } from '@/shared/components'
 import type { TeamMember } from '@/shared/api/contracts/team'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEllipsis, faUserCheck, faUserXmark } from '@fortawesome/free-solid-svg-icons'
+import { faEllipsis, faUserCheck, faUserGear, faUserXmark } from '@fortawesome/free-solid-svg-icons'
 
 interface MemberActionMenuProps {
   member: TeamMember
@@ -12,6 +12,7 @@ interface MemberActionMenuProps {
   onClose: () => void
   onDeactivate: () => void
   onActivate: () => void
+  onManageRoles: () => void
 }
 
 export function MemberActionMenu({
@@ -21,6 +22,7 @@ export function MemberActionMenu({
   onClose,
   onDeactivate,
   onActivate,
+  onManageRoles,
 }: MemberActionMenuProps) {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -50,6 +52,14 @@ export function MemberActionMenu({
           role="menu"
           className="absolute right-0 top-full mt-1 w-48 bg-white border border-(--border-custom) rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.1)] overflow-hidden z-50 animate-in fade-in-0 slide-in-from-top-1 duration-150"
         >
+          <button
+            role="menuitem"
+            onClick={onManageRoles}
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-(--text) hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            <FontAwesomeIcon icon={faUserGear} style={{ fontSize: 12 }} />
+            Gerenciar papéis
+          </button>
           {member.isActive ? (
             <button
               role="menuitem"
