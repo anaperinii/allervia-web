@@ -97,6 +97,10 @@ export function AddImmunotherapyPage() {
         const changes: UpdatePatientBody = {}
         const phoneNumber = data.phone.replace(/\D/g, '')
         const weightInKg = Number(data.weight.replace(',', '.'))
+        const cpf = data.cpf.replace(/\D/g, '')
+        if (cpf !== (current.cpf ?? '').replace(/\D/g, '')) {
+          changes.cpf = data.cpf
+        }
         if (phoneNumber !== current.phoneNumber.replace(/\D/g, '')) {
           changes.phoneNumber = phoneNumber
         }
@@ -121,7 +125,7 @@ export function AddImmunotherapyPage() {
                 birthDate: data.birthDate,
                 weightInKg: Number(data.weight.replace(',', '.')),
                 phoneNumber: data.phone.replace(/\D/g, ''),
-                ...(data.cpf.trim() ? { cpf: data.cpf } : {}),
+                cpf: data.cpf,
                 responsiblePhysicianId: account?.professional?.id ?? '',
               },
             }),

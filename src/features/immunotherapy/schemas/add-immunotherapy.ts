@@ -63,15 +63,13 @@ export const addImmunotherapySchema = z
         message: weightResult.error.issues[0].message,
       })
     }
-    if (data.cpf.trim().length > 0) {
-      const cpfResult = cpfSchema.safeParse(data.cpf)
-      if (!cpfResult.success) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['cpf'],
-          message: cpfResult.error.issues[0].message,
-        })
-      }
+    const cpfResult = cpfSchema.safeParse(data.cpf)
+    if (!cpfResult.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['cpf'],
+        message: cpfResult.error.issues[0].message,
+      })
     }
 
     if (data.stepIds.length > 0) {

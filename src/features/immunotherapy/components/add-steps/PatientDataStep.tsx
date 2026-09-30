@@ -55,6 +55,11 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
     if (detailCpf !== undefined) setValue('cpf', formatCPF(detailCpf ?? ''))
   }, [detailCpf, setValue])
 
+  // Cadastro antigo pode não ter CPF; nesse caso o campo fica editável para o
+  // prescritor completar — o valor é gravado no cadastro ao salvar.
+  const cpfLocked =
+    isExisting && (patientDetailQuery.isPending || Boolean(detailCpf))
+
   const suggestions = isExisting ? [] : (patientsQuery.data?.items ?? []).slice(0, 8)
   const isOpen = showSuggestions && suggestions.length > 0
 
@@ -210,7 +215,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
           </div>
         </FieldLabel>
 
-        <FieldLabel label="CPF (opcional)" error={errors.cpf?.message}>
+        <FieldLabel label="CPF" error={errors.cpf?.message}>
           <Controller
             control={control}
             name="cpf"
@@ -221,9 +226,9 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
                 }
                 invalid={!!errors.cpf}
                 value={field.value}
-                readOnly={isExisting}
-                tabIndex={isExisting ? -1 : undefined}
-                className={cn(isExisting && 'bg-gray-100/60 text-(--text-muted)')}
+                readOnly={cpfLocked}
+                tabIndex={cpfLocked ? -1 : undefined}
+                className={cn(cpfLocked && 'bg-gray-100/60 text-(--text-muted)')}
                 onBlur={field.onBlur}
                 onChange={(e) => field.onChange(formatCPF(e.target.value))}
               />
@@ -293,7 +298,8 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
         {isExisting && (
           <p className="col-span-2 flex items-center gap-2 text-[0.65rem] leading-relaxed text-(--text-muted)">
             Paciente já cadastrado: o tratamento não duplica o cadastro. Ajustes em
-            telefone, nascimento e peso atualizam o cadastro do paciente ao salvar.
+            CPF, telefone, nascimento e peso atualizam o cadastro do paciente ao
+            salvar.
             <Button type="button" tone="brand" variant="ghost" size="sm" onClick={clearPatient}>
               Cadastrar outro paciente
             </Button>

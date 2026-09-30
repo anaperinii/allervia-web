@@ -23,7 +23,7 @@ export function AddImmunotherapyReviewStep({
 
   const patientItems = [
     { label: 'Nome', value: form.name || '—' },
-    { label: 'CPF', value: form.cpf || 'Não informado' },
+    { label: 'CPF', value: form.cpf || '—' },
     { label: 'Telefone', value: form.phone || '—' },
     { label: 'Data de Nascimento', value: formatIsoToPtOrDash(form.birthDate) },
     { label: 'Peso', value: form.weight ? `${form.weight} kg` : '—' },
