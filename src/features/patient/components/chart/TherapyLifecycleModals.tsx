@@ -187,7 +187,7 @@ function ResumeForm({
     >
       <p className="text-xs text-(--text) leading-relaxed">
         O tratamento volta a aceitar comandos clínicos a partir da previsão preservada.
-        Para retomar em outro valor ou data, use &quot;Editar previsão pendente&quot; após a retomada.
+        Para retomar em outro valor ou data, edite os dados previstos na linha do tempo após a retomada.
       </p>
       <FieldLabel label="Motivo da retomada" required>
         <TextArea
