@@ -51,6 +51,16 @@ export function editVersion(
   })
 }
 
+export function discardDraftVersion(
+  versionId: string,
+  expectedRevision: number,
+): Promise<{ discardedVersionId: string; protocolRemoved: boolean }> {
+  return apiRequest(`/treatment-protocols/versions/${versionId}`, {
+    method: 'DELETE',
+    body: { expectedRevision },
+  })
+}
+
 function mutateVersion(
   versionId: string,
   action: 'publish' | 'retire' | 'default',
