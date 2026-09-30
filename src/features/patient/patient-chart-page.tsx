@@ -191,11 +191,18 @@ export function PatientChartPage() {
     [doseRecords, patientId],
   )
 
-  const currentInterval = lastAdministered?.administeredValues
-    ? `${lastAdministered.administeredValues.intervalDays} dias`
-    : '-'
-  const currentDose = lastAdministered?.administeredValues
-    ? formatStepPresentation(lastAdministered.administeredValues)
+  // Antes da primeira aplicação não há dose administrada: o intervalo vigente
+  // é o planejado para a dose agendada.
+  const currentIntervalDays =
+    lastAdministered?.administeredValues?.intervalDays ??
+    pendingRecord?.plannedValues?.intervalDays ??
+    null
+  const currentInterval =
+    currentIntervalDays !== null ? `${currentIntervalDays} dias` : '-'
+  const currentDoseValues =
+    lastAdministered?.administeredValues ?? pendingRecord?.plannedValues ?? null
+  const currentDose = currentDoseValues
+    ? formatStepPresentation(currentDoseValues)
     : '-'
   const nextDate = pendingRecord
     ? formatInstantDate(pendingRecord.scheduledAt)
@@ -324,7 +331,7 @@ export function PatientChartPage() {
         />
 
         <div className="flex flex-1 flex-col gap-3 min-w-0">
-          {patientDetail.therapies.length > 0 && (
+          {patientDetail.therapies.length > 1 && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[0.7rem] font-semibold text-(--text-muted)">
                 Tratamento:
