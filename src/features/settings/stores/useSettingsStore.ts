@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 
 export type Language = 'pt-BR' | 'en' | 'es'
-export type Timezone = 'America/Sao_Paulo' | 'America/Manaus' | 'America/Noronha'
 
 export interface EventColor {
   id: string
@@ -25,8 +24,7 @@ interface SettingsState {
   emailNotifications: boolean
   pushNotifications: boolean
 
-  timezone: Timezone
-  sessionTimeout: '15' | '30' | '60' | '120'
+  sessionTimeout: string
   language: Language
 
   reminderWhatsapp: boolean
@@ -40,7 +38,6 @@ interface SettingsState {
   setTwoFaEnabled: (value: boolean) => void
   setEmailNotifications: (value: boolean) => void
   setPushNotifications: (value: boolean) => void
-  setTimezone: (value: Timezone) => void
   setSessionTimeout: (value: SettingsState['sessionTimeout']) => void
   setLanguage: (value: Language) => void
   setReminderWhatsapp: (value: boolean) => void
@@ -55,7 +52,6 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   twoFaEnabled: false,
   emailNotifications: true,
   pushNotifications: false,
-  timezone: 'America/Sao_Paulo',
   sessionTimeout: '30',
   language: 'pt-BR',
   reminderWhatsapp: true,
@@ -68,7 +64,6 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setTwoFaEnabled: (value) => set({ twoFaEnabled: value }),
   setEmailNotifications: (value) => set({ emailNotifications: value }),
   setPushNotifications: (value) => set({ pushNotifications: value }),
-  setTimezone: (value) => set({ timezone: value }),
   setSessionTimeout: (value) => set({ sessionTimeout: value }),
   setLanguage: (value) => set({ language: value }),
   setReminderWhatsapp: (value) => set({ reminderWhatsapp: value }),

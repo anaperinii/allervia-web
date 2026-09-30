@@ -1,12 +1,15 @@
 import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
 import {
   useSettingsStore,
   type EventColor,
   type Language,
-  type Timezone,
 } from '@/features/settings/stores/useSettingsStore'
+import { readOrganization, updateOrganization } from '@/shared/api/team.api'
+import { queryKeys } from '@/shared/api/query-keys'
+import { ApiError } from '@/shared/api/contracts/errors'
 import {
   Button,
   FieldLabel,
@@ -32,13 +35,79 @@ import { faBell, faCalendar, faCheck, faDatabase, faLock, faPalette, faPencil, f
 
 const FIXED_EVENT_IDS = ['subcutaneous', 'sublingual', 'missed']
 
+const SESSION_TIMEOUT_MIN = 5
+const SESSION_TIMEOUT_MAX = 720
+
+const SESSION_TIMEOUT_OPTIONS: { value: string; label: string }[] = [
+  { value: '15', label: '15 minutos' },
+  { value: '30', label: '30 minutos' },
+  { value: '60', label: '1 hora' },
+  { value: '120', label: '2 horas' },
+]
+
+function isValidTimeout(value: string): boolean {
+  const minutes = Number(value)
+  return (
+    Number.isInteger(minutes) &&
+    minutes >= SESSION_TIMEOUT_MIN &&
+    minutes <= SESSION_TIMEOUT_MAX
+  )
+}
+
+const TIMEZONE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'America/Noronha', label: 'Fernando de Noronha (GMT-2)' },
+  { value: 'America/Sao_Paulo', label: 'Brasília (GMT-3)' },
+  { value: 'America/Bahia', label: 'Salvador (GMT-3)' },
+  { value: 'America/Fortaleza', label: 'Fortaleza (GMT-3)' },
+  { value: 'America/Recife', label: 'Recife (GMT-3)' },
+  { value: 'America/Belem', label: 'Belém (GMT-3)' },
+  { value: 'America/Araguaina', label: 'Araguaína (GMT-3)' },
+  { value: 'America/Maceio', label: 'Maceió (GMT-3)' },
+  { value: 'America/Santarem', label: 'Santarém (GMT-3)' },
+  { value: 'America/Campo_Grande', label: 'Campo Grande (GMT-4)' },
+  { value: 'America/Cuiaba', label: 'Cuiabá (GMT-4)' },
+  { value: 'America/Manaus', label: 'Manaus (GMT-4)' },
+  { value: 'America/Porto_Velho', label: 'Porto Velho (GMT-4)' },
+  { value: 'America/Boa_Vista', label: 'Boa Vista (GMT-4)' },
+  { value: 'America/Eirunepe', label: 'Eirunepé (GMT-5)' },
+  { value: 'America/Rio_Branco', label: 'Rio Branco (GMT-5)' },
+]
+
 export function AdvancedSettingsPage() {
   const canAdvanced = useHasPermission('advanced_settings')
   const canViewAudit = useHasPermission('view_audit')
-  const timezone = useSettingsStore((s) => s.timezone)
-  const setTimezone = useSettingsStore((s) => s.setTimezone)
+  const queryClient = useQueryClient()
+  const [timezoneError, setTimezoneError] = useState<string | null>(null)
+  const organizationQuery = useQuery({
+    queryKey: queryKeys.organization(),
+    queryFn: ({ signal }) => readOrganization(signal),
+    enabled: canAdvanced,
+  })
+  const timezoneMutation = useMutation({
+    mutationFn: (timeZone: string) => updateOrganization({ timeZone }),
+    onSuccess: async () => {
+      setTimezoneError(null)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.organization() })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.account() })
+      await queryClient.invalidateQueries({ queryKey: ['clinical'] })
+    },
+    onError: (error) =>
+      setTimezoneError(
+        error instanceof ApiError
+          ? error.message
+          : 'Não foi possível alterar o fuso horário.',
+      ),
+  })
+  const timezone = organizationQuery.data?.timeZone ?? ''
+  const timezoneOptions =
+    timezone && !TIMEZONE_OPTIONS.some((option) => option.value === timezone)
+      ? [{ value: timezone, label: timezone }, ...TIMEZONE_OPTIONS]
+      : TIMEZONE_OPTIONS
   const sessionTimeout = useSettingsStore((s) => s.sessionTimeout)
   const setSessionTimeout = useSettingsStore((s) => s.setSessionTimeout)
+  const [customTimeout, setCustomTimeout] = useState(
+    () => !SESSION_TIMEOUT_OPTIONS.some((option) => option.value === sessionTimeout),
+  )
   const language = useSettingsStore((s) => s.language)
   const setLanguage = useSettingsStore((s) => s.setLanguage)
   const eventColors = useSettingsStore((s) => s.eventColors)
@@ -142,22 +211,68 @@ export function AdvancedSettingsPage() {
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
                 <FieldLabel label="Fuso horário">
-                  <Select value={timezone} onChange={(e) => setTimezone(e.target.value as Timezone)}>
-                    <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
-                    <option value="America/Manaus">Manaus (GMT-4)</option>
-                    <option value="America/Noronha">Fernando de Noronha (GMT-2)</option>
+                  <Select
+                    value={timezone}
+                    disabled={organizationQuery.isPending || timezoneMutation.isPending}
+                    onChange={(e) => {
+                      setTimezoneError(null)
+                      timezoneMutation.mutate(e.target.value)
+                    }}
+                  >
+                    {timezoneOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </Select>
+                  <p className="mt-1 text-[0.6rem] leading-relaxed text-(--text-muted)">
+                    Fuso clínico da organização: governa as datas previstas das
+                    aplicações.
+                  </p>
+                  {(timezoneError || organizationQuery.error) && (
+                    <p role="alert" className="mt-1 text-[0.6rem] text-red-700">
+                      {timezoneError ??
+                        'Não foi possível carregar o fuso da organização.'}
+                    </p>
+                  )}
                 </FieldLabel>
                 <FieldLabel label="Tempo de sessão (minutos)">
                   <Select
-                    value={sessionTimeout}
-                    onChange={(e) => setSessionTimeout(e.target.value as typeof sessionTimeout)}
+                    value={customTimeout ? 'custom' : sessionTimeout}
+                    onChange={(e) => {
+                      if (e.target.value === 'custom') {
+                        setCustomTimeout(true)
+                        return
+                      }
+                      setCustomTimeout(false)
+                      setSessionTimeout(e.target.value)
+                    }}
                   >
-                    <option value="15">15 minutos</option>
-                    <option value="30">30 minutos</option>
-                    <option value="60">1 hora</option>
-                    <option value="120">2 horas</option>
+                    {SESSION_TIMEOUT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                    <option value="custom">Outro…</option>
                   </Select>
+                  {customTimeout && (
+                    <TextInput
+                      type="number"
+                      min={SESSION_TIMEOUT_MIN}
+                      max={SESSION_TIMEOUT_MAX}
+                      step={1}
+                      value={sessionTimeout}
+                      aria-label="Tempo de sessão personalizado, em minutos"
+                      onChange={(e) => setSessionTimeout(e.target.value)}
+                      className="mt-2"
+                    />
+                  )}
+                  {customTimeout && !isValidTimeout(sessionTimeout) && (
+                    <p role="alert" className="mt-1 text-[0.6rem] text-red-700">
+                      Informe um valor inteiro entre {SESSION_TIMEOUT_MIN} e{' '}
+                      {SESSION_TIMEOUT_MAX} minutos.
+                    </p>
+                  )}
                 </FieldLabel>
                 <FieldLabel label="Idioma">
                   <Select value={language} onChange={(e) => setLanguage(e.target.value as Language)}>
