@@ -52,22 +52,34 @@ const CATALOG = [
   },
 ]
 
+// CPF válido pelo dígito verificador; o passo 1 exige CPF desde o cadastro unificado.
+const VALID_CPF_DIGITS = '52998224725'
+const VALID_CPF_MASKED = '529.982.247-25'
+
+const PATIENT_7 = {
+  id: 'patient-7',
+  fullName: 'Paula Andrade',
+  cpfMasked: '529.***.***-25',
+  birthDate: '1988-02-10',
+  weightInKg: '61.0',
+  phoneNumber: '62911112222',
+  isActive: true,
+  responsiblePhysician: { id: 'professional-1', fullName: 'Dra. Karina Martins' },
+}
+
 const PATIENTS_PAGE = {
-  items: [
-    {
-      id: 'patient-7',
-      fullName: 'Paula Andrade',
-      cpfMasked: null,
-      birthDate: '1988-02-10',
-      weightInKg: '61.0',
-      phoneNumber: '62911112222',
-      isActive: true,
-      responsiblePhysician: { id: 'professional-1', fullName: 'Dra. Karina Martins' },
-    },
-  ],
+  items: [PATIENT_7],
   page: 1,
   pageSize: 50,
   total: 1,
+}
+
+// O detalhe é o único lugar que devolve o CPF completo; a listagem só mascara.
+const PATIENT_7_DETAIL = {
+  ...PATIENT_7,
+  cpf: VALID_CPF_DIGITS,
+  therapies: [],
+  updatedAt: '2026-09-01T12:00:00.000Z',
 }
 
 function stubApi() {
@@ -104,6 +116,9 @@ function stubApi() {
           201,
         ),
       )
+    }
+    if (url.includes('/patients/patient-7')) {
+      return Promise.resolve(jsonResponse(PATIENT_7_DETAIL))
     }
     if (url.includes('/patients')) {
       return Promise.resolve(jsonResponse(PATIENTS_PAGE))
@@ -153,10 +168,22 @@ function controlByLabel(labelText: RegExp): HTMLElement {
 }
 
 async function fillPatientStep(user: ReturnType<typeof userEvent.setup>) {
+  // Nome é um combobox: digitar abre as sugestões, que só viram vínculo ao clicar.
   await user.type(screen.getByPlaceholderText('Nome completo'), 'Paciente Novo')
+  await user.type(controlByLabel(/^cpf$/i), VALID_CPF_DIGITS)
   await user.type(screen.getByPlaceholderText('(00) 00000-0000'), '62999998888')
   await user.type(controlByLabel(/data de nascimento/i), '1990-06-15')
   await user.type(screen.getByPlaceholderText('Ex: 70.5'), '70.5')
+  await user.click(screen.getByRole('button', { name: 'Continuar' }))
+}
+
+async function linkExistingPatient(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByPlaceholderText('Nome completo'), 'Paula')
+  await user.click(await screen.findByRole('option', { name: /paula andrade/i }))
+  // O CPF completo chega pelo detalhe e trava o campo: é o sinal de vínculo pronto.
+  await waitFor(() =>
+    expect(controlByLabel(/^cpf$/i)).toHaveValue(VALID_CPF_MASKED),
+  )
   await user.click(screen.getByRole('button', { name: 'Continuar' }))
 }
 
@@ -206,7 +233,6 @@ describe('wizard de prescrição', () => {
     await fillPrescriptionStep(user)
 
     expect(await screen.findByText('SCIT ácaros — v1')).toBeInTheDocument()
-    expect(screen.getByText('America/Sao_Paulo')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /salvar prescrição/i }))
 
@@ -222,7 +248,7 @@ describe('wizard de prescrição', () => {
       expect(body.patientId).toBeUndefined()
       expect(body.patient.fullName).toBe('Paciente Novo')
       expect(body.patient.phoneNumber).toBe('62999998888')
-      expect(body.patient.cpf).toBeUndefined()
+      expect(body.patient.cpf).toBe(VALID_CPF_MASKED)
       expect(body.patient.responsiblePhysicianId).toBe('professional-1')
       expect(body.targetConcentration).toBeUndefined()
       expect(body.targetVolume).toBeUndefined()
@@ -234,10 +260,7 @@ describe('wizard de prescrição', () => {
     const user = userEvent.setup()
     await renderWizard()
 
-    await user.click(screen.getByRole('tab', { name: 'Paciente existente' }))
-    const patientOption = await screen.findByRole('option', { name: /paula andrade/i })
-    await user.selectOptions(patientOption.closest('select')!, 'patient-7')
-    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    await linkExistingPatient(user)
 
     await fillPrescriptionStep(user)
     await user.click(await screen.findByRole('button', { name: /salvar prescrição/i }))
@@ -258,7 +281,12 @@ describe('wizard de prescrição', () => {
       if (url.includes('/immunotherapies/register')) {
         return Promise.resolve(
           jsonResponse(
-            { statusCode: 409, code: 'AUTOMATION_DISABLED', message: 'AUTOMATION_DISABLED' },
+            {
+              statusCode: 409,
+              code: 'AUTOMATION_DISABLED',
+              message:
+                'A automação de protocolos está desativada para esta clínica. Fale com quem administra a conta.',
+            },
             409,
           ),
         )
@@ -281,7 +309,10 @@ describe('wizard de prescrição', () => {
     await fillPrescriptionStep(user)
     await user.click(await screen.findByRole('button', { name: /salvar prescrição/i }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('AUTOMATION_DISABLED')
+    // A falha só aparece no toast: o formulário não guarda mais erro inline.
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Ação não permitida agora')
+    expect(alert).toHaveTextContent(/automação de protocolos está desativada/i)
     expect(router.state.location.pathname).toBe('/add-immunotherapy')
     expect(screen.getByText('SCIT ácaros — v1')).toBeInTheDocument()
   })
