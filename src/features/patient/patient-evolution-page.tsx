@@ -1,4 +1,7 @@
-import { EvolutionReviewStep } from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
+import {
+  EvolutionReviewStep,
+  NextDosePreview,
+} from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
 import { PostApplicationStep } from '@/features/patient/components/treatment-evolution/PostApplicationStep'
 import { PreApplicationStep } from '@/features/patient/components/treatment-evolution/PreApplicationStep'
 import { SelectPatientStep } from '@/features/patient/components/treatment-evolution/SelectPatientStep'
@@ -350,6 +353,15 @@ function PatientEvolutionContent() {
                   plannedStep={plannedStep}
                   selectedStep={selectedStep}
                   performerName={performerName}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="border-t border-(--border-custom) px-5 py-3 flex items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              {step === 3 && (
+                <NextDosePreview
                   preview={previewQuery.data ?? null}
                   previewPending={previewQuery.isPending && previewQuery.fetchStatus !== 'idle'}
                   previewError={
@@ -362,9 +374,7 @@ function PatientEvolutionContent() {
                 />
               )}
             </div>
-          </div>
-
-          <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
+            <div className="flex shrink-0 items-center gap-2">
             <Button type="button" tone="danger" variant="outline" onClick={() => setShowCancelModal(true)}>
               Cancelar
             </Button>
@@ -381,6 +391,7 @@ function PatientEvolutionContent() {
             >
               {step < 3 ? 'Continuar' : 'Salvar Evolução'}
             </Button>
+            </div>
           </div>
         </form>
       </div>

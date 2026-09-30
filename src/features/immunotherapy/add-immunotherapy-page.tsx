@@ -209,7 +209,6 @@ export function AddImmunotherapyPage() {
                   form={values}
                   versionLabel={versionLabel}
                   steps={selectedVersion?.definition.steps ?? []}
-                  timeZone={account?.organization?.timeZone ?? ''}
                 />
               )}
             </div>

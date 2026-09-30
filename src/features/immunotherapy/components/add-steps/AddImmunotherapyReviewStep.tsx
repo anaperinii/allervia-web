@@ -1,4 +1,5 @@
 import { StepHeading } from '@/shared/components'
+import { cn } from '@/shared/lib/cn'
 import { formatIsoToPtOrDash } from '@/shared/lib/dates'
 import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
@@ -8,14 +9,12 @@ interface AddImmunotherapyReviewStepProps {
   form: AddImmunotherapyForm
   versionLabel: string
   steps: ProtocolStep[]
-  timeZone: string
 }
 
 export function AddImmunotherapyReviewStep({
   form,
   versionLabel,
   steps,
-  timeZone,
 }: AddImmunotherapyReviewStepProps) {
   const stepById = new Map(steps.map((step) => [step.id, step]))
   const starting = stepById.get(form.startingStepId)
@@ -39,7 +38,6 @@ export function AddImmunotherapyReviewStep({
     { label: 'Data de Início', value: formatIsoToPtOrDash(form.startDate) },
     { label: 'Extrato', value: form.extract || '—' },
     { label: 'Versão do protocolo', value: versionLabel || '—' },
-    { label: 'Fuso da prescrição', value: timeZone },
     {
       label: 'Etapa inicial',
       value: starting
@@ -49,13 +47,6 @@ export function AddImmunotherapyReviewStep({
     {
       label: 'Etapa meta',
       value: target ? formatStepOption(target) : '—',
-    },
-    {
-      label: 'Etapas permitidas',
-      value:
-        form.stepIds
-          .map((id) => stepById.get(id)?.label ?? id)
-          .join(', ') || '—',
     },
   ]
 
@@ -92,9 +83,18 @@ function ReviewCard({ title, items }: ReviewCardProps) {
         />
         <div className="text-[0.8rem] font-bold text-(--text)">{title}</div>
       </div>
-      <div className="grid grid-cols-3 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
-        {items.map((item) => (
-          <div key={item.label} className="bg-white px-3 py-2">
+      {/* As linhas da grade saem das próprias células: sobra na última linha
+          fica com o fundo do card, sem o bloco escuro do contêiner. */}
+      <div className="grid grid-cols-3 rounded-lg overflow-hidden border border-(--border-custom)">
+        {items.map((item, index) => (
+          <div
+            key={item.label}
+            className={cn(
+              'bg-white px-3 py-2',
+              index % 3 !== 2 && index !== items.length - 1 && 'border-r border-(--border-custom)',
+              index < items.length - (items.length % 3 || 3) && 'border-b border-(--border-custom)',
+            )}
+          >
             <div className="text-[0.7rem] font-semibold text-(--text-muted) mb-0.5">{item.label}</div>
             <div className="text-[0.82rem] font-medium text-(--text)">{item.value}</div>
           </div>

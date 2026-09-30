@@ -27,7 +27,7 @@ export function PageHeader({ breadcrumb, title, actions }: PageHeaderProps) {
           </div>
         )}
         <h1
-          className="text-[2.15rem] font-medium leading-[1.15] tracking-[-0.03em] truncate pb-1"
+          className="text-[1.85rem] font-medium leading-[1.15] tracking-[-0.03em] truncate pb-1"
           style={{ color: SHOWCASE.ink }}
         >
           {title}
