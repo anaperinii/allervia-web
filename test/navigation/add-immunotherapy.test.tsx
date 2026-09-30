@@ -166,9 +166,10 @@ async function fillPrescriptionStep(user: ReturnType<typeof userEvent.setup>) {
     screen.getByPlaceholderText(/Der p 60%/),
     'Der p 60% + Der f 40%',
   )
+  // Escolher a versão pré-seleciona todas as etapas do protocolo.
   await user.selectOptions(controlByLabel(/versão do protocolo/i), 'version-1')
-  await user.click(screen.getByRole('checkbox', { name: /baixa/i }))
-  await user.click(screen.getByRole('checkbox', { name: /meta/i }))
+  expect(screen.getByRole('checkbox', { name: /baixa/i })).toBeChecked()
+  expect(screen.getByRole('checkbox', { name: /meta/i })).toBeChecked()
   await user.selectOptions(controlByLabel(/etapa inicial/i), 'low')
   await user.selectOptions(controlByLabel(/etapa meta/i), 'high')
   await user.click(screen.getByRole('button', { name: 'Continuar' }))

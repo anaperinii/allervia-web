@@ -3,6 +3,7 @@ import { Controller, type UseFormReturn } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import { FieldLabel, SegmentedControl, Select, StepHeading, TextInput } from '@/shared/components'
 import { formatCPF, formatPhone, formatWeight } from '@/shared/lib/formatters'
+import { calculateAge, parseIsoDate } from '@/shared/lib/dates'
 import { listPatients } from '@/shared/api/clinical.api'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
@@ -18,6 +19,12 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
   const organizationId = account?.organization?.id ?? ''
   const patientMode = watch('patientMode')
   const [search, setSearch] = useState('')
+
+  const birthDate = watch('birthDate')
+  const age =
+    birthDate && parseIsoDate(birthDate) && parseIsoDate(birthDate)! <= new Date()
+      ? calculateAge(birthDate)
+      : null
 
   const patientsQuery = useQuery({
     queryKey: queryKeys.patients(organizationId, {
@@ -127,9 +134,20 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
               )}
             />
           </FieldLabel>
-          <FieldLabel label="Data de Nascimento" error={errors.birthDate?.message}>
-            <TextInput type="date" invalid={!!errors.birthDate} {...register('birthDate')} />
-          </FieldLabel>
+          <div className="grid grid-cols-[1fr_5rem] gap-2">
+            <FieldLabel label="Data de Nascimento" error={errors.birthDate?.message}>
+              <TextInput type="date" invalid={!!errors.birthDate} {...register('birthDate')} />
+            </FieldLabel>
+            <FieldLabel label="Idade">
+              <TextInput
+                value={age === null ? '—' : `${age} ${age === 1 ? 'ano' : 'anos'}`}
+                readOnly
+                tabIndex={-1}
+                aria-label="Idade calculada a partir da data de nascimento"
+                className="text-center text-(--text-muted) bg-gray-100/60"
+              />
+            </FieldLabel>
+          </div>
           <FieldLabel label="Peso" error={errors.weight?.message}>
             <div className="relative">
               <Controller
