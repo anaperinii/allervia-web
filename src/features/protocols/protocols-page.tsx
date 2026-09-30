@@ -1,25 +1,20 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
-import { ProtocolEditor } from '@/features/protocols/protocol-editor'
-import { EMPTY_DRAFT, validateDraft } from '@/features/protocols/protocol-draft'
+import { ProgressionViewer } from '@/features/protocols/components/ProgressionViewer'
+import { AutomationCard } from '@/features/protocols/components/AutomationCard'
 import {
-  createProtocol,
-  createVersion,
-  editVersion,
+  discardDraftVersion,
   listProtocols,
   publishVersion,
   readAutomation,
-  readVersion,
   retireVersion,
   setDefaultVersion,
-  simulateVersion,
   updateAutomation,
 } from '@/shared/api/protocols.api'
 import type {
-  ProtocolDefinitionDraft,
   ProtocolVersion,
-  SimulationResult,
   TreatmentProtocol,
 } from '@/shared/api/contracts/protocols'
 import { PROTOCOL_ERROR_CODES } from '@/shared/api/contracts/protocols'
@@ -27,13 +22,9 @@ import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { useHasPermission } from '@/shared/stores/useUserStore'
-import {
-  Button,
-  FieldLabel,
-  Modal,
-  Switch,
-  TextInput,
-} from '@/shared/components'
+import { Button, Modal, TextInput } from '@/shared/components'
+import { faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { cn } from '@/shared/lib/cn'
 
 const STATUS_VIEW = {
@@ -46,16 +37,11 @@ type ConfirmAction =
   | { type: 'publish'; version: ProtocolVersion }
   | { type: 'default'; version: ProtocolVersion }
   | { type: 'retire'; version: ProtocolVersion }
+  | { type: 'discard'; version: ProtocolVersion; isOnlyVersion: boolean }
 
-interface EditorState {
-  mode: 'create' | 'new-version' | 'edit-draft'
-  protocolId?: string
-  versionId?: string
-  expectedRevision: number
-  name: string
-  draft: ProtocolDefinitionDraft
-  serverDraft?: ProtocolDefinitionDraft
-  serverRevision?: number
+interface ProgressionTarget {
+  protocolName: string
+  version: ProtocolVersion
 }
 
 function describe(error: unknown, fallback: string): string {
@@ -67,6 +53,7 @@ function describe(error: unknown, fallback: string): string {
 }
 
 export function ProtocolsPage() {
+  const navigate = useNavigate()
   const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
   const queryClient = useQueryClient()
@@ -84,12 +71,10 @@ export function ProtocolsPage() {
     enabled: organizationId !== '',
   })
 
-  const [editor, setEditor] = useState<EditorState | null>(null)
-  const [editorError, setEditorError] = useState<string | null>(null)
-  const [conflict, setConflict] = useState(false)
   const [confirm, setConfirm] = useState<ConfirmAction | null>(null)
+  const [progression, setProgression] = useState<ProgressionTarget | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
-  const [simulation, setSimulation] = useState<SimulationResult | null>(null)
+  const [search, setSearch] = useState('')
 
   const refresh = async () => {
     await queryClient.invalidateQueries({
@@ -100,55 +85,21 @@ export function ProtocolsPage() {
     })
   }
 
-  const saveMutation = useMutation({
-    mutationFn: async (state: EditorState) => {
-      if (state.mode === 'create') {
-        return createProtocol({ name: state.name.trim(), definition: state.draft })
-      }
-      if (state.mode === 'new-version') {
-        return createVersion(state.protocolId!, state.draft)
-      }
-      return editVersion(state.versionId!, state.expectedRevision, state.draft)
-    },
-    onSuccess: async () => {
-      setEditor(null)
-      setEditorError(null)
-      setConflict(false)
-      await refresh()
-    },
-    onError: async (error) => {
-      if (
-        error instanceof ApiError &&
-        error.message === PROTOCOL_ERROR_CODES.staleRevision &&
-        editor?.versionId
-      ) {
-        const fresh = await readVersion(editor.versionId)
-        setEditor((current) =>
-          current
-            ? {
-                ...current,
-                serverDraft: fresh.definition,
-                serverRevision: fresh.revision,
-              }
-            : current,
-        )
-        setConflict(true)
-        setEditorError(null)
+  const confirmMutation = useMutation({
+    mutationFn: async (action: ConfirmAction): Promise<void> => {
+      if (action.type === 'publish') {
+        await publishVersion(action.version.id, action.version.revision)
         return
       }
-      setEditorError(describe(error, 'Não foi possível salvar o rascunho.'))
-    },
-  })
-
-  const confirmMutation = useMutation({
-    mutationFn: (action: ConfirmAction) => {
-      if (action.type === 'publish') {
-        return publishVersion(action.version.id, action.version.revision)
-      }
       if (action.type === 'default') {
-        return setDefaultVersion(action.version.id, action.version.revision)
+        await setDefaultVersion(action.version.id, action.version.revision)
+        return
       }
-      return retireVersion(action.version.id, action.version.revision)
+      if (action.type === 'discard') {
+        await discardDraftVersion(action.version.id, action.version.revision)
+        return
+      }
+      await retireVersion(action.version.id, action.version.revision)
     },
     onSuccess: async () => {
       setConfirm(null)
@@ -169,51 +120,56 @@ export function ProtocolsPage() {
       setActionError(describe(error, 'Não foi possível salvar a automação.')),
   })
 
-  const simulateMutation = useMutation({
-    mutationFn: async (version: ProtocolVersion) => {
-      const definition = version.definition
-      const firstStep = definition.steps[0]
-      const lastStep = definition.steps[definition.steps.length - 1]
-      return simulateVersion(version.id, {
-        prescription: {
-          protocolId: version.protocolId,
-          protocolVersionId: version.id,
-          route: definition.route,
-          stepIds: definition.steps.map((step) => step.id),
-          startingStepId: firstStep.id,
-          targetStepId: lastStep.id,
-        },
-        administered: {
-          route: definition.route,
-          volumeUnit: definition.volumeUnit,
-          concentrationUnit: definition.concentrationUnit,
-          concentration: firstStep.concentration,
-          volume: firstStep.volume,
-          intervalDays: firstStep.intervalDays,
-        },
-        stepId: firstStep.id,
-      })
-    },
-    onSuccess: (result) => setSimulation(result),
-    onError: (error) =>
-      setActionError(describe(error, 'Não foi possível simular a versão.')),
-  })
-
-  const protocols = protocolsQuery.data ?? []
+  const allProtocols = protocolsQuery.data ?? []
+  const term = search.trim().toLowerCase()
+  const protocols = term
+    ? allProtocols.filter((protocol: TreatmentProtocol) =>
+        protocol.name.toLowerCase().includes(term),
+      )
+    : allProtocols
   const defaults = automationQuery.data?.defaults ?? []
   const defaultVersionIds = new Set(defaults.map((item) => item.versionId))
 
-  const openEditor = (state: EditorState) => {
-    setEditor(state)
-    setEditorError(null)
-    setConflict(false)
-  }
-
-  const draftProblems = editor ? validateDraft(editor.draft) : []
-
   return (
     <SettingsLayout subtitle="Protocolos de Imunoterapia">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <section className="flex flex-wrap items-center gap-3">
+          <h2 className="text-sm font-bold text-(--text)">Catálogo</h2>
+          <div className="relative ml-auto min-w-45 flex-1 sm:max-w-64">
+            <label htmlFor="protocol-search" className="sr-only">
+              Pesquisar protocolo
+            </label>
+            <FontAwesomeIcon
+              icon={faMagnifyingGlass}
+              className="absolute left-2.5 top-1/2 z-10 -translate-y-1/2 text-(--text-muted)"
+              style={{ fontSize: 14 }}
+            />
+            <TextInput
+              id="protocol-search"
+              placeholder="Pesquisar por nome"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-9 pl-8"
+            />
+          </div>
+          {canManage && (
+            <Button
+              tone="brand"
+              variant="solid"
+              prominent
+              onClick={() =>
+                void navigate({
+                  to: '/protocol-editor',
+                  search: { mode: 'create' },
+                })
+              }
+            >
+              Novo protocolo
+            </Button>
+          )}
+        </section>
+
         {!canManage && (
           <p className="rounded-lg border border-(--border-custom) bg-gray-50 px-3 py-2 text-[0.7rem] text-(--text-muted)">
             Você pode consultar o catálogo. A configuração de protocolos é uma
@@ -231,91 +187,30 @@ export function ProtocolsPage() {
           </div>
         )}
 
-        <section className="rounded-2xl border border-(--border-custom) bg-[#F6F8F8] overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
-            <h2 className="text-xs font-bold text-(--text)">Automação da recomendação</h2>
-          </div>
-          <div className="p-4 flex flex-wrap items-end gap-4">
-            {automationQuery.isPending ? (
-              <span className="text-xs text-(--text-muted)">Carregando…</span>
-            ) : automationQuery.data ? (
-              <>
-                <FieldLabel label="Recomendação automática">
-                  <Switch
-                    checked={automationQuery.data.enabled}
-                    disabled={!canManage || automationMutation.isPending}
-                    onChange={(checked) =>
-                      automationMutation.mutate({
-                        enabled: checked,
-                        timeZone: automationQuery.data!.timeZone,
-                      })
-                    }
-                    aria-label="Recomendação automática"
-                  />
-                </FieldLabel>
-                <FieldLabel label="Fuso clínico das previsões">
-                  <TextInput
-                    value={automationQuery.data.timeZone}
-                    readOnly
-                    className="w-56 text-(--text-muted)"
-                  />
-                </FieldLabel>
-                <p className="basis-full text-[0.65rem] leading-relaxed text-(--text-muted)">
-                  A automação calcula a sucessora recomendada após cada
-                  aplicação. Desligá-la não restaura fluxos antigos: a
-                  aplicação continua registrando pelo servidor. O fuso é
-                  alterado junto da organização, em Configurações.
-                </p>
-              </>
-            ) : null}
-          </div>
-        </section>
-
-        <section className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-(--text)">Catálogo</h2>
-          {canManage && (
-            <Button
-              tone="brand"
-              variant="solid"
-              prominent
-              onClick={() =>
-                openEditor({
-                  mode: 'create',
-                  expectedRevision: 0,
-                  name: '',
-                  draft: {
-                    ...EMPTY_DRAFT,
-                    steps: [
-                      {
-                        id: 'inicio',
-                        label: 'Início',
-                        phase: 'BUILD_UP',
-                        concentration: '1000',
-                        volume: '0.1',
-                        intervalDays: 7,
-                        nextStepId: null,
-                      },
-                    ],
-                  },
-                })
-              }
-            >
-              Novo protocolo
-            </Button>
-          )}
-        </section>
-
         {protocolsQuery.isPending ? (
           <p className="text-xs text-(--text-muted)">Carregando catálogo…</p>
         ) : protocols.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-(--border-custom) bg-white p-8 text-center">
-            <p className="text-xs font-semibold text-(--text)">
-              Nenhum protocolo configurado
-            </p>
-            <p className="mt-1 text-[0.7rem] text-(--text-muted)">
-              Novas prescrições dependem de uma versão publicada e definida como
-              padrão. {canManage ? 'Crie o primeiro protocolo acima.' : 'Um médico da organização precisa configurá-lo.'}
-            </p>
+            {term ? (
+              <>
+                <p className="text-xs font-semibold text-(--text)">
+                  Nenhum protocolo encontrado
+                </p>
+                <p className="mt-1 text-[0.7rem] text-(--text-muted)">
+                  Nenhum nome do catálogo corresponde a “{search.trim()}”.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs font-semibold text-(--text)">
+                  Nenhum protocolo configurado
+                </p>
+                <p className="mt-1 text-[0.7rem] text-(--text-muted)">
+                  Novas prescrições dependem de uma versão publicada e definida como
+                  padrão. {canManage ? 'Crie o primeiro protocolo acima.' : 'Um médico da organização precisa configurá-lo.'}
+                </p>
+              </>
+            )}
           </div>
         ) : (
           protocols.map((protocol: TreatmentProtocol) => (
@@ -335,23 +230,16 @@ export function ProtocolsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      const latest = protocol.versions[0]
-                      openEditor({
-                        mode: 'new-version',
-                        protocolId: protocol.id,
-                        expectedRevision: 0,
-                        name: protocol.name,
-                        draft: latest
-                          ? (JSON.parse(
-                              JSON.stringify({
-                                ...EMPTY_DRAFT,
-                                steps: latest.definition.steps,
-                              }),
-                            ) as ProtocolDefinitionDraft)
-                          : EMPTY_DRAFT,
+                    className="border-[#12333a]/40 text-[#12333a] hover:border-[#12333a]/70 hover:bg-[#12333a]/6"
+                    leftIcon={
+                      <FontAwesomeIcon icon={faPlus} style={{ fontSize: 11 }} />
+                    }
+                    onClick={() =>
+                      void navigate({
+                        to: '/protocol-editor',
+                        search: { mode: 'new-version', protocolId: protocol.id },
                       })
-                    }}
+                    }
                   >
                     Nova versão
                   </Button>
@@ -364,35 +252,55 @@ export function ProtocolsPage() {
                   return (
                     <li
                       key={version.id}
-                      className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-(--border-custom) last:border-0"
+                      className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-(--border-custom) last:border-0 bg-white"
                     >
-                      <span className="text-xs font-semibold text-(--text)">
-                        v{version.number}
-                      </span>
-                      <span
-                        className={cn(
-                          'inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border',
-                          status.className,
-                        )}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setProgression({
+                            protocolName: protocol.name,
+                            version,
+                          })
+                        }
+                        aria-label={`Ver progressão da versão ${version.number} de ${protocol.name}`}
+                        className="group flex flex-1 flex-wrap items-center gap-2 text-left cursor-pointer rounded-md -m-1 p-1 transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                       >
-                        {status.label}
-                      </span>
-                      {isDefault && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border bg-brand-50 text-brand-dark border-brand/30">
-                          Padrão para novas prescrições
+                        <span className="text-xs font-semibold text-(--text) group-hover:text-brand-dark transition-colors">
+                          v{version.number}
                         </span>
-                      )}
-                      <span className="text-[0.65rem] text-(--text-muted)">
-                        {version.definition.steps.length} etapas
-                      </span>
+                        <span
+                          className={cn(
+                            'inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border',
+                            status.className,
+                          )}
+                        >
+                          {status.label}
+                        </span>
+                        {isDefault && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border bg-brand-50 text-brand-dark border-brand/30">
+                            Padrão para novas prescrições
+                          </span>
+                        )}
+                        <span className="text-[0.65rem] text-(--text-muted)">
+                          {version.definition.steps.length} etapas
+                        </span>
+                        <span className="text-[0.65rem] font-semibold text-brand opacity-0 transition-opacity group-hover:opacity-100">
+                          Ver progressão
+                        </span>
+                      </button>
                       <div className="ml-auto flex items-center gap-1.5">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => simulateMutation.mutate(version)}
+                          onClick={() =>
+                            void navigate({
+                              to: '/protocol-lab',
+                              search: { versionId: version.id },
+                            })
+                          }
                           disabled={version.definition.steps.length === 0}
                         >
-                          Simular
+                          Simular fluxo
                         </Button>
                         {canManage && version.status === 'DRAFT' && (
                           <>
@@ -400,17 +308,12 @@ export function ProtocolsPage() {
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                openEditor({
-                                  mode: 'edit-draft',
-                                  versionId: version.id,
-                                  expectedRevision: version.revision,
-                                  name: protocol.name,
-                                  draft: JSON.parse(
-                                    JSON.stringify({
-                                      ...EMPTY_DRAFT,
-                                      steps: version.definition.steps,
-                                    }),
-                                  ) as ProtocolDefinitionDraft,
+                                void navigate({
+                                  to: '/protocol-editor',
+                                  search: {
+                                    mode: 'edit-draft',
+                                    versionId: version.id,
+                                  },
                                 })
                               }
                             >
@@ -423,6 +326,20 @@ export function ProtocolsPage() {
                               onClick={() => setConfirm({ type: 'publish', version })}
                             >
                               Publicar
+                            </Button>
+                            <Button
+                              variant="outline"
+                              tone="danger"
+                              size="sm"
+                              onClick={() =>
+                                setConfirm({
+                                  type: 'discard',
+                                  version,
+                                  isOnlyVersion: protocol.versions.length === 1,
+                                })
+                              }
+                            >
+                              Excluir rascunho
                             </Button>
                           </>
                         )}
@@ -455,129 +372,33 @@ export function ProtocolsPage() {
             </div>
           ))
         )}
+        </div>
+
+        <aside className="w-full lg:sticky lg:top-0 lg:w-72 lg:shrink-0">
+          <AutomationCard
+            enabled={automationQuery.data?.enabled ?? false}
+            loading={automationQuery.isPending || !automationQuery.data}
+            saving={automationMutation.isPending}
+            canManage={canManage}
+            onToggle={(enabled) =>
+              automationMutation.mutate({
+                enabled,
+                timeZone: automationQuery.data!.timeZone,
+              })
+            }
+          />
+        </aside>
       </div>
 
-      <Modal
-        open={editor !== null}
-        onClose={() => setEditor(null)}
-        size="lg"
-        title={
-          editor?.mode === 'create'
-            ? 'Novo protocolo'
-            : editor?.mode === 'new-version'
-              ? `Nova versão — ${editor.name}`
-              : `Editar rascunho — ${editor?.name ?? ''}`
+      <ProgressionViewer
+        open={progression !== null}
+        onClose={() => setProgression(null)}
+        protocolName={progression?.protocolName ?? ''}
+        version={progression?.version ?? null}
+        isDefault={
+          progression ? defaultVersionIds.has(progression.version.id) : false
         }
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setEditor(null)}>
-              Cancelar
-            </Button>
-            <Button
-              tone="brand"
-              variant="solid"
-              disabled={
-                !editor ||
-                saveMutation.isPending ||
-                conflict ||
-                draftProblems.length > 0 ||
-                (editor.mode === 'create' && editor.name.trim().length === 0)
-              }
-              onClick={() => editor && saveMutation.mutate(editor)}
-            >
-              Salvar rascunho
-            </Button>
-          </>
-        }
-      >
-        {editor && (
-          <div className="flex flex-col gap-3">
-            {editor.mode === 'create' && (
-              <FieldLabel label="Nome do protocolo">
-                <TextInput
-                  value={editor.name}
-                  onChange={(e) =>
-                    setEditor({ ...editor, name: e.target.value })
-                  }
-                  placeholder="Ex.: SCIT ácaros — padrão da clínica"
-                />
-              </FieldLabel>
-            )}
-
-            {conflict && (
-              <div
-                role="alert"
-                className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[0.7rem] text-amber-800"
-              >
-                <p className="font-semibold">
-                  Outra pessoa salvou este rascunho enquanto você editava.
-                </p>
-                <p className="mt-1">
-                  Seu rascunho local foi preservado abaixo para comparação. A
-                  versão do servidor agora tem{' '}
-                  {editor.serverDraft?.steps.length ?? '?'} etapas (revisão{' '}
-                  {editor.serverRevision}). Escolha como seguir:
-                </p>
-                <div className="mt-2 flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditor({
-                        ...editor,
-                        draft: editor.serverDraft ?? editor.draft,
-                        expectedRevision:
-                          editor.serverRevision ?? editor.expectedRevision,
-                        serverDraft: undefined,
-                        serverRevision: undefined,
-                      })
-                      setConflict(false)
-                    }}
-                  >
-                    Descartar o meu e usar o do servidor
-                  </Button>
-                  <Button
-                    tone="brand"
-                    variant="solid"
-                    size="sm"
-                    onClick={() => {
-                      setEditor({
-                        ...editor,
-                        expectedRevision: editor.serverRevision ?? editor.expectedRevision,
-                        serverDraft: undefined,
-                        serverRevision: undefined,
-                      })
-                      setConflict(false)
-                    }}
-                  >
-                    Manter o meu e sobrescrever
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <ProtocolEditor
-              draft={editor.draft}
-              readOnly={!canManage}
-              onChange={(draft) => setEditor({ ...editor, draft })}
-            />
-
-            {draftProblems.length > 0 && (
-              <ul className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[0.7rem] text-red-700 list-disc list-inside">
-                {draftProblems.map((problem) => (
-                  <li key={problem}>{problem}</li>
-                ))}
-              </ul>
-            )}
-
-            {editorError && (
-              <p role="alert" className="text-[0.7rem] text-red-700">
-                {editorError}
-              </p>
-            )}
-          </div>
-        )}
-      </Modal>
+      />
 
       <Modal
         open={confirm !== null}
@@ -588,7 +409,9 @@ export function ProtocolsPage() {
             ? 'Publicar versão'
             : confirm?.type === 'default'
               ? 'Definir versão padrão'
-              : 'Retirar versão'
+              : confirm?.type === 'discard'
+                ? 'Excluir rascunho'
+                : 'Retirar versão'
         }
         footer={
           <>
@@ -596,7 +419,11 @@ export function ProtocolsPage() {
               Cancelar
             </Button>
             <Button
-              tone={confirm?.type === 'retire' ? 'danger' : 'brand'}
+              tone={
+                confirm?.type === 'retire' || confirm?.type === 'discard'
+                  ? 'danger'
+                  : 'brand'
+              }
               variant="solid"
               disabled={confirmMutation.isPending}
               onClick={() => confirm && confirmMutation.mutate(confirm)}
@@ -627,42 +454,23 @@ export function ProtocolsPage() {
               Tratamentos já vinculados continuam lendo a definição adotada.
             </>
           )}
+          {confirm?.type === 'discard' && (
+            <>
+              A v{confirm.version.number} será apagada e não poderá ser
+              recuperada. Rascunho nunca foi prescrito, então nenhum tratamento
+              é afetado.
+              {confirm.isOnlyVersion && (
+                <>
+                  {' '}
+                  Como é a única versão deste protocolo, o protocolo inteiro sai
+                  do catálogo.
+                </>
+              )}
+            </>
+          )}
         </p>
       </Modal>
 
-      <Modal
-        open={simulation !== null}
-        onClose={() => setSimulation(null)}
-        size="sm"
-        title="Simulação da primeira transição"
-        footer={
-          <Button variant="outline" onClick={() => setSimulation(null)}>
-            Fechar
-          </Button>
-        }
-      >
-        {simulation?.kind === 'RECOMMENDED' && (
-          <p className="text-xs text-(--text-muted) leading-relaxed">
-            Após administrar a primeira etapa, o motor recomenda{' '}
-            <span className="font-semibold text-(--text)">{simulation.label}</span>{' '}
-            (1:{Number(simulation.values.concentration).toLocaleString('pt-BR')} ·{' '}
-            {simulation.values.volume.replace('.', ',')} mL · a cada{' '}
-            {simulation.values.intervalDays} dias).
-          </p>
-        )}
-        {simulation?.kind === 'END_OF_SEQUENCE' && (
-          <p className="text-xs text-(--text-muted) leading-relaxed">
-            A primeira etapa não tem sucessora automática: fim de sequência não
-            é encerramento clínico, apenas ausência de recomendação.
-          </p>
-        )}
-        {simulation?.kind === 'UNRESOLVED' && (
-          <p className="text-xs text-red-700 leading-relaxed">
-            O motor não resolveu a transição ({simulation.code}). Revise etapas
-            e valores antes de publicar.
-          </p>
-        )}
-      </Modal>
     </SettingsLayout>
   )
 }

@@ -61,6 +61,7 @@ export function RegisterPage({ token }: RegisterPageProps = {}) {
     queryFn: ({ signal }) => readInviteContext(token!, signal),
     enabled: Boolean(token),
     retry: false,
+    meta: { public: true },
   })
 
   const invite = inviteQuery.data

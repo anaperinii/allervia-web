@@ -49,7 +49,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setUnauthenticatedHandler(() => {
       setForcedAnonymous(true)
       setCsrfToken(null)
-      queryClient.clear()
+      queryClient.removeQueries({
+        predicate: (query) => query.meta?.public !== true,
+      })
     })
     return () => setUnauthenticatedHandler(null)
   }, [queryClient])

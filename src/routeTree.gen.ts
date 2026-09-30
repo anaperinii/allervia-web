@@ -15,9 +15,10 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProtocolsRouteImport } from './routes/protocols'
+import { Route as ProtocolLabRouteImport } from './routes/protocol-lab'
+import { Route as ProtocolEditorRouteImport } from './routes/protocol-editor'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlansRouteImport } from './routes/plans'
-import { Route as PersonalizationRouteImport } from './routes/personalization'
 import { Route as PatientReportRouteImport } from './routes/patient-report'
 import { Route as PatientEvolutionRouteImport } from './routes/patient-evolution'
 import { Route as PatientCompletionRouteImport } from './routes/patient-completion'
@@ -66,6 +67,16 @@ const ProtocolsRoute = ProtocolsRouteImport.update({
   path: '/protocols',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProtocolLabRoute = ProtocolLabRouteImport.update({
+  id: '/protocol-lab',
+  path: '/protocol-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtocolEditorRoute = ProtocolEditorRouteImport.update({
+  id: '/protocol-editor',
+  path: '/protocol-editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -74,11 +85,6 @@ const ProfileRoute = ProfileRouteImport.update({
 const PlansRoute = PlansRouteImport.update({
   id: '/plans',
   path: '/plans',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PersonalizationRoute = PersonalizationRouteImport.update({
-  id: '/personalization',
-  path: '/personalization',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PatientReportRoute = PatientReportRouteImport.update({
@@ -184,9 +190,10 @@ export interface FileRoutesByFullPath {
   '/patient-completion': typeof PatientCompletionRoute
   '/patient-evolution': typeof PatientEvolutionRoute
   '/patient-report': typeof PatientReportRoute
-  '/personalization': typeof PersonalizationRoute
   '/plans': typeof PlansRoute
   '/profile': typeof ProfileRoute
+  '/protocol-editor': typeof ProtocolEditorRoute
+  '/protocol-lab': typeof ProtocolLabRoute
   '/protocols': typeof ProtocolsRoute
   '/register': typeof RegisterRoute
   '/security': typeof SecurityRoute
@@ -212,9 +219,10 @@ export interface FileRoutesByTo {
   '/patient-completion': typeof PatientCompletionRoute
   '/patient-evolution': typeof PatientEvolutionRoute
   '/patient-report': typeof PatientReportRoute
-  '/personalization': typeof PersonalizationRoute
   '/plans': typeof PlansRoute
   '/profile': typeof ProfileRoute
+  '/protocol-editor': typeof ProtocolEditorRoute
+  '/protocol-lab': typeof ProtocolLabRoute
   '/protocols': typeof ProtocolsRoute
   '/register': typeof RegisterRoute
   '/security': typeof SecurityRoute
@@ -241,9 +249,10 @@ export interface FileRoutesById {
   '/patient-completion': typeof PatientCompletionRoute
   '/patient-evolution': typeof PatientEvolutionRoute
   '/patient-report': typeof PatientReportRoute
-  '/personalization': typeof PersonalizationRoute
   '/plans': typeof PlansRoute
   '/profile': typeof ProfileRoute
+  '/protocol-editor': typeof ProtocolEditorRoute
+  '/protocol-lab': typeof ProtocolLabRoute
   '/protocols': typeof ProtocolsRoute
   '/register': typeof RegisterRoute
   '/security': typeof SecurityRoute
@@ -271,9 +280,10 @@ export interface FileRouteTypes {
     | '/patient-completion'
     | '/patient-evolution'
     | '/patient-report'
-    | '/personalization'
     | '/plans'
     | '/profile'
+    | '/protocol-editor'
+    | '/protocol-lab'
     | '/protocols'
     | '/register'
     | '/security'
@@ -299,9 +309,10 @@ export interface FileRouteTypes {
     | '/patient-completion'
     | '/patient-evolution'
     | '/patient-report'
-    | '/personalization'
     | '/plans'
     | '/profile'
+    | '/protocol-editor'
+    | '/protocol-lab'
     | '/protocols'
     | '/register'
     | '/security'
@@ -327,9 +338,10 @@ export interface FileRouteTypes {
     | '/patient-completion'
     | '/patient-evolution'
     | '/patient-report'
-    | '/personalization'
     | '/plans'
     | '/profile'
+    | '/protocol-editor'
+    | '/protocol-lab'
     | '/protocols'
     | '/register'
     | '/security'
@@ -356,9 +368,10 @@ export interface RootRouteChildren {
   PatientCompletionRoute: typeof PatientCompletionRoute
   PatientEvolutionRoute: typeof PatientEvolutionRoute
   PatientReportRoute: typeof PatientReportRoute
-  PersonalizationRoute: typeof PersonalizationRoute
   PlansRoute: typeof PlansRoute
   ProfileRoute: typeof ProfileRoute
+  ProtocolEditorRoute: typeof ProtocolEditorRoute
+  ProtocolLabRoute: typeof ProtocolLabRoute
   ProtocolsRoute: typeof ProtocolsRoute
   RegisterRoute: typeof RegisterRoute
   SecurityRoute: typeof SecurityRoute
@@ -412,6 +425,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtocolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/protocol-lab': {
+      id: '/protocol-lab'
+      path: '/protocol-lab'
+      fullPath: '/protocol-lab'
+      preLoaderRoute: typeof ProtocolLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/protocol-editor': {
+      id: '/protocol-editor'
+      path: '/protocol-editor'
+      fullPath: '/protocol-editor'
+      preLoaderRoute: typeof ProtocolEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -424,13 +451,6 @@ declare module '@tanstack/react-router' {
       path: '/plans'
       fullPath: '/plans'
       preLoaderRoute: typeof PlansRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/personalization': {
-      id: '/personalization'
-      path: '/personalization'
-      fullPath: '/personalization'
-      preLoaderRoute: typeof PersonalizationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/patient-report': {
@@ -572,9 +592,10 @@ const rootRouteChildren: RootRouteChildren = {
   PatientCompletionRoute: PatientCompletionRoute,
   PatientEvolutionRoute: PatientEvolutionRoute,
   PatientReportRoute: PatientReportRoute,
-  PersonalizationRoute: PersonalizationRoute,
   PlansRoute: PlansRoute,
   ProfileRoute: ProfileRoute,
+  ProtocolEditorRoute: ProtocolEditorRoute,
+  ProtocolLabRoute: ProtocolLabRoute,
   ProtocolsRoute: ProtocolsRoute,
   RegisterRoute: RegisterRoute,
   SecurityRoute: SecurityRoute,
