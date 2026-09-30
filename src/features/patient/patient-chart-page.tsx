@@ -199,11 +199,17 @@ export function PatientChartPage() {
     null
   const currentInterval =
     currentIntervalDays !== null ? `${currentIntervalDays} dias` : '-'
+  // Vigente = o que será aplicado a seguir (planejado da dose agendada);
+  // sem agendamento, vale a última administrada.
   const currentDoseValues =
-    lastAdministered?.administeredValues ?? pendingRecord?.plannedValues ?? null
+    pendingRecord?.plannedValues ?? lastAdministered?.administeredValues ?? null
   const currentDose = currentDoseValues
     ? formatStepPresentation(currentDoseValues)
     : '-'
+  const previousDose =
+    pendingRecord?.plannedValues && lastAdministered?.administeredValues
+      ? formatStepPresentation(lastAdministered.administeredValues)
+      : null
   const nextDate = pendingRecord
     ? formatInstantDate(pendingRecord.scheduledAt)
     : '-'
@@ -383,7 +389,12 @@ export function PatientChartPage() {
               )}
             </div>
           )}
-          <SummaryCards currentInterval={currentInterval} nextDate={nextDate} currentDose={currentDose} />
+          <SummaryCards
+            currentInterval={currentInterval}
+            nextDate={nextDate}
+            currentDose={currentDose}
+            previousDose={previousDose}
+          />
 
           <div className="flex flex-1 flex-col min-h-0 min-w-0">
           <div className="relative z-10 flex items-end justify-between gap-2">
