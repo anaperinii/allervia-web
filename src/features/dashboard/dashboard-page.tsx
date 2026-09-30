@@ -9,6 +9,30 @@ import {
   TodayApplicationsCard,
   type TodayApplication,
 } from '@/features/dashboard/components/showcase/TodayApplicationsCard'
+import {
+  ChartCaption,
+  ChartState,
+  HBarList,
+  PhaseStackChart,
+  StatusHistoryChart,
+  VolumeConcentrationHeatmap,
+} from '@/features/dashboard/components/showcase/AggregateCharts'
+import { ComparisonCard } from '@/features/dashboard/components/showcase/ComparisonCard'
+import {
+  aggregateActiveByType,
+  aggregateByConcentration,
+  aggregatePhasesByDay,
+  aggregateStatusHistory,
+  aggregateVolumeMatrix,
+  buildComparisonSeries,
+  eachDay,
+  useActiveTherapies,
+  useDoseWindow,
+  usePreviousMetrics,
+  useStatusHistory,
+  type StatusGranularity,
+} from '@/features/dashboard/hooks/useDashboardAggregates'
+import type { CardFilter } from '@/features/dashboard/hooks/useChartWindow'
 import { formatRange } from '@/features/dashboard/lib/format-range'
 import { scheduleItemToApplication } from '@/features/patient/adapters/clinical-presentation'
 import { getClinicalMetrics, listDoseSchedule } from '@/shared/api/clinical.api'
@@ -27,11 +51,9 @@ import {
   faGaugeHigh,
   faShieldHalved,
   faSyringe,
-  faTriangleExclamation,
   faUser,
   faUserXmark,
 } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -46,17 +68,6 @@ const TABS: { id: DashboardTab; label: string; icon: IconDefinition }[] = [
 
 function dayInput(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
-
-function UnavailableIndicator({ reason }: { reason: string }) {
-  return (
-    <div className="flex h-full min-h-32 flex-col items-center justify-center gap-2 px-6 text-center">
-      <FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 18, color: '#8FB4BA' }} />
-      <p className="text-[0.7rem] leading-relaxed" style={{ color: '#8FB4BA' }}>
-        Indicador indisponível: {reason}
-      </p>
-    </div>
-  )
 }
 
 export function DashboardPage() {
@@ -102,15 +113,42 @@ export function DashboardPage() {
     }
   }, [])
 
-  const period = useMemo(() => {
-    const to = dateRange?.to ?? dateRange?.from ?? new Date()
-    const from =
-      dateRange?.from ?? new Date(to.getTime() - 29 * 24 * 60 * 60 * 1000)
+  const periodDays = useMemo(() => {
+    const DAY_MS = 24 * 60 * 60 * 1000
+    const toDate = dateRange?.to ?? dateRange?.from ?? new Date()
+    const fromDate = dateRange?.from ?? new Date(toDate.getTime() - 29 * DAY_MS)
+    const fromDay = dayInput(fromDate)
+    const toDay = dayInput(toDate)
+    const days = eachDay(fromDay, toDay)
+    const previousTo = new Date(fromDate.getTime() - DAY_MS)
+    const previousFrom = new Date(previousTo.getTime() - (days.length - 1) * DAY_MS)
+    const previousFromDay = dayInput(previousFrom)
+    const previousToDay = dayInput(previousTo)
     return {
-      from: toOffsetIso(dayInput(from), '00:00'),
-      to: toOffsetIso(dayInput(to), '23:59'),
+      fromDay,
+      toDay,
+      days,
+      previousFromDay,
+      previousToDay,
+      previousDays: eachDay(previousFromDay, previousToDay),
     }
   }, [dateRange])
+
+  const period = useMemo(
+    () => ({
+      from: toOffsetIso(periodDays.fromDay, '00:00'),
+      to: toOffsetIso(periodDays.toDay, '23:59'),
+    }),
+    [periodDays],
+  )
+
+  const previousPeriod = useMemo(
+    () => ({
+      from: toOffsetIso(periodDays.previousFromDay, '00:00'),
+      to: toOffsetIso(periodDays.previousToDay, '23:59'),
+    }),
+    [periodDays],
+  )
 
   const metricsQuery = useQuery({
     queryKey: queryKeys.clinicalMetrics(organizationId, period),
@@ -118,6 +156,95 @@ export function DashboardPage() {
     enabled: organizationId !== '',
   })
   const metrics = metricsQuery.data ?? null
+
+  const previousMetricsQuery = usePreviousMetrics(organizationId, previousPeriod)
+  const doseWindowQuery = useDoseWindow(organizationId, period)
+  const activeTherapiesQuery = useActiveTherapies(organizationId)
+
+  const concentrationData = useMemo(
+    () => aggregateByConcentration(doseWindowQuery.data ?? []),
+    [doseWindowQuery.data],
+  )
+  const volumeMatrix = useMemo(
+    () => aggregateVolumeMatrix(doseWindowQuery.data ?? []),
+    [doseWindowQuery.data],
+  )
+  const phaseSeries = useMemo(
+    () =>
+      aggregatePhasesByDay(
+        doseWindowQuery.data ?? [],
+        periodDays.fromDay,
+        periodDays.toDay,
+      ),
+    [doseWindowQuery.data, periodDays],
+  )
+  const typeData = useMemo(
+    () => aggregateActiveByType(activeTherapiesQuery.data ?? []),
+    [activeTherapiesQuery.data],
+  )
+  const comparisonSeries = useMemo(
+    () =>
+      metrics && previousMetricsQuery.data
+        ? buildComparisonSeries(
+            metrics,
+            previousMetricsQuery.data,
+            periodDays.days,
+            periodDays.previousDays,
+          )
+        : [],
+    [metrics, previousMetricsQuery.data, periodDays],
+  )
+  const phasesEmpty = phaseSeries.every(
+    (entry) => entry.buildUp + entry.maintenance === 0,
+  )
+
+  const statusHistoryQuery = useStatusHistory(organizationId)
+  const [statusGranularity, setStatusGranularity] =
+    useState<StatusGranularity>('month')
+  const [statusWindow, setStatusWindow] = useState('12')
+  const statusSeries = useMemo(
+    () =>
+      aggregateStatusHistory(
+        statusHistoryQuery.data ?? [],
+        statusGranularity,
+        Number(statusWindow),
+      ),
+    [statusHistoryQuery.data, statusGranularity, statusWindow],
+  )
+  const statusFilters: CardFilter[] = [
+    {
+      key: 'granularity',
+      value: statusGranularity,
+      onChange: (value) => {
+        setStatusGranularity(value as StatusGranularity)
+        setStatusWindow('12')
+      },
+      options: [
+        { value: 'week', label: 'Semanas' },
+        { value: 'month', label: 'Meses' },
+      ],
+      ariaLabel: 'Granularidade',
+    },
+    {
+      key: 'range',
+      value: statusWindow,
+      onChange: setStatusWindow,
+      options:
+        statusGranularity === 'month'
+          ? [
+              { value: '3', label: 'Últimos 3 meses' },
+              { value: '6', label: 'Últimos 6 meses' },
+              { value: '12', label: 'Últimos 12 meses' },
+            ]
+          : [
+              { value: '4', label: 'Últimas 4 semanas' },
+              { value: '8', label: 'Últimas 8 semanas' },
+              { value: '12', label: 'Últimas 12 semanas' },
+              { value: '26', label: 'Últimas 26 semanas' },
+            ],
+      ariaLabel: 'Janela',
+    },
+  ]
 
   const todayKey = dayInput(new Date())
   const todayQuery = useQuery({
@@ -340,10 +467,25 @@ export function DashboardPage() {
         </div>
 
         <div className="col-span-9">
-          <div className="flex h-full flex-col rounded-xl border border-(--border-custom) bg-white p-5">
-            <div className="text-xs font-semibold text-(--text-muted)">Comparativo de Aplicações</div>
-            <UnavailableIndicator reason="a comparação entre períodos exige histórico agregado acumulado, entregue com os relatórios oficiais." />
-          </div>
+          {comparisonSeries.length > 0 ? (
+            <ComparisonCard
+              title="Comparativo de Aplicações"
+              caption={`Aplicações por dia vs período anterior (${periodDays.days.length} dias)`}
+              totalSuffix="aplicações"
+              currentLabel="Atual"
+              previousLabel="Anterior"
+              series={comparisonSeries}
+            />
+          ) : (
+            <div className="flex h-full flex-col rounded-xl border border-(--border-custom) bg-white p-5">
+              <div className="text-xs font-semibold text-(--text-muted)">Comparativo de Aplicações</div>
+              <div className="flex flex-1 items-center justify-center text-xs text-(--text-muted)">
+                {previousMetricsQuery.isError
+                  ? 'Não foi possível carregar o comparativo.'
+                  : 'Carregando…'}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -354,20 +496,67 @@ export function DashboardPage() {
         subtitle="Indicadores oficiais do período no fuso clínico da organização; denominadores documentados no contrato."
         metrics={darkMetrics}
       >
-        <DarkChartCard title="Status de Imunoterapias" fullWidth>
-          <UnavailableIndicator reason="a evolução mensal de status exige série histórica própria." />
+        <DarkChartCard
+          title="Status de Imunoterapias"
+          fullWidth
+          filters={statusFilters}
+          filtersActive={statusGranularity !== 'month' || statusWindow !== '12'}
+        >
+          <ChartCaption>
+            Tratamentos por status ao fim de cada {statusGranularity === 'month' ? 'mês' : 'semana'}, reconstruídos do histórico de suspensões, retomadas e conclusões
+          </ChartCaption>
+          <ChartState
+            loading={statusHistoryQuery.isPending}
+            error={statusHistoryQuery.isError}
+            empty={(statusHistoryQuery.data ?? []).length === 0}
+            emptyText="Sem tratamentos registrados."
+          >
+            <StatusHistoryChart series={statusSeries} />
+          </ChartState>
         </DarkChartCard>
         <DarkChartCard title="Ciclos de Tratamento por Concentração">
-          <UnavailableIndicator reason="a distribuição por concentração chega com as agregações de relatório." />
+          <ChartCaption>Aplicações administradas no período, por concentração</ChartCaption>
+          <ChartState
+            loading={doseWindowQuery.isPending}
+            error={doseWindowQuery.isError}
+            empty={concentrationData.length === 0}
+            emptyText="Sem aplicações administradas no período."
+          >
+            <HBarList data={concentrationData} unit="aplicações" />
+          </ChartState>
         </DarkChartCard>
         <DarkChartCard title="Volume vs Concentração">
-          <UnavailableIndicator reason="a matriz de valores administrados chega com as agregações de relatório." />
+          <ChartCaption>Matriz de valores administrados no período</ChartCaption>
+          <ChartState
+            loading={doseWindowQuery.isPending}
+            error={doseWindowQuery.isError}
+            empty={volumeMatrix.total === 0}
+            emptyText="Sem aplicações administradas no período."
+          >
+            <VolumeConcentrationHeatmap matrix={volumeMatrix} />
+          </ChartState>
         </DarkChartCard>
         <DarkChartCard title="Imunoterapias Ativas por Tipo">
-          <UnavailableIndicator reason="a distribuição por tipo de alérgeno chega com as agregações de relatório." />
+          <ChartCaption>Tratamentos em andamento, por tipo de alérgeno</ChartCaption>
+          <ChartState
+            loading={activeTherapiesQuery.isPending}
+            error={activeTherapiesQuery.isError}
+            empty={typeData.length === 0}
+            emptyText="Sem tratamentos em andamento."
+          >
+            <HBarList data={typeData} unit="tratamentos" />
+          </ChartState>
         </DarkChartCard>
         <DarkChartCard title="Distribuição de Fases" fullWidth>
-          <UnavailableIndicator reason="a série histórica de fases exige agregação acumulada própria." />
+          <ChartCaption>Aplicações administradas por dia, empilhadas por fase do tratamento</ChartCaption>
+          <ChartState
+            loading={doseWindowQuery.isPending}
+            error={doseWindowQuery.isError}
+            empty={phasesEmpty}
+            emptyText="Sem aplicações administradas no período."
+          >
+            <PhaseStackChart series={phaseSeries} />
+          </ChartState>
         </DarkChartCard>
       </DarkMetricsSection>
     </>
