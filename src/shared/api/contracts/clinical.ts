@@ -150,6 +150,7 @@ export interface DoseDetail extends DoseRecord {
   allowedValues: ProtocolStep[]
   migrationRequired: boolean
   observations?: DoseObservation[]
+  observationAddenda?: DoseObservationAddendum[]
 }
 
 export interface DoseValuesBody {

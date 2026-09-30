@@ -36,6 +36,7 @@ export function RequireSession({ children }: { children: ReactNode }) {
   const { status, account, error, refresh } = useSession()
   const navigate = useNavigate()
   const syncFromAccount = useUserStore((s) => s.syncFromAccount)
+  const profileReady = useUserStore((s) => s.current !== null)
 
   useEffect(() => {
     syncFromAccount(account)
@@ -78,7 +79,16 @@ export function RequireSession({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!account) return null
+  // syncFromAccount roda em efeito, ou seja, depois do render dos filhos. Soltar
+  // os filhos antes da store existir faz useCurrentUser() estourar no reload.
+  if (!account || !profileReady) {
+    return (
+      <CenteredMessage
+        title="Carregando sua sessão"
+        description="Verificando seu acesso com o servidor."
+      />
+    )
+  }
 
   return <>{children}</>
 }

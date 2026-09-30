@@ -1,10 +1,20 @@
-import { useState } from 'react'
-import { cn } from '@/shared/lib/cn'
+import { useQuery } from '@tanstack/react-query'
 import { Button, Modal } from '@/shared/components'
+import { getDose } from '@/shared/api/clinical.api'
+import { queryKeys } from '@/shared/api/query-keys'
+import { formatInstantDate } from '@/features/patient/adapters/clinical-presentation'
+import type { DoseObservationAddendum } from '@/shared/api/contracts/clinical'
 import type { Application } from '@/features/patient/stores/usePatientStore'
+
+const CONDUCT_LABELS: Record<string, string> = {
+  MAINTAIN: 'Manter protocolo',
+  REQUEST_PHYSICIAN_REVIEW: 'Solicitar avaliação médica',
+  SUSPEND_TREATMENT: 'Suspender tratamento',
+}
 
 interface ApplicationDetailModalProps {
   application: Application | null
+  organizationId: string
   onClose: () => void
   onRetract?: (doseId: string) => void
   onLateObservation?: (doseId: string) => void
@@ -12,32 +22,28 @@ interface ApplicationDetailModalProps {
 
 export function ApplicationDetailModal({
   application,
+  organizationId,
   onClose,
   onRetract,
   onLateObservation,
 }: ApplicationDetailModalProps) {
-  const [tab, setTab] = useState<'pre' | 'post'>('pre')
-  const [hasSwitched, setHasSwitched] = useState(false)
-
-  const handleClose = () => {
-    onClose()
-    setTab('pre')
-    setHasSwitched(false)
-  }
-
-  const switchTab = (next: 'pre' | 'post') => {
-    if (next === tab) return
-    setHasSwitched(true)
-    setTab(next)
-  }
-
   const completed = application?.status === 'completed'
+
+  // As observações tardias só existem no detalhe da dose; a listagem que
+  // alimenta `application` não as carrega.
+  const doseQuery = useQuery({
+    queryKey: queryKeys.dose(organizationId, application?.id ?? ''),
+    queryFn: ({ signal }) => getDose(application!.id, signal),
+    enabled: organizationId !== '' && !!application && completed,
+  })
+  const addenda = doseQuery.data?.observationAddenda ?? []
+
   return (
     <Modal
       open={!!application}
-      onClose={handleClose}
+      onClose={onClose}
       title="Dados da aplicação"
-      size="lg"
+      size="2xl"
       footer={
         completed && (onRetract || onLateObservation) ? (
           <>
@@ -59,80 +65,96 @@ export function ApplicationDetailModal({
                 Registrar em erro
               </Button>
             )}
-            <Button variant="outline" onClick={handleClose}>Fechar</Button>
+            <Button variant="outline" onClick={onClose}>Fechar</Button>
           </>
         ) : undefined
       }
     >
       {application && (
-        <>
-          <div role="tablist" aria-label="Etapas da aplicação" className="flex items-center justify-center gap-2">
-            <TabButton active={tab === 'pre'} onClick={() => switchTab('pre')}>Pré-Aplicação</TabButton>
-            <TabButton active={tab === 'post'} onClick={() => switchTab('post')}>Pós-Aplicação</TabButton>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Panel title="Pré-Aplicação">
+              <Field colSpan label="Como o paciente passou durante o intervalo da última aplicação?">
+                {application.administratorNote || 'Sem intercorrências relatadas durante o intervalo.'}
+              </Field>
+              <Field label="Presença de efeito colateral">{application.sideEffect === 'yes' ? 'Sim' : 'Não'}</Field>
+              <Field label="Necessidade de medicação">{application.medicationNeeded === 'yes' ? 'Sim' : 'Não'}</Field>
+              {application.sideEffect === 'yes' && (
+                <Field colSpan label="Efeitos colaterais relatados">{application.reportedEffects || '—'}</Field>
+              )}
+              {application.medicationNeeded === 'yes' && (
+                <Field colSpan label="Medicações administradas">{application.medications || '—'}</Field>
+              )}
+            </Panel>
+
+            <Panel title="Pós-Aplicação">
+              <Field label="Horário">{application.startTime} – {application.endTime}</Field>
+              <Field label="Data">{application.date}</Field>
+              <Field label="Volume aplicado">{application.appliedVolume || '-'}</Field>
+              <Field label="Concentração aplicada">{application.extractConcentration || '-'}</Field>
+              <Field label="Intervalo associado da dose">{application.cycle.days} dias</Field>
+              <Field label="Responsável">{application.administrator || '-'}</Field>
+              <Field label="Presença de efeito colateral">{application.sideEffect === 'yes' ? 'Sim' : 'Não'}</Field>
+              <Field label="Necessidade de medicação">{application.medicationNeeded === 'yes' ? 'Sim' : 'Não'}</Field>
+              {application.sideEffect === 'yes' && (
+                <Field colSpan label="Efeitos colaterais relatados">{application.reportedEffects || '—'}</Field>
+              )}
+              {application.medicationNeeded === 'yes' && (
+                <Field colSpan label="Medicações administradas">{application.medications || '—'}</Field>
+              )}
+              <Field colSpan label="Notas do responsável">{application.administratorNote || '-'}</Field>
+            </Panel>
           </div>
 
-          <div key={hasSwitched ? tab : 'initial'} className={hasSwitched ? 'animate-in fade-in-0 slide-in-from-right-2 duration-200' : undefined}>
-            {tab === 'pre' ? <PreTab application={application} /> : <PostTab application={application} />}
-          </div>
-        </>
+          {addenda.length > 0 && (
+            <Panel title={addenda.length > 1 ? 'Observações tardias' : 'Observação tardia'}>
+              <div className="col-span-2 space-y-3">
+                {addenda.map((addendum) => (
+                  <Addendum key={addendum.id} addendum={addendum} />
+                ))}
+              </div>
+            </Panel>
+          )}
+        </div>
       )}
     </Modal>
   )
 }
 
-function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={cn(
-        'px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer',
-        active ? 'bg-linear-to-br from-brand to-brand-dark text-white shadow-sm' : 'bg-teal-50 text-teal-600 hover:bg-teal-100',
-      )}
-    >
-      {children}
-    </button>
+    <section className="rounded-xl border border-(--border-custom) bg-white p-4">
+      <h3 className="mb-3 text-[0.7rem] font-bold uppercase tracking-wide text-(--text-muted)">
+        {title}
+      </h3>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3">{children}</div>
+    </section>
   )
 }
 
-function PreTab({ application }: { application: Application }) {
+function Addendum({ addendum }: { addendum: DoseObservationAddendum }) {
   return (
-    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-      <Field colSpan label="Como o paciente passou durante o intervalo da última aplicação?">
-        {application.administratorNote || 'Sem intercorrências relatadas durante o intervalo.'}
-      </Field>
-      <Field label="Presença de efeito colateral">{application.sideEffect === 'yes' ? 'Sim' : 'Não'}</Field>
-      <Field label="Necessidade de medicação">{application.medicationNeeded === 'yes' ? 'Sim' : 'Não'}</Field>
-      {application.sideEffect === 'yes' && (
-        <Field colSpan label="Efeitos colaterais relatados">{application.reportedEffects || '—'}</Field>
-      )}
-      {application.medicationNeeded === 'yes' && (
-        <Field colSpan label="Medicações administradas">{application.medications || '—'}</Field>
-      )}
-    </div>
-  )
-}
-
-function PostTab({ application }: { application: Application }) {
-  return (
-    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-      <Field label="Horário">{application.startTime} – {application.endTime}</Field>
-      <Field label="Data">{application.date}</Field>
-      <Field label="Volume aplicado">{application.appliedVolume || '-'}</Field>
-      <Field label="Concentração aplicada">{application.extractConcentration || '-'}</Field>
-      <Field label="Intervalo associado da dose">{application.cycle.days} dias</Field>
-      <Field label="Responsável">{application.administrator || '-'}</Field>
-      <Field label="Presença de efeito colateral">{application.sideEffect === 'yes' ? 'Sim' : 'Não'}</Field>
-      <Field label="Necessidade de medicação">{application.medicationNeeded === 'yes' ? 'Sim' : 'Não'}</Field>
-      {application.sideEffect === 'yes' && (
-        <Field colSpan label="Efeitos colaterais relatados">{application.reportedEffects || '—'}</Field>
-      )}
-      {application.medicationNeeded === 'yes' && (
-        <Field colSpan label="Medicações administradas">{application.medications || '—'}</Field>
-      )}
-      <Field colSpan label="Notas do responsável">{application.administratorNote || '-'}</Field>
+    <div className="rounded-lg border border-(--border-custom) bg-gray-50/60 px-3 py-2.5">
+      <div className="mb-1.5 text-[0.65rem] font-semibold text-(--text-muted)">
+        Observado em {formatInstantDate(addendum.observedAt)}
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+        <Field label="Efeitos colaterais relatados">
+          {addendum.reportedSideEffects.join(', ') || '—'}
+        </Field>
+        <Field label="Medicações administradas">
+          {addendum.administeredMedications.join(', ') || '—'}
+        </Field>
+        {addendum.conduct && (
+          <Field label="Conduta imediata">
+            {CONDUCT_LABELS[addendum.conduct] ?? addendum.conduct}
+          </Field>
+        )}
+        {addendum.conductJustification && (
+          <Field label="Justificativa da conduta">{addendum.conductJustification}</Field>
+        )}
+        {addendum.notes && <Field colSpan label="Notas">{addendum.notes}</Field>}
+      </div>
     </div>
   )
 }

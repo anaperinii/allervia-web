@@ -572,6 +572,7 @@ export function PatientChartPage() {
 
       <ApplicationDetailModal
         application={selectedApplication}
+        organizationId={organizationId}
         onClose={() => setSelectedApp(null)}
         onRetract={
           canAdjustProtocol

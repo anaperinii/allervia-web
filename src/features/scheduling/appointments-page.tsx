@@ -243,7 +243,7 @@ export function AppointmentsPage() {
             />
             {canNewAppointment && (
               <Pill active icon={faPlus} onClick={() => setShowNewModal(true)}>
-                Novo Compromisso
+                Novo agendamento
               </Pill>
             )}
           </>
