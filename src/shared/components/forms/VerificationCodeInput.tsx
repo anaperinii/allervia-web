@@ -73,7 +73,7 @@ export function VerificationCodeInput({
           data-code-digit=""
           className={cn(
             'w-11 h-12 rounded-2xl border text-center text-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#257E8C]/35 focus:border-[#257E8C] transition-all',
-            error ? 'border-red-400 bg-red-50/40' : 'border-[#DDE6E6]',
+            error ? 'border-red-400' : 'border-[#DDE6E6]',
           )}
         />
       ))}

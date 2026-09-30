@@ -30,7 +30,7 @@ export function FieldLabel({ label, required, hint, children, error, helperText 
 
 const FIELD_BASE =
   'w-full border bg-white px-4 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#257E8C]/35 focus:border-[#257E8C] transition-all'
-const FIELD_INVALID = 'border-red-400 bg-red-50/40'
+const FIELD_INVALID = 'border-red-400'
 const FIELD_VALID = 'border-[#DDE6E6]'
 
 interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {

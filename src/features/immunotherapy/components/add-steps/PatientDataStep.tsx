@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Controller, type UseFormReturn } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
-import { Button, FieldLabel, StepHeading, TextInput } from '@/shared/components'
+import { FieldLabel, StepHeading, TextInput } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
 import { formatCPF, formatPhone, formatWeight } from '@/shared/lib/formatters'
 import { calculateAge, parseIsoDate, toDateInputValue } from '@/shared/lib/dates'
@@ -163,7 +163,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
               aria-activedescendant={
                 highlightedIndex >= 0 ? `${LISTBOX_ID}-${highlightedIndex}` : undefined
               }
-              className={cn(isExisting && 'pr-9')}
+              className={cn(isExisting && 'pr-32')}
               {...nameField}
               onFocus={() => setShowSuggestions(true)}
               onBlur={(e) => {
@@ -176,10 +176,11 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
               <button
                 type="button"
                 onClick={clearPatient}
-                aria-label="Desvincular paciente e limpar os dados"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-(--text-muted) transition-colors hover:bg-gray-100 hover:text-(--text)"
+                aria-label="Limpar seleção e desvincular o paciente"
+                className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1.5 rounded-full border border-red-300 bg-red-50 px-2.5 py-1 text-[0.65rem] font-semibold text-red-700 transition-colors hover:border-red-400 hover:bg-red-100 cursor-pointer"
               >
-                <FontAwesomeIcon icon={faXmark} style={{ fontSize: 12 }} />
+                <FontAwesomeIcon icon={faXmark} style={{ fontSize: 10 }} />
+                Limpar seleção
               </button>
             )}
             {isOpen && (
@@ -296,13 +297,10 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
         </FieldLabel>
 
         {isExisting && (
-          <p className="col-span-2 flex items-center gap-2 text-[0.65rem] leading-relaxed text-(--text-muted)">
+          <p className="col-span-2 text-[0.65rem] leading-relaxed text-(--text-muted)">
             Paciente já cadastrado: o tratamento não duplica o cadastro. Ajustes em
             CPF, telefone, nascimento e peso atualizam o cadastro do paciente ao
             salvar.
-            <Button type="button" tone="brand" variant="ghost" size="sm" onClick={clearPatient}>
-              Cadastrar outro paciente
-            </Button>
           </p>
         )}
       </div>
