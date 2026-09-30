@@ -7,6 +7,7 @@ import { MemberActionMenu } from './MemberActionMenu'
 
 interface MembersTableProps {
   members: TeamMember[]
+  currentProfessionalId?: string
   openMenuId: string | null
   onToggleMenu: (id: string) => void
   onCloseMenu: () => void
@@ -21,6 +22,7 @@ const monthYear = new Intl.DateTimeFormat('pt-BR', {
 
 export function MembersTable({
   members,
+  currentProfessionalId,
   openMenuId,
   onToggleMenu,
   onCloseMenu,
@@ -56,7 +58,14 @@ export function MembersTable({
             <td className="px-5 py-3">
               <MediaRow
                 leading={<PatientInitials name={member.fullName} size={32} />}
-                title={member.fullName}
+                title={
+                  <>
+                    {member.fullName}
+                    {member.professionalId === currentProfessionalId && (
+                      <span className="ml-1 font-normal text-(--text-muted)">(você)</span>
+                    )}
+                  </>
+                }
                 description={member.email}
               />
             </td>

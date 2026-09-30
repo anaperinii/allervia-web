@@ -299,6 +299,7 @@ export function TeamsPage() {
             ) : (
               <MembersTable
                 members={members}
+                currentProfessionalId={account?.professional?.id}
                 openMenuId={openMenuId}
                 onToggleMenu={(id) => setOpenMenuId(openMenuId === id ? null : id)}
                 onCloseMenu={() => setOpenMenuId(null)}
