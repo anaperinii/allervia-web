@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Button } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
@@ -7,6 +8,7 @@ import {
   projectDate,
   volume,
 } from '@/features/protocols/lab/flow-graph'
+import { PHASE_VIEW } from '@/features/protocols/lab/phase-view'
 import type { Verdict } from './FlowDiagram'
 
 interface StepInspectorProps {
@@ -48,9 +50,23 @@ export function StepInspector({
   const date =
     showDates && day !== null ? projectDate(startDate, day, timeZone) : null
 
-  const facts: { label: string; value: string }[] = [
+  const phase = PHASE_VIEW[step.phase]
+
+  const facts: { label: string; value: ReactNode }[] = [
     { label: 'Identificador', value: step.id },
-    { label: 'Fase', value: step.phase === 'BUILD_UP' ? 'Indução' : 'Manutenção' },
+    {
+      label: 'Fase',
+      value: (
+        <span
+          className={cn(
+            'inline-flex items-center rounded-full border px-2 py-0.5 text-[0.6rem] font-bold leading-none',
+            phase.chip,
+          )}
+        >
+          {phase.label}
+        </span>
+      ),
+    },
     { label: 'Diluição', value: dilution(step.concentration) },
     { label: 'Volume', value: volume(step.volume) },
     { label: 'Cadência', value: cadence(step.intervalDays) },
@@ -70,9 +86,9 @@ export function StepInspector({
   ]
 
   return (
-    <div className="rounded-2xl border border-(--border-custom) bg-white overflow-hidden">
+    <div className="overflow-hidden rounded-2xl border border-brand/40 bg-white shadow-[0_10px_24px_-18px_rgba(16,60,68,0.5)]">
       <header className="border-b border-(--border-custom) bg-gray-50/50 px-4 py-3">
-        <h3 className="text-xs font-bold text-(--text)">{step.label}</h3>
+        <h3 className="truncate text-xs font-bold text-(--text)">{step.label}</h3>
         {verdict?.detail && (
           <p
             className={cn(

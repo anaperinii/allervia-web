@@ -1,5 +1,3 @@
-import { faPause, faPlay } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Button, FieldLabel, Select, Switch, TextInput } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
@@ -12,10 +10,7 @@ interface LabControlsProps {
   onStartDateChange: (value: string) => void
   showDates: boolean
   onShowDatesChange: (value: boolean) => void
-  playing: boolean
-  onTogglePlay: () => void
-  canRun: boolean
-  cursorLabel: string
+  canValidate: boolean
   onValidate: () => void
   validating: boolean
   validationSummary: { text: string; tone: 'ok' | 'bad' } | null
@@ -29,10 +24,7 @@ export function LabControls({
   onStartDateChange,
   showDates,
   onShowDatesChange,
-  playing,
-  onTogglePlay,
-  canRun,
-  cursorLabel,
+  canValidate,
   onValidate,
   validating,
   validationSummary,
@@ -40,38 +32,20 @@ export function LabControls({
   return (
     <div className="overflow-hidden rounded-2xl border border-(--border-custom) bg-[#F6F8F8]">
       <header className="border-b border-(--border-custom) bg-gray-50/50 px-4 py-3">
-        <h2 className="text-xs font-bold text-(--text)">Execução</h2>
+        <h2 className="text-xs font-bold text-(--text)">
+          Parâmetros da simulação
+        </h2>
       </header>
 
       <div className="flex flex-col gap-4 p-4">
-        <Button
-          tone="brand"
-          variant="solid"
-          size="sm"
-          fullWidth
-          onClick={onTogglePlay}
-          disabled={!canRun}
-          leftIcon={
-            <FontAwesomeIcon
-              icon={playing ? faPause : faPlay}
-              style={{ fontSize: 11 }}
-            />
-          }
-        >
-          {playing ? 'Pausar' : 'Executar trilha'}
-        </Button>
-
-        <p className="text-[0.65rem] font-medium text-(--text-muted)">
-          {cursorLabel}
-        </p>
-
         <div className="rounded-xl border border-(--border-custom) bg-white p-3">
           <Button
-            variant="outline"
+            tone="brand"
+            variant="solid"
             size="sm"
             fullWidth
-            disabled={validating || !canRun}
-            className="border-[#12333a]/40 text-[#12333a] hover:border-[#12333a]/70 hover:bg-[#12333a]/6"
+            prominent
+            disabled={validating || !canValidate}
             onClick={onValidate}
           >
             {validating ? 'Conferindo…' : 'Conferir com o motor'}

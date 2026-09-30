@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useSearch } from '@tanstack/react-router'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
@@ -12,9 +12,6 @@ import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { todayStr } from '@/shared/lib/dates'
-
-/** Ritmo da animação da trilha. */
-const STEP_INTERVAL_MS = 900
 
 export function ProtocolLabPage() {
   const { versionId } = useSearch({ from: '/protocol-lab' })
@@ -35,8 +32,6 @@ export function ProtocolLabPage() {
   })
 
   const [startStepId, setStartStepId] = useState('')
-  const [cursor, setCursor] = useState(0)
-  const [playing, setPlaying] = useState(false)
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null)
   const [showDates, setShowDates] = useState(false)
   const [startDate, setStartDate] = useState(todayStr)
@@ -57,31 +52,13 @@ export function ProtocolLabPage() {
     protocolsQuery.data?.find((protocol) => protocol.id === version?.protocolId)
       ?.name ?? 'Protocolo'
 
-  const boundedCursor = Math.min(cursor, Math.max(mainNodes.length - 1, 0))
-  const activeNode = mainNodes[boundedCursor]
+  // A trilha inteira aparece de uma vez: não há cursor nem etapa "atual".
   const visited = useMemo(
-    () => new Set(mainNodes.slice(0, boundedCursor + 1).map((node) => node.step.id)),
-    [mainNodes, boundedCursor],
+    () => new Set(steps.map((step) => step.id)),
+    [steps],
   )
-  const canStepForward = boundedCursor < mainNodes.length - 1
-
-  useEffect(() => {
-    if (!playing || mainNodes.length === 0) return
-    const timer = window.setInterval(() => {
-      setCursor((current) => {
-        if (current >= mainNodes.length - 1) {
-          setPlaying(false)
-          return current
-        }
-        return current + 1
-      })
-    }, STEP_INTERVAL_MS)
-    return () => window.clearInterval(timer)
-  }, [playing, mainNodes.length])
 
   const resetRun = (nextStartStepId?: string) => {
-    setPlaying(false)
-    setCursor(0)
     setVerdicts(new Map())
     if (nextStartStepId !== undefined) setStartStepId(nextStartStepId)
   }
@@ -238,7 +215,7 @@ export function ProtocolLabPage() {
 
             <FlowDiagram
               chains={graph.chains}
-              activeStepId={activeNode?.step.id ?? null}
+              activeStepId={null}
               visited={visited}
               selectedStepId={selectedStepId}
               verdicts={verdicts}
@@ -250,6 +227,19 @@ export function ProtocolLabPage() {
           </div>
 
           <aside className="flex w-full flex-col gap-4 xl:w-80 xl:shrink-0">
+            <StepInspector
+              step={selectedStep}
+              day={selectedNode?.day ?? null}
+              incoming={selectedStepId ? (graph.incoming.get(selectedStepId) ?? []) : []}
+              verdict={selectedStepId ? verdicts.get(selectedStepId) : undefined}
+              startDate={startDate}
+              timeZone={timeZone}
+              showDates={showDates}
+              isStart={selectedStepId === effectiveStart}
+              onSetStart={(stepId) => resetRun(stepId)}
+              onFocus={setSelectedStepId}
+            />
+
             <LabControls
               steps={steps}
               startStepId={effectiveStart}
@@ -258,17 +248,7 @@ export function ProtocolLabPage() {
               onStartDateChange={setStartDate}
               showDates={showDates}
               onShowDatesChange={setShowDates}
-              playing={playing}
-              onTogglePlay={() => {
-                if (playing) {
-                  setPlaying(false)
-                  return
-                }
-                // Dar play no fim da trilha recomeça a execução.
-                if (!canStepForward) setCursor(0)
-                setPlaying(true)
-              }}
-              canRun={mainNodes.length > 1}
+              canValidate={mainNodes.length > 0}
               onValidate={() => validation.mutate()}
               validating={validation.isPending}
               validationSummary={
@@ -284,24 +264,6 @@ export function ProtocolLabPage() {
                         tone: 'bad',
                       }
               }
-              cursorLabel={
-                activeNode
-                  ? `Etapa ${activeNode.position} de ${mainNodes.length} · ${activeNode.step.label} · dia ${activeNode.day}`
-                  : 'Sem etapas na trilha'
-              }
-            />
-
-            <StepInspector
-              step={selectedStep}
-              day={selectedNode?.day ?? null}
-              incoming={selectedStepId ? (graph.incoming.get(selectedStepId) ?? []) : []}
-              verdict={selectedStepId ? verdicts.get(selectedStepId) : undefined}
-              startDate={startDate}
-              timeZone={timeZone}
-              showDates={showDates}
-              isStart={selectedStepId === effectiveStart}
-              onSetStart={(stepId) => resetRun(stepId)}
-              onFocus={setSelectedStepId}
             />
           </aside>
         </div>
