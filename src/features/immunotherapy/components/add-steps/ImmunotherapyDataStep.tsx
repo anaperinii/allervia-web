@@ -7,7 +7,7 @@ import { cn } from '@/shared/lib/cn'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
 import { listProtocols, readAutomation } from '@/shared/api/protocols.api'
 import type { ProtocolStep, ProtocolVersion } from '@/shared/api/contracts/protocols'
-import { formatStepPresentation } from '@/features/patient/adapters/clinical-presentation'
+import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
@@ -64,6 +64,12 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
 
   const steps: ProtocolStep[] = selectedVersion?.definition.steps ?? []
 
+  const applyStepIds = (next: string[]) => {
+    setValue('stepIds', next, { shouldValidate: true })
+    if (!next.includes(watch('startingStepId'))) setValue('startingStepId', '')
+    if (!next.includes(watch('targetStepId'))) setValue('targetStepId', '')
+  }
+
   const toggleStep = (stepId: string) => {
     const next = selectedStepIds.includes(stepId)
       ? selectedStepIds.filter((id) => id !== stepId)
@@ -71,10 +77,11 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
         steps.map((step) => step.id).filter(
           (id) => id === stepId || selectedStepIds.includes(id),
         )
-    setValue('stepIds', next, { shouldValidate: true })
-    if (!next.includes(watch('startingStepId'))) setValue('startingStepId', '')
-    if (!next.includes(watch('targetStepId'))) setValue('targetStepId', '')
+    applyStepIds(next)
   }
+
+  const allSelected =
+    steps.length > 0 && steps.every((step) => selectedStepIds.includes(step.id))
 
   return (
     <div className="space-y-5">
@@ -105,7 +112,15 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
                 value={field.value}
                 onChange={(e) => {
                   field.onChange(e.target.value)
-                  setValue('stepIds', [])
+                  // Caso comum é prescrever o protocolo inteiro: já entra com
+                  // todas as etapas marcadas e o médico desmarca as exceções.
+                  const version = publishedOptions.find(
+                    (option) => option.version.id === e.target.value,
+                  )?.version
+                  setValue(
+                    'stepIds',
+                    version?.definition.steps.map((step) => step.id) ?? [],
+                  )
                   setValue('startingStepId', '')
                   setValue('targetStepId', '')
                 }}
@@ -132,6 +147,20 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
       {selectedVersion && (
         <div className="space-y-3">
           <FieldLabel label="Etapas permitidas na prescrição" error={errors.stepIds?.message}>
+            <div className="mb-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  applyStepIds(allSelected ? [] : steps.map((step) => step.id))
+                }
+                className="rounded-md border border-(--border-custom) bg-white px-2 py-1 text-[0.65rem] font-semibold text-(--text-muted) transition-colors hover:border-brand/50 hover:text-brand-dark cursor-pointer"
+              >
+                {allSelected ? 'Limpar seleção' : 'Selecionar todas'}
+              </button>
+              <span className="text-[0.6rem] text-(--text-muted)">
+                {selectedStepIds.length} de {steps.length} selecionadas
+              </span>
+            </div>
             <div className="flex flex-wrap gap-2">
               {steps.map((step) => {
                 const selected = selectedStepIds.includes(step.id)
@@ -149,9 +178,9 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
                         : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50',
                     )}
                   >
-                    {step.label}
+                    {formatStepOption(step)}
                     <span className="ml-1.5 font-normal opacity-75">
-                      {formatStepPresentation(step)} · {step.intervalDays}d
+                      {step.intervalDays}d
                     </span>
                   </button>
                 )
@@ -167,7 +196,7 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
                   .filter((step) => selectedStepIds.includes(step.id))
                   .map((step) => (
                     <option key={step.id} value={step.id}>
-                      {step.label} — {formatStepPresentation(step)}
+                      {formatStepOption(step)}
                     </option>
                   ))}
               </Select>
@@ -179,7 +208,7 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
                   .filter((step) => selectedStepIds.includes(step.id))
                   .map((step) => (
                     <option key={step.id} value={step.id}>
-                      {step.label} — {formatStepPresentation(step)}
+                      {formatStepOption(step)}
                     </option>
                   ))}
               </Select>

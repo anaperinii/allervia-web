@@ -1,5 +1,6 @@
 import { InviteMemberModal } from '@/features/settings/components/InviteMemberModal'
 import { InvitesTable } from '@/features/settings/components/InvitesTable'
+import { ManageRolesModal } from '@/features/settings/components/ManageRolesModal'
 import { MembersTable } from '@/features/settings/components/MembersTable'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import {
@@ -49,6 +50,7 @@ export function TeamsPage() {
   const [itemsPerPage, setItemsPerPage] = useState(5)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [confirmState, setConfirmState] = useState<TeamConfirmState | null>(null)
+  const [rolesTarget, setRolesTarget] = useState<TeamMember | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
 
@@ -319,6 +321,10 @@ export function TeamsPage() {
                     name: member.fullName,
                   })
                 }}
+                onManageRoles={(member: TeamMember) => {
+                  setOpenMenuId(null)
+                  setRolesTarget(member)
+                }}
               />
             )}
           </div>
@@ -367,6 +373,14 @@ export function TeamsPage() {
         error={inviteError}
         onClose={() => setShowInviteModal(false)}
         onSubmit={(data) => inviteMutation.mutate(data)}
+      />
+
+      <ManageRolesModal
+        member={rolesTarget}
+        organizationId={organizationId}
+        currentProfessionalId={account?.professional?.id}
+        onClose={() => setRolesTarget(null)}
+        onSaved={refreshAll}
       />
 
       <TeamConfirmModal

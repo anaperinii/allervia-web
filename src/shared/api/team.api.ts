@@ -6,6 +6,7 @@ import type {
   Organization,
   Page,
   ProfessionalProfile,
+  ProfessionalRoleGrant,
   TeamMember,
 } from '@/shared/api/contracts/team'
 
@@ -151,10 +152,18 @@ export function updateOrganization(
 export function grantRole(body: {
   professionalId: string
   name: BackendRole
-}): Promise<{ id: string; role: BackendRole }> {
+}): Promise<ProfessionalRoleGrant> {
   return apiRequest('/roles', { method: 'POST', body })
 }
 
-export function revokeRole(roleId: string): Promise<void> {
-  return apiRequest<void>(`/roles/${roleId}`, { method: 'DELETE' })
+export function revokeRole(roleId: string): Promise<ProfessionalRoleGrant> {
+  return apiRequest(`/roles/${roleId}`, { method: 'DELETE' })
+}
+
+/** Concessões vigentes (revokedAt null) do profissional, com os ids que a revogação exige. */
+export function listProfessionalRoles(
+  professionalId: string,
+  signal?: AbortSignal,
+): Promise<ProfessionalRoleGrant[]> {
+  return apiRequest(`/roles/professional/${professionalId}`, { signal })
 }

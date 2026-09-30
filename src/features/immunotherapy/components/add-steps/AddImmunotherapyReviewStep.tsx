@@ -1,6 +1,6 @@
 import { StepHeading } from '@/shared/components'
 import { formatIsoToPtOrDash } from '@/shared/lib/dates'
-import { formatStepPresentation } from '@/features/patient/adapters/clinical-presentation'
+import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
 import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
 
@@ -44,12 +44,12 @@ export function AddImmunotherapyReviewStep({
     {
       label: 'Etapa inicial',
       value: starting
-        ? `${starting.label} — ${formatStepPresentation(starting)}`
+        ? formatStepOption(starting)
         : '—',
     },
     {
       label: 'Etapa meta',
-      value: target ? `${target.label} — ${formatStepPresentation(target)}` : '—',
+      value: target ? formatStepOption(target) : '—',
     },
     {
       label: 'Etapas permitidas',

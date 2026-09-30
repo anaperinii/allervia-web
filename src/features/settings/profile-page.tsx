@@ -1,4 +1,3 @@
-import userAvatar from '@/assets/user-avatar.jpg'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
 import { PROFESSION_LABELS, ROLE_BADGES } from '@/features/settings/constants/team-roles'
@@ -12,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
-import { faCamera, faFloppyDisk, faUserGear } from '@fortawesome/free-solid-svg-icons'
+import { faCamera, faFloppyDisk, faUser, faUserGear } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export function ProfilePage() {
@@ -107,11 +106,16 @@ export function ProfilePage() {
   return (
     <SettingsLayout subtitle="Meu Perfil">
       <form onSubmit={(e) => e.preventDefault()}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-            <div className="flex items-center justify-between gap-5 lg:col-span-2">
+        <div className="flex flex-col gap-6">
+            <div className="flex items-center justify-between gap-5">
               <div className="flex items-center gap-5 min-w-0">
                 <div className="relative shrink-0">
-                  <img src={userAvatar} alt="" className="h-20 w-20 rounded-full object-cover border border-(--border-custom)" />
+                  <span
+                    aria-hidden="true"
+                    className="flex h-20 w-20 items-center justify-center rounded-full border border-(--border-custom) bg-gray-100 text-(--text-muted)"
+                  >
+                    <FontAwesomeIcon icon={faUser} style={{ fontSize: 30 }} />
+                  </span>
                   {editing && (
                     <button
                       type="button"
@@ -156,11 +160,15 @@ export function ProfilePage() {
             </div>
 
             {failure && (
-              <p className="lg:col-span-2 text-xs text-red-600" role="alert">
+              <p className="text-xs text-red-600" role="alert">
                 {failure}
               </p>
             )}
 
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
+            {/* Coluna esquerda: dados pessoais e, abaixo, acesso e papéis —
+                que estica só até a altura dos dados profissionais ao lado. */}
+            <div className="flex flex-col gap-6">
             <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Pessoais</h2>
@@ -182,6 +190,37 @@ export function ProfilePage() {
                 isso não aparecem aqui em vez de exibirem um valor inventado.
               </div>
             </section>
+
+            <section className="flex flex-1 flex-col overflow-hidden rounded-3xl border border-(--border-custom) bg-[#F6F8F8]">
+              <div className="flex items-center gap-2 border-b border-(--border-custom) bg-gray-50/50 px-4 py-2.5">
+                <FontAwesomeIcon icon={faUserGear} className="text-(--text-muted)" style={{ fontSize: 13 }} />
+                <h2 className="text-xs font-bold text-(--text)">Acesso e papéis</h2>
+              </div>
+              <div className="flex flex-1 flex-col gap-2 px-4 py-3">
+                <div className="flex flex-wrap gap-1.5">
+                  {roles.length > 0 ? (
+                    roles.map((role) => (
+                      <span
+                        key={role}
+                        className="rounded-full border border-(--border-custom) bg-white px-2.5 py-0.5 text-[0.65rem] font-semibold text-(--text)"
+                      >
+                        {ROLE_BADGES[role].label}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-[0.7rem] text-(--text-muted)">
+                      Nenhum papel atribuído nesta organização.
+                    </span>
+                  )}
+                </div>
+                <p className="text-[0.65rem] leading-relaxed text-(--text-muted)">
+                  Os papéis são concedidos pela administração da organização e
+                  valem para todas as suas sessões. Cada ação continua sendo
+                  autorizada pelo servidor no momento em que é executada.
+                </p>
+              </div>
+            </section>
+            </div>
 
             <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
@@ -211,36 +250,7 @@ export function ProfilePage() {
                 atualizada pela administração.
               </div>
             </section>
-
-            <section className="lg:col-span-2 border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
-                <FontAwesomeIcon icon={faUserGear} className="text-(--text-muted)" style={{ fontSize: 14 }} />
-                <h2 className="text-xs font-bold text-(--text)">Acesso e papéis</h2>
-              </div>
-              <div className="p-4 flex flex-col gap-3">
-                <div className="flex flex-wrap gap-2">
-                  {roles.length > 0 ? (
-                    roles.map((role) => (
-                      <span
-                        key={role}
-                        className="rounded-full border border-(--border-custom) bg-white px-3 py-1 text-[0.7rem] font-semibold text-(--text)"
-                      >
-                        {ROLE_BADGES[role].label}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs text-(--text-muted)">
-                      Nenhum papel atribuído nesta organização.
-                    </span>
-                  )}
-                </div>
-                <p className="text-[0.7rem] leading-relaxed text-(--text-muted)">
-                  Os papéis são concedidos pela administração da organização e
-                  valem para todas as suas sessões. Cada ação continua sendo
-                  autorizada pelo servidor no momento em que é executada.
-                </p>
-              </div>
-            </section>
+            </div>
         </div>
       </form>
 

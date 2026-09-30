@@ -8,6 +8,7 @@ import {
   type FlowChain,
   type FlowNode,
 } from '@/features/protocols/lab/flow-graph'
+import { PHASE_VIEW } from '@/features/protocols/lab/phase-view'
 
 export type VerdictState = 'checking' | 'match' | 'mismatch' | 'end' | 'error'
 
@@ -20,9 +21,9 @@ export interface Verdict {
 const DEFAULT_PER_ROW = 5
 
 const CARD_W = 128
-const CARD_H = 116
+const CARD_H = 88
 const GAP_X = 58
-const GAP_Y = 68
+const GAP_Y = 60
 /** Braço da Bézier que faz o laço lateral quando a trilha troca de fileira. */
 const CURVE_ARM = 96
 
@@ -30,22 +31,6 @@ const TRACK_HALO = '#e6edf2'
 const TRACK_PENDING = '#c9d5de'
 const TRACK_DONE = '#257E8C'
 
-const PHASE_VIEW = {
-  BUILD_UP: {
-    label: 'Indução',
-    short: 'Indução',
-    bar: 'bg-sky-400',
-    ring: 'border-sky-200',
-    text: 'text-sky-700',
-  },
-  MAINTENANCE: {
-    label: 'Manutenção',
-    short: 'Manut.',
-    bar: 'bg-emerald-400',
-    ring: 'border-emerald-200',
-    text: 'text-emerald-700',
-  },
-} as const
 
 const VERDICT_VIEW: Record<
   VerdictState,
@@ -319,13 +304,18 @@ function StepCard({
       aria-label={`Etapa ${node.position}: ${node.step.label}`}
       title={`${node.step.label} · ${dilution(node.step.concentration)} · ${volume(node.step.volume)} · ${cadence(node.step.intervalDays)}`}
       className={cn(
-        'relative flex h-full w-full cursor-pointer flex-col gap-0.5 overflow-hidden rounded-xl border bg-white p-2 text-left shadow-[0_2px_0_rgba(31,45,58,0.06),0_6px_14px_-8px_rgba(31,45,58,0.25)] transition-all duration-300',
+        'relative flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-xl border bg-white px-2 pb-1.5 pt-1 text-left shadow-[0_2px_0_rgba(31,45,58,0.06),0_6px_14px_-8px_rgba(31,45,58,0.25)] transition-all duration-300',
         active
           ? 'border-brand shadow-[0_0_0_3px_rgba(37,126,140,0.20)] scale-[1.05]'
           : visited
             ? phase.ring
-            : 'border-(--border-custom) opacity-55',
-        selected && !active && 'ring-2 ring-brand/40',
+            : 'border-(--border-custom)',
+        selected &&
+          !active &&
+          cn(
+            'z-10 animate-[card-pick_320ms_cubic-bezier(0.16,1,0.3,1)_forwards]',
+            phase.selected,
+          ),
       )}
     >
       <span
@@ -354,18 +344,18 @@ function StepCard({
       </div>
 
       {/* O que se aplica: volume em destaque, diluição como qualificador. */}
-      <div className="mt-0.5 flex items-baseline gap-1">
-        <span className="text-[0.95rem] font-bold leading-none text-(--text)">
+      <div className="mt-2 flex items-baseline gap-1">
+        <span className="text-[0.88rem] font-bold leading-none text-(--text)">
           {node.step.volume.replace('.', ',')}
         </span>
-        <span className="text-[0.58rem] font-medium text-(--text-muted)">mL</span>
+        <span className="text-[0.55rem] font-medium text-(--text-muted)">mL</span>
+        <span className="ml-auto truncate text-[0.58rem] font-semibold text-(--text-muted)">
+          {dilution(node.step.concentration)}
+        </span>
       </div>
-      <span className="truncate text-[0.62rem] font-semibold text-(--text-muted)">
-        {dilution(node.step.concentration)}
-      </span>
 
       {/* Quando. O intervalo até a próxima etapa vive na linha, não aqui. */}
-      <span className="mt-auto truncate text-[0.58rem] text-(--text-muted)">
+      <span className="mt-auto truncate text-[0.55rem] text-(--text-muted)">
         {date ?? `dia ${node.day}`}
       </span>
 

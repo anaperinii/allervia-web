@@ -27,8 +27,8 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
         <tr className="border-b border-white/40 bg-white/20 backdrop-blur-md">
           <th className="text-left text-[0.8rem] font-semibold text-[#12333a] pl-5 pr-4 pt-4 pb-2.5">Paciente</th>
           <th className="text-left text-[0.8rem] font-semibold text-[#12333a] pl-6 pr-4 pt-4 pb-2.5">Tipo</th>
-          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Via de administração</th>
           <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Situação</th>
+          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Via de administração</th>
           <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Próxima aplicação</th>
           <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Médico responsável</th>
         </tr>
@@ -74,9 +74,6 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
                     {item.immunoType}
                   </span>
                 </td>
-                <td className="px-4 py-2 text-xs text-(--text-muted)">
-                  {ROUTE_LABELS[item.administrationRoute]}
-                </td>
                 <td className="px-4 py-2">
                   <span
                     className={cn(
@@ -87,6 +84,9 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
                   >
                     {THERAPY_STATUS_LABELS[item.status]}
                   </span>
+                </td>
+                <td className="px-4 py-2 text-xs text-(--text-muted)">
+                  {ROUTE_LABELS[item.administrationRoute]}
                 </td>
                 <td className="px-4 py-2 text-xs text-(--text-muted)">
                   {item.nextDose ? formatInstantDate(item.nextDose.scheduledAt) : '—'}

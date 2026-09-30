@@ -20,7 +20,6 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import allerviaMark from '@/assets/allervia-mark-light.png'
-import userAvatar from '@/assets/user-avatar.jpg'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { Button, Modal } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
@@ -231,13 +230,19 @@ export function AppShell({ children }: { children: ReactNode }) {
               />
             </div>
             <Link to="/profile" aria-label="Perfil" className="flex items-center no-underline">
-              <img
-                src={userAvatar}
-                alt={userName}
+              <span
+                role="img"
+                aria-label={userName}
                 title={userName}
-                className="relative z-10 h-10 w-10 rounded-full object-cover"
-                style={{ border: `2px solid ${SHOWCASE.white}` }}
-              />
+                className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full"
+                style={{
+                  border: `2px solid ${SHOWCASE.white}`,
+                  background: SHOWCASE.canvas,
+                  color: SHOWCASE.inkSoft,
+                }}
+              >
+                <FontAwesomeIcon icon={faUser} style={{ fontSize: 15 }} />
+              </span>
               <span
                 className="-ml-10 flex h-10 flex-col justify-center whitespace-nowrap rounded-full pl-12 pr-5 backdrop-blur-md"
                 style={{

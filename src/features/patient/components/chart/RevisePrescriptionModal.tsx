@@ -6,7 +6,7 @@ import { listProtocols } from '@/shared/api/protocols.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
 import { queryKeys } from '@/shared/api/query-keys'
-import { formatStepPresentation } from '@/features/patient/adapters/clinical-presentation'
+import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
 import { cn } from '@/shared/lib/cn'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -204,9 +204,9 @@ function ReviseForm({
                         : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50',
                     )}
                   >
-                    {step.label}
+                    {formatStepOption(step)}
                     <span className="ml-1.5 font-normal opacity-75">
-                      {formatStepPresentation(step)} · {step.intervalDays}d
+                      {step.intervalDays}d
                     </span>
                   </button>
                 )
@@ -270,7 +270,7 @@ function StepSelect({
           .filter((step) => stepIds.includes(step.id))
           .map((step) => (
             <option key={step.id} value={step.id}>
-              {step.label} — {formatStepPresentation(step)}
+              {formatStepOption(step)}
             </option>
           ))}
       </Select>

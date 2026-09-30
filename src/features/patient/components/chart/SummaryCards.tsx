@@ -9,12 +9,14 @@ interface SummaryCardsProps {
   currentInterval: string
   nextDate: string
   currentDose: string
+  /** Dose administrada anterior, quando difere da vigente. */
+  previousDose?: string | null
 }
 
 const CARDS: { key: string; label: string; render: (props: SummaryCardsProps) => string }[] = [
   { key: 'interval', label: 'Intervalo Atual', render: (p) => p.currentInterval },
   { key: 'next', label: 'Próxima Aplicação', render: (p) => p.nextDate },
-  { key: 'dose', label: 'Última Concentração e Volume', render: (p) => p.currentDose },
+  { key: 'dose', label: 'Concentração e Volume vigentes', render: (p) => p.currentDose },
 ]
 
 export function SummaryCards(props: SummaryCardsProps) {
@@ -35,7 +37,22 @@ export function SummaryCards(props: SummaryCardsProps) {
           <DottedSpot className="pointer-events-none absolute bottom-0 right-0" />
           <div className="relative">
             <div className="text-xs font-medium" style={{ color: '#8FB4BA' }}>{card.label}</div>
-            <div className="text-lg font-semibold truncate" style={{ color: '#F2F6F7' }}>{withSmallMl(card.render(props))}</div>
+            <div className="flex items-baseline gap-2 min-w-0">
+              <div className="text-lg font-semibold truncate" style={{ color: '#F2F6F7' }}>{withSmallMl(card.render(props))}</div>
+              {card.key === 'dose' && props.previousDose && (
+                <span
+                  title={`Dose administrada anterior: ${props.previousDose}`}
+                  className="shrink-0 rounded-full border px-2 py-0.5 text-[0.6rem] font-bold leading-none"
+                  style={{
+                    borderColor: '#B7E06A',
+                    background: 'rgba(183,224,106,0.18)',
+                    color: '#D3EE9A',
+                  }}
+                >
+                  anterior {withSmallMl(props.previousDose)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       ))}

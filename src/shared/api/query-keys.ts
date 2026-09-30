@@ -11,6 +11,8 @@ export const queryKeys = {
     ['team', organizationId, filters] as const,
   invites: (organizationId: string, filters: Record<string, unknown>) =>
     ['invites', organizationId, filters] as const,
+  memberRoles: (organizationId: string, professionalId: string) =>
+    ['team', organizationId, 'roles', professionalId] as const,
   inviteContext: (token: string) => ['invites', 'context', token] as const,
 
   clinical: (organizationId: string) => ['clinical', organizationId] as const,

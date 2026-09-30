@@ -9,6 +9,10 @@ import {
 } from '@tanstack/react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ProtocolsPage } from '@/features/protocols/protocols-page'
+import {
+  ProtocolEditorPage,
+  type ProtocolEditorMode,
+} from '@/features/protocols/protocol-editor-page'
 import { validateDraft } from '@/features/protocols/protocol-draft'
 import type { ProtocolDefinitionDraft } from '@/shared/api/contracts/protocols'
 import { buildAccountContext, withSession } from '../helpers/session'
@@ -144,8 +148,34 @@ async function renderProtocols(account = PHYSICIAN) {
     path: '/settings',
     component: () => <h1>Configurações</h1>,
   })
+  type EditorSearch = {
+    mode: ProtocolEditorMode
+    protocolId?: string
+    versionId?: string
+  }
+  const editor = createRoute({
+    getParentRoute: () => root,
+    path: '/protocol-editor',
+    validateSearch: (search: Record<string, unknown>): EditorSearch => ({
+      mode: (search.mode as ProtocolEditorMode) ?? 'create',
+      protocolId:
+        typeof search.protocolId === 'string' ? search.protocolId : undefined,
+      versionId:
+        typeof search.versionId === 'string' ? search.versionId : undefined,
+    }),
+    component: function EditorRoute() {
+      const search = editor.useSearch()
+      return (
+        <ProtocolEditorPage
+          mode={search.mode}
+          protocolId={search.protocolId}
+          versionId={search.versionId}
+        />
+      )
+    },
+  })
   const router = createRouter({
-    routeTree: root.addChildren([protocols, settings]),
+    routeTree: root.addChildren([protocols, settings, editor]),
     history: createMemoryHistory({ initialEntries: ['/protocols'] }),
   })
 

@@ -5,7 +5,7 @@ import type { PreviewDoseResult } from '@/shared/api/contracts/clinical'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
 import {
   formatInstantDate,
-  formatStepPresentation,
+  formatStepOption,
 } from '@/features/patient/adapters/clinical-presentation'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -50,11 +50,11 @@ export function EvolutionReviewStep({
     { label: 'Horário', value: form.endTime ? `${form.startTime} – ${form.endTime}` : form.startTime || '—' },
     {
       label: 'Previsto pela prescrição',
-      value: plannedStep ? `${plannedStep.label} — ${formatStepPresentation(plannedStep)}` : '—',
+      value: plannedStep ? formatStepOption(plannedStep) : '—',
     },
     {
       label: 'Realizado',
-      value: selectedStep ? `${selectedStep.label} — ${formatStepPresentation(selectedStep)}` : '—',
+      value: selectedStep ? formatStepOption(selectedStep) : '—',
     },
     ...(form.adjustmentReason ? [{ label: 'Motivo do ajuste', value: form.adjustmentReason }] : []),
     { label: 'Executor', value: performerName ?? '—' },
@@ -105,7 +105,7 @@ export function EvolutionReviewStep({
           <p className="text-[0.78rem] leading-relaxed text-slate-600">
             O servidor recomenda como próxima dose{' '}
             <span className="font-bold text-slate-800">
-              {preview.recommendation.label} — {formatStepPresentation(preview.recommendation.values)}
+              {formatStepOption({ label: preview.recommendation.label, ...preview.recommendation.values })}
             </span>
             {preview.nextScheduledAt && (
               <>

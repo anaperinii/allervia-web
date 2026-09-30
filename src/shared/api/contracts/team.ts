@@ -43,6 +43,16 @@ export interface InviteContext {
   expiresAt: string
 }
 
+export interface ProfessionalRoleGrant {
+  id: string
+  professionalId: string
+  role: BackendRole
+  grantedAt: string
+  grantedById: string
+  revokedAt: string | null
+  revokedById: string | null
+}
+
 export interface ProfessionalProfile {
   id: string
   userId: string

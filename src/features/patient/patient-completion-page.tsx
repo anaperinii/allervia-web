@@ -141,10 +141,11 @@ export function PatientCompletionPage() {
         breadcrumb={['Prontuário', 'Conclusão de Tratamento']}
         title={therapy.patient.fullName}
       />
-      <div className="flex-1 overflow-y-auto space-y-4 px-1 pb-8 max-w-3xl">
-        <div className="rounded-xl border border-(--border-custom) bg-white px-4 py-3">
+      <div className="flex-1 overflow-y-auto px-1 pb-8">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
+        <div className="rounded-xl border border-(--border-custom) bg-white px-4 py-3 xl:col-span-2">
           <div className="text-xs font-bold text-(--text) mb-2">Resumo do tratamento</div>
-          <div className="grid grid-cols-3 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
+          <div className="grid grid-cols-3 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom) md:grid-cols-6">
             <Cell label="Tipo" value={`${therapy.immunoType} · ${therapy.extract}`} />
             <Cell label="Situação" value={THERAPY_STATUS_LABELS[therapy.status]} />
             <Cell label="Início" value={formatInstantDate(therapy.inductionStartDate)} />
@@ -241,6 +242,7 @@ export function PatientCompletionPage() {
               Encerrar tratamento
             </Button>
           </div>
+        </div>
         </div>
       </div>
     </div>

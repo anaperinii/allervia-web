@@ -191,12 +191,25 @@ export function PatientChartPage() {
     [doseRecords, patientId],
   )
 
-  const currentInterval = lastAdministered?.administeredValues
-    ? `${lastAdministered.administeredValues.intervalDays} dias`
+  // Antes da primeira aplicação não há dose administrada: o intervalo vigente
+  // é o planejado para a dose agendada.
+  const currentIntervalDays =
+    lastAdministered?.administeredValues?.intervalDays ??
+    pendingRecord?.plannedValues?.intervalDays ??
+    null
+  const currentInterval =
+    currentIntervalDays !== null ? `${currentIntervalDays} dias` : '-'
+  // Vigente = o que será aplicado a seguir (planejado da dose agendada);
+  // sem agendamento, vale a última administrada.
+  const currentDoseValues =
+    pendingRecord?.plannedValues ?? lastAdministered?.administeredValues ?? null
+  const currentDose = currentDoseValues
+    ? formatStepPresentation(currentDoseValues)
     : '-'
-  const currentDose = lastAdministered?.administeredValues
-    ? formatStepPresentation(lastAdministered.administeredValues)
-    : '-'
+  const previousDose =
+    pendingRecord?.plannedValues && lastAdministered?.administeredValues
+      ? formatStepPresentation(lastAdministered.administeredValues)
+      : null
   const nextDate = pendingRecord
     ? formatInstantDate(pendingRecord.scheduledAt)
     : '-'
@@ -324,7 +337,7 @@ export function PatientChartPage() {
         />
 
         <div className="flex flex-1 flex-col gap-3 min-w-0">
-          {patientDetail.therapies.length > 0 && (
+          {patientDetail.therapies.length > 1 && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[0.7rem] font-semibold text-(--text-muted)">
                 Tratamento:
@@ -376,7 +389,12 @@ export function PatientChartPage() {
               )}
             </div>
           )}
-          <SummaryCards currentInterval={currentInterval} nextDate={nextDate} currentDose={currentDose} />
+          <SummaryCards
+            currentInterval={currentInterval}
+            nextDate={nextDate}
+            currentDose={currentDose}
+            previousDose={previousDose}
+          />
 
           <div className="flex flex-1 flex-col min-h-0 min-w-0">
           <div className="relative z-10 flex items-end justify-between gap-2">
