@@ -109,7 +109,7 @@ export function comparePtDateAsc(a: string, b: string): number {
 
 export function formatDurationFromDays(days: number): string {
   if (days < 0) return '—'
-  if (days === 0) return 'iniciado hoje'
+  if (days === 0) return 'Iniciado hoje'
   if (days < 30) return `${days} ${days === 1 ? 'dia' : 'dias'}`
   if (days < 365) {
     const months = Math.round(days / 30)

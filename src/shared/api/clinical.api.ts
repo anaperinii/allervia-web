@@ -116,21 +116,6 @@ export function getImmunotherapy(
   return apiRequest(`/immunotherapies/${immunotherapyId}`, { signal })
 }
 
-/**
- * O PATCH aceita apenas o tipo do alérgeno; qualquer valor clínico (etapas,
- * versão do protocolo, meta) exige revisão de prescrição — o servidor recusa
- * com PRESCRIPTION_REVISION_REQUIRED.
- */
-export function updateImmunotherapy(
-  immunotherapyId: string,
-  body: { expectedRevision: number; immunoType: string },
-): Promise<ImmunotherapyDetail> {
-  return apiRequest(`/immunotherapies/${immunotherapyId}`, {
-    method: 'PATCH',
-    body,
-  })
-}
-
 export function listTherapiesForPatient(
   patientId: string,
   signal?: AbortSignal,

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PatientInitials } from '@/shared/components/glass-card'
 import { cn } from '@/shared/lib/cn'
+import { formatCPF, formatPhone } from '@/shared/lib/formatters'
 import { Button } from '@/shared/components'
 import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
 import { PatientActionsMenu } from '@/features/patient/components/chart/PatientActionsMenu'
@@ -23,19 +24,15 @@ interface PatientInfoSidebarProps {
   canEvolve: boolean
   canEmitReport: boolean
   canEditPatient: boolean
-  canAdjustProtocol: boolean
   canInactivate: boolean
   canComplete: boolean
   completeDisabled: boolean
   canLgpdPortability: boolean
   canRevisePrescription: boolean
-  canEditTherapy: boolean
-  onEditTherapy: () => void
   onRevisePrescription: () => void
   onShowLifecycleHistory: () => void
   onReactivate: () => void
   onEditPatient: () => void
-  onAdjustProtocol: () => void
   onInactivate: () => void
   onPortability: () => void
   onComplete: () => void
@@ -54,19 +51,15 @@ export function PatientInfoSidebar({
   canEvolve,
   canEmitReport,
   canEditPatient,
-  canAdjustProtocol,
   canInactivate,
   canComplete,
   completeDisabled,
   canLgpdPortability,
   canRevisePrescription,
-  canEditTherapy,
-  onEditTherapy,
   onRevisePrescription,
   onShowLifecycleHistory,
   onReactivate,
   onEditPatient,
-  onAdjustProtocol,
   onInactivate,
   onPortability,
   onComplete,
@@ -79,8 +72,8 @@ export function PatientInfoSidebar({
   const personalRows: [string, string][] = [
     ['Data de Nascimento', patient.birthDate],
     ['Idade', `${patient.age} anos`],
-    ['CPF', patient.cpf],
-    ['Telefone', patient.phone],
+    ['CPF', formatCPF(patient.cpf)],
+    ['Telefone', formatPhone(patient.phone)],
     ['Peso', patient.weight],
     ['Médico Responsável', patient.responsibleDoctor],
   ]
@@ -94,7 +87,6 @@ export function PatientInfoSidebar({
   ]
 
   const showImmunoActions =
-    canAdjustProtocol ||
     canRevisePrescription ||
     therapyStatus !== null ||
     (patient.protocolAdjustments?.length ?? 0) > 0 ||
@@ -180,8 +172,6 @@ export function PatientInfoSidebar({
             </Button>
           )}
           <PatientActionsMenu
-            canEditTherapy={canEditTherapy}
-            onEditTherapy={onEditTherapy}
             canInactivate={canInactivate}
             canLgpdPortability={canLgpdPortability}
             canComplete={canComplete}
@@ -255,17 +245,6 @@ export function PatientInfoSidebar({
               </div>
               {showImmunoActions && (
                 <div className="pt-2 mt-1 border-t border-(--border-custom) space-y-1.5">
-                  {canAdjustProtocol && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      fullWidth
-                      disabled={therapyStatus !== 'IN_PROGRESS'}
-                      onClick={onAdjustProtocol}
-                    >
-                      Editar previsão pendente
-                    </Button>
-                  )}
                   {canRevisePrescription && (
                     <Button
                       variant="outline"
