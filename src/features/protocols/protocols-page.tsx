@@ -136,21 +136,21 @@ export function ProtocolsPage() {
         <div className="flex min-w-0 flex-1 flex-col gap-4">
         <section className="flex flex-wrap items-center gap-3">
           <h2 className="text-sm font-bold text-(--text)">Catálogo</h2>
-          <div className="relative ml-auto min-w-45 flex-1 sm:max-w-64">
+          <div className="relative ml-auto min-w-60 flex-1 sm:max-w-md">
             <label htmlFor="protocol-search" className="sr-only">
               Pesquisar protocolo
             </label>
             <FontAwesomeIcon
               icon={faMagnifyingGlass}
-              className="absolute left-2.5 top-1/2 z-10 -translate-y-1/2 text-(--text-muted)"
-              style={{ fontSize: 14 }}
+              className="absolute left-3 top-1/2 z-10 -translate-y-1/2 text-(--text-muted)"
+              style={{ fontSize: 15 }}
             />
             <TextInput
               id="protocol-search"
               placeholder="Pesquisar por nome"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-9 pl-8"
+              className="h-10 pl-9 text-[0.8rem]"
             />
           </div>
           {canManage && (
