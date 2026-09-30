@@ -136,9 +136,12 @@ export function Toast({
   if (!open) return null
   const v = VARIANT_CLASS[variant]
   const accent = ACCENT[variant]
+  const urgent = variant === 'danger' || variant === 'warning'
 
   return (
     <div
+      role={urgent ? 'alert' : 'status'}
+      aria-live={urgent ? 'assertive' : 'polite'}
       className={cn('fixed z-50', POSITION_CLASS[position])}
       style={{ animation: 'slide-up-fade 0.3s ease-out' }}
     >
@@ -166,7 +169,7 @@ export function Toast({
         >
           <span
             aria-hidden
-            className="pointer-events-none absolute -top-12 left-1/2 -z-10 h-24 w-4/5 -translate-x-1/2 rounded-full"
+            className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-24 w-4/5 -translate-x-1/2 rounded-full"
             style={{ background: accent.glow, filter: 'blur(34px)' }}
           />
           <span
