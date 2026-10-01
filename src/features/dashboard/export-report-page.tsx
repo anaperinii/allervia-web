@@ -1,21 +1,69 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useHasPermission } from '@/shared/stores/useUserStore'
-import { exportClinicalDoses } from '@/shared/api/clinical.api'
+import { exportClinicalDoses, getClinicalMetrics } from '@/shared/api/clinical.api'
 import type { ClinicalExportRow, TherapyStatus } from '@/shared/api/contracts/clinical'
-import { ApiError } from '@/shared/api/contracts/errors'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
 import { exportClinicalDatasetCsv } from '@/features/patient/exporters'
+import {
+  exportDashboardReportPdf,
+  type DashboardReportData,
+} from '@/features/dashboard/exporters/pdf-report-exporter'
+import {
+  exportDashboardReportCsv,
+  exportDashboardReportJson,
+} from '@/features/dashboard/exporters/data-report-exporters'
+import {
+  aggregateActiveByType,
+  aggregateByConcentration,
+  aggregatePhasesByDay,
+  aggregateStatusHistory,
+  aggregateVolumeMatrix,
+  buildComparisonSeries,
+  eachDay,
+  useActiveTherapies,
+  useDoseWindow,
+  usePreviousMetrics,
+  useStatusHistory,
+} from '@/features/dashboard/hooks/useDashboardAggregates'
 import { downloadFile } from '@/shared/lib/file-download'
-import { Button, FieldLabel, Modal, Select, TextArea, toast } from '@/shared/components'
+import { toOffsetIso } from '@/shared/lib/dates'
+import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, toast } from '@/shared/components'
 import { PageHeader, Pill } from '@/shared/components/showcase'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleCheck, faCircleInfo, faDownload } from '@fortawesome/free-solid-svg-icons'
+import { faCircleCheck, faCircleInfo, faDownload, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 
 const PAGE_SIZE = 100
 const MAX_PAGES = 20
 
-type ExportFormat = 'csv' | 'json'
+type ExportFormat =
+  | 'csv'
+  | 'json'
+  | 'dashboard-pdf'
+  | 'dashboard-csv'
+  | 'dashboard-json'
+
+const FORMAT_FILE_LABELS: Record<ExportFormat, string> = {
+  csv: 'CSV',
+  json: 'JSON',
+  'dashboard-pdf': 'PDF',
+  'dashboard-csv': 'CSV',
+  'dashboard-json': 'JSON',
+}
+
+const FORMAT_DESCRIPTIONS: Record<ExportFormat, string> = {
+  csv: 'O arquivo descreve o conjunto clínico persistido no instante da geração (corte temporal explícito), com previsto e realizado separados, versão fixada e fuso da prescrição em cada linha.',
+  json: 'O arquivo descreve o conjunto clínico persistido no instante da geração (corte temporal explícito), com previsto e realizado separados, versão fixada e fuso da prescrição em cada linha.',
+  'dashboard-pdf':
+    'O PDF reproduz os gráficos do painel (indicadores, comparativo, status, fases, concentrações, tipos e matriz volume × concentração) no recorte dos últimos 30 dias, pronto para impressão.',
+  'dashboard-csv':
+    'O CSV contém os valores do painel (indicadores e séries dos gráficos) em seções tabulares, sem gráficos e sem a listagem de pacientes.',
+  'dashboard-json':
+    'O JSON contém os valores do painel (indicadores e séries dos gráficos) em estrutura legível por máquina, sem gráficos e sem a listagem de pacientes.',
+}
 
 const STATUS_OPTIONS: { value: '' | TherapyStatus; label: string }[] = [
   { value: '', label: 'Todos os tratamentos' },
@@ -24,6 +72,14 @@ const STATUS_OPTIONS: { value: '' | TherapyStatus; label: string }[] = [
   { value: 'COMPLETED', label: 'Concluídos' },
 ]
 
+function dayInput(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function dayLabel(day: string): string {
+  return `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`
+}
+
 export function ExportReportPage() {
   const navigate = useNavigate()
   const canViewDashboard = useHasPermission('view_dashboard')
@@ -31,18 +87,120 @@ export function ExportReportPage() {
     if (!canViewDashboard) navigate({ to: '/immunotherapies' })
   }, [canViewDashboard, navigate])
 
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+
   const [format, setFormat] = useState<ExportFormat>('csv')
   const [status, setStatus] = useState<'' | TherapyStatus>('')
   const [justification, setJustification] = useState('')
   const [consent, setConsent] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
-  const [failure, setFailure] = useState<string | null>(null)
 
-  const exportDisabled = !consent || !justification.trim() || progress !== null
+  const isDashboardFormat = format.startsWith('dashboard-')
 
-  async function runExport() {
-    setFailure(null)
+  // Mesmo recorte padrão do painel: últimos 30 dias.
+  const periodDays = useMemo(() => {
+    const DAY_MS = 24 * 60 * 60 * 1000
+    const toDate = new Date()
+    const fromDate = new Date(toDate.getTime() - 29 * DAY_MS)
+    const fromDay = dayInput(fromDate)
+    const toDay = dayInput(toDate)
+    const days = eachDay(fromDay, toDay)
+    const previousTo = new Date(fromDate.getTime() - DAY_MS)
+    const previousFrom = new Date(previousTo.getTime() - (days.length - 1) * DAY_MS)
+    return {
+      fromDay,
+      toDay,
+      days,
+      previousFromDay: dayInput(previousFrom),
+      previousToDay: dayInput(previousTo),
+      previousDays: eachDay(dayInput(previousFrom), dayInput(previousTo)),
+    }
+  }, [])
+
+  const period = useMemo(
+    () => ({
+      from: toOffsetIso(periodDays.fromDay, '00:00'),
+      to: toOffsetIso(periodDays.toDay, '23:59'),
+    }),
+    [periodDays],
+  )
+  const previousPeriod = useMemo(
+    () => ({
+      from: toOffsetIso(periodDays.previousFromDay, '00:00'),
+      to: toOffsetIso(periodDays.previousToDay, '23:59'),
+    }),
+    [periodDays],
+  )
+
+  // Agregados do painel só são buscados quando um formato do painel está selecionado.
+  const dashboardOrganizationId = isDashboardFormat ? organizationId : ''
+  const metricsQuery = useQuery({
+    queryKey: queryKeys.clinicalMetrics(organizationId, period),
+    queryFn: ({ signal }) => getClinicalMetrics(period, signal),
+    enabled: dashboardOrganizationId !== '',
+  })
+  const previousMetricsQuery = usePreviousMetrics(dashboardOrganizationId, previousPeriod)
+  const doseWindowQuery = useDoseWindow(dashboardOrganizationId, period)
+  const activeTherapiesQuery = useActiveTherapies(dashboardOrganizationId)
+  const statusHistoryQuery = useStatusHistory(dashboardOrganizationId)
+
+  const dashboardLoading =
+    isDashboardFormat &&
+    (metricsQuery.isPending ||
+      previousMetricsQuery.isPending ||
+      doseWindowQuery.isPending ||
+      activeTherapiesQuery.isPending ||
+      statusHistoryQuery.isPending)
+  const dashboardError =
+    isDashboardFormat &&
+    (metricsQuery.isError ||
+      previousMetricsQuery.isError ||
+      doseWindowQuery.isError ||
+      activeTherapiesQuery.isError ||
+      statusHistoryQuery.isError)
+
+  const exportDisabled =
+    !consent ||
+    !justification.trim() ||
+    progress !== null ||
+    dashboardLoading ||
+    dashboardError
+
+  function runDashboardExport() {
+    const metrics = metricsQuery.data
+    const previousMetrics = previousMetricsQuery.data
+    if (!metrics || !previousMetrics) return
+    const doses = doseWindowQuery.data ?? []
+    const data: DashboardReportData = {
+      generatedAt: new Date().toLocaleString('pt-BR'),
+      periodLabel: `${dayLabel(periodDays.fromDay)} a ${dayLabel(periodDays.toDay)} (últimos 30 dias)`,
+      metrics,
+      comparisonSeries: buildComparisonSeries(
+        metrics,
+        previousMetrics,
+        periodDays.days,
+        periodDays.previousDays,
+      ),
+      statusSeries: aggregateStatusHistory(statusHistoryQuery.data ?? [], 'month', 12),
+      phaseSeries: aggregatePhasesByDay(doses, periodDays.fromDay, periodDays.toDay),
+      concentrationData: aggregateByConcentration(doses),
+      typeData: aggregateActiveByType(activeTherapiesQuery.data ?? []),
+      volumeMatrix: aggregateVolumeMatrix(doses),
+    }
+    if (format === 'dashboard-pdf') exportDashboardReportPdf(data)
+    else if (format === 'dashboard-csv') exportDashboardReportCsv(data)
+    else exportDashboardReportJson(data)
+    toast.success({
+      icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
+      title: 'Relatório do painel gerado',
+      description: `Período ${dayLabel(periodDays.fromDay)} a ${dayLabel(periodDays.toDay)}, formato ${FORMAT_FILE_LABELS[format]}.`,
+      autoDismissMs: 8000,
+    })
+  }
+
+  async function runDatasetExport() {
     const asOf = new Date().toISOString()
     const rows: ClinicalExportRow[] = []
     let total = 0
@@ -60,9 +218,13 @@ export function ExportReportPage() {
         if (rows.length >= total) break
       }
       if (rows.length < total) {
-        setFailure(
-          `O conjunto tem ${total} linhas e o limite do navegador é ${MAX_PAGES * PAGE_SIZE}. Exportado parcialmente até a linha ${rows.length}; volumes maiores exigem o job de exportação (pendência declarada).`,
-        )
+        toast.warning({
+          icon: <FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 16 }} />,
+          title: 'Exportação parcial',
+          description: `O conjunto tem ${total} linhas e o limite do navegador é ${MAX_PAGES * PAGE_SIZE}. Exportado parcialmente até a linha ${rows.length}; volumes maiores exigem o job de exportação (pendência declarada).`,
+          position: 'top-right',
+          autoDismissMs: 10000,
+        })
       }
       if (format === 'csv') {
         exportClinicalDatasetCsv(rows, asOf)
@@ -80,12 +242,18 @@ export function ExportReportPage() {
         autoDismissMs: 8000,
       })
     } catch (error) {
-      setFailure(
-        error instanceof ApiError ? error.message : 'Não foi possível gerar a exportação.',
-      )
+      showApiErrorToast(error, { title: 'Não foi possível gerar a exportação' })
     } finally {
       setProgress(null)
     }
+  }
+
+  async function runExport() {
+    if (isDashboardFormat) {
+      runDashboardExport()
+      return
+    }
+    await runDatasetExport()
   }
 
   return (
@@ -102,7 +270,7 @@ export function ExportReportPage() {
               disabled={exportDisabled}
               className={exportDisabled ? 'opacity-50 cursor-not-allowed' : undefined}
             >
-              Exportar {format.toUpperCase()}
+              Exportar {FORMAT_FILE_LABELS[format]}
             </Pill>
             {!consent && (
               <span className="text-[0.68rem] font-medium" style={{ color: '#E0453C' }}>
@@ -117,27 +285,34 @@ export function ExportReportPage() {
         <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
           <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
           <p className="text-[0.68rem] text-brand-dark leading-relaxed">
-            O arquivo descreve o conjunto clínico persistido no instante da geração
-            (corte temporal explícito), com previsto e realizado separados, versão
-            fixada e fuso da prescrição em cada linha. Cada geração fica registrada
-            na auditoria do servidor com autor, filtros e corte.
+            {FORMAT_DESCRIPTIONS[format]} Cada geração fica registrada na auditoria
+            do servidor com autor, filtros e corte.
           </p>
         </div>
 
         <div className="rounded-xl border border-(--border-custom) bg-white px-4 py-3 space-y-3">
           <FieldLabel label="Formato">
             <Select value={format} onChange={(e) => setFormat(e.target.value as ExportFormat)}>
-              <option value="csv">CSV (com proteção de células-fórmula)</option>
-              <option value="json">JSON estruturado</option>
+              <optgroup label="Conjunto clínico (listagem completa)">
+                <option value="csv">CSV (com proteção de células-fórmula)</option>
+                <option value="json">JSON estruturado</option>
+              </optgroup>
+              <optgroup label="Painel de métricas (dashboard)">
+                <option value="dashboard-pdf">PDF com gráficos (para impressão)</option>
+                <option value="dashboard-csv">CSV — valores do painel, sem gráficos</option>
+                <option value="dashboard-json">JSON — valores do painel, sem gráficos</option>
+              </optgroup>
             </Select>
           </FieldLabel>
-          <FieldLabel label="Filtro por situação do tratamento">
-            <Select value={status} onChange={(e) => setStatus(e.target.value as '' | TherapyStatus)}>
-              {STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </Select>
-          </FieldLabel>
+          {!isDashboardFormat && (
+            <FieldLabel label="Filtro por situação do tratamento">
+              <Select value={status} onChange={(e) => setStatus(e.target.value as '' | TherapyStatus)}>
+                {STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </Select>
+            </FieldLabel>
+          )}
           <FieldLabel label="Justificativa" required>
             <TextArea
               rows={2}
@@ -158,8 +333,15 @@ export function ExportReportPage() {
           </label>
         </div>
 
+        {dashboardLoading && (
+          <p className="text-xs text-(--text-muted)">Carregando indicadores do painel…</p>
+        )}
+        {dashboardError && (
+          <p role="alert" className="text-xs text-red-700">
+            Não foi possível carregar os indicadores do painel. Recarregue a página e tente novamente.
+          </p>
+        )}
         {progress && <p className="text-xs text-(--text-muted)">{progress}</p>}
-        {failure && <p role="alert" className="text-[0.72rem] text-amber-700 leading-relaxed">{failure}</p>}
       </div>
 
       <Modal
@@ -182,8 +364,13 @@ export function ExportReportPage() {
       >
         <p className="text-[0.7rem] text-(--text-muted) leading-relaxed">
           A geração define o corte temporal e registra a solicitação na auditoria do
-          servidor com autor e filtros. Formato: {format.toUpperCase()}
-          {status ? ` · Filtro: ${STATUS_OPTIONS.find((o) => o.value === status)?.label}` : ''}.
+          servidor com autor e filtros. Formato: {FORMAT_FILE_LABELS[format]}
+          {!isDashboardFormat && status
+            ? ` · Filtro: ${STATUS_OPTIONS.find((o) => o.value === status)?.label}`
+            : ''}
+          {isDashboardFormat
+            ? ` · Valores do painel, últimos 30 dias${format === 'dashboard-pdf' ? ', com gráficos' : ', sem gráficos'}`
+            : ''}.
         </p>
       </Modal>
     </div>

@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { createAppQueryClient } from '@/shared/api/query-client'
+import { ToastViewport, useToastStore } from '@/shared/components'
 import type {
   AccountContext,
   SessionState,
@@ -87,17 +89,19 @@ export function buildSessionValue(
 export type SessionOverrides = Partial<SessionValue>
 
 export function withSession(children: ReactNode, value?: SessionOverrides) {
-  const queryClient = new QueryClient({
+  const queryClient = createAppQueryClient({
     defaultOptions: { queries: { retry: false } },
   })
 
   const session = buildSessionValue(value)
   useUserStore.getState().syncFromAccount(session.account)
+  useToastStore.setState({ toasts: [] })
 
   return (
     <QueryClientProvider client={queryClient}>
       <SessionContext.Provider value={session}>
         {children}
+        <ToastViewport />
       </SessionContext.Provider>
     </QueryClientProvider>
   )

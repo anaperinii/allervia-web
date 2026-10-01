@@ -20,7 +20,6 @@ export function ProfilePage() {
 
   const [editing, setEditing] = useState(false)
   const [showSaveModal, setShowSaveModal] = useState(false)
-  const [failure, setFailure] = useState<string | null>(null)
 
   const profileQuery = useQuery({
     queryKey: queryKeys.professionalProfile(),
@@ -59,25 +58,16 @@ export function ProfilePage() {
     onSuccess: async () => {
       setShowSaveModal(false)
       setEditing(false)
-      setFailure(null)
       await queryClient.invalidateQueries({
         queryKey: queryKeys.professionalProfile(),
       })
       await refresh()
     },
-    onError: (error) => {
-      setShowSaveModal(false)
-      setFailure(
-        error instanceof ApiError
-          ? error.message
-          : 'Não foi possível salvar o perfil.',
-      )
-    },
+    onError: () => setShowSaveModal(false),
   })
 
   const handleCancel = () => {
     reset()
-    setFailure(null)
     setEditing(false)
   }
 
@@ -158,12 +148,6 @@ export function ProfilePage() {
                 )}
               </div>
             </div>
-
-            {failure && (
-              <p className="text-xs text-red-600" role="alert">
-                {failure}
-              </p>
-            )}
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
             {/* Coluna esquerda: dados pessoais e, abaixo, acesso e papéis —

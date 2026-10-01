@@ -19,8 +19,6 @@ interface SettingsState {
   googleCalendarConnected: boolean
   autoSync: boolean
 
-  twoFaEnabled: boolean
-
   emailNotifications: boolean
   pushNotifications: boolean
 
@@ -35,7 +33,6 @@ interface SettingsState {
 
   setGoogleCalendarConnected: (value: boolean) => void
   setAutoSync: (value: boolean) => void
-  setTwoFaEnabled: (value: boolean) => void
   setEmailNotifications: (value: boolean) => void
   setPushNotifications: (value: boolean) => void
   setSessionTimeout: (value: SettingsState['sessionTimeout']) => void
@@ -49,7 +46,6 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>((set) => ({
   googleCalendarConnected: false,
   autoSync: true,
-  twoFaEnabled: false,
   emailNotifications: true,
   pushNotifications: false,
   sessionTimeout: '30',
@@ -61,7 +57,6 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 
   setGoogleCalendarConnected: (value) => set({ googleCalendarConnected: value }),
   setAutoSync: (value) => set({ autoSync: value }),
-  setTwoFaEnabled: (value) => set({ twoFaEnabled: value }),
   setEmailNotifications: (value) => set({ emailNotifications: value }),
   setPushNotifications: (value) => set({ pushNotifications: value }),
   setSessionTimeout: (value) => set({ sessionTimeout: value }),

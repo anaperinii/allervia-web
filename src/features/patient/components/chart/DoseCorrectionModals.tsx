@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, FieldLabel, Modal, Select, TextArea, TextInput, toast } from '@/shared/components'
+import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, TextInput, toast } from '@/shared/components'
 import {
   addLateObservation,
   getDose,
@@ -29,7 +29,6 @@ interface CorrectionModalProps {
 export function RetractDoseModal({ doseId, organizationId, onClose }: CorrectionModalProps) {
   const queryClient = useQueryClient()
   const [reason, setReason] = useState('')
-  const [failure, setFailure] = useState<string | null>(null)
 
   const doseQuery = useQuery({
     queryKey: queryKeys.dose(organizationId, doseId ?? ''),
@@ -56,13 +55,18 @@ export function RetractDoseModal({ doseId, organizationId, onClose }: Correction
       })
       onClose()
     },
+    meta: { suppressErrorToast: true },
     onError: (error) => {
-      setFailure(
-        error instanceof ApiError && error.code === 'SUCCESSOR_ALREADY_ADMINISTERED'
-          ? 'A dose seguinte já foi aplicada: a retratação em cadeia exige análise clínica explícita, não um comando automático.'
-          : error instanceof ApiError
-            ? error.message
-            : 'Não foi possível retratar a aplicação.',
+      showApiErrorToast(
+        error,
+        error instanceof ApiError &&
+          error.code === 'SUCCESSOR_ALREADY_ADMINISTERED'
+          ? {
+              title: 'Retratação exige análise clínica',
+              description:
+                'A dose seguinte já foi aplicada: a retratação em cadeia exige análise clínica explícita, não um comando automático.',
+            }
+          : {},
       )
     },
   })
@@ -79,7 +83,7 @@ export function RetractDoseModal({ doseId, organizationId, onClose }: Correction
             tone="danger"
             variant="solid"
             disabled={reason.trim().length < 10 || !dose || mutation.isPending}
-            onClick={() => { setFailure(null); mutation.mutate() }}
+            onClick={() => mutation.mutate()}
           >
             Registrar em erro
           </Button>
@@ -106,7 +110,6 @@ export function RetractDoseModal({ doseId, organizationId, onClose }: Correction
           onChange={(e) => setReason(e.target.value)}
         />
       </FieldLabel>
-      {failure && <p role="alert" className="text-[0.7rem] text-red-700 leading-relaxed">{failure}</p>}
     </Modal>
   )
 }
@@ -120,7 +123,6 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
   const [time, setTime] = useState('12:00')
   const [conduct, setConduct] = useState('')
   const [conductJustification, setConductJustification] = useState('')
-  const [failure, setFailure] = useState<string | null>(null)
 
   const doseQuery = useQuery({
     queryKey: queryKeys.dose(organizationId, doseId ?? ''),
@@ -156,13 +158,17 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
       })
       onClose()
     },
+    meta: { suppressErrorToast: true },
     onError: (error) => {
-      setFailure(
+      showApiErrorToast(
+        error,
         error instanceof ApiError && error.code === 'CONDUCT_REQUIRES_PHYSICIAN'
-          ? 'Suspender o tratamento exige poder de revisão clínica. Registre a observação e solicite avaliação médica.'
-          : error instanceof ApiError
-            ? error.message
-            : 'Não foi possível registrar a observação.',
+          ? {
+              title: 'Conduta exige revisão médica',
+              description:
+                'Suspender o tratamento exige poder de revisão clínica. Registre a observação e solicite avaliação médica.',
+            }
+          : {},
       )
     },
   })
@@ -182,7 +188,7 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>
-          <Button tone="brand" variant="solid" disabled={!canSubmit} onClick={() => { setFailure(null); mutation.mutate() }}>
+          <Button tone="brand" variant="solid" disabled={!canSubmit} onClick={() => mutation.mutate()}>
             Registrar observação
           </Button>
         </>
@@ -223,7 +229,6 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
           />
         </FieldLabel>
       )}
-      {failure && <p role="alert" className="text-[0.7rem] text-red-700 leading-relaxed">{failure}</p>}
     </Modal>
   )
 }

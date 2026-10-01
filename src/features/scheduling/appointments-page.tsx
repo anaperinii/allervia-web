@@ -1,6 +1,6 @@
 ﻿import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
@@ -19,6 +19,7 @@ import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { toOffsetIso } from '@/shared/lib/dates'
 import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import { useCalendarNav } from '@/features/scheduling/hooks/useCalendarNav'
 import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolbar'
 import { WeekView } from '@/features/scheduling/components/WeekView'
@@ -99,7 +100,9 @@ export function AppointmentsPage() {
     }
   }, [visibleDays])
 
-  const search = patientSearch.trim()
+  // A busca alimenta a chave da query: sem o atraso, cada tecla dispararia um
+  // novo ciclo de paginação no servidor.
+  const search = useDebouncedValue(patientSearch.trim())
   const scheduleQuery = useQuery({
     queryKey: queryKeys.schedule(organizationId, {
       ...range,
@@ -108,6 +111,7 @@ export function AppointmentsPage() {
     queryFn: ({ signal }) =>
       fetchSchedule({ ...range!, search: search || undefined }, signal),
     enabled: organizationId !== '' && range !== null,
+    placeholderData: keepPreviousData,
   })
 
   const scheduleItems = useMemo(
@@ -116,17 +120,20 @@ export function AppointmentsPage() {
   )
   const truncated =
     scheduleQuery.data !== undefined &&
+    !scheduleQuery.isPlaceholderData &&
     scheduleQuery.data.items.length < scheduleQuery.data.total
 
+  // `listAppointments` não filtra por nome — a busca é aplicada no cliente logo
+  // abaixo, então a chave fica fora dela e o período é reaproveitado do cache.
   const appointmentsQuery = useQuery({
     queryKey: queryKeys.schedule(organizationId, {
       appointments: true,
       ...range,
-      search: search || undefined,
     }),
     queryFn: ({ signal }) =>
       listAppointments({ ...range!, pageSize: 100 }, signal),
     enabled: organizationId !== '' && range !== null,
+    placeholderData: keepPreviousData,
   })
   const appointmentItems = useMemo(() => {
     const items = appointmentsQuery.data?.items ?? []
@@ -236,7 +243,7 @@ export function AppointmentsPage() {
             />
             {canNewAppointment && (
               <Pill active icon={faPlus} onClick={() => setShowNewModal(true)}>
-                Novo Compromisso
+                Novo agendamento
               </Pill>
             )}
           </>

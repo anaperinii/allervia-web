@@ -11,6 +11,7 @@ import { useSession } from '@/shared/auth/useSession'
 import {
   buildLegacyPatient,
   doseToLegacyApplication,
+  formatInstantDate,
 } from '@/features/patient/adapters/clinical-presentation'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import {
@@ -206,6 +207,11 @@ export function PatientReportPage() {
           <ReportClinicalPreview
             patient={patient}
             realizedApplications={realizedApplications}
+            inductionStart={
+              selectedTherapy
+                ? formatInstantDate(selectedTherapy.inductionStartDate)
+                : null
+            }
             reactionsCount={reactionsCount}
             selectedSections={selectedSections}
             fileFormat={fileFormat}

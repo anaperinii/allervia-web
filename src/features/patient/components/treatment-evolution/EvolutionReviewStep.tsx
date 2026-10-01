@@ -1,5 +1,6 @@
 import { format, parse } from 'date-fns'
 import { StepHeading } from '@/shared/components'
+import { cn } from '@/shared/lib/cn'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
 import type { PreviewDoseResult } from '@/shared/api/contracts/clinical'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
@@ -22,9 +23,6 @@ interface ReviewStepProps {
   plannedStep: ProtocolStep | null
   selectedStep: ProtocolStep | null
   performerName: string | null
-  preview: PreviewDoseResult | null
-  previewPending: boolean
-  previewError: string | null
 }
 
 export function EvolutionReviewStep({
@@ -32,9 +30,6 @@ export function EvolutionReviewStep({
   plannedStep,
   selectedStep,
   performerName,
-  preview,
-  previewPending,
-  previewError,
 }: ReviewStepProps) {
   const preItems: { label: string; value: string }[] = [
     ...(form.intervalReport ? [{ label: 'Relato do intervalo', value: form.intervalReport }] : []),
@@ -79,67 +74,87 @@ export function EvolutionReviewStep({
         <ReviewCard title="Pós-Aplicação" items={postItems} />
       </div>
 
-      {previewPending && (
-        <p className="text-[0.75rem] text-(--text-muted)">Consultando a recomendação do servidor…</p>
-      )}
-      {previewError && (
-        <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 rounded-lg px-3.5 py-3">
-          <FontAwesomeIcon icon={faCircleInfo} className="text-red-500 shrink-0" style={{ fontSize: 14 }} />
-          <p className="text-xs text-red-700">{previewError}</p>
-        </div>
-      )}
-      {preview?.recommendation.kind === 'RECOMMENDED' && (
-        <div
-          className="relative flex items-center gap-3 overflow-hidden rounded-xl px-4 py-3"
-          style={{
-            background: 'linear-gradient(120deg, #fbfcfc, #f4f7f7)',
-            boxShadow: '0 6px 18px -6px rgba(16,60,68,0.18)',
-          }}
-        >
-          <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-            style={{ background: '#10b981', boxShadow: '0 2px 8px rgba(16,185,129,0.35)' }}
-          >
-            <FontAwesomeIcon icon={faCalendarCheck} style={{ fontSize: 16, color: '#ffffff' }} />
-          </span>
-          <p className="text-[0.78rem] leading-relaxed text-slate-600">
-            O servidor recomenda como próxima dose{' '}
-            <span className="font-bold text-slate-800">
-              {formatStepOption({ label: preview.recommendation.label, ...preview.recommendation.values })}
-            </span>
-            {preview.nextScheduledAt && (
-              <>
-                {' '}para <span className="font-bold text-slate-800">{formatInstantDate(preview.nextScheduledAt)}</span>
-                {' '}(intervalo de{' '}
-                <span className="font-bold text-slate-800">{preview.recommendation.values.intervalDays} dias</span>).
-              </>
-            )}
-            {' '}Ela será gravada junto desta confirmação.
-          </p>
-        </div>
-      )}
-      {preview?.recommendation.kind === 'END_OF_SEQUENCE' && (
-        <div
-          className="relative flex items-center gap-3 overflow-hidden rounded-xl px-4 py-3"
-          style={{
-            background: 'linear-gradient(120deg, #fbfcfc, #f4f7f7)',
-            boxShadow: '0 6px 18px -6px rgba(16,60,68,0.18)',
-          }}
-        >
-          <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-            style={{ background: '#0ea5e9', boxShadow: '0 2px 8px rgba(14,165,233,0.35)' }}
-          >
-            <FontAwesomeIcon icon={faFlagCheckered} style={{ fontSize: 14, color: '#ffffff' }} />
-          </span>
-          <p className="text-[0.78rem] leading-relaxed text-slate-600">
-            Fim da sequência automática: nenhuma sucessora será criada. Isso{' '}
-            <span className="font-semibold">não encerra o tratamento</span> — a decisão clínica continua com o prescritor.
-          </p>
-        </div>
-      )}
     </div>
   )
+}
+
+interface NextDosePreviewProps {
+  preview: PreviewDoseResult | null
+  previewPending: boolean
+  previewError: string | null
+}
+
+/**
+ * Resumo do que o servidor gravará junto da confirmação. Mora na barra de ações
+ * do formulário, ao lado dos botões, e não no corpo da revisão.
+ */
+export function NextDosePreview({
+  preview,
+  previewPending,
+  previewError,
+}: NextDosePreviewProps) {
+  if (previewPending) {
+    return (
+      <p className="text-[0.72rem] text-(--text-muted)">
+        Consultando a recomendação do servidor…
+      </p>
+    )
+  }
+
+  if (previewError) {
+    return (
+      <p className="flex items-center gap-2 text-[0.72rem] text-red-700">
+        <FontAwesomeIcon icon={faCircleInfo} className="shrink-0 text-red-500" style={{ fontSize: 13 }} />
+        {previewError}
+      </p>
+    )
+  }
+
+  if (preview?.recommendation.kind === 'RECOMMENDED') {
+    return (
+      <p className="flex items-center gap-2.5 text-[0.72rem] leading-snug text-slate-600">
+        <span
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+          style={{ background: '#10b981', boxShadow: '0 2px 8px rgba(16,185,129,0.35)' }}
+        >
+          <FontAwesomeIcon icon={faCalendarCheck} style={{ fontSize: 13, color: '#ffffff' }} />
+        </span>
+        <span>
+          O servidor recomenda como próxima dose{' '}
+          <span className="font-bold text-slate-800">
+            {formatStepOption({ label: preview.recommendation.label, ...preview.recommendation.values })}
+          </span>
+          {preview.nextScheduledAt && (
+            <>
+              {' '}para <span className="font-bold text-slate-800">{formatInstantDate(preview.nextScheduledAt)}</span>
+              {' '}(intervalo de{' '}
+              <span className="font-bold text-slate-800">{preview.recommendation.values.intervalDays} dias</span>).
+            </>
+          )}
+          {' '}Ela será gravada junto desta confirmação.
+        </span>
+      </p>
+    )
+  }
+
+  if (preview?.recommendation.kind === 'END_OF_SEQUENCE') {
+    return (
+      <p className="flex items-center gap-2.5 text-[0.72rem] leading-snug text-slate-600">
+        <span
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+          style={{ background: '#0ea5e9', boxShadow: '0 2px 8px rgba(14,165,233,0.35)' }}
+        >
+          <FontAwesomeIcon icon={faFlagCheckered} style={{ fontSize: 12, color: '#ffffff' }} />
+        </span>
+        <span>
+          Fim da sequência automática: nenhuma sucessora será criada. Isso{' '}
+          <span className="font-semibold">não encerra o tratamento</span> — a decisão clínica continua com o prescritor.
+        </span>
+      </p>
+    )
+  }
+
+  return null
 }
 
 interface ReviewCardProps {
@@ -164,9 +179,18 @@ function ReviewCard({ title, items }: ReviewCardProps) {
         />
         <div className="text-[0.8rem] font-bold text-(--text)">{title}</div>
       </div>
-      <div className="grid grid-cols-3 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
-        {items.map((item) => (
-          <div key={item.label} className="bg-white px-3 py-2">
+      {/* As linhas da grade saem das próprias células: sobra na última linha
+          fica com o fundo do card, sem o bloco escuro do contêiner. */}
+      <div className="grid grid-cols-3 rounded-lg overflow-hidden border border-(--border-custom)">
+        {items.map((item, index) => (
+          <div
+            key={item.label}
+            className={cn(
+              'bg-white px-3 py-2',
+              index % 3 !== 2 && index !== items.length - 1 && 'border-r border-(--border-custom)',
+              index < items.length - (items.length % 3 || 3) && 'border-b border-(--border-custom)',
+            )}
+          >
             <div className="text-[0.7rem] font-semibold text-(--text-muted) mb-0.5">{item.label}</div>
             <div className="text-[0.82rem] font-medium text-(--text)">{item.value || '—'}</div>
           </div>

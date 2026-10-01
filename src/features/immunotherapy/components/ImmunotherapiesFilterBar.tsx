@@ -12,6 +12,9 @@ interface ImmunotherapiesFilterBarProps {
   setSearchTerm: (v: string) => void
   statusFilter: StatusFilter
   setStatusFilter: (v: StatusFilter) => void
+  typeFilter: string
+  setTypeFilter: (v: string) => void
+  typeOptions: string[]
 }
 
 export function ImmunotherapiesFilterBar({
@@ -19,10 +22,13 @@ export function ImmunotherapiesFilterBar({
   setSearchTerm,
   statusFilter,
   setStatusFilter,
+  typeFilter,
+  setTypeFilter,
+  typeOptions,
 }: ImmunotherapiesFilterBarProps) {
   return (
     <div className="flex items-center gap-2">
-      <div className="relative w-80">
+      <div className="relative w-96">
         <label htmlFor="immunotherapy-search" className="sr-only">
           Pesquisar paciente
         </label>
@@ -33,12 +39,26 @@ export function ImmunotherapiesFilterBar({
         />
         <TextInput
           id="immunotherapy-search"
-          placeholder="Pesquisar paciente, tipo ou extrato"
+          placeholder="Pesquisar por paciente ou campos do tratamento"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-9 pl-9 pr-4 text-[0.78rem]"
+          className="h-10 pl-9 pr-4 text-[0.8rem]"
         />
       </div>
+
+      <Select
+        aria-label="Filtrar por tipo de imunoterapia"
+        value={typeFilter}
+        onChange={(e) => setTypeFilter(e.target.value)}
+        className="h-9 w-auto"
+      >
+        <option value="all">Todos os tipos</option>
+        {typeOptions.map((type) => (
+          <option key={type} value={type}>
+            {type}
+          </option>
+        ))}
+      </Select>
 
       <Select
         aria-label="Filtrar por situação"

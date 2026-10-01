@@ -1,4 +1,7 @@
-import { EvolutionReviewStep } from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
+import {
+  EvolutionReviewStep,
+  NextDosePreview,
+} from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
 import { PostApplicationStep } from '@/features/patient/components/treatment-evolution/PostApplicationStep'
 import { PreApplicationStep } from '@/features/patient/components/treatment-evolution/PreApplicationStep'
 import { SelectPatientStep } from '@/features/patient/components/treatment-evolution/SelectPatientStep'
@@ -24,7 +27,7 @@ import type {
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
-import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
+import { Button, CancelWizardModal, showApiErrorToast, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
 import { todayStr, toOffsetIso } from '@/shared/lib/dates'
 import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
 import { useHasPermission } from '@/shared/stores/useUserStore'
@@ -73,7 +76,6 @@ function PatientEvolutionContent() {
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(preselectedId ?? null)
-  const [failure, setFailure] = useState<string | null>(null)
 
   const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
 
@@ -192,21 +194,20 @@ function PatientEvolutionContent() {
       })
       navigate({ to: '/immunotherapies' })
     },
+    meta: { suppressErrorToast: true },
     onError: async (error) => {
       if (error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION') {
         await queryClient.invalidateQueries({
           queryKey: queryKeys.dose(organizationId, dose?.id ?? ''),
         })
-        setFailure(
-          'O tratamento mudou desde que você abriu este formulário. Os dados foram recarregados; revise e confirme novamente.',
-        )
+        showApiErrorToast(error, {
+          title: 'Tratamento desatualizado',
+          description:
+            'O tratamento mudou desde que você abriu este formulário. Os dados foram recarregados; revise e confirme novamente.',
+        })
         return
       }
-      setFailure(
-        error instanceof ApiError
-          ? error.message
-          : 'Não foi possível registrar a evolução. O estado da dose foi reconsultado; verifique antes de reenviar.',
-      )
+      showApiErrorToast(error)
     },
   })
 
@@ -240,7 +241,6 @@ function PatientEvolutionContent() {
   const onSaveEvolution = () =>
     handleSubmit((data) => {
       if (!dose || !selectedStep) return
-      setFailure(null)
       const executor = professionals.find((member) => member.professionalId === data.performerId)
       if (!executor) {
         setError('performerId', { type: 'custom', message: 'Selecione um profissional disponível.' })
@@ -353,6 +353,15 @@ function PatientEvolutionContent() {
                   plannedStep={plannedStep}
                   selectedStep={selectedStep}
                   performerName={performerName}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="border-t border-(--border-custom) px-5 py-3 flex items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              {step === 3 && (
+                <NextDosePreview
                   preview={previewQuery.data ?? null}
                   previewPending={previewQuery.isPending && previewQuery.fetchStatus !== 'idle'}
                   previewError={
@@ -364,15 +373,8 @@ function PatientEvolutionContent() {
                   }
                 />
               )}
-              {failure && (
-                <p role="alert" className="mt-3 text-[0.75rem] text-red-700">
-                  {failure}
-                </p>
-              )}
             </div>
-          </div>
-
-          <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
+            <div className="flex shrink-0 items-center gap-2">
             <Button type="button" tone="danger" variant="outline" onClick={() => setShowCancelModal(true)}>
               Cancelar
             </Button>
@@ -389,6 +391,7 @@ function PatientEvolutionContent() {
             >
               {step < 3 ? 'Continuar' : 'Salvar Evolução'}
             </Button>
+            </div>
           </div>
         </form>
       </div>

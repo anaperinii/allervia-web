@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrialRouteImport } from './routes/trial'
+import { Route as ToastLabRouteImport } from './routes/toast-lab'
 import { Route as TeamsRouteImport } from './routes/teams'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SecurityRouteImport } from './routes/security'
@@ -40,6 +41,11 @@ import { Route as PatientPatientIdRouteImport } from './routes/patient.$patientI
 const TrialRoute = TrialRouteImport.update({
   id: '/trial',
   path: '/trial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToastLabRoute = ToastLabRouteImport.update({
+  id: '/toast-lab',
+  path: '/toast-lab',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeamsRoute = TeamsRouteImport.update({
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/security': typeof SecurityRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
+  '/toast-lab': typeof ToastLabRoute
   '/trial': typeof TrialRoute
   '/patient/$patientId': typeof PatientPatientIdRoute
 }
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/security': typeof SecurityRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
+  '/toast-lab': typeof ToastLabRoute
   '/trial': typeof TrialRoute
   '/patient/$patientId': typeof PatientPatientIdRoute
 }
@@ -258,6 +266,7 @@ export interface FileRoutesById {
   '/security': typeof SecurityRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
+  '/toast-lab': typeof ToastLabRoute
   '/trial': typeof TrialRoute
   '/patient/$patientId': typeof PatientPatientIdRoute
 }
@@ -289,6 +298,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/settings'
     | '/teams'
+    | '/toast-lab'
     | '/trial'
     | '/patient/$patientId'
   fileRoutesByTo: FileRoutesByTo
@@ -318,6 +328,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/settings'
     | '/teams'
+    | '/toast-lab'
     | '/trial'
     | '/patient/$patientId'
   id:
@@ -347,6 +358,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/settings'
     | '/teams'
+    | '/toast-lab'
     | '/trial'
     | '/patient/$patientId'
   fileRoutesById: FileRoutesById
@@ -377,6 +389,7 @@ export interface RootRouteChildren {
   SecurityRoute: typeof SecurityRoute
   SettingsRoute: typeof SettingsRoute
   TeamsRoute: typeof TeamsRoute
+  ToastLabRoute: typeof ToastLabRoute
   TrialRoute: typeof TrialRoute
   PatientPatientIdRoute: typeof PatientPatientIdRoute
 }
@@ -388,6 +401,13 @@ declare module '@tanstack/react-router' {
       path: '/trial'
       fullPath: '/trial'
       preLoaderRoute: typeof TrialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/toast-lab': {
+      id: '/toast-lab'
+      path: '/toast-lab'
+      fullPath: '/toast-lab'
+      preLoaderRoute: typeof ToastLabRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teams': {
@@ -601,6 +621,7 @@ const rootRouteChildren: RootRouteChildren = {
   SecurityRoute: SecurityRoute,
   SettingsRoute: SettingsRoute,
   TeamsRoute: TeamsRoute,
+  ToastLabRoute: ToastLabRoute,
   TrialRoute: TrialRoute,
   PatientPatientIdRoute: PatientPatientIdRoute,
 }

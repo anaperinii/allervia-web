@@ -112,6 +112,9 @@ export function PatientChartPage() {
       phone: string
       weight: string
       responsibleDoctor: string
+      guardianName?: string
+      guardianCpf?: string
+      guardianPhone?: string
     }) =>
       updatePatient(patientId, {
         fullName: patch.name,
@@ -122,6 +125,15 @@ export function PatientChartPage() {
         ...(patch.responsibleDoctor &&
         patch.responsibleDoctor !== patientDetail?.responsiblePhysician.id
           ? { responsiblePhysicianId: patch.responsibleDoctor }
+          : {}),
+        ...(patch.guardianName
+          ? {
+              guardian: {
+                fullName: patch.guardianName.trim(),
+                cpf: patch.guardianCpf,
+                phoneNumber: (patch.guardianPhone ?? '').replace(/\D/g, ''),
+              },
+            }
           : {}),
       }),
     onSuccess: async () => {
@@ -315,7 +327,6 @@ export function PatientChartPage() {
           canEvolve={canEvolve}
           canEmitReport={canEmitReport}
           canEditPatient={canEditPatient}
-          canAdjustProtocol={canAdjustProtocol && pendingDose !== null}
           canInactivate={canInactivate && selectedTherapy?.status === 'IN_PROGRESS'}
           canComplete={canInactivate}
           completeDisabled={selectedTherapy?.status !== 'IN_PROGRESS'}
@@ -325,7 +336,6 @@ export function PatientChartPage() {
           onShowLifecycleHistory={() => setShowLifecycleHistory(true)}
           onReactivate={() => setShowResumeModal(true)}
           onEditPatient={() => setShowEditModal(true)}
-          onAdjustProtocol={() => setShowEditDoseModal(true)}
           onInactivate={() => setShowSuspendModal(true)}
           onPortability={() => setShowPortabilityModal(true)}
           onComplete={() =>
@@ -574,6 +584,7 @@ export function PatientChartPage() {
 
       <ApplicationDetailModal
         application={selectedApplication}
+        organizationId={organizationId}
         onClose={() => setSelectedApp(null)}
         onRetract={
           canAdjustProtocol

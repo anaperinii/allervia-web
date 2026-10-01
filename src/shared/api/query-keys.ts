@@ -23,6 +23,8 @@ export const queryKeys = {
     ['clinical', organizationId, 'patients', 'detail', patientId] as const,
   immunotherapies: (organizationId: string, filters: Record<string, unknown>) =>
     ['clinical', organizationId, 'immunotherapies', filters] as const,
+  immunotherapyTypes: (organizationId: string) =>
+    ['clinical', organizationId, 'immunotherapies', 'types'] as const,
   protocols: (organizationId: string) =>
     ['clinical', organizationId, 'protocols'] as const,
   protocolVersion: (organizationId: string, versionId: string) =>

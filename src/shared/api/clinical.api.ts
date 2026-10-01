@@ -73,6 +73,12 @@ export interface UpdatePatientBody {
   birthDate?: string
   cpf?: string
   responsiblePhysicianId?: string
+  /** Responsável legal (menores de idade); null remove o vínculo. */
+  guardian?: {
+    fullName: string
+    cpf?: string
+    phoneNumber: string
+  } | null
 }
 
 export function updatePatient(
@@ -88,6 +94,7 @@ export interface ImmunotherapiesQuery {
   search?: string
   status?: TherapyStatus
   route?: AdministrationRoute
+  immunoType?: string
   responsiblePhysicianId?: string
   includeArchived?: boolean
 }
@@ -99,6 +106,13 @@ export function listImmunotherapies(
   return apiRequest(`/immunotherapies/list${toQueryString({ ...query })}`, {
     signal,
   })
+}
+
+/** Tipos de alérgeno presentes no acervo visível — alimenta o filtro da listagem. */
+export function listImmunotherapyTypes(
+  signal?: AbortSignal,
+): Promise<string[]> {
+  return apiRequest('/immunotherapies/types', { signal })
 }
 
 export function getImmunotherapy(
@@ -124,6 +138,12 @@ export interface RegisterImmunotherapyBody {
     phoneNumber: string
     cpf?: string
     responsiblePhysicianId: string
+    /** Responsável legal — obrigatório para menores de idade. */
+    guardian?: {
+      fullName: string
+      cpf?: string
+      phoneNumber: string
+    }
   }
   patientId?: string
   immunoType: string

@@ -5,7 +5,7 @@ import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
-import { derivePatientDates, type Application, type Patient } from '@/features/patient/stores/usePatientStore'
+import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
 import type { ReportFileFormat, ReportSectionId } from '@/features/patient/exporters/types'
 import { maskCpf, maskName, maskPhone } from '@/shared/lib/mask'
 
@@ -15,6 +15,8 @@ import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 interface ReportClinicalPreviewProps {
   patient: Patient
   realizedApplications: Application[]
+  /** Início da indução do servidor; o prontuário mostra o mesmo valor. */
+  inductionStart: string | null
   reactionsCount: number
   selectedSections: ReportSectionId[]
   fileFormat: ReportFileFormat
@@ -24,12 +26,12 @@ interface ReportClinicalPreviewProps {
 export function ReportClinicalPreview({
   patient,
   realizedApplications,
+  inductionStart,
   reactionsCount,
   selectedSections,
   fileFormat,
   anonymized,
 }: ReportClinicalPreviewProps) {
-  const { inductionStart } = derivePatientDates(realizedApplications, patient.id)
   return (
     <div className="bg-white rounded-xl border border-(--border-custom) shadow-sm max-w-2xl mx-auto">
       <div className="px-6 py-5 border-b border-(--border-custom)">

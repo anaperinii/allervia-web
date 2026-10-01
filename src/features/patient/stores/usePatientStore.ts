@@ -50,6 +50,12 @@ export interface ProtocolAdjustment {
   responsibleDoctor: string
 }
 
+export interface PatientGuardianInfo {
+  name: string
+  cpf: string
+  phone: string
+}
+
 export interface Patient {
   id: string
   name: string
@@ -58,6 +64,7 @@ export interface Patient {
   phone: string
   weight: string
   cpf: string
+  guardian?: PatientGuardianInfo | null
   responsibleDoctor: string
   responsibleDoctorId?: string
   status: 'active' | 'inactive'

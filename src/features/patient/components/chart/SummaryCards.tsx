@@ -16,7 +16,7 @@ interface SummaryCardsProps {
 const CARDS: { key: string; label: string; render: (props: SummaryCardsProps) => string }[] = [
   { key: 'interval', label: 'Intervalo Atual', render: (p) => p.currentInterval },
   { key: 'next', label: 'Próxima Aplicação', render: (p) => p.nextDate },
-  { key: 'dose', label: 'Concentração e Volume vigentes', render: (p) => p.currentDose },
+  { key: 'dose', label: 'Concentração e Volume Vigentes', render: (p) => p.currentDose },
 ]
 
 export function SummaryCards(props: SummaryCardsProps) {
@@ -42,14 +42,14 @@ export function SummaryCards(props: SummaryCardsProps) {
               {card.key === 'dose' && props.previousDose && (
                 <span
                   title={`Dose administrada anterior: ${props.previousDose}`}
-                  className="shrink-0 rounded-full border px-2 py-0.5 text-[0.6rem] font-bold leading-none"
+                  className="shrink-0 rounded-md border px-2 py-0.5 text-[0.6rem] font-bold leading-none"
                   style={{
                     borderColor: '#B7E06A',
                     background: 'rgba(183,224,106,0.18)',
                     color: '#D3EE9A',
                   }}
                 >
-                  anterior {withSmallMl(props.previousDose)}
+                  Anterior {withSmallMl(props.previousDose)}
                 </span>
               )}
             </div>

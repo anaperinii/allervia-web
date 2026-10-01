@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type FormEvent } from 'react'
+import { QrCodeImage } from '@/shared/components'
 import type { MfaChallenge } from '@/shared/api/contracts/account'
 
 const fieldStyle: CSSProperties = {
@@ -61,7 +62,14 @@ export function SecondFactorStep({
             color: 'var(--ink)',
           }}
         >
-          <div className="font-semibold">Chave de configuração</div>
+          <div className="flex justify-center">
+            <div className="rounded-lg bg-white p-2">
+              <QrCodeImage value={challenge.enrollment.keyUri} size={168} />
+            </div>
+          </div>
+          <div className="mt-3 font-semibold">
+            Não consegue escanear? Informe esta chave manualmente
+          </div>
           <code className="mt-1 block select-all">{challenge.enrollment.secret}</code>
         </div>
       )}

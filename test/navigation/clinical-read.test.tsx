@@ -38,7 +38,10 @@ const LIST_PAGE = {
         id: 'dose-1',
         scheduledAt: '2026-01-08T13:00:00.000Z',
         status: 'SCHEDULED',
+        intervalDays: 7,
+        phase: 'BUILD_UP',
       },
+      currentPhase: 'BUILD_UP',
       createdAt: '2026-01-01T13:00:00.000Z',
     },
   ],
@@ -79,7 +82,10 @@ const PATIENT_DETAIL = {
         id: 'dose-1',
         scheduledAt: '2026-01-08T13:00:00.000Z',
         status: 'SCHEDULED',
+        intervalDays: 7,
+        phase: 'BUILD_UP',
       },
+      currentPhase: 'BUILD_UP',
       createdAt: '2026-01-01T13:00:00.000Z',
     },
     {
@@ -93,6 +99,7 @@ const PATIENT_DETAIL = {
       maintenanceStartDate: null,
       prescription: { versionId: 'version-0', revision: 1 },
       nextDose: null,
+      currentPhase: 'BUILD_UP',
       createdAt: '2025-06-01T13:00:00.000Z',
     },
   ],
@@ -105,6 +112,9 @@ function stubClinicalApi() {
     const url = String(input)
     if (url.includes('/immunotherapies/list')) {
       return Promise.resolve(jsonResponse(LIST_PAGE))
+    }
+    if (url.includes('/immunotherapies/types')) {
+      return Promise.resolve(jsonResponse(['Ácaros']))
     }
     if (url.includes('/patients/patient-1')) {
       return Promise.resolve(jsonResponse(PATIENT_DETAIL))

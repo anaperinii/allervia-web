@@ -9,7 +9,6 @@ import {
   createSupportRequest,
   listSupportRequests,
 } from '@/shared/api/notifications.api'
-import { ApiError } from '@/shared/api/contracts/errors'
 import { Button, FieldLabel, TextArea, TextInput } from '@/shared/components'
 import { formatInstantDate } from '@/features/patient/adapters/clinical-presentation'
 
@@ -27,7 +26,6 @@ function SupportRequestSection() {
   const queryClient = useQueryClient()
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
-  const [failure, setFailure] = useState<string | null>(null)
 
   const listQuery = useQuery({
     queryKey: ['support-requests'],
@@ -40,11 +38,6 @@ function SupportRequestSection() {
       setSubject('')
       setMessage('')
       await queryClient.invalidateQueries({ queryKey: ['support-requests'] })
-    },
-    onError: (error) => {
-      setFailure(
-        error instanceof ApiError ? error.message : 'Não foi possível enviar a solicitação.',
-      )
     },
   })
 
@@ -74,12 +67,11 @@ function SupportRequestSection() {
               placeholder="Descreva a dúvida ou o problema"
             />
           </FieldLabel>
-          {failure && <p role="alert" className="text-[0.7rem] text-red-700">{failure}</p>}
           <Button
             tone="brand"
             variant="solid"
             disabled={!subject.trim() || !message.trim() || mutation.isPending}
-            onClick={() => { setFailure(null); mutation.mutate() }}
+            onClick={() => mutation.mutate()}
           >
             Enviar solicitação
           </Button>

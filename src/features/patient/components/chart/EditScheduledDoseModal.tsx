@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button, FieldLabel, Modal, Select, TextArea, TextInput } from '@/shared/components'
+import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, TextInput } from '@/shared/components'
 import { updateScheduledDose } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
@@ -50,7 +50,6 @@ function EditScheduledDoseForm({
   const [date, setDate] = useState(dose ? localDateInput(dose.scheduledAt) : '')
   const [time, setTime] = useState(dose ? localTimeInput(dose.scheduledAt) : '')
   const [reason, setReason] = useState('')
-  const [failure, setFailure] = useState<string | null>(null)
 
   const selectedStep = dose?.allowedValues.find((step) => step.id === stepId) ?? null
 
@@ -73,21 +72,20 @@ function EditScheduledDoseForm({
       onSaved()
       onClose()
     },
+    meta: { suppressErrorToast: true },
     onError: async (error) => {
       if (error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION') {
         await queryClient.invalidateQueries({
           queryKey: queryKeys.dose(organizationId, dose?.id ?? ''),
         })
-        setFailure(
-          'A previsão mudou desde que você abriu este formulário. Os dados foram recarregados; confirme novamente.',
-        )
+        showApiErrorToast(error, {
+          title: 'Previsão desatualizada',
+          description:
+            'A previsão mudou desde que você abriu este formulário. Os dados foram recarregados; confirme novamente.',
+        })
         return
       }
-      setFailure(
-        error instanceof ApiError
-          ? error.message
-          : 'Não foi possível salvar a edição da previsão.',
-      )
+      showApiErrorToast(error)
     },
   })
 
@@ -106,7 +104,7 @@ function EditScheduledDoseForm({
             tone="brand"
             variant="solid"
             disabled={!canSubmit}
-            onClick={() => { setFailure(null); mutation.mutate() }}
+            onClick={() => mutation.mutate()}
           >
             Salvar previsão
           </Button>
@@ -150,10 +148,6 @@ function EditScheduledDoseForm({
           onChange={(e) => setReason(e.target.value)}
         />
       </FieldLabel>
-
-      {failure && (
-        <p role="alert" className="text-[0.7rem] text-red-700">{failure}</p>
-      )}
     </Modal>
   )
 }

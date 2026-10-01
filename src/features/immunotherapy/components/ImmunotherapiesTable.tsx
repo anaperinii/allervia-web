@@ -1,23 +1,15 @@
 import { cn } from '@/shared/lib/cn'
 import type { ImmunotherapyListItem } from '@/shared/api/contracts/clinical'
+import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
+import { PHASE_VIEW } from '@/features/protocols/lab/phase-view'
 import {
   formatInstantDate,
   ROUTE_LABELS,
-  THERAPY_STATUS_LABELS,
 } from '@/features/patient/adapters/clinical-presentation'
 
 interface ImmunotherapiesTableProps {
   items: ImmunotherapyListItem[]
   onSelect: (item: ImmunotherapyListItem) => void
-}
-
-const STATUS_STYLES: Record<
-  ImmunotherapyListItem['status'],
-  { text: string; bg: string }
-> = {
-  IN_PROGRESS: { text: 'text-green-700', bg: 'bg-green-50 border-green-200' },
-  SUSPENDED: { text: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
-  COMPLETED: { text: 'text-slate-600', bg: 'bg-slate-100 border-slate-200' },
 }
 
 export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTableProps) {
@@ -27,7 +19,7 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
         <tr className="border-b border-white/40 bg-white/20 backdrop-blur-md">
           <th className="text-left text-[0.8rem] font-semibold text-[#12333a] pl-5 pr-4 pt-4 pb-2.5">Paciente</th>
           <th className="text-left text-[0.8rem] font-semibold text-[#12333a] pl-6 pr-4 pt-4 pb-2.5">Tipo</th>
-          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Situação</th>
+          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Intervalo e fase</th>
           <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Via de administração</th>
           <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Próxima aplicação</th>
           <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-4 pb-2.5">Médico responsável</th>
@@ -42,7 +34,16 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
           </tr>
         ) : (
           items.map((item) => {
-            const status = STATUS_STYLES[item.status]
+            // Fallback pela data de manutenção: sustenta respostas de um
+            // servidor anterior ao campo currentPhase.
+            const phase =
+              PHASE_VIEW[
+                item.currentPhase ??
+                  (item.maintenanceStartDate ? 'MAINTENANCE' : 'BUILD_UP')
+              ]
+            const interval = item.nextDose?.intervalDays ?? null
+            const intervalColor =
+              interval !== null ? getIntervalColor(interval) : null
             const inactivePatient = !item.patient.isActive
             return (
               <tr
@@ -75,15 +76,32 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
                   </span>
                 </td>
                 <td className="px-4 py-2">
-                  <span
-                    className={cn(
-                      'inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border',
-                      status.text,
-                      status.bg,
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {intervalColor ? (
+                      <span
+                        className="inline-flex items-center rounded-md border px-2 py-0.5 text-[0.65rem] font-semibold"
+                        style={{
+                          backgroundColor: intervalColor.bg + '4D',
+                          color: intervalColor.text,
+                          borderColor: intervalColor.dot + '30',
+                        }}
+                      >
+                        {interval} dias
+                      </span>
+                    ) : (
+                      <span className="text-[0.65rem] text-(--text-muted)">
+                        Sem previsão
+                      </span>
                     )}
-                  >
-                    {THERAPY_STATUS_LABELS[item.status]}
-                  </span>
+                    <span
+                      className={cn(
+                        'inline-flex items-center rounded-md border px-2 py-0.5 text-[0.65rem] font-semibold',
+                        phase.chip,
+                      )}
+                    >
+                      {phase.label}
+                    </span>
+                  </div>
                 </td>
                 <td className="px-4 py-2 text-xs text-(--text-muted)">
                   {ROUTE_LABELS[item.administrationRoute]}

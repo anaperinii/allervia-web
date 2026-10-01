@@ -271,7 +271,7 @@ export function DarkMetricsSection({
             {eyebrow}
           </p>
         )}
-        <h2 className="text-[2.15rem] font-medium leading-[1.15] tracking-tight" style={{ color: INK }}>
+        <h2 className="text-[1.85rem] font-medium leading-[1.15] tracking-tight" style={{ color: INK }}>
           {title}
         </h2>
         <p className="mt-1.5 text-[0.88rem]" style={{ color: INK_MUTED }}>

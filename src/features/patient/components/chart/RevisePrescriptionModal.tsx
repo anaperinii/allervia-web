@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, FieldLabel, Modal, Select, TextArea, toast } from '@/shared/components'
 import { revisePrescription } from '@/shared/api/clinical.api'
 import { listProtocols } from '@/shared/api/protocols.api'
-import { ApiError } from '@/shared/api/contracts/errors'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
 import { queryKeys } from '@/shared/api/query-keys'
 import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
@@ -42,7 +41,6 @@ function ReviseForm({
   const [targetStepId, setTargetStepId] = useState('')
   const [pendingStepId, setPendingStepId] = useState('')
   const [reason, setReason] = useState('')
-  const [failure, setFailure] = useState<string | null>(null)
   const [rehearsed, setRehearsed] = useState<{ body: string; summary: string } | null>(null)
 
   const protocolsQuery = useQuery({
@@ -101,7 +99,6 @@ function ReviseForm({
           body: currentKey!,
           summary: `${result.pendingStep.label} — 1:${Number(result.pendingStep.concentration).toLocaleString('pt-BR')} - ${result.pendingStep.volume.replace('.', ',')}ml · ${result.pendingStep.intervalDays}d`,
         })
-        setFailure(null)
         return
       }
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
@@ -114,12 +111,7 @@ function ReviseForm({
       })
       onClose()
     },
-    onError: (error) => {
-      setRehearsed(null)
-      setFailure(
-        error instanceof ApiError ? error.message : 'Não foi possível revisar a prescrição.',
-      )
-    },
+    onError: () => setRehearsed(null),
   })
 
   const toggleStep = (stepId: string) => {
@@ -146,7 +138,7 @@ function ReviseForm({
             variant="outline"
             tone="brand"
             disabled={!ready || mutation.isPending}
-            onClick={() => { setFailure(null); mutation.mutate(true) }}
+            onClick={() => mutation.mutate(true)}
             leftIcon={<FontAwesomeIcon icon={faFlaskVial} style={{ fontSize: 11 }} />}
           >
             Ensaiar (sem gravar)
@@ -155,7 +147,7 @@ function ReviseForm({
             tone="brand"
             variant="solid"
             disabled={!rehearsedMatches || mutation.isPending}
-            onClick={() => { setFailure(null); mutation.mutate(false) }}
+            onClick={() => mutation.mutate(false)}
           >
             Confirmar revisão
           </Button>
@@ -244,7 +236,6 @@ function ReviseForm({
           </p>
         </div>
       )}
-      {failure && <p role="alert" className="text-[0.7rem] text-red-700 leading-relaxed">{failure}</p>}
     </Modal>
   )
 }

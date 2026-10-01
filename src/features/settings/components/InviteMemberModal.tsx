@@ -10,7 +10,6 @@ import {
 interface InviteMemberModalProps {
   open: boolean
   submitting: boolean
-  error: string | null
   onClose: () => void
   onSubmit: (data: { email: string; fullName: string; role: TeamRole }) => void
 }
@@ -18,7 +17,6 @@ interface InviteMemberModalProps {
 export function InviteMemberModal({
   open,
   submitting,
-  error,
   onClose,
   onSubmit,
 }: InviteMemberModalProps) {
@@ -111,11 +109,6 @@ export function InviteMemberModal({
           {ROLE_DESCRIPTIONS[role]}
         </div>
       </div>
-      {error && (
-        <p className="text-[0.7rem] text-red-600" role="alert">
-          {error}
-        </p>
-      )}
     </Modal>
   )
 }

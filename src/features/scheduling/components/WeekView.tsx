@@ -1,7 +1,7 @@
 import { format, isSameDay, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/cn'
-import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
+import { EventDots } from '@/features/scheduling/components/EventDots'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 interface WeekViewProps {
@@ -31,7 +31,7 @@ export function WeekView({
             onClick={() => onSelectDate(day)}
             className={cn(
               'border-r border-(--border-custom) last:border-r-0 p-2.5 cursor-pointer transition-colors flex flex-col min-h-0 relative',
-              today || selected ? 'bg-[#1d6772]/14' : 'hover:bg-brand/6',
+              today || selected ? 'bg-[#1d6772]/6' : 'hover:bg-brand/6',
             )}
           >
             {today && (
@@ -57,40 +57,52 @@ export function WeekView({
               </div>
             </div>
             <div className="flex-1 space-y-1 overflow-y-auto">
-              {applications.map((application) => {
-                const color = getApplicationEventColor(application)
-                return (
+              {applications.map((application) => (
+                // Formato de pasta: aba com o horário, curva côncava para fora
+                // e as bolinhas flutuando no vão à direita da aba.
+                <div
+                  key={application.id}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSelectApplication(application)
+                  }}
+                  className={cn(
+                    'group relative cursor-pointer text-[0.6rem] text-(--text) transition-all hover:-translate-y-px',
+                    application.status === 'missed' && 'opacity-70',
+                  )}
+                >
+                  <div className="relative flex items-end">
+                    <span className="relative z-10 block min-w-[64%] max-w-[84%] truncate rounded-t-lg bg-white px-2 pb-0.5 pt-1 text-[0.68rem] font-bold">
+                      {application.startTime}
+                      {application.endTime ? ` – ${application.endTime}` : ''}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none relative z-10 -ml-px block h-2.5 w-2.5 self-end"
+                      style={{
+                        background:
+                          'radial-gradient(circle at 100% 0%, transparent 9.5px, #ffffff 10px)',
+                      }}
+                    />
+                    <span className="absolute bottom-0.5 right-0 z-20">
+                      <EventDots application={application} />
+                    </span>
+                  </div>
                   <div
-                    key={application.id}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onSelectApplication(application)
-                    }}
-                    className={cn(
-                      'group relative rounded-md px-2.5 py-1.5 text-[0.6rem] backdrop-blur-sm cursor-pointer hover:brightness-95 transition-all',
-                      application.status === 'missed' && 'opacity-70',
-                    )}
+                    className="space-y-0.5 rounded-b-lg rounded-tr-lg bg-white px-2.5 pb-1.5 pt-1"
                     style={{
-                      backgroundColor: color.bg,
                       backgroundImage:
                         application.status === 'missed'
-                          ? `repeating-linear-gradient(45deg, rgba(100,116,139,0.22) 0 1.5px, transparent 1.5px 6px), ${color.grad}`
-                          : color.grad,
-                      color: color.text,
-                      boxShadow: '0 1px 4px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.04)',
+                          ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.14) 0 1.5px, transparent 1.5px 6px)'
+                          : undefined,
+                      boxShadow: '0 1px 4px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.05)',
                     }}
                   >
-                    <div className="space-y-0.5">
-                      <div className="text-[0.72rem] font-bold">
-                        {application.startTime}
-                        {application.endTime ? ` – ${application.endTime}` : ''}
-                      </div>
-                      <div className="font-semibold opacity-90 truncate">{application.patientName ?? ''}</div>
-                      <div className="font-medium opacity-90 truncate">{application.dose}</div>
-                    </div>
+                    <div className="font-semibold text-(--text) truncate">{application.patientName ?? ''}</div>
+                    <div className="font-medium text-(--text-muted) truncate">{application.dose}</div>
                   </div>
-                )
-              })}
+                </div>
+              ))}
             </div>
           </div>
         )

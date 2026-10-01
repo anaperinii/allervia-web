@@ -3,20 +3,22 @@ import { ImmunotherapyDataStep } from '@/features/immunotherapy/components/add-s
 import { PatientDataStep } from '@/features/immunotherapy/components/add-steps/PatientDataStep'
 import {
   addImmunotherapySchema,
+  isMinorBirthDate,
   STEP_1_FIELDS,
   STEP_2_FIELDS,
   type AddImmunotherapyForm,
 } from '@/features/immunotherapy/schemas/add-immunotherapy'
 import {
-  listPatients,
+  getPatient,
   registerImmunotherapy,
+  updatePatient,
+  type UpdatePatientBody,
 } from '@/shared/api/clinical.api'
 import { listProtocols } from '@/shared/api/protocols.api'
-import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
-import { tomorrowStr } from '@/shared/lib/dates'
+import { toDateInputValue, tomorrowStr } from '@/shared/lib/dates'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -29,7 +31,7 @@ import { faCircleCheck, faClipboardCheck, faSyringe, faUser } from '@fortawesome
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const STEPS: WizardStep[] = [
-  { label: 'Paciente', icon: faUser, description: 'Paciente novo ou já cadastrado, vinculado ao prescritor autenticado.' },
+  { label: 'Paciente', icon: faUser, description: 'Busque pelo nome para reaproveitar um cadastro existente ou preencha os dados de um paciente novo, vinculado ao prescritor autenticado.' },
   { label: 'Prescrição', icon: faSyringe, description: 'Tipo, extrato, data de início e a versão publicada do protocolo com etapas, início e meta.' },
   { label: 'Revisão', icon: faClipboardCheck, description: 'Confira os valores exatos e o fuso. Salvar grava paciente, tratamento e primeira previsão em uma única transação.' },
 ]
@@ -51,7 +53,6 @@ export function AddImmunotherapyPage() {
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [showCancelModal, setShowCancelModal] = useState(false)
-  const [failure, setFailure] = useState<string | null>(null)
 
   const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
 
@@ -59,8 +60,8 @@ export function AddImmunotherapyPage() {
     resolver: zodResolver(addImmunotherapySchema),
     mode: 'onBlur',
     defaultValues: {
-      patientMode: 'new',
       name: '', cpf: '', phone: '', birthDate: '', weight: '', patientId: '',
+      guardianName: '', guardianCpf: '', guardianPhone: '',
       type: '', startDate: tomorrowStr(), extract: '',
       protocolVersionId: '', stepIds: [], startingStepId: '', targetStepId: '',
     },
@@ -74,12 +75,6 @@ export function AddImmunotherapyPage() {
     queryFn: ({ signal }) => listProtocols(signal),
     enabled: organizationId !== '',
   })
-  const patientsQuery = useQuery({
-    queryKey: queryKeys.patients(organizationId, { picker: true, search: undefined }),
-    queryFn: ({ signal }) => listPatients({ pageSize: 50, isActive: true }, signal),
-    enabled: organizationId !== '' && values.patientMode === 'existing',
-  })
-
   const selectedProtocol = (protocolsQuery.data ?? []).find((protocol) =>
     protocol.versions.some((version) => version.id === values.protocolVersionId),
   )
@@ -89,15 +84,61 @@ export function AddImmunotherapyPage() {
   const versionLabel = selectedProtocol && selectedVersion
     ? `${selectedProtocol.name} — v${selectedVersion.number}`
     : ''
-  const existingPatientName =
-    (patientsQuery.data?.items ?? []).find((patient) => patient.id === values.patientId)
-      ?.fullName ?? null
+  // Carregado no passo 1 ao vincular um paciente; serve de linha-base para
+  // detectar o que o prescritor ajustou nos dados pessoais.
+  const patientDetailQuery = useQuery({
+    queryKey: queryKeys.patient(organizationId, values.patientId),
+    queryFn: ({ signal }) => getPatient(values.patientId, signal),
+    enabled: organizationId !== '' && values.patientId !== '',
+  })
 
   const registerMutation = useMutation({
-    mutationFn: (data: AddImmunotherapyForm) =>
-      registerImmunotherapy({
+    mutationFn: async (data: AddImmunotherapyForm) => {
+      const isMinor = isMinorBirthDate(data.birthDate)
+      const guardianBody = isMinor
+        ? {
+            fullName: data.guardianName.trim(),
+            cpf: data.guardianCpf,
+            phoneNumber: data.guardianPhone.replace(/\D/g, ''),
+          }
+        : undefined
+
+      const current = patientDetailQuery.data
+      if (data.patientId && current) {
+        const changes: UpdatePatientBody = {}
+        const phoneNumber = data.phone.replace(/\D/g, '')
+        const weightInKg = Number(data.weight.replace(',', '.'))
+        const cpf = data.cpf.replace(/\D/g, '')
+        if (cpf !== (current.cpf ?? '').replace(/\D/g, '')) {
+          changes.cpf = data.cpf
+        }
+        if (phoneNumber !== current.phoneNumber.replace(/\D/g, '')) {
+          changes.phoneNumber = phoneNumber
+        }
+        if (data.birthDate !== toDateInputValue(current.birthDate)) {
+          changes.birthDate = data.birthDate
+        }
+        if (weightInKg !== current.weightInKg) {
+          changes.weightInKg = weightInKg
+        }
+        if (guardianBody) {
+          const existing = current.guardian
+          const changed =
+            !existing ||
+            existing.fullName !== guardianBody.fullName ||
+            (existing.cpf ?? '').replace(/\D/g, '') !==
+              guardianBody.cpf.replace(/\D/g, '') ||
+            existing.phoneNumber.replace(/\D/g, '') !== guardianBody.phoneNumber
+          if (changed) changes.guardian = guardianBody
+        }
+        if (Object.keys(changes).length > 0) {
+          await updatePatient(data.patientId, changes)
+        }
+      }
+
+      return registerImmunotherapy({
         idempotencyKey: idempotencyKeyRef.current,
-        ...(data.patientMode === 'existing'
+        ...(data.patientId
           ? { patientId: data.patientId }
           : {
               patient: {
@@ -105,8 +146,9 @@ export function AddImmunotherapyPage() {
                 birthDate: data.birthDate,
                 weightInKg: Number(data.weight.replace(',', '.')),
                 phoneNumber: data.phone.replace(/\D/g, ''),
-                ...(data.cpf.trim() ? { cpf: data.cpf } : {}),
+                cpf: data.cpf,
                 responsiblePhysicianId: account?.professional?.id ?? '',
+                ...(guardianBody ? { guardian: guardianBody } : {}),
               },
             }),
         immunoType: data.type.trim(),
@@ -117,7 +159,8 @@ export function AddImmunotherapyPage() {
         stepIds: data.stepIds,
         startingStepId: data.startingStepId,
         targetStepId: data.targetStepId,
-      }),
+      })
+    },
     onSuccess: async (result) => {
       await queryClient.invalidateQueries({
         queryKey: ['clinical', organizationId],
@@ -142,13 +185,6 @@ export function AddImmunotherapyPage() {
       })
       navigate({ to: '/immunotherapies' })
     },
-    onError: (error) => {
-      setFailure(
-        error instanceof ApiError
-          ? error.message
-          : 'Não foi possível registrar a prescrição.',
-      )
-    },
   })
 
   const advanceStep = async () => {
@@ -162,7 +198,6 @@ export function AddImmunotherapyPage() {
     if (step < 3) {
       void advanceStep()
     } else {
-      setFailure(null)
       void handleSubmit((data) => registerMutation.mutate(data))()
     }
   }
@@ -196,14 +231,7 @@ export function AddImmunotherapyPage() {
                   form={values}
                   versionLabel={versionLabel}
                   steps={selectedVersion?.definition.steps ?? []}
-                  existingPatientName={existingPatientName}
-                  timeZone={account?.organization?.timeZone ?? ''}
                 />
-              )}
-              {failure && (
-                <p role="alert" className="mt-3 text-[0.75rem] text-red-700">
-                  {failure}
-                </p>
               )}
             </div>
           </div>

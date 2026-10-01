@@ -20,6 +20,22 @@ export interface ResponsiblePhysician {
   councilUf?: string | null
 }
 
+/** Responsável legal — obrigatório no cadastro de pacientes menores de idade. */
+export interface PatientGuardian {
+  fullName: string
+  cpf: string | null
+  phoneNumber: string
+}
+
+export interface NextDoseSummary {
+  id: string
+  scheduledAt: string
+  status: DoseStatus
+  /** Intervalo até a dose seguinte, fixado no planejamento. */
+  intervalDays: number
+  phase: ProtocolPhase
+}
+
 export interface TherapySummary {
   id: string
   immunoType: string
@@ -30,7 +46,9 @@ export interface TherapySummary {
   inductionStartDate: string
   maintenanceStartDate: string | null
   prescription: { versionId: string; revision: number } | null
-  nextDose: { id: string; scheduledAt: string; status: DoseStatus } | null
+  nextDose: NextDoseSummary | null
+  /** Fase vigente do tratamento, resolvida pelo servidor. */
+  currentPhase: ProtocolPhase
   createdAt: string
 }
 
@@ -50,6 +68,7 @@ export interface PatientListItem {
 
 export interface PatientDetail extends PatientListItem {
   cpf?: string | null
+  guardian?: PatientGuardian | null
   therapies: TherapySummary[]
   updatedAt: string
 }
@@ -66,7 +85,9 @@ export interface ImmunotherapyListItem {
   patient: { id: string; fullName: string; isActive: boolean }
   responsiblePhysician: { id: string; fullName: string }
   prescription: { versionId: string; revision: number } | null
-  nextDose: { id: string; scheduledAt: string; status: DoseStatus } | null
+  nextDose: NextDoseSummary | null
+  /** Fase vigente do tratamento, resolvida pelo servidor. */
+  currentPhase: ProtocolPhase
   createdAt: string
 }
 
@@ -137,6 +158,7 @@ export interface DoseDetail extends DoseRecord {
   allowedValues: ProtocolStep[]
   migrationRequired: boolean
   observations?: DoseObservation[]
+  observationAddenda?: DoseObservationAddendum[]
 }
 
 export interface DoseValuesBody {

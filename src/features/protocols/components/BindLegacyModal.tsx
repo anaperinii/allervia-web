@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button, FieldLabel, Modal, Select, toast } from '@/shared/components'
+import { Button, FieldLabel, Modal, Select, showApiErrorToast, toast } from '@/shared/components'
 import { bindLegacyTherapy } from '@/shared/api/protocols.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import type {
@@ -62,7 +62,6 @@ function BindLegacyForm({
   const [stepIds, setStepIds] = useState<string[]>([])
   const [startingStepId, setStartingStepId] = useState('')
   const [targetStepId, setTargetStepId] = useState('')
-  const [failure, setFailure] = useState<string | null>(null)
   const [rehearsed, setRehearsed] = useState<{ body: string; stepLabel: string } | null>(null)
 
   const publishedOptions = useMemo(
@@ -109,7 +108,6 @@ function BindLegacyForm({
             ? formatStepOption(step)
             : result.stepId,
         })
-        setFailure(null)
         return
       }
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
@@ -122,10 +120,13 @@ function BindLegacyForm({
       })
       onBound()
     },
+    meta: { suppressErrorToast: true },
     onError: (error) => {
       setRehearsed(null)
       if (error instanceof ApiError && error.code && BIND_ERROR_EXPLANATIONS[error.code]) {
-        setFailure(BIND_ERROR_EXPLANATIONS[error.code])
+        showApiErrorToast(error, {
+          description: BIND_ERROR_EXPLANATIONS[error.code],
+        })
         if (error.code === 'STALE_CLINICAL_REVISION' || error.code === 'PRESCRIPTION_ALREADY_BOUND') {
           void queryClient.invalidateQueries({
             queryKey: ['clinical', organizationId, 'protocols', 'migration'],
@@ -133,9 +134,7 @@ function BindLegacyForm({
         }
         return
       }
-      setFailure(
-        error instanceof ApiError ? error.message : 'Não foi possível processar a vinculação.',
-      )
+      showApiErrorToast(error)
     },
   })
 
@@ -162,7 +161,7 @@ function BindLegacyForm({
             variant="outline"
             tone="brand"
             disabled={!currentBody || bindMutation.isPending}
-            onClick={() => { setFailure(null); bindMutation.mutate(true) }}
+            onClick={() => bindMutation.mutate(true)}
             leftIcon={<FontAwesomeIcon icon={faFlaskVial} style={{ fontSize: 11 }} />}
           >
             Ensaiar (sem gravar)
@@ -171,7 +170,7 @@ function BindLegacyForm({
             tone="brand"
             variant="solid"
             disabled={!rehearsedMatches || bindMutation.isPending}
-            onClick={() => { setFailure(null); bindMutation.mutate(false) }}
+            onClick={() => bindMutation.mutate(false)}
           >
             Vincular tratamento
           </Button>
@@ -292,10 +291,7 @@ function BindLegacyForm({
           </p>
         </div>
       )}
-      {failure && (
-        <p role="alert" className="text-[0.7rem] text-red-700 leading-relaxed">{failure}</p>
-      )}
-      {!rehearsedMatches && currentBody && !failure && (
+      {!rehearsedMatches && currentBody && (
         <p className="text-[0.65rem] text-(--text-muted)">
           Ensaie esta exata seleção antes de vincular; qualquer mudança exige novo ensaio.
         </p>

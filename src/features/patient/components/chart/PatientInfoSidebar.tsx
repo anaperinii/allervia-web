@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PatientInitials } from '@/shared/components/glass-card'
 import { cn } from '@/shared/lib/cn'
+import { formatCPF, formatPhone } from '@/shared/lib/formatters'
 import { Button } from '@/shared/components'
 import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
 import { PatientActionsMenu } from '@/features/patient/components/chart/PatientActionsMenu'
@@ -23,7 +24,6 @@ interface PatientInfoSidebarProps {
   canEvolve: boolean
   canEmitReport: boolean
   canEditPatient: boolean
-  canAdjustProtocol: boolean
   canInactivate: boolean
   canComplete: boolean
   completeDisabled: boolean
@@ -33,7 +33,6 @@ interface PatientInfoSidebarProps {
   onShowLifecycleHistory: () => void
   onReactivate: () => void
   onEditPatient: () => void
-  onAdjustProtocol: () => void
   onInactivate: () => void
   onPortability: () => void
   onComplete: () => void
@@ -52,7 +51,6 @@ export function PatientInfoSidebar({
   canEvolve,
   canEmitReport,
   canEditPatient,
-  canAdjustProtocol,
   canInactivate,
   canComplete,
   completeDisabled,
@@ -62,7 +60,6 @@ export function PatientInfoSidebar({
   onShowLifecycleHistory,
   onReactivate,
   onEditPatient,
-  onAdjustProtocol,
   onInactivate,
   onPortability,
   onComplete,
@@ -75,10 +72,17 @@ export function PatientInfoSidebar({
   const personalRows: [string, string][] = [
     ['Data de Nascimento', patient.birthDate],
     ['Idade', `${patient.age} anos`],
-    ['CPF', patient.cpf],
-    ['Telefone', patient.phone],
+    ['CPF', formatCPF(patient.cpf)],
+    ['Telefone', formatPhone(patient.phone)],
     ['Peso', patient.weight],
     ['Médico Responsável', patient.responsibleDoctor],
+    ...(patient.guardian
+      ? ([
+          ['Responsável Legal', patient.guardian.name],
+          ['CPF do Responsável', patient.guardian.cpf ? formatCPF(patient.guardian.cpf) : '—'],
+          ['Tel. do Responsável', formatPhone(patient.guardian.phone)],
+        ] as [string, string][])
+      : []),
   ]
 
   const immunoRows: [string, string][] = [
@@ -90,14 +94,13 @@ export function PatientInfoSidebar({
   ]
 
   const showImmunoActions =
-    canAdjustProtocol ||
     canRevisePrescription ||
     therapyStatus !== null ||
     (patient.protocolAdjustments?.length ?? 0) > 0 ||
     inactivationCount > 0
 
   return (
-    <div className="flex w-[360px] shrink-0 flex-col rounded-xl bg-white overflow-hidden">
+    <div className="flex w-90 shrink-0 flex-col rounded-xl bg-white overflow-hidden">
       <div className="border-b border-(--border-custom) px-5 py-4">
         <div className="flex items-center gap-3">
           <PatientInitials name={patient.name} size={48} />
@@ -200,7 +203,7 @@ export function PatientInfoSidebar({
             Dados Pessoais
             {showPersonal ? <FontAwesomeIcon icon={faChevronUp} style={{ fontSize: 14 }} /> : <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 14 }} />}
           </button>
-          <div id={personalId} className={cn('overflow-hidden transition-all duration-300', showPersonal ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0')}>
+          <div id={personalId} className={cn('overflow-hidden transition-all duration-300', showPersonal ? 'max-h-120 opacity-100' : 'max-h-0 opacity-0')}>
             <div className="px-3.5 pb-3 space-y-2">
               {personalRows.map(([label, value]) => (
                 <Row key={label} label={label} value={value} />
@@ -249,17 +252,6 @@ export function PatientInfoSidebar({
               </div>
               {showImmunoActions && (
                 <div className="pt-2 mt-1 border-t border-(--border-custom) space-y-1.5">
-                  {canAdjustProtocol && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      fullWidth
-                      disabled={therapyStatus !== 'IN_PROGRESS'}
-                      onClick={onAdjustProtocol}
-                    >
-                      Editar previsão pendente
-                    </Button>
-                  )}
                   {canRevisePrescription && (
                     <Button
                       variant="outline"

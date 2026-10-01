@@ -12,6 +12,9 @@ import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
 
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+
 interface ImmunotherapyDataStepProps {
   form: UseFormReturn<AddImmunotherapyForm>
 }
@@ -146,20 +149,33 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
 
       {selectedVersion && (
         <div className="space-y-3">
-          <FieldLabel label="Etapas permitidas na prescrição" error={errors.stepIds?.message}>
-            <div className="mb-2 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  applyStepIds(allSelected ? [] : steps.map((step) => step.id))
-                }
-                className="rounded-md border border-(--border-custom) bg-white px-2 py-1 text-[0.65rem] font-semibold text-(--text-muted) transition-colors hover:border-brand/50 hover:text-brand-dark cursor-pointer"
-              >
-                {allSelected ? 'Limpar seleção' : 'Selecionar todas'}
-              </button>
-              <span className="text-[0.6rem] text-(--text-muted)">
-                {selectedStepIds.length} de {steps.length} selecionadas
+          <div>
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-(--text-muted)">
+                Etapas permitidas na prescrição
               </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[0.6rem] text-(--text-muted)">
+                  {selectedStepIds.length} de {steps.length} selecionadas
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    applyStepIds(allSelected ? [] : steps.map((step) => step.id))
+                  }
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-md border bg-white px-2 py-1 text-[0.65rem] font-semibold transition-colors cursor-pointer',
+                    allSelected
+                      ? 'border-red-300 text-red-700 hover:border-red-400 hover:bg-red-50'
+                      : 'border-(--border-custom) text-(--text-muted) hover:border-brand/50 hover:text-brand-dark',
+                  )}
+                >
+                  {allSelected && (
+                    <FontAwesomeIcon icon={faXmark} style={{ fontSize: 10 }} />
+                  )}
+                  {allSelected ? 'Limpar seleção' : 'Selecionar todas'}
+                </button>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               {steps.map((step) => {
@@ -186,7 +202,12 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
                 )
               })}
             </div>
-          </FieldLabel>
+            {errors.stepIds?.message && (
+              <span className="mt-0.5 block text-[0.6rem] text-red-500">
+                {errors.stepIds.message}
+              </span>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <FieldLabel label="Etapa inicial" error={errors.startingStepId?.message}>
