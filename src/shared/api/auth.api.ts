@@ -138,6 +138,10 @@ export function confirmMfaFactor(input: {
   return apiRequest('/auth/mfa/enroll/confirm', { method: 'POST', body: input })
 }
 
+export function regenerateRecoveryCodes(): Promise<{ recoveryCodes: string[] }> {
+  return apiRequest('/auth/mfa/recovery-codes', { method: 'POST', body: {} })
+}
+
 export function revokeMfaFactor(credentialId: string): Promise<void> {
   return apiRequest<void>(`/auth/mfa/factors/${credentialId}`, {
     method: 'DELETE',

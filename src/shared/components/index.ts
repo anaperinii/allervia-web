@@ -13,6 +13,8 @@ export { Switch } from './forms/Switch'
 export { ToggleCard } from './forms/ToggleCard'
 export { VerificationCodeInput } from './forms/VerificationCodeInput'
 
+export { QrCodeImage } from './QrCodeImage'
+
 export { CancelWizardModal } from './modals/CancelWizardModal'
 export { ConfirmDiscardModal } from './modals/ConfirmDiscardModal'
 export { Modal } from './modals/Modal'
