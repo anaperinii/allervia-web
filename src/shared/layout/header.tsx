@@ -105,10 +105,10 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
       >
         <Link
           to="/"
-          className="relative flex items-center gap-2.5 no-underline"
+          className="relative flex items-center gap-1.5 no-underline"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <img src={markSrc} alt="" className="h-8 w-8 object-contain" />
+          <img src={markSrc} alt="" className="h-7 w-7 object-contain" />
           <AllerviaWordmark className="text-xl" style={{ color: brandColor }} />
         </Link>
 

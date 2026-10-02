@@ -2,7 +2,6 @@ import { Link, useLocation } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { cn } from '@/shared/lib/cn'
 import allerviaMark from '@/assets/allervia-mark-light.png'
-import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { useSidebarStore } from '@/shared/layout/useSidebarStore'
 import { SidebarProfile } from '@/shared/layout/SidebarProfile'
@@ -127,9 +126,6 @@ export function Sidebar() {
         )}
       >
         <img src={allerviaMark} alt="Allervia" className="h-8 w-8 shrink-0 object-contain" />
-        {!isCollapsed && (
-          <AllerviaWordmark className="absolute left-1/2 -translate-x-[62%] text-lg" style={{ color: '#12333a' }} />
-        )}
       </Link>
 
       <div

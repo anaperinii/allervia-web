@@ -1,68 +1,56 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource/manrope/latin-200.css";
-@import "@fontsource/manrope/latin-300.css";
-@import "@fontsource/manrope/latin-400.css";
-@import "@fontsource/manrope/latin-500.css";
-@import "@fontsource/manrope/latin-600.css";
-@import "@fontsource/manrope/latin-700.css";
-@import "@fontsource/manrope/latin-800.css";
 
 @font-face {
-  font-family: "InterNumerals";
+  font-family: "Aspekta";
   font-style: normal;
   font-display: swap;
   font-weight: 200;
-  src: url("@fontsource/inter/files/inter-latin-200-normal.woff2") format("woff2");
-  unicode-range: U+0030-0039;
+  src: url("./assets/fonts/aspekta-latin-200.woff2") format("woff2");
 }
 @font-face {
-  font-family: "InterNumerals";
+  font-family: "Aspekta";
   font-style: normal;
   font-display: swap;
   font-weight: 300;
-  src: url("@fontsource/inter/files/inter-latin-300-normal.woff2") format("woff2");
-  unicode-range: U+0030-0039;
+  src: url("./assets/fonts/aspekta-latin-300.woff2") format("woff2");
 }
 @font-face {
-  font-family: "InterNumerals";
+  font-family: "Aspekta";
   font-style: normal;
   font-display: swap;
   font-weight: 400;
-  src: url("@fontsource/inter/files/inter-latin-400-normal.woff2") format("woff2");
-  unicode-range: U+0030-0039;
+  src: url("./assets/fonts/aspekta-latin-400.woff2") format("woff2");
 }
 @font-face {
-  font-family: "InterNumerals";
+  font-family: "Aspekta";
   font-style: normal;
   font-display: swap;
   font-weight: 500;
-  src: url("@fontsource/inter/files/inter-latin-500-normal.woff2") format("woff2");
-  unicode-range: U+0030-0039;
+  src: url("./assets/fonts/aspekta-latin-500.woff2") format("woff2");
 }
+/* Os pesos altos usam cortes mais leves da Aspekta: a família pesa mais à vista
+   que a Manrope anterior, e o bold cheio ficava denso demais na interface. */
 @font-face {
-  font-family: "InterNumerals";
+  font-family: "Aspekta";
   font-style: normal;
   font-display: swap;
   font-weight: 600;
-  src: url("@fontsource/inter/files/inter-latin-600-normal.woff2") format("woff2");
-  unicode-range: U+0030-0039;
+  src: url("./assets/fonts/aspekta-latin-500.woff2") format("woff2");
 }
 @font-face {
-  font-family: "InterNumerals";
+  font-family: "Aspekta";
   font-style: normal;
   font-display: swap;
   font-weight: 700;
-  src: url("@fontsource/inter/files/inter-latin-700-normal.woff2") format("woff2");
-  unicode-range: U+0030-0039;
+  src: url("./assets/fonts/aspekta-latin-550.woff2") format("woff2");
 }
 @font-face {
-  font-family: "InterNumerals";
+  font-family: "Aspekta";
   font-style: normal;
   font-display: swap;
   font-weight: 800;
-  src: url("@fontsource/inter/files/inter-latin-800-normal.woff2") format("woff2");
-  unicode-range: U+0030-0039;
+  src: url("./assets/fonts/aspekta-latin-600.woff2") format("woff2");
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -94,8 +82,8 @@
   --color-allervia-ink-muted: #7FA6AC;
   --color-allervia-dot: #9BC1C4;
   --color-allervia-foot: #0a181b;
-  --font-family-sans: "InterNumerals", "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-family-heading: "InterNumerals", "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-family-sans: "Aspekta", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-family-heading: "Aspekta", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 @layer base {

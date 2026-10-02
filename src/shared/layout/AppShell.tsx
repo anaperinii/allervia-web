@@ -20,7 +20,6 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import allerviaMark from '@/assets/allervia-mark-light.png'
-import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { Button, Modal } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
 import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
@@ -162,7 +161,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               ) : (
                 <img src={allerviaMark} alt="Allervia" className="h-9 w-9 object-contain" />
               )}
-              <AllerviaWordmark className="ml-6 text-lg" style={{ color: SHOWCASE.ink }} />
             </Link>
           </div>
 

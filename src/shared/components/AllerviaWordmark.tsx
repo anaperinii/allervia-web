@@ -8,14 +8,8 @@ interface AllerviaWordmarkProps {
 
 export function AllerviaWordmark({ className, style }: AllerviaWordmarkProps) {
   return (
-    <span className={cn('font-semibold lowercase leading-none whitespace-nowrap tracking-[-0.005em]', className)} style={style}>
-      allervia
-      <sup
-        className="uppercase font-medium"
-        style={{ fontSize: '0.3em', marginLeft: '0.12em', verticalAlign: 'super', letterSpacing: '0.04em' }}
-      >
-        tm
-      </sup>
+    <span className={cn('font-bold leading-none whitespace-nowrap tracking-[-0.005em]', className)} style={style}>
+      Allervia
     </span>
   )
 }

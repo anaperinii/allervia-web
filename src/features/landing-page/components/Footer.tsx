@@ -31,8 +31,7 @@ export function Footer() {
           display: 'block',
           textAlign: 'center',
           fontSize: 'clamp(110px, 27vw, 520px)',
-          fontWeight: 600,
-          textTransform: 'lowercase',
+          fontWeight: 700,
           letterSpacing: '-0.005em',
           lineHeight: 0.8,
           whiteSpace: 'nowrap',
@@ -41,7 +40,7 @@ export function Footer() {
           opacity: isLight ? 0.05 : 0.035,
         }}
       >
-        allervia
+        Allervia
       </span>
 
       <div
@@ -57,9 +56,9 @@ export function Footer() {
             to="/"
             aria-label="Voltar para a página inicial"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="mb-4 flex w-fit items-center gap-2.5 no-underline"
+            className="mb-4 flex w-fit items-center gap-1.5 no-underline"
           >
-            <img src={markSrc} alt="" className="h-9 w-9 object-contain" />
+            <img src={markSrc} alt="" className="h-8 w-8 object-contain" />
             <AllerviaWordmark className="text-2xl" style={{ color: 'var(--ll-ink)' }} />
           </Link>
           <p className="text-[0.875rem] leading-[1.7] max-w-72" style={{ color: 'var(--ll-ink-muted)' }}>
