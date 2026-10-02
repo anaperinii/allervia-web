@@ -2,7 +2,6 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, RouterProvider } from '@tanstack/react-router'
 import { afterEach, expect, it, vi } from 'vitest'
 import { TrialPage } from '@/features/auth/trial-page'
-import { LandingThemeProvider } from '@/features/landing-page/theme-context'
 import { trialSchema } from '@/features/auth/schemas/trial'
 
 vi.mock('@/shared/components/Aurora', () => ({ Aurora: () => null }))
@@ -13,7 +12,7 @@ async function page() {
   const trial = createRoute({ getParentRoute: () => root, path: '/trial', component: TrialPage })
   const router = createRouter({ routeTree: root.addChildren([trial]), history: createMemoryHistory({ initialEntries: ['/trial'] }) })
   await router.load()
-  render(<LandingThemeProvider><RouterProvider router={router} /></LandingThemeProvider>)
+  render(<RouterProvider router={router} />)
   await screen.findByRole('button', { name: 'Solicitar demonstração' })
 }
 

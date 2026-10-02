@@ -1,5 +1,4 @@
 import { SPLIT_FEATURES } from '@/features/landing-page/constants/split-features'
-import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
 import { Card, CardSwap } from '@/shared/components/CardSwap'
 import { useState } from 'react'
 import { Reveal } from './Reveal'
@@ -7,33 +6,27 @@ import { Reveal } from './Reveal'
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-const CARD_TONES_LIGHT = ['155,193,196', '108,158,165', '37,126,140', '20,74,86']
-const CARD_TONES_DARK = ['155,193,196', '108,158,165', '74,163,175', '96,168,178']
+const CARD_TONES = ['155,193,196', '108,158,165', '37,126,140', '20,74,86']
 
 const THUMB_ANGLES = ['120% 90% at 22% 92%', '110% 95% at 78% 88%', '120% 90% at 50% 100%', '115% 95% at 12% 78%']
 
-export function SplitSection() {
-  const { theme } = useLandingTheme()
-  const darkTheme = theme === 'dark'
-  const [active, setActive] = useState(0)
-  const tones = darkTheme ? CARD_TONES_DARK : CARD_TONES_LIGHT
-  const next = () => setActive((i) => (i + 1) % SPLIT_FEATURES.length)
+const GLOW_ALPHA = [0.5, 0.2]
+const PLATE_MID = 'rgba(219,231,232,0.94)'
+const PLATE_END = '#f4f8f8'
+const CARD_INK = '#0E2E34'
+const CARD_INK_MUTED = 'rgba(14,46,52,0.75)'
+const CARD_SCRIM =
+  'linear-gradient(to top, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.34) 55%, rgba(255,255,255,0) 100%)'
+const BADGE_BG = '#0E2E34'
+const BADGE_INK = '#e9f2f1'
+const BADGE_BD = 'rgba(233,242,241,0.20)'
+const DOT_IDLE_BD = 'rgba(37,126,140,0.5)'
+const DOT_ACTIVE_SHADOW =
+  '0 2px 12px rgba(108,158,165,0.3), 0 0 0 1.5px rgba(37,126,140,0.35)'
 
-  const glowAlpha = darkTheme ? [0.85, 0.35] : [0.5, 0.2]
-  const plateMid = darkTheme ? 'rgba(15,58,66,0.92)' : 'rgba(219,231,232,0.94)'
-  const plateEnd = darkTheme ? '#08191d' : '#f4f8f8'
-  const cardInk = darkTheme ? '#e9f2f1' : '#0E2E34'
-  const cardInkMuted = darkTheme ? 'rgba(233,242,241,0.8)' : 'rgba(14,46,52,0.75)'
-  const cardScrim = darkTheme
-    ? 'linear-gradient(to top, rgba(6,20,23,0.62) 0%, rgba(6,20,23,0.28) 55%, rgba(6,20,23,0) 100%)'
-    : 'linear-gradient(to top, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.34) 55%, rgba(255,255,255,0) 100%)'
-  const badgeBg = darkTheme ? '#e9f2f1' : '#0E2E34'
-  const badgeInk = darkTheme ? '#0E2E34' : '#e9f2f1'
-  const badgeBd = darkTheme ? 'rgba(14,46,52,0.18)' : 'rgba(233,242,241,0.20)'
-  const dotIdleBd = darkTheme ? 'var(--ll-border)' : 'rgba(37,126,140,0.5)'
-  const dotActiveShadow = darkTheme
-    ? '0 2px 12px rgba(108,158,165,0.3)'
-    : '0 2px 12px rgba(108,158,165,0.3), 0 0 0 1.5px rgba(37,126,140,0.35)'
+export function SplitSection() {
+  const [active, setActive] = useState(0)
+  const next = () => setActive((i) => (i + 1) % SPLIT_FEATURES.length)
 
   return (
     <section
@@ -90,14 +83,14 @@ export function SplitSection() {
                               width: '13px',
                               background:
                                 'linear-gradient(to bottom right, var(--color-brand), var(--color-brand-dark))',
-                              boxShadow: dotActiveShadow,
+                              boxShadow: DOT_ACTIVE_SHADOW,
                             }
                           : {
                               height: '7px',
                               width: '7px',
                               background:
                                 'linear-gradient(var(--ll-surface), var(--ll-surface)), var(--ll-bg)',
-                              border: `1px solid ${dotIdleBd}`,
+                              border: `1px solid ${DOT_IDLE_BD}`,
                             }
                       }
                     />
@@ -136,14 +129,14 @@ export function SplitSection() {
             className="mx-auto"
           >
             {SPLIT_FEATURES.map((feature, index) => {
-              const tone = tones[index] ?? tones[0]
+              const tone = CARD_TONES[index] ?? CARD_TONES[0]
               const angle = THUMB_ANGLES[index] ?? THUMB_ANGLES[0]
               return (
                 <Card
                   key={feature.title}
                   className="flex cursor-pointer flex-col justify-end p-8"
                   style={{
-                    background: `radial-gradient(${angle}, rgba(${tone},${glowAlpha[0]}) 0%, rgba(${tone},${glowAlpha[1]}) 38%, ${plateMid} 78%, ${plateEnd} 100%)`,
+                    background: `radial-gradient(${angle}, rgba(${tone},${GLOW_ALPHA[0]}) 0%, rgba(${tone},${GLOW_ALPHA[1]}) 38%, ${PLATE_MID} 78%, ${PLATE_END} 100%)`,
                     border: '1px solid var(--ll-border)',
                   }}
                   >
@@ -153,7 +146,7 @@ export function SplitSection() {
                     style={{
                       backdropFilter: 'blur(14px)',
                       WebkitBackdropFilter: 'blur(14px)',
-                      background: cardScrim,
+                      background: CARD_SCRIM,
                       maskImage: 'linear-gradient(to top, #000 0%, #000 45%, transparent 100%)',
                       WebkitMaskImage: 'linear-gradient(to top, #000 0%, #000 45%, transparent 100%)',
                     }}
@@ -161,14 +154,14 @@ export function SplitSection() {
                   <div className="relative z-10">
                     <span
                       className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[0.78rem] font-semibold tabular-nums"
-                      style={{ background: badgeBg, border: `1px solid ${badgeBd}`, color: badgeInk }}
+                      style={{ background: BADGE_BG, border: `1px solid ${BADGE_BD}`, color: BADGE_INK }}
                     >
                       {String(index + 1).padStart(2, '0')}
                     </span>
-                    <h4 className="mt-3 text-[1.35rem] font-medium tracking-tight" style={{ color: cardInk }}>
+                    <h4 className="mt-3 text-[1.35rem] font-medium tracking-tight" style={{ color: CARD_INK }}>
                       {feature.title}
                     </h4>
-                    <p className="mt-2 text-[0.92rem] leading-[1.6]" style={{ color: cardInkMuted }}>
+                    <p className="mt-2 text-[0.92rem] leading-[1.6]" style={{ color: CARD_INK_MUTED }}>
                       {feature.description}
                     </p>
                   </div>

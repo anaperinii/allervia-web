@@ -1,6 +1,4 @@
 import { AUTH_FIELD_CLASSES, AUTH_THEMES, authThemeVars } from '@/features/auth/constants/auth-theme'
-import { ThemeSwitch } from '@/features/landing-page/components/ThemeSwitch'
-import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { cn } from '@/shared/lib/cn'
 import { Link } from '@tanstack/react-router'
@@ -15,9 +13,7 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({ children, animate = true }: AuthLayoutProps) {
-  const { theme } = useLandingTheme()
-  const t = theme === 'dark' ? AUTH_THEMES.dark : AUTH_THEMES.light
-
+  const t = AUTH_THEMES.light
   const vars = authThemeVars(t)
 
   const formPanel = (
@@ -25,17 +21,15 @@ export function AuthLayout({ children, animate = true }: AuthLayoutProps) {
         className="flex flex-col min-h-screen px-6 py-10 sm:px-14 lg:px-20 transition-colors duration-300"
         style={{ background: 'var(--card)' }}
       >
-        <div className={cn(animate && 'auth-brand', 'flex items-center justify-between gap-5')}>
+        <div className={cn(animate && 'auth-brand', 'flex items-center gap-5')}>
           <Link
             to="/"
             aria-label="Voltar para a página inicial"
-            className="flex items-center gap-3 no-underline"
+            className="flex items-center gap-1.5 no-underline"
           >
             <img src={t.mark} alt="" className="h-7 w-auto object-contain" />
             <AllerviaWordmark className="text-xl" style={{ color: 'var(--ink)' }} />
           </Link>
-
-          <ThemeSwitch />
         </div>
 
         <div className="flex-1 flex flex-col justify-center py-10">

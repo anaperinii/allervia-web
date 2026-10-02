@@ -9,7 +9,6 @@ import {
 } from '@tanstack/react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { RegisterPage } from '@/features/auth/register-page'
-import { LandingThemeProvider } from '@/features/landing-page/theme-context'
 import { withSession } from '../helpers/session'
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -47,9 +46,7 @@ async function renderRegister(token?: string) {
   await router.load()
   render(
     withSession(
-      <LandingThemeProvider>
-        <RouterProvider router={router} />
-      </LandingThemeProvider>,
+      <RouterProvider router={router} />,
       { status: 'anonymous', account: null, session: null },
     ),
   )

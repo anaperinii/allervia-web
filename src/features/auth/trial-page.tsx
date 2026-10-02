@@ -1,8 +1,6 @@
 import { AUTH_FIELD_CLASSES, AUTH_THEMES, authThemeVars } from '@/features/auth/constants/auth-theme'
 import { trialSchema, type TrialForm } from '@/features/auth/schemas/trial'
 import { HERO_PLATE } from '@/features/landing-page/components/HeroSection'
-import { ThemeSwitch } from '@/features/landing-page/components/ThemeSwitch'
-import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
 import { Button, FieldLabel, Modal, Select, TextInput } from '@/shared/components'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { Aurora } from '@/shared/components/Aurora'
@@ -48,9 +46,7 @@ export function TrialPage() {
   const pending = useRef<{ payload: string; requestId: string } | null>(null)
   const submitting = useRef(false)
   const router = useRouter()
-  const { theme } = useLandingTheme()
-  const darkTheme = theme === 'dark'
-  const t = darkTheme ? AUTH_THEMES.dark : AUTH_THEMES.light
+  const t = AUTH_THEMES.light
 
   const goBack = () => {
     if (router.history.canGoBack()) router.history.back()
@@ -149,17 +145,15 @@ export function TrialPage() {
 
         <div className="relative z-10 h-full min-h-[calc(100vh-1.5rem)] lg:min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,42rem)] items-stretch overflow-hidden rounded-3xl">
           <div className="flex flex-col px-6 py-6 sm:px-10 lg:pl-14 lg:pr-10">
-            <div className="auth-brand flex items-center justify-between gap-5">
+            <div className="auth-brand flex items-center gap-5">
               <Link
                 to="/"
                 aria-label="Voltar para a página inicial"
-                className="flex items-center gap-3 no-underline"
+                className="flex items-center gap-1.5 no-underline"
                 >
                 <img src={AUTH_THEMES.light.mark} alt="" className="h-7 w-auto object-contain" />
                 <AllerviaWordmark className="text-xl" style={{ color: '#0E2E34' }} />
               </Link>
-
-              <ThemeSwitch />
             </div>
 
             <div className="auth-art-copy flex-1 flex flex-col justify-end max-w-2xl pt-8 pb-[4vh]">

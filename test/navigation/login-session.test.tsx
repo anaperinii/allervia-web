@@ -9,7 +9,6 @@ import {
 } from '@tanstack/react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LoginPage } from '@/features/auth/login-page'
-import { LandingThemeProvider } from '@/features/landing-page/theme-context'
 import { setCsrfToken } from '@/shared/api/client'
 import { withSession } from '../helpers/session'
 
@@ -51,9 +50,7 @@ async function renderLogin(adopt = vi.fn().mockResolvedValue(undefined)) {
 
   render(
     withSession(
-      <LandingThemeProvider>
-        <RouterProvider router={router} />
-      </LandingThemeProvider>,
+      <RouterProvider router={router} />,
       { status: 'anonymous', account: null, session: null, adopt },
     ),
   )

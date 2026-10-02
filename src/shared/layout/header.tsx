@@ -1,7 +1,4 @@
-import allerviaMarkWhite from '@/assets/allervia-mark-dark.png'
-import allerviaMarkBlack from '@/assets/allervia-mark-light.png'
-import { ThemeSwitch } from '@/features/landing-page/components/ThemeSwitch'
-import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
+import allerviaMark from '@/assets/allervia-mark-light.png'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { cn } from '@/shared/lib/cn'
 import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons'
@@ -23,7 +20,6 @@ interface HeaderProps {
 
 export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
   const showNavLinks = !isAuthPage
-  const showThemeSwitch = hasHero
   const [pastHero, setPastHero] = useState(() => {
     if (typeof window === 'undefined') return false
     return window.scrollY > window.innerHeight - 80
@@ -39,13 +35,9 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const { theme } = useLandingTheme()
   const bareBar = hasHero && !showNavLinks
   const heroPill = hasHero && showNavLinks
   const overHeroTop = heroPill && !pastHero
-  const isLightBrand = !overHeroTop && theme === 'light'
-  const onLightPlate = overHeroTop || isLightBrand
-  const markSrc = onLightPlate ? allerviaMarkBlack : allerviaMarkWhite
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -108,7 +100,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
           className="relative flex items-center gap-1.5 no-underline"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <img src={markSrc} alt="" className="h-7 w-7 object-contain" />
+          <img src={allerviaMark} alt="" className="h-7 w-7 object-contain" />
           <AllerviaWordmark className="text-xl" style={{ color: brandColor }} />
         </Link>
 
@@ -157,9 +149,6 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
           >
             Começar agora
           </Link>
-          {showThemeSwitch && (
-            <ThemeSwitch overHero={onDarkPlate} scheme={overHeroTop ? 'dark' : 'auto'} />
-          )}
         </div>
 
         <button
@@ -228,11 +217,6 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
             >
               Começar agora
             </Link>
-            {showThemeSwitch && (
-              <div className="flex justify-center pt-2">
-                <ThemeSwitch />
-              </div>
-            )}
           </div>
         </div>
       </div>

@@ -1,5 +1,3 @@
-import { LandingThemeProvider } from '@/features/landing-page/theme-context'
-import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
 import { ToastViewport } from '@/shared/components'
 import { AppShell } from '@/shared/layout/AppShell'
 import { Header } from '@/shared/layout/header'
@@ -37,10 +35,9 @@ interface PublicShellProps {
 }
 
 function PublicShell({ hideHeader, isAuthRoute, hasHero, pathname }: PublicShellProps) {
-  const { theme } = useLandingTheme()
   const skipTransition = noTransitionRoutes.includes(pathname)
   return (
-    <div data-landing-theme={theme} className="min-h-screen" style={{ background: 'var(--ll-bg)' }}>
+    <div data-landing-theme="" className="min-h-screen" style={{ background: 'var(--ll-bg)' }}>
       {!hideHeader && <Header isAuthPage={isAuthRoute} hasHero={hasHero} />}
       {skipTransition ? (
         <Outlet />
@@ -63,14 +60,12 @@ export function RootComponent() {
 
   if (isPublicRoute) {
     return (
-      <LandingThemeProvider>
-        <PublicShell
-          hideHeader={hideHeader}
-          isAuthRoute={isAuthRoute}
-          hasHero={hasHero}
-          pathname={location.pathname}
-        />
-      </LandingThemeProvider>
+      <PublicShell
+        hideHeader={hideHeader}
+        isAuthRoute={isAuthRoute}
+        hasHero={hasHero}
+        pathname={location.pathname}
+      />
     )
   }
 

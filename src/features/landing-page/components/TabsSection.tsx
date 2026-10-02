@@ -1,6 +1,5 @@
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
 import { PRODUCT_TABS, type TabId } from '@/features/landing-page/constants/tabs'
-import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
 import { Card, CardSwap } from '@/shared/components/CardSwap'
 import { cn } from '@/shared/lib/cn'
 import { Link } from '@tanstack/react-router'
@@ -19,13 +18,11 @@ export function TabsSection() {
   }
 
   const activeIndex = PRODUCT_TABS.findIndex((t) => t.id === activeTab)
-  const { theme } = useLandingTheme()
-  const darkTheme = theme === 'dark'
-  const panelBorder = darkTheme ? 'rgba(224,240,238,0.1)' : 'rgba(18,51,58,0.16)'
-  const panelBg = darkTheme ? '#101617' : '#eef2f3'
-  const panelTabBorder = darkTheme ? 'rgba(224,240,238,0.07)' : 'rgba(18,51,58,0.1)'
-  const tabActiveColor = darkTheme ? '#f2f6f6' : '#12333a'
-  const tabIdleColor = darkTheme ? '#5e7376' : '#8299a0'
+  const panelBorder = 'rgba(18,51,58,0.16)'
+  const panelBg = '#eef2f3'
+  const panelTabBorder = 'rgba(18,51,58,0.1)'
+  const tabActiveColor = '#12333a'
+  const tabIdleColor = '#8299a0'
 
   return (
     <section

@@ -1,7 +1,6 @@
 import featuresArt from '@/assets/features-art.jpg'
 import { SectionHeader } from '@/features/landing-page/components/SectionHeader'
 import { FEATURES } from '@/features/landing-page/constants/features'
-import { useLandingTheme } from '@/features/landing-page/useLandingTheme'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Reveal } from './Reveal'
 
@@ -15,23 +14,14 @@ const CARD_SPANS = [
   'lg:col-span-2',
 ]
 
-const ART_SCRIM = {
-  dark: 'linear-gradient(180deg, rgba(8,25,29,0.22) 0%, rgba(8,25,29,0.45) 100%)',
-  light: 'linear-gradient(180deg, rgba(255,255,255,0.52) 0%, rgba(255,255,255,0.30) 55%, rgba(108,158,165,0.14) 100%)',
-}
+const ART_SCRIM =
+  'linear-gradient(180deg, rgba(255,255,255,0.52) 0%, rgba(255,255,255,0.30) 55%, rgba(108,158,165,0.14) 100%)'
 
-const BADGE_TONES_DARK = ['#7fb0b6', '#6C9EA5', '#5b8f97', '#4d7e85', '#3f6f77', '#356169', '#2b6169']
-const BADGE_TONES_LIGHT = ['#6fa4ab', '#588a91', '#4a7f88', '#257E8C', '#22707c', '#1d6772', '#1a5c66']
+const BADGE_TONES = ['#6fa4ab', '#588a91', '#4a7f88', '#257E8C', '#22707c', '#1d6772', '#1a5c66']
 
-const ART_TINT = {
-  dark: '#0d3b42',
-  light: '#7fb2b6',
-}
+const ART_TINT = '#7fb2b6'
 
 export function FeaturesGrid() {
-  const { theme } = useLandingTheme()
-  const darkTheme = theme === 'dark'
-
   return (
     <section
       id="features"
@@ -81,25 +71,21 @@ export function FeaturesGrid() {
             loading="lazy"
             decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
-            style={{
-              filter: darkTheme
-                ? 'invert(1) hue-rotate(180deg) brightness(0.92)'
-                : 'saturate(0.8) brightness(1.06) contrast(0.96)',
-            }}
+            style={{ filter: 'saturate(0.8) brightness(1.06) contrast(0.96)' }}
           />
           <div
             aria-hidden="true"
             className="absolute inset-0"
             style={{
-              background: darkTheme ? ART_TINT.dark : ART_TINT.light,
+              background: ART_TINT,
               mixBlendMode: 'color',
-              opacity: darkTheme ? 0.9 : 0.4,
+              opacity: 0.4,
             }}
           />
           <div
             aria-hidden="true"
             className="absolute inset-0"
-            style={{ background: darkTheme ? ART_SCRIM.dark : ART_SCRIM.light }}
+            style={{ background: ART_SCRIM }}
           />
         </Reveal>
 
@@ -119,7 +105,7 @@ export function FeaturesGrid() {
               <div
                 className="mb-5 flex h-12 w-12 items-center justify-center rounded-full"
                 style={{
-                  background: (darkTheme ? BADGE_TONES_DARK : BADGE_TONES_LIGHT)[index],
+                  background: BADGE_TONES[index],
                   color: '#ffffff',
                 }}
               >

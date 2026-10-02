@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, RouterProvider } from '@tanstack/react-router'
 import { expect, it } from 'vitest'
 import { LoginPage } from '@/features/auth/login-page'
-import { LandingThemeProvider } from '@/features/landing-page/theme-context'
 import { withSession } from '../helpers/session'
 
 it('uses a real memory router for the password recovery link', async () => {
@@ -14,7 +13,7 @@ it('uses a real memory router for the password recovery link', async () => {
   await router.load()
   render(
     withSession(
-      <LandingThemeProvider><RouterProvider router={router} /></LandingThemeProvider>,
+      <RouterProvider router={router} />,
       { status: 'anonymous', account: null, session: null },
     ),
   )
