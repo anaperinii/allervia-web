@@ -18,7 +18,7 @@ import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { toOffsetIso } from '@/shared/lib/dates'
-import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
+import { useCalendarConnection } from '@/features/settings/hooks/useCalendarConnection'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import { useCalendarNav } from '@/features/scheduling/hooks/useCalendarNav'
 import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolbar'
@@ -77,7 +77,7 @@ async function fetchSchedule(
 export function AppointmentsPage() {
   const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
-  const googleCalendarConnected = useSettingsStore((state) => state.googleCalendarConnected)
+  const { isConnected: googleCalendarConnected } = useCalendarConnection()
   const canNewAppointment = useHasPermission('new_appointment')
   const canReschedule = useHasPermission('edit_scheduled_dose')
   const navigate = useNavigate()

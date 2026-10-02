@@ -124,6 +124,7 @@ function stubApi() {
             id: 'appointment-1',
             organizationId: 'organization-1',
             patientId: 'patient-1',
+            professionalId: 'professional-1',
             doseId: null,
             title: 'Avaliação',
             startsAt: isoAt(1, 10),
@@ -135,6 +136,11 @@ function stubApi() {
             createdAt: isoAt(0, 9),
             updatedAt: isoAt(0, 9),
             patient: { id: 'patient-1', fullName: 'Paula Andrade', phoneNumber: '62911112222' },
+            professional: {
+              id: 'professional-1',
+              fullName: 'Dra. Karina Martins',
+              profession: 'PHYSICIAN',
+            },
             dose: null,
           },
           201,
@@ -146,6 +152,30 @@ function stubApi() {
     }
     if (url.includes('/immunotherapies/patients/')) {
       return Promise.resolve(jsonResponse([]))
+    }
+    if (url.includes('/professionals')) {
+      return Promise.resolve(
+        jsonResponse({
+          items: [
+            {
+              professionalId: 'professional-1',
+              userId: 'user-1',
+              fullName: 'Dra. Karina Martins',
+              email: 'karina@allervia.test',
+              phoneNumber: '62995571423',
+              profession: 'PHYSICIAN',
+              councilNumber: '24815',
+              councilUf: 'GO',
+              roles: ['PHYSICIAN'],
+              isActive: true,
+              createdAt: isoAt(-60, 9),
+            },
+          ],
+          page: 1,
+          pageSize: 100,
+          total: 1,
+        }),
+      )
     }
     if (url.includes('/patients')) {
       return Promise.resolve(
@@ -273,7 +303,7 @@ describe('agenda alimentada por doses persistidas', () => {
     await renderAt('/appointments', AppointmentsPage)
 
     await screen.findByText('Paula Andrade')
-    await user.click(screen.getByRole('button', { name: /novo compromisso/i }))
+    await user.click(screen.getByRole('button', { name: /novo agendamento/i }))
     expect(await screen.findByText('Novo compromisso')).toBeInTheDocument()
 
     const patientLabel = screen.getByText(/^paciente$/i, { selector: 'label' })
@@ -298,6 +328,7 @@ describe('agenda alimentada por doses persistidas', () => {
       expect(post).toBeDefined()
       const body = JSON.parse((post![1] as RequestInit).body as string)
       expect(body.patientId).toBe('patient-1')
+      expect(body.professionalId).toBe('professional-1')
       expect(body.startsAt).toMatch(/^2026-12-01T10:00:00[+-]\d{2}:\d{2}$/)
       expect(body.endsAt).toMatch(/^2026-12-01T10:30:00[+-]\d{2}:\d{2}$/)
       expect(body.doseId).toBeUndefined()

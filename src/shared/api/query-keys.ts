@@ -52,4 +52,8 @@ export const queryKeys = {
     ['clinical', organizationId, 'doses', 'schedule', filters] as const,
   clinicalMetrics: (organizationId: string, filters: Record<string, unknown>) =>
     ['clinical', organizationId, 'doses', 'metrics', filters] as const,
+
+  calendarConnection: () => ['integrations', 'google-calendar', 'me'] as const,
+  calendarConnections: (organizationId: string) =>
+    ['integrations', 'google-calendar', organizationId] as const,
 } as const

@@ -42,6 +42,8 @@ export type Permission =
   | 'view_protocols'
   | 'view_dashboard'
   | 'view_audit'
+  | 'view_calendar_connections'
+  | 'manage_calendar_connection'
 
 export const PERMISSION_CAPABILITIES: Record<Permission, string> = {
   adjust_protocol: 'protocols:manage',
@@ -59,6 +61,8 @@ export const PERMISSION_CAPABILITIES: Record<Permission, string> = {
   view_protocols: 'protocols:read',
   view_dashboard: 'immunotherapies:read',
   view_audit: 'auditLogs:read',
+  view_calendar_connections: 'calendarConnections:read',
+  manage_calendar_connection: 'calendarConnections:manage',
 }
 
 export const ROLE_LABELS: Record<UserRole, string> = {

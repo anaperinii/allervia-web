@@ -10,6 +10,7 @@ import {
 import type { Appointment } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
+import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
 import { toOffsetIso, todayStr, addMinutesToTime } from '@/shared/lib/dates'
 import { formatInstantDate } from '@/features/patient/adapters/clinical-presentation'
 
@@ -48,6 +49,7 @@ function NewAppointmentForm({
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [patientId, setPatientId] = useState('')
+  const [professionalId, setProfessionalId] = useState(account?.professional?.id ?? '')
   const [doseId, setDoseId] = useState('')
   const [title, setTitle] = useState('')
   const [date, setDate] = useState(todayStr())
@@ -67,6 +69,7 @@ function NewAppointmentForm({
       ),
     enabled: organizationId !== '',
   })
+  const professionals = useProfessionalDirectory()
   const therapiesQuery = useQuery({
     queryKey: [...queryKeys.patient(organizationId, patientId), 'therapies'],
     queryFn: ({ signal }) => listTherapiesForPatient(patientId, signal),
@@ -83,6 +86,7 @@ function NewAppointmentForm({
     mutationFn: () =>
       createAppointment({
         patientId,
+        professionalId,
         ...(doseId ? { doseId } : {}),
         ...(title.trim() ? { title: title.trim() } : {}),
         startsAt: toOffsetIso(date, startTime),
@@ -103,7 +107,12 @@ function NewAppointmentForm({
   })
 
   const canSubmit =
-    !!patientId && !!date && !!startTime && !!endTime && !mutation.isPending
+    !!patientId &&
+    !!professionalId &&
+    !!date &&
+    !!startTime &&
+    !!endTime &&
+    !mutation.isPending
 
   return (
     <Modal
@@ -135,6 +144,25 @@ function NewAppointmentForm({
           </Select>
         </FieldLabel>
       </div>
+      <FieldLabel
+        label="Profissional responsável"
+        required
+        hint="(dono da agenda do compromisso)"
+      >
+        <Select
+          value={professionalId}
+          onChange={(e) => setProfessionalId(e.target.value)}
+        >
+          <option value="" disabled>
+            {professionals.isLoading ? 'Carregando…' : 'Selecione o profissional'}
+          </option>
+          {professionals.members.map((member) => (
+            <option key={member.professionalId} value={member.professionalId}>
+              {member.fullName}
+            </option>
+          ))}
+        </Select>
+      </FieldLabel>
       {patientId && (
         <FieldLabel
           label="Previsão clínica vinculada"

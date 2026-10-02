@@ -245,6 +245,7 @@ export interface AppointmentsQuery {
   to: string
   status?: AppointmentStatus
   patientId?: string
+  professionalId?: string
   page?: number
   pageSize?: number
 }
@@ -258,6 +259,7 @@ export function listAppointments(
 
 export function createAppointment(body: {
   patientId: string
+  professionalId: string
   doseId?: string
   title?: string
   startsAt: string
@@ -273,6 +275,7 @@ export function updateAppointment(
     expectedRevision: number
     status?: AppointmentStatus
     statusReason?: string
+    professionalId?: string
     startsAt?: string
     endsAt?: string
     title?: string
