@@ -18,6 +18,7 @@ import {
   TextInput,
 } from '@/shared/components'
 import { MediaRow } from '@/features/settings/components/MediaRow'
+import { GoogleCalendarRow } from '@/features/settings/components/GoogleCalendarRow'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { AuditTrailPanel } from '@/features/settings/components/AuditTrailPanel'
 import { NotificationPreferencesPanel } from '@/features/settings/components/NotificationPreferencesPanel'
@@ -31,7 +32,7 @@ function UnavailableBadge() {
 }
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBell, faCalendar, faCheck, faDatabase, faLock, faPalette, faPencil, faPlus, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faBell, faCheck, faDatabase, faLock, faPalette, faPencil, faPlus, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 
 const FIXED_EVENT_IDS = ['subcutaneous', 'sublingual', 'missed']
 
@@ -289,14 +290,8 @@ export function AdvancedSettingsPage() {
                 <h2 className="text-xs font-bold text-(--text)">Agendamentos</h2>
               </div>
               <div className="p-4 space-y-4">
-                <div>
-                  <MediaRow
-                    className="mb-3"
-                    icon={<FontAwesomeIcon icon={faCalendar} style={{ fontSize: 14 }} />}
-                    title="Google Agenda"
-                    description="Sincronização exige OAuth com credenciais no servidor, vínculo de evento e reconciliação — capacidade bloqueada até o provedor ser configurado"
-                    trailing={<UnavailableBadge />}
-                  />
+                <div className="mb-3">
+                  <GoogleCalendarRow />
                 </div>
 
                 <div className="border-t border-(--border-custom)" />

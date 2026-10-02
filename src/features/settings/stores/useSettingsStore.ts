@@ -16,7 +16,6 @@ const DEFAULT_EVENT_COLORS: EventColor[] = [
 
 interface SettingsState {
 
-  googleCalendarConnected: boolean
   autoSync: boolean
 
   emailNotifications: boolean
@@ -31,7 +30,6 @@ interface SettingsState {
 
   autoBackup: boolean
 
-  setGoogleCalendarConnected: (value: boolean) => void
   setAutoSync: (value: boolean) => void
   setEmailNotifications: (value: boolean) => void
   setPushNotifications: (value: boolean) => void
@@ -44,7 +42,6 @@ interface SettingsState {
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
-  googleCalendarConnected: false,
   autoSync: true,
   emailNotifications: true,
   pushNotifications: false,
@@ -55,7 +52,6 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   eventColors: DEFAULT_EVENT_COLORS,
   autoBackup: true,
 
-  setGoogleCalendarConnected: (value) => set({ googleCalendarConnected: value }),
   setAutoSync: (value) => set({ autoSync: value }),
   setEmailNotifications: (value) => set({ emailNotifications: value }),
   setPushNotifications: (value) => set({ pushNotifications: value }),

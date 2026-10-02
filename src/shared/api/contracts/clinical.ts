@@ -1,3 +1,4 @@
+import type { Profession } from '@/shared/api/contracts/account'
 import type { Page } from '@/shared/api/contracts/team'
 import type {
   ProtocolPhase,
@@ -419,6 +420,7 @@ export interface Appointment {
   id: string
   organizationId: string
   patientId: string
+  professionalId: string | null
   doseId: string | null
   title: string | null
   startsAt: string
@@ -430,6 +432,7 @@ export interface Appointment {
   createdAt: string
   updatedAt: string
   patient: { id: string; fullName: string; phoneNumber: string }
+  professional: { id: string; fullName: string; profession: Profession } | null
   dose: { id: string; scheduledAt: string; status: DoseStatus } | null
 }
 

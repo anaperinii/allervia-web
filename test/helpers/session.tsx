@@ -65,6 +65,8 @@ export function buildAccountContext(
       'appointments:read',
       'appointments:manage',
       'protocols:manage',
+      'calendarConnections:read',
+      'calendarConnections:manage',
     ],
     security: { mfaEnabled: true, mfaRequired: true, sessionBased: true },
     ...overrides,
