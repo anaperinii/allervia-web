@@ -264,7 +264,7 @@ export function AppointmentsPage() {
         </p>
       )}
 
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-3xl border border-(--border-custom) bg-[#F6F8F8]">
+      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-[#F6F8F8]">
         <CalendarToolbar
           monthLabel={calendar.monthLabel}
           onPrev={calendar.goToPrev}

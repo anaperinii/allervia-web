@@ -182,7 +182,7 @@ export function AdvancedSettingsPage() {
   return (
     <SettingsLayout subtitle="Configurações Avançadas">
       <div className="flex flex-col gap-5">
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Notificações</h2>
               </div>
@@ -206,7 +206,7 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Sistema</h2>
               </div>
@@ -285,7 +285,7 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Agendamentos</h2>
               </div>
@@ -367,7 +367,7 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Tipos de Imunoterapia</h2>
               </div>
@@ -423,7 +423,7 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados e Backup</h2>
               </div>
@@ -438,7 +438,7 @@ export function AdvancedSettingsPage() {
         </section>
 
             {canViewAudit && (
-              <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+              <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
                 <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                   <h2 className="text-xs font-bold text-(--text)">Auditoria administrativa</h2>
                   <p className="text-[0.62rem] text-(--text-muted) mt-0.5">

@@ -1,4 +1,4 @@
-import { IconButton, Select } from '@/shared/components'
+import { IconButton } from '@/shared/components'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAnglesLeft, faAnglesRight, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
@@ -7,12 +7,10 @@ interface TablePaginationProps {
   currentPage: number
   totalPages: number
   totalItems?: number
-  itemsPerPage: number
   onPageChange: (page: number) => void
-  onItemsPerPageChange: (n: number) => void
 }
 
-export function TablePagination({ currentPage, totalPages, totalItems, itemsPerPage, onPageChange, onItemsPerPageChange }: TablePaginationProps) {
+export function TablePagination({ currentPage, totalPages, totalItems, onPageChange }: TablePaginationProps) {
   const controls = [
     { icon: faAnglesLeft, label: 'Primeira página', action: () => onPageChange(1), disabled: currentPage === 1 },
     { icon: faChevronLeft, label: 'Página anterior', action: () => onPageChange(currentPage - 1), disabled: currentPage === 1 },
@@ -24,21 +22,8 @@ export function TablePagination({ currentPage, totalPages, totalItems, itemsPerP
     <div className="border-t border-(--border-custom) px-4 py-2.5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-(--text-muted)">Registros por página</span>
-          <div className="w-24">
-            <Select
-              aria-label="Registros por página"
-              value={itemsPerPage}
-              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="h-8 text-xs"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-            </Select>
-          </div>
           {totalItems !== undefined && (
-            <span className="ml-3 text-xs text-(--text-muted)">
+            <span className="text-xs text-(--text-muted)">
               {totalItems} {totalItems === 1 ? 'registro' : 'registros'} no total
             </span>
           )}

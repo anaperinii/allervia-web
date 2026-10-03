@@ -142,7 +142,7 @@ interface CardProps {
 export function Card({ children, className, padded = true }: CardProps) {
   return (
     <section
-      className={cn('relative flex h-full flex-col overflow-hidden rounded-3xl', padded && 'p-5', className)}
+      className={cn('relative flex h-full flex-col overflow-hidden rounded-xl', padded && 'p-5', className)}
       style={{ background: SHOWCASE.card, border: `1px solid ${SHOWCASE.line}` }}
     >
       {children}

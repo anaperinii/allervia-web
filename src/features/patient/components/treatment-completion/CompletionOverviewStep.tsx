@@ -109,7 +109,7 @@ export function CompletionOverviewStep({
 
 function DetailsCard({ title, rows }: { title: string; rows: [string, string][] }) {
   return (
-    <div className="border border-(--border-custom) rounded-3xl bg-[#F6F8F8] overflow-hidden">
+    <div className="border border-(--border-custom) rounded-xl bg-[#F6F8F8] overflow-hidden">
       <div className="px-4 py-2.5 border-b border-(--border-custom) text-sm font-bold text-(--text)">
         {title}
       </div>

@@ -175,7 +175,7 @@ function RailLink({
         <span
           className={cn(
             'relative truncate whitespace-nowrap',
-            active ? 'font-semibold' : 'font-normal',
+            active ? 'font-bold' : 'font-normal',
             compact ? 'text-[0.74rem]' : 'text-[0.85rem]',
           )}
         >

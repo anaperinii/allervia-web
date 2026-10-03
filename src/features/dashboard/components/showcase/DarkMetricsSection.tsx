@@ -64,7 +64,7 @@ export function DarkChartCard({
 }) {
   return (
     <section
-      className={fullWidth ? 'col-span-3 rounded-3xl p-5' : 'rounded-3xl p-5'}
+      className={fullWidth ? 'col-span-3 rounded-xl p-5' : 'rounded-xl p-5'}
       style={{ background: '#F6F8F8', border: '1px solid #DDE6E6' }}
     >
       <header className="mb-4 flex items-start justify-between gap-3">
@@ -185,7 +185,7 @@ function Gauge({ value, max, glow }: { value: number; max: number; glow: string 
 function DarkTile({ metric, index }: { metric: DarkMetric; index: number }) {
   return (
     <article
-      className="relative flex flex-col justify-between overflow-hidden rounded-3xl p-5 backdrop-blur-md"
+      className="relative flex flex-col justify-between overflow-hidden rounded-xl p-5 backdrop-blur-md"
       style={{
         background: pillarPlate(index),
         border: `1px solid ${PILLAR_BORDER}`,

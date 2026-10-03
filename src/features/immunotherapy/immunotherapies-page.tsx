@@ -34,7 +34,7 @@ export function ImmunotherapiesPage() {
   const [typeFilter, setTypeFilter] = useState('all')
   const [modalityTab, setModalityTab] = useState<ModalityTab>('all')
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const itemsPerPage = 10
 
   const filters = {
     page: currentPage,
@@ -154,7 +154,7 @@ export function ImmunotherapiesPage() {
       )}
 
       <div
-        className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-3xl"
+        className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-xl"
         style={{ background: SHOWCASE.card, border: `1px solid ${SHOWCASE.line}` }}
       >
         <div className="flex-1 overflow-auto">
@@ -170,9 +170,7 @@ export function ImmunotherapiesPage() {
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
-          itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
-          onItemsPerPageChange={(size) => applyFilter(() => setItemsPerPage(size))}
         />
       </div>
     </div>

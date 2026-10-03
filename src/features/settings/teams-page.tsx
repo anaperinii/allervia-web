@@ -47,7 +47,7 @@ export function TeamsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const itemsPerPage = 10
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [confirmState, setConfirmState] = useState<TeamConfirmState | null>(null)
   const [rolesTarget, setRolesTarget] = useState<TeamMember | null>(null)
@@ -316,9 +316,7 @@ export function TeamsPage() {
           <TablePagination
             currentPage={currentPage}
             totalPages={totalPages}
-            itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
-            onItemsPerPageChange={(size) => applyFilter(() => setItemsPerPage(size))}
           />
         </div>
       ) : (

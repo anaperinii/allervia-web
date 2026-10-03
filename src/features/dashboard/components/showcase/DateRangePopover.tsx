@@ -47,7 +47,7 @@ export function DateRangePopover({ open, range, onRangeChange, onClose }: DateRa
       aria-label="Selecionar período"
       aria-hidden={!open}
       className={cn(
-        'absolute -left-1 top-full z-50 mt-2 origin-top-left overflow-hidden rounded-3xl p-4 transition-all duration-200 ease-out',
+        'absolute -left-1 top-full z-50 mt-2 origin-top-left overflow-hidden rounded-xl p-4 transition-all duration-200 ease-out',
         'shadow-[0_18px_48px_-20px_rgba(16,60,68,0.45)]',
         open ? 'opacity-100 scale-100 translate-y-0' : 'pointer-events-none opacity-0 scale-95 -translate-y-1',
       )}
@@ -57,11 +57,11 @@ export function DateRangePopover({ open, range, onRangeChange, onClose }: DateRa
         src={proArt}
         alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 h-full w-full scale-110 rounded-3xl object-cover blur-2xl"
+        className="pointer-events-none absolute inset-0 h-full w-full scale-110 rounded-xl object-cover blur-2xl"
       />
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 rounded-3xl"
+        className="pointer-events-none absolute inset-0 rounded-xl"
         style={{ background: 'rgba(255,255,255,0.62)' }}
       />
 

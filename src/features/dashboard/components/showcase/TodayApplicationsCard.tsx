@@ -23,7 +23,7 @@ export function TodayApplicationsCard({
 }) {
   return (
     <section
-      className="relative flex h-full flex-col overflow-hidden rounded-3xl"
+      className="relative flex h-full flex-col overflow-hidden rounded-xl"
       style={{ background: SHOWCASE.card, border: `1px solid ${SHOWCASE.line}` }}
     >
       <img

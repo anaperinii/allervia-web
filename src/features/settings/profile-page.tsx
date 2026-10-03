@@ -153,7 +153,7 @@ export function ProfilePage() {
             {/* Coluna esquerda: dados pessoais e, abaixo, acesso e papéis —
                 que estica só até a altura dos dados profissionais ao lado. */}
             <div className="flex flex-col gap-6">
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Pessoais</h2>
               </div>
@@ -175,7 +175,7 @@ export function ProfilePage() {
               </div>
             </section>
 
-            <section className="flex flex-1 flex-col overflow-hidden rounded-3xl border border-(--border-custom) bg-[#F6F8F8]">
+            <section className="flex flex-1 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-[#F6F8F8]">
               <div className="flex items-center gap-2 border-b border-(--border-custom) bg-gray-50/50 px-4 py-2.5">
                 <FontAwesomeIcon icon={faUserGear} className="text-(--text-muted)" style={{ fontSize: 13 }} />
                 <h2 className="text-xs font-bold text-(--text)">Acesso e papéis</h2>
@@ -206,7 +206,7 @@ export function ProfilePage() {
             </section>
             </div>
 
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Profissionais</h2>
               </div>

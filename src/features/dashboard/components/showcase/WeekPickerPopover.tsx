@@ -99,7 +99,7 @@ export function WeekPicker({
             ref={panelRef}
             role="dialog"
             aria-label={ariaLabel}
-            className="fixed z-[60] overflow-hidden rounded-3xl p-4 shadow-[0_18px_48px_-20px_rgba(16,60,68,0.45)]"
+            className="fixed z-[60] overflow-hidden rounded-xl p-4 shadow-[0_18px_48px_-20px_rgba(16,60,68,0.45)]"
             style={{
               top: coords.top,
               left: coords.left,
@@ -112,11 +112,11 @@ export function WeekPicker({
               src={proArt}
               alt=""
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 h-full w-full scale-110 rounded-3xl object-cover blur-2xl"
+              className="pointer-events-none absolute inset-0 h-full w-full scale-110 rounded-xl object-cover blur-2xl"
             />
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 rounded-3xl"
+              className="pointer-events-none absolute inset-0 rounded-xl"
               style={{ background: 'rgba(255,255,255,0.62)' }}
             />
 
