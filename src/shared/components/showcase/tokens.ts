@@ -1,8 +1,8 @@
 export const SHOWCASE = {
   canvas: '#EBEEEE',
-  card: '#F6F8F8',
-  cardInner: '#EDF1F1',
-  cardInnerStrong: '#E3E9E9',
+  card: '#EFF3F3',
+  cardInner: '#E6ECEC',
+  cardInnerStrong: '#DCE4E4',
   ink: '#12333a',
   inkSoft: '#4A6469',
   muted: '#8CA1A6',

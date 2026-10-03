@@ -80,7 +80,7 @@ export function CardFilters({
       <div
         ref={inlineRef}
         className={cn(
-          'flex items-center gap-1.5 rounded-full transition-all duration-500 ease-out',
+          'flex items-center gap-1.5 rounded-lg transition-all duration-500 ease-out',
           open ? 'py-0.5 pl-2 pr-0.5' : 'p-0',
         )}
         style={{

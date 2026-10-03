@@ -367,7 +367,7 @@ export function PatientChartPage() {
                       })
                     }
                     className={cn(
-                      'rounded-full border px-3 py-1 text-[0.7rem] font-semibold transition-colors cursor-pointer',
+                      'rounded-lg border px-3 py-1 text-[0.7rem] font-semibold transition-colors cursor-pointer',
                       active
                         ? 'border-brand bg-brand-50 text-brand-dark'
                         : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50',

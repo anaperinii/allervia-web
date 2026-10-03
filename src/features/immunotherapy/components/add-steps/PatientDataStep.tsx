@@ -198,7 +198,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
                 type="button"
                 onClick={clearPatient}
                 aria-label="Limpar seleção e desvincular o paciente"
-                className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1.5 rounded-full border border-red-300 bg-red-50 px-2.5 py-1 text-[0.65rem] font-semibold text-red-700 transition-colors hover:border-red-400 hover:bg-red-100 cursor-pointer"
+                className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-2.5 py-1 text-[0.65rem] font-semibold text-red-700 transition-colors hover:border-red-400 hover:bg-red-100 cursor-pointer"
               >
                 <FontAwesomeIcon icon={faXmark} style={{ fontSize: 10 }} />
                 Limpar seleção

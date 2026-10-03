@@ -367,7 +367,7 @@ export function DashboardPage() {
 
       <div className="relative z-40 flex items-center gap-2 mb-5">
         <div
-          className="relative z-50 flex items-center gap-2 rounded-full p-1 backdrop-blur-md"
+          className="relative z-50 flex items-center gap-2 rounded-lg p-1 backdrop-blur-md"
           style={{ background: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.65)' }}
         >
           <span className="relative inline-flex" {...{ [DATE_RANGE_ANCHOR_ATTR]: '' }}>
@@ -386,7 +386,7 @@ export function DashboardPage() {
             />
           </span>
           <span
-            className="inline-flex h-9 items-center rounded-full px-4 text-[0.78rem] font-medium whitespace-nowrap"
+            className="inline-flex h-9 items-center rounded-lg px-4 text-[0.78rem] font-medium whitespace-nowrap"
             style={{ background: '#FFFFFF', border: '1px solid #DDE6E6', color: '#4A6469' }}
           >
             {dateRange?.from ? formatRange(dateRange) : 'Últimos 30 dias'}

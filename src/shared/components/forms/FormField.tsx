@@ -42,7 +42,7 @@ export function TextInput({ invalid, className, ...rest }: TextInputProps) {
     <input
       {...rest}
       aria-invalid={invalid || undefined}
-      className={cn(FIELD_BASE, 'h-9 rounded-full', invalid ? FIELD_INVALID : FIELD_VALID, className)}
+      className={cn(FIELD_BASE, 'h-9 rounded-lg', invalid ? FIELD_INVALID : FIELD_VALID, className)}
     />
   )
 }
@@ -66,7 +66,7 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   children: ReactNode
 }
 const SELECT_BASE =
-  'w-full h-9 appearance-none cursor-pointer rounded-full border bg-white pl-4 pr-9 text-[0.78rem] font-medium text-[#4A6469] transition-all focus:outline-none focus:border-[#12333a]/40'
+  'w-full h-9 appearance-none cursor-pointer rounded-lg border bg-white pl-4 pr-9 text-[0.78rem] font-medium text-[#4A6469] transition-all focus:outline-none focus:border-[#12333a]/40'
 
 export function Select({ invalid, className, children, ...rest }: SelectProps) {
   return (

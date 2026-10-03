@@ -40,7 +40,7 @@ export function WizardStepsBreadcrumb({
               onClick={() => clickable && onSelect?.(i)}
               aria-current={active ? 'step' : undefined}
               className={cn(
-                'relative flex h-8 items-center gap-2 overflow-hidden rounded-full pl-4 pr-5 text-[0.72rem] font-medium whitespace-nowrap transition-all duration-300',
+                'relative flex h-8 items-center gap-2 overflow-hidden rounded-lg pl-4 pr-5 text-[0.72rem] font-medium whitespace-nowrap transition-all duration-300',
                 i > 0 && 'pl-7',
                 clickable ? 'cursor-pointer' : 'cursor-default',
               )}

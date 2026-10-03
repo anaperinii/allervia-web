@@ -29,8 +29,6 @@
   font-weight: 500;
   src: url("./assets/fonts/aspekta-latin-500.woff2") format("woff2");
 }
-/* Os pesos altos usam cortes mais leves da Aspekta: a família pesa mais à vista
-   que a Manrope anterior, e o bold cheio ficava denso demais na interface. */
 @font-face {
   font-family: "Aspekta";
   font-style: normal;
@@ -120,6 +118,15 @@
 }
 
 @layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .gradient-text {
     background: linear-gradient(135deg, var(--color-teal-600), var(--color-cyan-500));
     -webkit-background-clip: text;
@@ -222,6 +229,11 @@
 @keyframes slide-in {
   from { transform: translateX(-100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes sidebar-slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slide-up-fade {

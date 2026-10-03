@@ -189,7 +189,7 @@ export function ToastLabPage() {
             key={edge.label}
             type="button"
             onClick={edge.run}
-            className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-teal-400 hover:text-teal-700"
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-teal-400 hover:text-teal-700"
           >
             {edge.label}
           </button>

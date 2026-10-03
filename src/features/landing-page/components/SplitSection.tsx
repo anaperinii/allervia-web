@@ -102,7 +102,7 @@ export function SplitSection() {
               type="button"
               onClick={next}
               aria-label="Próximo pilar"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full cursor-pointer transition-colors duration-200"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg cursor-pointer transition-colors duration-200"
               style={{
                 border: '1.5px solid var(--ll-border-strong)',
                 background: 'transparent',

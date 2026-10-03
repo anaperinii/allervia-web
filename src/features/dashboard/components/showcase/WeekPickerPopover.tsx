@@ -74,7 +74,7 @@ export function WeekPicker({
         aria-label={ariaLabel}
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="flex h-8 shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full py-0 pl-1 pr-3.5 text-[0.7rem] font-medium"
+        className="flex h-8 shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg py-0 pl-1 pr-3.5 text-[0.7rem] font-medium"
         style={{
           background: range ? SHOWCASE.ink : SHOWCASE.white,
           border: range ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
@@ -147,7 +147,7 @@ export function WeekPicker({
                     onChange('all')
                     setOpen(false)
                   }}
-                  className="h-8 cursor-pointer rounded-full px-3.5 text-[0.7rem] font-medium"
+                  className="h-8 cursor-pointer rounded-lg px-3.5 text-[0.7rem] font-medium"
                   style={{ border: `1px solid ${SHOWCASE.line}`, color: SHOWCASE.inkSoft }}
                 >
                   Limpar

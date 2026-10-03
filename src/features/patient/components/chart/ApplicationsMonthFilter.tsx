@@ -26,7 +26,7 @@ export function ApplicationsMonthFilter({ months, activeKey, onChange }: Applica
           aria-label="Rolar meses para a esquerda"
           size="sm"
           onClick={() => scrollBy('left')}
-          className="border border-[#DDE6E6] shadow-sm rounded-full"
+          className="border border-[#DDE6E6] shadow-sm rounded-lg"
         >
           <FontAwesomeIcon icon={faChevronLeft} style={{ fontSize: 12 }} />
         </IconButton>
@@ -44,7 +44,7 @@ export function ApplicationsMonthFilter({ months, activeKey, onChange }: Applica
           aria-label="Rolar meses para a direita"
           size="sm"
           onClick={() => scrollBy('right')}
-          className="border border-[#DDE6E6] shadow-sm rounded-full"
+          className="border border-[#DDE6E6] shadow-sm rounded-lg"
         >
           <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />
         </IconButton>
@@ -60,7 +60,7 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'shrink-0 h-6.5 inline-flex items-center px-3 rounded-full text-[0.62rem] font-medium border transition-all cursor-pointer whitespace-nowrap',
+        'shrink-0 h-6.5 inline-flex items-center px-3 rounded-lg text-[0.62rem] font-medium border transition-all cursor-pointer whitespace-nowrap',
         active
           ? 'bg-[#12333a] text-white border-transparent'
           : 'bg-white text-[#4A6469] border-[#DDE6E6] hover:border-[#257E8C]/45 hover:text-[#257E8C]',

@@ -57,7 +57,7 @@ export function IconButton(props: IconButtonProps) {
   const { tone, variant, size = 'md', className, children, disabled, 'aria-label': ariaLabel } = props
   const resolved = resolveTone(variant, tone)
   const cls = cn(
-    'flex items-center justify-center rounded-full shrink-0 transition-all duration-200 cursor-pointer hover:scale-105',
+    'flex items-center justify-center rounded-lg shrink-0 transition-all duration-200 cursor-pointer hover:scale-105',
     SIZE_CLASS[size],
     TONE_CLASS[resolved],
     disabled && 'opacity-50 cursor-not-allowed pointer-events-none',

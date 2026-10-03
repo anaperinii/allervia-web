@@ -18,7 +18,7 @@ export function NotificationFilterBar({ activeTab, onTabChange, tabCounts }: Not
     <div
       role="tablist"
       aria-label="Categoria"
-      className="flex h-9 w-max items-stretch gap-0.5 rounded-full border border-[#DDE6E6] bg-white p-0.5"
+      className="flex h-9 w-max items-stretch gap-0.5 rounded-lg border border-[#DDE6E6] bg-white p-0.5"
     >
       {NOTIFICATION_TABS.map((tab) => {
         const active = activeTab === tab.key
@@ -29,7 +29,7 @@ export function NotificationFilterBar({ activeTab, onTabChange, tabCounts }: Not
             aria-selected={active}
             onClick={() => onTabChange(tab.key)}
             className={cn(
-              'rounded-full px-4 text-[0.7rem] font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer whitespace-nowrap',
+              'rounded-md px-4 text-[0.7rem] font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer whitespace-nowrap',
               active ? 'bg-[#12333a] text-white' : 'text-[#4A6469] hover:text-[#12333a]',
             )}
           >

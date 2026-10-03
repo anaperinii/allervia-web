@@ -87,7 +87,7 @@ export function DateRangePopover({ open, range, onRangeChange, onClose }: DateRa
           <button
             type="button"
             onClick={() => onRangeChange(undefined)}
-            className="h-8 rounded-full px-3.5 text-[0.7rem] font-medium cursor-pointer transition-colors"
+            className="h-8 rounded-lg px-3.5 text-[0.7rem] font-medium cursor-pointer transition-colors"
             style={{ border: `1px solid ${SHOWCASE.line}`, color: SHOWCASE.inkSoft }}
           >
             Limpar
@@ -95,7 +95,7 @@ export function DateRangePopover({ open, range, onRangeChange, onClose }: DateRa
           <button
             type="button"
             onClick={onClose}
-            className="h-8 rounded-full px-3.5 text-[0.7rem] font-medium cursor-pointer transition-colors"
+            className="h-8 rounded-lg px-3.5 text-[0.7rem] font-medium cursor-pointer transition-colors"
             style={{ background: SHOWCASE.ink, color: SHOWCASE.onAccent }}
           >
             Aplicar
