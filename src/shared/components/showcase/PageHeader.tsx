@@ -14,7 +14,7 @@ export function PageHeader({ breadcrumb, title, actions }: PageHeaderProps) {
   const hasBreadcrumb = Boolean(breadcrumb?.length)
 
   return (
-    <div className={cn('flex items-end justify-between gap-6 mb-7', !hasBreadcrumb && 'pt-7')}>
+    <div className={cn('flex items-end justify-between gap-6 mb-7', hasBreadcrumb ? 'pt-3' : 'pt-7')}>
       <div className="min-w-0">
         {breadcrumb && breadcrumb.length > 0 && (
           <div className="flex items-center gap-2 mb-0.5 text-[0.88rem] font-medium" style={{ color: SHOWCASE.muted }}>

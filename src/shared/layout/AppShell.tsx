@@ -5,7 +5,6 @@ import {
   faBell,
   faCalendarDays,
   faChartColumn,
-  faChevronDown,
   faCircleInfo,
   faCircleQuestion,
   faCreditCard,
@@ -31,14 +30,12 @@ import { useQuery } from '@tanstack/react-query'
 import { listNotifications } from '@/shared/api/notifications.api'
 import { hasPermission, useUserStore, type Permission } from '@/shared/stores/useUserStore'
 
-const RAIL_ACTIVE_BACKGROUND =
-  'linear-gradient(to right, rgba(37,126,140,0.46) 0%, rgba(37,126,140,0.20) 18%, rgba(37,126,140,0.08) 45%, rgba(37,126,140,0.04) 100%)'
-const RAIL_ACTIVE_INK = '#10454F'
-const RAIL_ACTIVE_MARKER = '#0C343C'
 const RAIL_ACTIVE_SOLID = 'linear-gradient(150deg, #257E8C, #12333a)'
 const RAIL_ACTIVE_SOLID_SHADOW = '0 6px 16px rgba(16,60,68,0.28)'
 
 const PAGE_BACKGROUND = '#F7FAFA'
+const CONTENT_EDGE = 'rgba(18,51,58,0.16)'
+const CONTENT_SHADOW = '-8px 0 20px -10px rgba(16,60,68,0.32)'
 
 const SIDEBAR_BACKGROUND = `linear-gradient(to top,
   #BCD6D8 0%,
@@ -49,9 +46,6 @@ const SIDEBAR_BACKGROUND = `linear-gradient(to top,
 const SIDEBAR_HOVER = 'rgba(37,126,140,0.10)'
 const SIDEBAR_TREE_LINE = 'rgba(18,51,58,0.28)'
 const SIDEBAR_SUBITEM_ACTIVE = 'rgba(37,126,140,0.16)'
-const LOGOUT_INK = '#B83A30'
-const LOGOUT_BACKGROUND = 'rgba(184,58,48,0.10)'
-const LOGOUT_BORDER = 'rgba(184,58,48,0.42)'
 
 interface RailItem {
   icon: IconDefinition
@@ -72,6 +66,12 @@ const RAIL: RailItem[] = [
   { icon: faChartColumn, path: '/dashboard', label: 'Painel de Métricas', match: ['/export-report'] },
   { icon: faBell, path: '/notifications', label: 'Notificações' },
 ]
+
+const SETTINGS_ITEM: RailItem = {
+  icon: faGear,
+  path: '/settings',
+  label: 'Configurações',
+}
 
 interface SettingsLink {
   icon: IconDefinition
@@ -107,13 +107,9 @@ function RailLink({
   subtle?: boolean
 }) {
   const size = compact ? 'h-7.5' : 'h-9'
-  const solidActive = collapsed && !subtle
-  const activeBackground = subtle
-    ? SIDEBAR_SUBITEM_ACTIVE
-    : solidActive
-      ? RAIL_ACTIVE_SOLID
-      : RAIL_ACTIVE_BACKGROUND
-  const activeColor = subtle ? SHOWCASE.accent : solidActive ? SHOWCASE.white : RAIL_ACTIVE_INK
+  const solidActive = !subtle
+  const activeBackground = subtle ? SIDEBAR_SUBITEM_ACTIVE : RAIL_ACTIVE_SOLID
+  const activeColor = subtle ? SHOWCASE.accent : SHOWCASE.white
   const idleColor = subtle && collapsed ? SHOWCASE.muted : SHOWCASE.inkSoft
   const [tip, setTip] = useState<{ top: number; left: number } | null>(null)
   return (
@@ -126,7 +122,7 @@ function RailLink({
         size,
         collapsed
           ? cn('justify-center rounded-lg', compact ? 'w-7.5' : 'w-9')
-          : 'w-full gap-2.5 rounded-lg px-2.5',
+          : 'w-full gap-3.5 rounded-lg px-2.5',
       )}
       style={{
         background: active ? activeBackground : 'transparent',
@@ -147,18 +143,11 @@ function RailLink({
         setTip(null)
       }}
     >
-      {active && !subtle && !collapsed && (
-        <span
-          aria-hidden="true"
-          className="absolute -left-0.5 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full"
-          style={{ background: RAIL_ACTIVE_MARKER }}
-        />
-      )}
       <FontAwesomeIcon icon={item.icon} className="shrink-0" style={{ fontSize: compact ? 12 : 14 }} />
       {!collapsed && (
         <span
           className={cn(
-            'truncate font-normal whitespace-nowrap',
+            'truncate font-normal whitespace-nowrap tracking-[0.015em]',
             compact ? 'text-[0.74rem]' : 'text-[0.85rem]',
           )}
         >
@@ -206,7 +195,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const unreadCount = unreadQuery.data?.unread ?? 0
   const userName = useUserStore((s) => s.current?.name ?? '')
   const [showLogout, setShowLogout] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const collapsed = useSidebarStore((s) => s.isCollapsed)
   const toggleSidebar = useSidebarStore((s) => s.toggle)
 
@@ -214,7 +202,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const visibleSettingsLinks = SETTINGS_LINKS.filter(
     (link) => !link.requires || hasPermission(capabilities, link.requires),
   )
-  const settingsActive = visibleSettingsLinks.some((link) => path === link.path)
+  const settingsActive =
+    path === SETTINGS_ITEM.path || visibleSettingsLinks.some((link) => path === link.path)
 
   const isActive = (item: RailItem) =>
     path === item.path || path.startsWith(item.path + '/') || (item.match?.some((m) => path.startsWith(m)) ?? false)
@@ -230,14 +219,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside
         className={cn(
           'relative z-50 flex h-screen shrink-0 flex-col py-5 transition-[width] duration-300 ease-out',
-          collapsed ? 'w-18 items-center px-3' : 'w-60 px-4',
+          collapsed ? 'w-18 items-center px-3' : 'w-54 px-4',
         )}
       >
         <div className={cn('flex items-center', collapsed ? 'flex-col gap-3' : 'justify-between gap-2')}>
-          <Link to="/immunotherapies" aria-label="Allervia" className="flex items-center gap-1.5 no-underline">
+          <Link to="/immunotherapies" aria-label="Allervia" className="flex items-center gap-3 no-underline">
             <img src={allerviaMark} alt="" className="h-7 w-7 shrink-0 object-contain" />
             {!collapsed && (
-              <AllerviaWordmark className="text-lg font-extrabold" style={{ color: SHOWCASE.ink }} />
+              <AllerviaWordmark className="text-lg font-semibold" style={{ color: SHOWCASE.ink }} />
             )}
           </Link>
           <button
@@ -275,135 +264,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
           ))}
 
-          <button
-            type="button"
-            onClick={() => setSettingsOpen((open) => !open)}
-            aria-label="Configurações"
-            aria-expanded={settingsOpen}
-            title="Configurações"
-            className={cn(
-              'group relative mt-1 flex h-9 shrink-0 cursor-pointer items-center transition-colors duration-200',
-              collapsed ? 'w-9 justify-center rounded-lg' : 'w-full gap-2.5 rounded-lg px-2.5',
-            )}
-            style={{
-              background: settingsActive
-                ? collapsed
-                  ? RAIL_ACTIVE_SOLID
-                  : RAIL_ACTIVE_BACKGROUND
-                : 'transparent',
-              backgroundClip: 'padding-box',
-              color: settingsActive
-                ? collapsed
-                  ? SHOWCASE.white
-                  : RAIL_ACTIVE_INK
-                : SHOWCASE.inkSoft,
-              border: 'none',
-              boxShadow: settingsActive && collapsed ? RAIL_ACTIVE_SOLID_SHADOW : undefined,
-            }}
-            onMouseEnter={(e) => {
-              if (!settingsActive) e.currentTarget.style.background = SIDEBAR_HOVER
-            }}
-            onMouseLeave={(e) => {
-              if (!settingsActive) e.currentTarget.style.background = 'transparent'
-            }}
-          >
-            {settingsActive && !collapsed && (
-              <span
-                aria-hidden="true"
-                className="absolute -left-0.5 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full"
-                style={{ background: RAIL_ACTIVE_MARKER }}
-              />
-            )}
-            <FontAwesomeIcon icon={faGear} className="shrink-0" style={{ fontSize: 14 }} />
-            {!collapsed && (
-              <>
-                <span className="truncate text-[0.85rem] font-normal whitespace-nowrap">Configurações</span>
-                <FontAwesomeIcon
-                  icon={faChevronDown}
-                  className="ml-auto shrink-0 transition-transform duration-300"
-                  style={{ fontSize: 10, transform: settingsOpen ? 'rotate(180deg)' : undefined }}
-                />
-              </>
-            )}
-            {collapsed && (
-              <span
-                className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50"
-                style={{ background: SHOWCASE.ink, color: '#eef3f4' }}
-              >
-                Configurações
-              </span>
-            )}
-          </button>
-
-          {!collapsed ? (
-            <div
-              className={cn(
-                'flex flex-col gap-1 overflow-hidden transition-all duration-300 ease-out',
-                settingsOpen ? 'mt-1 max-h-120 opacity-100' : 'max-h-0 opacity-0',
-              )}
-            >
-              <div className="relative ml-4 flex flex-col gap-1 pl-3">
-                <span
-                  aria-hidden="true"
-                  className="absolute left-0 top-0 bottom-0 w-px"
-                  style={{ background: SIDEBAR_TREE_LINE }}
-                />
-                {visibleSettingsLinks.map((link) => {
-                  const current = path === link.path
-                  return (
-                    <span key={link.path} className="relative block w-full">
-                      {current && (
-                        <span
-                          aria-hidden="true"
-                          className="absolute -left-3 top-0.5 bottom-0.5 w-0.5 rounded-full"
-                          style={{ background: SHOWCASE.accent }}
-                        />
-                      )}
-                      <RailLink
-                        item={link}
-                        active={current}
-                        collapsed={false}
-                        compact
-                        subtle
-                      />
-                    </span>
-                  )
-                })}
-              </div>
-            </div>
-          ) : (
-            settingsOpen && (
-              <div className="mt-1 flex flex-col items-center">
-                <span
-                  aria-hidden="true"
-                  className="h-3 w-px shrink-0"
-                  style={{
-                    background: SIDEBAR_TREE_LINE,
-                    animation: 'sidebar-slide-down 0.2s ease-out both',
-                  }}
-                />
-                <div className="no-scrollbar mt-1 flex max-h-56 flex-col items-center gap-1 overflow-y-auto">
-                  {visibleSettingsLinks.map((link, index) => (
-                    <span
-                      key={link.path}
-                      className="block shrink-0"
-                      style={{
-                        animation: 'sidebar-slide-down 0.26s ease-out both',
-                        animationDelay: `${60 + index * 35}ms`,
-                      }}
-                    >
-                      <RailLink
-                        item={link}
-                        active={path === link.path}
-                        collapsed
-                        subtle
-                      />
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )
-          )}
+          <span data-rail-item="" className={cn('mt-1 block', collapsed ? '' : 'w-full')}>
+            <RailLink
+              item={SETTINGS_ITEM}
+              active={settingsActive}
+              collapsed={collapsed}
+            />
+          </span>
         </nav>
 
         <div
@@ -432,9 +299,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={() => setShowLogout(true)}
               aria-label="Sair"
               title="Sair"
-              idleBackground={LOGOUT_BACKGROUND}
-              idleColor={LOGOUT_INK}
-              idleBorderColor={LOGOUT_BORDER}
+              idleBackground="transparent"
+              idleColor={SHOWCASE.inkSoft}
+              idleBorderColor={SIDEBAR_TREE_LINE}
             />
           </span>
         </div>
@@ -446,7 +313,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           'min-w-0 flex-1 rounded-l-2xl',
           pageScroll ? 'overflow-y-auto' : 'flex h-full flex-col overflow-hidden px-8 py-6',
         )}
-        style={{ background: PAGE_BACKGROUND, borderLeft: `1px solid ${SHOWCASE.line}` }}
+        style={{
+          background: PAGE_BACKGROUND,
+          borderLeft: `1px solid ${CONTENT_EDGE}`,
+          boxShadow: CONTENT_SHADOW,
+        }}
       >
         <main
           className={cn(
