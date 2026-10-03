@@ -1,7 +1,7 @@
 import { format, isSameDay, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/cn'
-import { EventDots } from '@/features/scheduling/components/EventDots'
+import { modalityStyle } from '@/features/scheduling/components/modality-colors'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 interface WeekViewProps {
@@ -57,9 +57,9 @@ export function WeekView({
               </div>
             </div>
             <div className="flex-1 space-y-1 overflow-y-auto">
-              {applications.map((application) => (
-                // Formato de pasta: aba com o horário, curva côncava para fora
-                // e as bolinhas flutuando no vão à direita da aba.
+              {applications.map((application) => {
+                const tone = modalityStyle(application)
+                return (
                 <div
                   key={application.id}
                   onClick={(e) => {
@@ -67,42 +67,30 @@ export function WeekView({
                     onSelectApplication(application)
                   }}
                   className={cn(
-                    'group relative cursor-pointer text-[0.6rem] text-(--text) transition-all hover:-translate-y-px',
+                    'group cursor-pointer space-y-0.5 rounded-lg border px-2.5 py-1.5 text-[0.6rem] transition-all hover:-translate-y-px',
                     application.status === 'missed' && 'opacity-70',
                   )}
+                  style={{
+                    background: tone.surface,
+                    borderColor: tone.border,
+                    color: tone.ink,
+                    backgroundImage:
+                      application.status === 'missed'
+                        ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.14) 0 1.5px, transparent 1.5px 6px)'
+                        : undefined,
+                  }}
                 >
-                  <div className="relative flex items-end">
-                    <span className="relative z-10 block min-w-[64%] max-w-[84%] truncate rounded-t-lg bg-white px-2 pb-0.5 pt-1 text-[0.68rem] font-bold">
-                      {application.startTime}
-                      {application.endTime ? ` – ${application.endTime}` : ''}
-                    </span>
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none relative z-10 -ml-px block h-2.5 w-2.5 self-end"
-                      style={{
-                        background:
-                          'radial-gradient(circle at 100% 0%, transparent 9.5px, #ffffff 10px)',
-                      }}
-                    />
-                    <span className="absolute bottom-0.5 right-0 z-20">
-                      <EventDots application={application} />
-                    </span>
+                  <div className="truncate text-[0.68rem] font-bold">
+                    {application.startTime}
+                    {application.endTime ? ` – ${application.endTime}` : ''}
                   </div>
-                  <div
-                    className="space-y-0.5 rounded-b-lg rounded-tr-lg bg-white px-2.5 pb-1.5 pt-1"
-                    style={{
-                      backgroundImage:
-                        application.status === 'missed'
-                          ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.14) 0 1.5px, transparent 1.5px 6px)'
-                          : undefined,
-                      boxShadow: '0 1px 4px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.05)',
-                    }}
-                  >
-                    <div className="font-semibold text-(--text) truncate">{application.patientName ?? ''}</div>
-                    <div className="font-medium text-(--text-muted) truncate">{application.dose}</div>
+                  <div className="truncate font-semibold">{application.patientName ?? ''}</div>
+                  <div className="truncate font-medium opacity-75">
+                    {application.dose} · {application.cycle.days} dias
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )

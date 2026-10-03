@@ -1,6 +1,6 @@
 import { format, isSameDay, isToday } from 'date-fns'
 import { cn } from '@/shared/lib/cn'
-import { EventDots } from '@/features/scheduling/components/EventDots'
+import { modalityStyle } from '@/features/scheduling/components/modality-colors'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
@@ -68,7 +68,9 @@ export function MonthView({
                 {format(day, 'dd')}
               </div>
               <div className="space-y-0.5">
-                {applications.slice(0, 2).map((application) => (
+                {applications.slice(0, 2).map((application) => {
+                  const tone = modalityStyle(application)
+                  return (
                   <div
                     key={application.id}
                     onClick={(e) => {
@@ -76,10 +78,13 @@ export function MonthView({
                       onSelectApplication(application)
                     }}
                     className={cn(
-                      'flex items-center gap-1 rounded border border-(--border-custom) bg-white px-1 py-0.5 text-[0.55rem] font-medium text-(--text) cursor-pointer transition-all hover:border-brand/40',
+                      'flex items-center gap-1 rounded border px-1 py-0.5 text-[0.55rem] font-medium cursor-pointer transition-all',
                       application.status === 'missed' && 'opacity-70',
                     )}
                     style={{
+                      background: tone.surface,
+                      borderColor: tone.border,
+                      color: tone.ink,
                       backgroundImage:
                         application.status === 'missed'
                           ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.14) 0 1.5px, transparent 1.5px 6px)'
@@ -87,11 +92,11 @@ export function MonthView({
                     }}
                   >
                     <span className="min-w-0 flex-1 truncate">
-                      {application.startTime} · {application.patientName ?? ''}
+                      {application.startTime} · {application.patientName ?? ''} · {application.cycle.days} dias
                     </span>
-                    <EventDots application={application} size="sm" />
                   </div>
-                ))}
+                  )
+                })}
                 {applications.length > 2 && (
                   <div className="text-[0.55rem] text-(--text-muted) px-1">
                     +{applications.length - 2} mais
