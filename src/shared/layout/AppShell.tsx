@@ -31,6 +31,8 @@ import { listNotifications } from '@/shared/api/notifications.api'
 import { hasPermission, useUserStore, type Permission } from '@/shared/stores/useUserStore'
 
 const RAIL_ACTIVE_SOLID = 'linear-gradient(150deg, #257E8C, #12333a)'
+const RAIL_ACTIVE_MARKER = '#1D6772'
+const RAIL_ACTIVE_BLEED_INK = '#10454F'
 const RAIL_ACTIVE_SOLID_SHADOW = '0 6px 16px rgba(16,60,68,0.28)'
 
 const PAGE_BACKGROUND = '#F7FAFA'
@@ -108,10 +110,16 @@ function RailLink({
 }) {
   const size = compact ? 'h-7.5' : 'h-9'
   const solidActive = !subtle
+  const bleedActive = active && solidActive && !collapsed
   const activeBackground = subtle ? SIDEBAR_SUBITEM_ACTIVE : RAIL_ACTIVE_SOLID
-  const activeColor = subtle ? SHOWCASE.accent : SHOWCASE.white
+  const activeColor = subtle
+    ? SHOWCASE.accent
+    : bleedActive
+      ? RAIL_ACTIVE_BLEED_INK
+      : SHOWCASE.white
   const idleColor = subtle && collapsed ? SHOWCASE.muted : SHOWCASE.inkSoft
   const [tip, setTip] = useState<{ top: number; left: number } | null>(null)
+  const [hovered, setHovered] = useState(false)
   return (
     <Link
       to={item.path}
@@ -125,29 +133,49 @@ function RailLink({
           : 'w-full gap-3.5 rounded-lg px-2.5',
       )}
       style={{
-        background: active ? activeBackground : 'transparent',
+        background: active
+          ? bleedActive
+            ? 'transparent'
+            : activeBackground
+          : hovered
+            ? SIDEBAR_HOVER
+            : 'transparent',
         backgroundClip: 'padding-box',
         color: active ? activeColor : idleColor,
         border: 'none',
-        boxShadow: active && solidActive ? RAIL_ACTIVE_SOLID_SHADOW : undefined,
+        boxShadow: active && solidActive && collapsed ? RAIL_ACTIVE_SOLID_SHADOW : undefined,
       }}
       onMouseEnter={(e) => {
-        if (!active) e.currentTarget.style.background = SIDEBAR_HOVER
+        setHovered(true)
         if (collapsed) {
           const rect = e.currentTarget.getBoundingClientRect()
           setTip({ top: rect.top + rect.height / 2, left: rect.right + 12 })
         }
       }}
-      onMouseLeave={(e) => {
-        if (!active) e.currentTarget.style.background = 'transparent'
+      onMouseLeave={() => {
+        setHovered(false)
         setTip(null)
       }}
     >
-      <FontAwesomeIcon icon={item.icon} className="shrink-0" style={{ fontSize: compact ? 12 : 14 }} />
+      {bleedActive && (
+        <>
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-4 top-0 bottom-0 w-1.5 rounded-l-full"
+            style={{ background: RAIL_ACTIVE_MARKER }}
+          />
+        </>
+      )}
+      <FontAwesomeIcon
+        icon={item.icon}
+        className="relative shrink-0"
+        style={{ fontSize: compact ? 12 : 14 }}
+      />
       {!collapsed && (
         <span
           className={cn(
-            'truncate font-normal whitespace-nowrap tracking-[0.015em]',
+            'relative truncate whitespace-nowrap',
+            active ? 'font-semibold' : 'font-normal',
             compact ? 'text-[0.74rem]' : 'text-[0.85rem]',
           )}
         >
@@ -159,7 +187,7 @@ function RailLink({
           aria-hidden="true"
           className={cn(
             'flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.55rem] font-bold',
-            collapsed ? 'absolute -top-0.5 -right-0.5' : 'ml-auto',
+            collapsed ? 'absolute -top-0.5 -right-0.5' : 'relative ml-auto',
           )}
           style={{ background: SHOWCASE.danger, color: '#FFFFFF' }}
         >
