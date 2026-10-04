@@ -304,7 +304,7 @@ describe('agenda alimentada por doses persistidas', () => {
 
     await screen.findByText('Paula Andrade')
     await user.click(screen.getByRole('button', { name: /novo agendamento/i }))
-    expect(await screen.findByText('Novo compromisso')).toBeInTheDocument()
+    expect(await screen.findByText('Novo agendamento')).toBeInTheDocument()
 
     const patientLabel = screen.getByText(/^paciente$/i, { selector: 'label' })
     await user.selectOptions(

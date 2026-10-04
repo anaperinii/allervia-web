@@ -1,5 +1,5 @@
 import { cn } from '@/shared/lib/cn'
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type CSSProperties, type ReactNode } from 'react'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
@@ -35,10 +35,13 @@ interface ModalProps {
   icon?: ReactNode
   tone?: Tone
   headerSlot?: ReactNode
+  headerStyle?: CSSProperties
+  /** Substitui o botão de fechar no canto do cabeçalho. */
+  headerAction?: ReactNode
   ariaLabel?: string
 }
 
-export function Modal({ open, onClose, title, size = 'md', children, footer, icon, tone = 'brand', headerSlot, ariaLabel }: ModalProps) {
+export function Modal({ open, onClose, title, size = 'md', children, footer, icon, tone = 'brand', headerSlot, headerStyle, headerAction, ariaLabel }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const previouslyFocused = useRef<HTMLElement | null>(null)
   const onCloseRef = useRef(onClose)
@@ -96,7 +99,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
     : { 'aria-label': ariaLabel ?? 'Diálogo' }
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in-0 duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 animate-in fade-in-0 duration-200"
       onClick={onClose}
     >
       <div
@@ -111,7 +114,10 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
         onClick={(e) => e.stopPropagation()}
       >
         {hasHeader && (
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-(--border-custom) shrink-0">
+          <div
+            className="flex items-center justify-between px-5 py-3.5 border-b border-(--border-custom) shrink-0"
+            style={headerStyle}
+          >
             {headerSlot ?? (
               icon ? (
                 <div className="flex items-center gap-3">
@@ -124,14 +130,16 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
                 <h3 id={titleId} className="text-sm font-bold text-(--text)">{title}</h3>
               )
             )}
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
-              aria-label="Fechar"
-            >
-              <FontAwesomeIcon icon={faXmark} style={{ fontSize: 16 }} />
-            </button>
+            {headerAction ?? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
+                aria-label="Fechar"
+              >
+                <FontAwesomeIcon icon={faXmark} style={{ fontSize: 16 }} />
+              </button>
+            )}
           </div>
         )}
 

@@ -217,6 +217,7 @@ export function scheduleItemToApplication(
     ...base,
     patientName: item.immunotherapy.patient.fullName,
     patientPhone: item.immunotherapy.patient.phoneNumber,
+    administrator: item.immunotherapy.patient.responsiblePhysician.fullName,
     modality: 'subcutaneous',
   }
 }
