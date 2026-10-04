@@ -58,10 +58,10 @@ export function ReportConfigPanel({
   patientStatus,
 }: ReportConfigPanelProps) {
   return (
-    <div className="w-[22rem] shrink-0 border-r border-(--border-custom) px-5 pt-0 pb-5 overflow-y-auto space-y-5">
-      <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-        <div className="text-[0.6rem] font-bold text-(--text-muted) uppercase tracking-wider">Resumo</div>
-        <div className="text-[0.65rem] text-(--text-muted) space-y-1">
+    <div className="w-[34rem] shrink-0 border-r border-(--border-custom) px-5 pt-0 pb-5 overflow-y-auto space-y-5">
+      <div className="space-y-2">
+        <span className="block text-xs font-bold" style={{ color: '#12333a' }}>Resumo</span>
+        <div className="space-y-1.5 text-[0.78rem] text-(--text-muted)">
           <Row label="Aplicações realizadas" value={String(realizedApplicationsCount)} />
           <Row label="Reações adversas" value={String(reactionsCount)} />
           <Row label="Intervalo atual" value={`${intervalDays} dias`} />
@@ -90,7 +90,7 @@ export function ReportConfigPanel({
 
       <div>
         <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Seções incluídas</span>
-        <div className="space-y-1.5">
+        <div className="grid grid-cols-2 gap-1.5">
           {REPORT_SECTIONS.map((section) => {
             const selected = selectedSections.includes(section.id)
             return (
@@ -123,7 +123,7 @@ export function ReportConfigPanel({
 
       <div>
         <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Privacidade e LGPD</span>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
           <ConsentCheckbox
             checked={anonymized}
             onChange={() => setAnonymized(!anonymized)}

@@ -29,7 +29,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faPrint, faShieldHalved } from '@fortawesome/free-solid-svg-icons'
 import { PageHeader, Pill } from '@/shared/components/showcase'
 
-const DEFAULT_SECTIONS: ReportSectionId[] = ['personal', 'immunotherapy', 'applications', 'progress']
+const DEFAULT_SECTIONS: ReportSectionId[] = [
+  'personal',
+  'immunotherapy',
+  'applications',
+  'reactions',
+  'progress',
+  'adjustments',
+  'inactivations',
+]
 
 export function PatientReportPage() {
   const navigate = useNavigate()
@@ -203,7 +211,7 @@ export function PatientReportPage() {
           patientStatus={patient.status}
         />
 
-        <div className="flex-1 overflow-y-auto p-5 bg-gray-50/50 rounded-2xl border border-(--border-custom)">
+        <div className="ml-auto w-full max-w-3xl flex-1 overflow-y-auto rounded-xl border border-(--border-custom) bg-gray-50/50 p-5">
           <ReportClinicalPreview
             patient={patient}
             realizedApplications={realizedApplications}
