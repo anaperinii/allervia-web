@@ -137,16 +137,54 @@ interface CardProps {
   children: ReactNode
   className?: string
   padded?: boolean
+  /** `plain` usa superfície branca — leitura de gráfico com contraste máximo. */
+  tone?: 'default' | 'plain'
 }
 
-export function Card({ children, className, padded = true }: CardProps) {
+export function Card({ children, className, padded = true, tone = 'default' }: CardProps) {
   return (
     <section
       className={cn('relative flex h-full flex-col overflow-hidden rounded-xl', padded && 'p-5', className)}
-      style={{ background: SHOWCASE.card, border: `1px solid ${SHOWCASE.line}` }}
+      style={{
+        background: tone === 'plain' ? SHOWCASE.white : SHOWCASE.card,
+        border: `1px solid ${SHOWCASE.line}`,
+      }}
     >
       {children}
     </section>
+  )
+}
+
+/**
+ * Valor numérico com a cauda em tom claro — dígitos finais recuam, a ordem de
+ * grandeza salta primeiro. Unidade sempre no tom claro.
+ */
+export function StatValue({
+  value,
+  unit,
+  className,
+}: {
+  value: string
+  unit?: string
+  className?: string
+}) {
+  const tailLength = value.length > 3 ? Math.min(3, value.length - 1) : 0
+  const head = tailLength > 0 ? value.slice(0, value.length - tailLength) : value
+  const tail = tailLength > 0 ? value.slice(value.length - tailLength) : ''
+
+  return (
+    <span
+      className={cn('flex items-baseline leading-none tracking-tight tabular-nums', className)}
+      style={{ color: SHOWCASE.ink }}
+    >
+      <span className="font-medium">{head}</span>
+      {tail && <span style={{ color: SHOWCASE.muted }}>{tail}</span>}
+      {unit && (
+        <span className="ml-0.5 text-[0.5em] font-medium" style={{ color: SHOWCASE.muted }}>
+          {unit}
+        </span>
+      )}
+    </span>
   )
 }
 

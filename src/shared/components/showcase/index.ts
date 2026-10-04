@@ -9,4 +9,5 @@ export {
   DayAxis,
   Pill,
   SelectPill,
+  StatValue,
 } from './primitives'

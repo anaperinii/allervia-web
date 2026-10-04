@@ -15,6 +15,10 @@ const FILTER_LABELS: Record<string, string> = {
   range: 'Intervalo',
   top: 'Exibir',
   order: 'Ordem',
+  granularity: 'Granularidade',
+  phase: 'Fase',
+  concentration: 'Concentração',
+  zeros: 'Sem tratamentos',
 }
 
 export function CardFilters({
