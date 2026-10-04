@@ -82,7 +82,7 @@ export function NotificationsPage() {
       <NotificationsHeader actions={null} />
 
       <div className="flex flex-1 min-h-0 flex-col">
-        <div className="relative z-10 -mb-px shrink-0 rounded-t-3xl border border-b-0 border-[#DDE6E6] bg-[#F6F8F8] px-5 py-3 flex items-center justify-between gap-3">
+        <div className="relative z-10 -mb-px shrink-0 rounded-t-xl border border-b-0 border-[#DDE6E6] bg-[#F6F8F8] px-5 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="text-xs text-(--text-muted)">
               {total} notificações · {unreadCount} não lidas
@@ -113,7 +113,7 @@ export function NotificationsPage() {
           </div>
         </div>
 
-        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto rounded-b-3xl border border-t-0 border-[#DDE6E6] bg-white">
+        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto rounded-b-xl border border-t-0 border-[#DDE6E6] bg-white">
           {query.error && (
             <p role="alert" className="px-5 py-4 text-xs text-red-700">
               {query.error instanceof ApiError

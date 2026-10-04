@@ -6,8 +6,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowRight, faCircleInfo, faCircleQuestion, faCreditCard, faFlask, faGear, faShield, faUser, faUsers } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
-const CARD_TEAL = '29,103,114'
-
 interface SettingsOption {
   icon: IconDefinition
   label: string
@@ -32,7 +30,6 @@ const settingsSections: SettingsSection[] = [
   },
   {
     title: 'Clínico',
-    description: 'Definições que governam prescrições e recomendações de dose',
     options: [
       { icon: faFlask, label: 'Protocolos de Imunoterapia', description: 'Catálogo, versões, publicação e automação', route: '/protocols', requires: 'adjust_protocol' },
     ],
@@ -93,7 +90,6 @@ export function SettingsPage() {
                       boxShadow: '0 6px 18px -14px rgba(16,60,68,0.18)',
                     }}
                   >
-                    <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `rgb(${CARD_TEAL})` }} />
                     <FontAwesomeIcon icon={Icon} className="shrink-0 text-brand transition-transform duration-300 group-hover:scale-105" style={{ fontSize: 15 }} />
                     <div className="min-w-0 flex-1">
                       <div className="text-[0.82rem] font-semibold text-slate-800">{option.label}</div>

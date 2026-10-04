@@ -269,7 +269,10 @@ export function AddImmunotherapyPage() {
         title="Cancelar cadastro?"
         description="Os dados preenchidos serão perdidos. Deseja realmente cancelar a prescrição da imunoterapia?"
         onClose={() => setShowCancelModal(false)}
-        onConfirm={() => navigate({ to: '/immunotherapies' })}
+        onConfirm={() => {
+          exitBlocker.allowNextNavigation()
+          navigate({ to: '/immunotherapies' })
+        }}
       />
 
       <CancelWizardModal

@@ -408,7 +408,10 @@ function PatientEvolutionContent() {
         title="Cancelar evolução?"
         description="Os dados preenchidos serão perdidos. Deseja realmente cancelar a evolução do paciente?"
         onClose={() => setShowCancelModal(false)}
-        onConfirm={() => navigate({ to: '/immunotherapies' })}
+        onConfirm={() => {
+          exitBlocker.allowNextNavigation()
+          navigate({ to: '/immunotherapies' })
+        }}
       />
 
       <CancelWizardModal
