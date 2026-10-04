@@ -121,6 +121,20 @@
 }
 
 @layer utilities {
+  input[type='time']::-webkit-calendar-picker-indicator,
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='datetime-local']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.55;
+    transition: opacity 0.2s ease;
+  }
+
+  input[type='time']::-webkit-calendar-picker-indicator:hover,
+  input[type='date']::-webkit-calendar-picker-indicator:hover,
+  input[type='datetime-local']::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+
   .breadcrumb-link {
     display: inline-flex;
     flex-direction: column;

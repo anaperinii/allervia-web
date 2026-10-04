@@ -1,6 +1,6 @@
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
 import type { DoseDetail } from '@/shared/api/contracts/clinical'
-import { FieldLabel, Select, StepHeading, TextArea, TextInput } from '@/shared/components'
+import { FieldLabel, Select, StepHeading, TextArea, TextInput, TimeSelect } from '@/shared/components'
 import { GLASS_CARD_SHADOW } from '@/shared/constants/glass-card'
 import { cn } from '@/shared/lib/cn'
 import { addMinutesToTime } from '@/shared/lib/dates'
@@ -48,12 +48,11 @@ export function PostApplicationStep({ form, dose }: PostApplicationStepProps) {
               control={control}
               name="startTime"
               render={({ field }) => (
-                <TextInput
-                  type="time"
+                <TimeSelect
+                  aria-label="Hora início"
                   value={field.value}
                   onBlur={field.onBlur}
-                  onChange={(e) => {
-                    const v = e.target.value
+                  onChange={(v) => {
                     field.onChange(v)
                     if (v && !getValues('endTime')) setValue('endTime', addMinutesToTime(v, 30))
                   }}
@@ -63,7 +62,19 @@ export function PostApplicationStep({ form, dose }: PostApplicationStepProps) {
             />
           </FieldLabel>
           <FieldLabel label="Hora fim" error={errors.endTime?.message}>
-            <TextInput type="time" invalid={!!errors.endTime} {...register('endTime')} />
+            <Controller
+              control={control}
+              name="endTime"
+              render={({ field }) => (
+                <TimeSelect
+                  aria-label="Hora fim"
+                  value={field.value}
+                  onBlur={field.onBlur}
+                  onChange={field.onChange}
+                  invalid={!!errors.endTime}
+                />
+              )}
+            />
           </FieldLabel>
         </div>
         <FieldLabel
