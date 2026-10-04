@@ -121,6 +121,26 @@
 }
 
 @layer utilities {
+  .breadcrumb-link {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    transition: color 0.2s ease, font-weight 0.2s ease;
+  }
+
+  .breadcrumb-link::after {
+    content: attr(data-label);
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  .breadcrumb-link:hover {
+    font-weight: 700;
+  }
+
   .no-scrollbar {
     scrollbar-width: none;
     -ms-overflow-style: none;

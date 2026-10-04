@@ -19,6 +19,7 @@ import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
 import { toDateInputValue, tomorrowStr } from '@/shared/lib/dates'
+import { useUnsavedChangesBlocker } from '@/shared/hooks/useUnsavedChangesBlocker'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -202,6 +203,12 @@ export function AddImmunotherapyPage() {
     }
   }
 
+  const { isDirty } = form.formState
+  const exitBlocker = useUnsavedChangesBlocker({
+    hasUnsavedChanges:
+      isDirty && !registerMutation.isPending && !registerMutation.isSuccess,
+  })
+
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
       <PageHeader
@@ -263,6 +270,15 @@ export function AddImmunotherapyPage() {
         description="Os dados preenchidos serão perdidos. Deseja realmente cancelar a prescrição da imunoterapia?"
         onClose={() => setShowCancelModal(false)}
         onConfirm={() => navigate({ to: '/immunotherapies' })}
+      />
+
+      <CancelWizardModal
+        open={exitBlocker.isBlocked}
+        title="Sair sem salvar?"
+        description="Há dados preenchidos que ainda não foram salvos. Se sair agora, a prescrição em andamento será perdida."
+        onClose={exitBlocker.cancelLeave}
+        onConfirm={exitBlocker.confirmLeave}
+        cancelLabel="Sair sem salvar"
       />
     </div>
   )

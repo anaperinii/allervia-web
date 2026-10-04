@@ -13,7 +13,11 @@ export function SettingsLayout({ subtitle, parents, headerActions, children }: S
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
       <PageHeader
-        breadcrumb={subtitle ? ['Configurações', ...(parents ?? [])] : undefined}
+        breadcrumb={
+          subtitle
+            ? [{ label: 'Configurações', to: '/settings' }, ...(parents ?? [])]
+            : undefined
+        }
         title={subtitle ?? 'Configurações'}
         actions={headerActions}
       />

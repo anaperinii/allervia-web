@@ -36,6 +36,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
+import { useUnsavedChangesBlocker } from '@/shared/hooks/useUnsavedChangesBlocker'
 
 import { PageHeader } from '@/shared/components/showcase'
 import { faCircleCheck, faClipboardCheck, faNotesMedical, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
@@ -238,6 +239,12 @@ function PatientEvolutionContent() {
     setStep((s) => (s + 1) as 0 | 1 | 2 | 3)
   }
 
+  const { isDirty } = form.formState
+  const exitBlocker = useUnsavedChangesBlocker({
+    hasUnsavedChanges:
+      isDirty && !administerMutation.isPending && !administerMutation.isSuccess,
+  })
+
   const onSaveEvolution = () =>
     handleSubmit((data) => {
       if (!dose || !selectedStep) return
@@ -402,6 +409,15 @@ function PatientEvolutionContent() {
         description="Os dados preenchidos serão perdidos. Deseja realmente cancelar a evolução do paciente?"
         onClose={() => setShowCancelModal(false)}
         onConfirm={() => navigate({ to: '/immunotherapies' })}
+      />
+
+      <CancelWizardModal
+        open={exitBlocker.isBlocked}
+        title="Sair sem salvar?"
+        description="Há dados preenchidos que ainda não foram salvos. Se sair agora, a evolução em andamento será perdida."
+        onClose={exitBlocker.cancelLeave}
+        onConfirm={exitBlocker.confirmLeave}
+        cancelLabel="Sair sem salvar"
       />
     </div>
   )

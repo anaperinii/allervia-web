@@ -149,34 +149,35 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
 
       {selectedVersion && (
         <div className="space-y-3">
-          <div>
-            <div className="mb-1.5 flex items-center justify-between gap-2">
+          <fieldset
+            className="relative rounded-xl border px-3.5 pb-3.5 pt-2.5"
+            style={{ borderColor: 'rgba(18,51,58,0.22)' }}
+          >
+            <legend className="flex items-center gap-2 px-1.5">
               <span className="text-xs font-semibold text-(--text-muted)">
                 Etapas permitidas na prescrição
               </span>
-              <div className="flex items-center gap-2">
-                <span className="text-[0.6rem] text-(--text-muted)">
-                  {selectedStepIds.length} de {steps.length} selecionadas
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    applyStepIds(allSelected ? [] : steps.map((step) => step.id))
-                  }
-                  className={cn(
-                    'flex items-center gap-1.5 rounded-md border bg-white px-2 py-1 text-[0.65rem] font-semibold transition-colors cursor-pointer',
-                    allSelected
-                      ? 'border-red-300 text-red-700 hover:border-red-400 hover:bg-red-50'
-                      : 'border-(--border-custom) text-(--text-muted) hover:border-brand/50 hover:text-brand-dark',
-                  )}
-                >
-                  {allSelected && (
-                    <FontAwesomeIcon icon={faXmark} style={{ fontSize: 10 }} />
-                  )}
-                  {allSelected ? 'Limpar seleção' : 'Selecionar todas'}
-                </button>
-              </div>
-            </div>
+              <span className="text-[0.6rem] text-(--text-muted)">
+                {selectedStepIds.length} de {steps.length} selecionadas
+              </span>
+            </legend>
+            <button
+              type="button"
+              onClick={() =>
+                applyStepIds(allSelected ? [] : steps.map((step) => step.id))
+              }
+              className={cn(
+                'absolute -top-5 right-5 flex items-center gap-1.5 rounded-md border px-2 py-1 text-[0.65rem] font-semibold transition-colors cursor-pointer',
+                allSelected
+                  ? 'border-red-300 bg-red-50 text-red-700 hover:border-red-400 hover:bg-red-100'
+                  : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50 hover:text-brand-dark',
+              )}
+            >
+              {allSelected && (
+                <FontAwesomeIcon icon={faXmark} style={{ fontSize: 10 }} />
+              )}
+              {allSelected ? 'Limpar seleção' : 'Selecionar todas'}
+            </button>
             <div className="flex flex-wrap gap-2">
               {steps.map((step) => {
                 const selected = selectedStepIds.includes(step.id)
@@ -207,7 +208,7 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
                 {errors.stepIds.message}
               </span>
             )}
-          </div>
+          </fieldset>
 
           <div className="grid grid-cols-2 gap-4">
             <FieldLabel label="Etapa inicial" error={errors.startingStepId?.message}>
