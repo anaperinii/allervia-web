@@ -106,6 +106,15 @@ export function PatientChartPage() {
   })
   const pendingDose = pendingDoseQuery.data ?? null
 
+  // Sem previsão pendente, a meta ainda é legível pelo detalhe da última dose
+  // administrada: as etapas permitidas vêm da mesma versão fixada.
+  const fallbackDoseId = pendingRecord === null ? (lastAdministered?.id ?? null) : null
+  const fallbackDoseQuery = useQuery({
+    queryKey: queryKeys.dose(organizationId, fallbackDoseId ?? ''),
+    queryFn: ({ signal }) => getDose(fallbackDoseId!, signal),
+    enabled: organizationId !== '' && fallbackDoseId !== null,
+  })
+
   const savePatientMutation = useMutation({
     mutationFn: (patch: {
       name: string
@@ -222,6 +231,11 @@ export function PatientChartPage() {
     pendingRecord?.plannedValues && lastAdministered?.administeredValues
       ? formatStepPresentation(lastAdministered.administeredValues)
       : null
+  // A meta da prescrição é a última etapa permitida da versão fixada.
+  const allowedSteps =
+    pendingDose?.allowedValues ?? fallbackDoseQuery.data?.allowedValues ?? []
+  const targetStep = allowedSteps.at(-1) ?? null
+  const targetValues = targetStep ? formatStepPresentation(targetStep) : null
   const nextDate = pendingRecord
     ? formatInstantDate(pendingRecord.scheduledAt)
     : '-'
@@ -316,6 +330,7 @@ export function PatientChartPage() {
       <div className="ml-1 mr-1 mt-1 mb-1 flex flex-1 gap-4 min-h-0 min-w-0">
         <PatientInfoSidebar
           patient={selectedPatient}
+          targetValues={targetValues}
           therapyStatus={selectedTherapy?.status ?? null}
           evolutionTherapyId={selectedTherapy?.id ?? null}
           treatmentTime={treatmentTime}
@@ -454,7 +469,7 @@ export function PatientChartPage() {
             )}
           </div>
 
-          <div className="flex-1 flex flex-col rounded-tr-xl rounded-b-xl bg-white overflow-hidden min-h-0 min-w-0">
+          <div className="flex-1 flex flex-col rounded-tr-xl rounded-b-xl border border-(--border-custom) bg-white overflow-hidden min-h-0 min-w-0">
             {activeTab === 'applications' ? (
               <>
                 <div className="px-5 py-3 border-b border-(--border-custom) min-w-0">
