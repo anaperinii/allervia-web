@@ -8,9 +8,17 @@ import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { exportClinicalDatasetCsv } from '@/features/patient/exporters'
 import {
+  ALL_DASHBOARD_SECTIONS,
+  buildDashboardReportPdf,
+  DASHBOARD_SECTIONS,
   exportDashboardReportPdf,
   type DashboardReportData,
+  type DashboardSectionId,
 } from '@/features/dashboard/exporters/pdf-report-exporter'
+import {
+  DATE_RANGE_ANCHOR_ATTR,
+  DateRangePopover,
+} from '@/features/dashboard/components/showcase/DateRangePopover'
 import {
   exportDashboardReportCsv,
   exportDashboardReportJson,
@@ -31,10 +39,17 @@ import {
 import { downloadFile } from '@/shared/lib/file-download'
 import { toOffsetIso } from '@/shared/lib/dates'
 import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, toast } from '@/shared/components'
-import { PageHeader, Pill } from '@/shared/components/showcase'
+import { CircleButton, PageHeader, Pill } from '@/shared/components/showcase'
+import type { DateRange } from 'react-day-picker'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleCheck, faCircleInfo, faDownload, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import {
+  faCalendar,
+  faCircleCheck,
+  faCircleInfo,
+  faDownload,
+  faTriangleExclamation,
+} from '@fortawesome/free-solid-svg-icons'
 
 const PAGE_SIZE = 100
 const MAX_PAGES = 20
@@ -58,7 +73,7 @@ const FORMAT_DESCRIPTIONS: Record<ExportFormat, string> = {
   csv: 'O arquivo descreve o conjunto clínico persistido no instante da geração (corte temporal explícito), com previsto e realizado separados, versão fixada e fuso da prescrição em cada linha.',
   json: 'O arquivo descreve o conjunto clínico persistido no instante da geração (corte temporal explícito), com previsto e realizado separados, versão fixada e fuso da prescrição em cada linha.',
   'dashboard-pdf':
-    'O PDF reproduz os gráficos do painel (indicadores, comparativo, status, fases, concentrações, tipos e matriz volume × concentração) no recorte dos últimos 30 dias, pronto para impressão.',
+    'O PDF reproduz os gráficos do painel no período e nas seções escolhidos abaixo, pronto para impressão.',
   'dashboard-csv':
     'O CSV contém os valores do painel (indicadores e séries dos gráficos) em seções tabulares, sem gráficos e sem a listagem de pacientes.',
   'dashboard-json':
@@ -90,20 +105,31 @@ export function ExportReportPage() {
   const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
 
-  const [format, setFormat] = useState<ExportFormat>('csv')
+  const [format, setFormat] = useState<ExportFormat>('dashboard-pdf')
   const [status, setStatus] = useState<'' | TherapyStatus>('')
   const [justification, setJustification] = useState('')
   const [consent, setConsent] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
+  const [sections, setSections] = useState<DashboardSectionId[]>(ALL_DASHBOARD_SECTIONS)
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const [calendarOpen, setCalendarOpen] = useState(false)
 
   const isDashboardFormat = format.startsWith('dashboard-')
 
-  // Mesmo recorte padrão do painel: últimos 30 dias.
+  const toggleSection = (id: DashboardSectionId) => {
+    setSections((previous) =>
+      previous.includes(id)
+        ? previous.filter((section) => section !== id)
+        : ALL_DASHBOARD_SECTIONS.filter((section) => previous.includes(section) || section === id),
+    )
+  }
+
+  // Recorte temporal escolhido; sem seleção, o padrão do painel (últimos 30 dias).
   const periodDays = useMemo(() => {
     const DAY_MS = 24 * 60 * 60 * 1000
-    const toDate = new Date()
-    const fromDate = new Date(toDate.getTime() - 29 * DAY_MS)
+    const toDate = dateRange?.to ?? dateRange?.from ?? new Date()
+    const fromDate = dateRange?.from ?? new Date(toDate.getTime() - 29 * DAY_MS)
     const fromDay = dayInput(fromDate)
     const toDay = dayInput(toDate)
     const days = eachDay(fromDay, toDay)
@@ -117,7 +143,7 @@ export function ExportReportPage() {
       previousToDay: dayInput(previousTo),
       previousDays: eachDay(dayInput(previousFrom), dayInput(previousTo)),
     }
-  }, [])
+  }, [dateRange])
 
   const period = useMemo(
     () => ({
@@ -168,14 +194,15 @@ export function ExportReportPage() {
     dashboardLoading ||
     dashboardError
 
-  function runDashboardExport() {
+  const reportData = useMemo<DashboardReportData | null>(() => {
     const metrics = metricsQuery.data
     const previousMetrics = previousMetricsQuery.data
-    if (!metrics || !previousMetrics) return
+    if (!metrics || !previousMetrics) return null
     const doses = doseWindowQuery.data ?? []
-    const data: DashboardReportData = {
+    return {
       generatedAt: new Date().toLocaleString('pt-BR'),
-      periodLabel: `${dayLabel(periodDays.fromDay)} a ${dayLabel(periodDays.toDay)} (últimos 30 dias)`,
+      periodLabel: `${dayLabel(periodDays.fromDay)} a ${dayLabel(periodDays.toDay)} (${periodDays.days.length} dias)`,
+      sections,
       metrics,
       comparisonSeries: buildComparisonSeries(
         metrics,
@@ -189,6 +216,31 @@ export function ExportReportPage() {
       typeData: aggregateActiveByType(activeTherapiesQuery.data ?? []),
       volumeMatrix: aggregateVolumeMatrix(doses),
     }
+  }, [
+    metricsQuery.data,
+    previousMetricsQuery.data,
+    doseWindowQuery.data,
+    activeTherapiesQuery.data,
+    statusHistoryQuery.data,
+    periodDays,
+    sections,
+  ])
+
+  // Pré-visualização: o mesmo documento do download, servido como blob local.
+  // A barra do visualizador nativo fica oculta (#toolbar=0), então imprimir e
+  // salvar seguem só pelos botões da página.
+  const previewUrl = useMemo(() => {
+    if (format !== 'dashboard-pdf' || !reportData) return null
+    return URL.createObjectURL(buildDashboardReportPdf(reportData).output('blob'))
+  }, [format, reportData])
+  useEffect(() => {
+    if (!previewUrl) return
+    return () => URL.revokeObjectURL(previewUrl)
+  }, [previewUrl])
+
+  function runDashboardExport() {
+    const data = reportData
+    if (!data) return
     if (format === 'dashboard-pdf') exportDashboardReportPdf(data)
     else if (format === 'dashboard-csv') exportDashboardReportCsv(data)
     else exportDashboardReportJson(data)
@@ -281,6 +333,7 @@ export function ExportReportPage() {
         }
       />
 
+      <div className="flex min-h-0 flex-1 gap-5">
       <div className="flex-1 overflow-y-auto max-w-2xl space-y-4 px-1 pb-8">
         <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
           <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
@@ -304,6 +357,60 @@ export function ExportReportPage() {
               </optgroup>
             </Select>
           </FieldLabel>
+          {isDashboardFormat && (
+            <>
+              <FieldLabel label="Período do relatório">
+                <div className="relative z-40 flex items-center gap-2">
+                  <span className="relative inline-flex" {...{ [DATE_RANGE_ANCHOR_ATTR]: '' }}>
+                    <CircleButton
+                      icon={faCalendar}
+                      active={calendarOpen || Boolean(dateRange?.from)}
+                      aria-label="Período"
+                      aria-expanded={calendarOpen}
+                      onClick={() => setCalendarOpen((open) => !open)}
+                    />
+                    <DateRangePopover
+                      open={calendarOpen}
+                      range={dateRange}
+                      onRangeChange={setDateRange}
+                      onClose={() => setCalendarOpen(false)}
+                    />
+                  </span>
+                  <span className="text-[0.72rem] text-(--text)">
+                    {dayLabel(periodDays.fromDay)} a {dayLabel(periodDays.toDay)}
+                    <span className="text-(--text-muted)"> · {periodDays.days.length} dias</span>
+                  </span>
+                  {dateRange?.from && (
+                    <button
+                      type="button"
+                      className="text-[0.68rem] underline text-(--text-muted) cursor-pointer"
+                      onClick={() => setDateRange(undefined)}
+                    >
+                      Últimos 30 dias
+                    </button>
+                  )}
+                </div>
+              </FieldLabel>
+
+              <FieldLabel label="Seções incluídas">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                  {DASHBOARD_SECTIONS.map((section) => (
+                    <label
+                      key={section.id}
+                      className="flex items-center gap-2 text-[0.7rem] text-(--text) cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={sections.includes(section.id)}
+                        onChange={() => toggleSection(section.id)}
+                      />
+                      {section.label}
+                    </label>
+                  ))}
+                </div>
+              </FieldLabel>
+            </>
+          )}
           {!isDashboardFormat && (
             <FieldLabel label="Filtro por situação do tratamento">
               <Select value={status} onChange={(e) => setStatus(e.target.value as '' | TherapyStatus)}>
@@ -344,6 +451,37 @@ export function ExportReportPage() {
         {progress && <p className="text-xs text-(--text-muted)">{progress}</p>}
       </div>
 
+      <aside className="hidden min-h-0 flex-1 flex-col gap-2 pb-8 lg:flex">
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="text-[0.8rem] font-semibold text-(--text)">Pré-visualização</h2>
+          <span className="text-[0.66rem] text-(--text-muted)">
+            {dayLabel(periodDays.fromDay)} a {dayLabel(periodDays.toDay)}
+          </span>
+        </div>
+        {previewUrl ? (
+          <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-(--border-custom) bg-white">
+            <iframe
+              key={previewUrl}
+              src={`${previewUrl}#toolbar=0&navpanes=0&view=FitH`}
+              title="Pré-visualização do relatório em PDF"
+              className="h-full w-full"
+            />
+          </div>
+        ) : (
+          <div className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-(--border-custom) bg-gray-50 px-6 text-center text-[0.72rem] text-(--text-muted)">
+            {format !== 'dashboard-pdf' || dashboardError
+              ? 'Pré-visualização indisponível'
+              : 'Montando a pré-visualização…'}
+          </div>
+        )}
+        <p className="text-[0.62rem] text-(--text-muted)">
+          {format === 'dashboard-pdf'
+            ? 'Documento idêntico ao do download; o visualizador é o do navegador.'
+            : 'Só o PDF do painel tem pré-visualização.'}
+        </p>
+      </aside>
+      </div>
+
       <Modal
         open={showConfirm}
         onClose={() => setShowConfirm(false)}
@@ -369,7 +507,7 @@ export function ExportReportPage() {
             ? ` · Filtro: ${STATUS_OPTIONS.find((o) => o.value === status)?.label}`
             : ''}
           {isDashboardFormat
-            ? ` · Valores do painel, últimos 30 dias${format === 'dashboard-pdf' ? ', com gráficos' : ', sem gráficos'}`
+            ? ` · Valores do painel, ${dayLabel(periodDays.fromDay)} a ${dayLabel(periodDays.toDay)}, ${sections.length} de ${ALL_DASHBOARD_SECTIONS.length} seções${format === 'dashboard-pdf' ? ', com gráficos' : ', sem gráficos'}`
             : ''}.
         </p>
       </Modal>

@@ -94,10 +94,8 @@ export function HBarList({
   const max = Math.max(...data.map((entry) => entry.count), 1)
   const ramp = palette === 'lime' ? LIME_RAMP : ORDINAL_RAMP
   const rows = data.map((entry, index) => {
-    const position =
+    const step =
       data.length <= 1 ? 1 : Math.round((index / (data.length - 1)) * (ramp.length - 1))
-    // `lime`: a lista chega em ordem decrescente — o 1º rótulo leva o passo mais escuro.
-    const step = palette === 'lime' ? ramp.length - 1 - position : position
     return { entry, color: ramp[step] }
   })
 

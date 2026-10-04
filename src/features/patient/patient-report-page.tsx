@@ -15,6 +15,7 @@ import {
 } from '@/features/patient/adapters/clinical-presentation'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import {
+  buildPatientReportPdf,
   exportCsv,
   exportPdf,
   type ReportData,
@@ -105,6 +106,38 @@ export function PatientReportPage() {
     setSelectedSections((previous) => (previous.includes(id) ? previous.filter((sectionId) => sectionId !== id) : [...previous, id]))
   }
 
+  const reportData = useMemo<ReportData | null>(() => {
+    if (!patient) return null
+    const masked = anonymized
+      ? {
+          ...patient,
+          name: maskName(patient.name, true),
+          cpf: maskCpf(patient.cpf, true),
+          phone: maskPhone(patient.phone, true),
+        }
+      : patient
+    return {
+      patient: masked,
+      sections: selectedSections,
+      realizedApplications,
+      reactionsCount,
+      generatedAt: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
+      anonymized,
+    }
+  }, [patient, anonymized, selectedSections, realizedApplications, reactionsCount])
+
+  // Pré-visualização: o mesmo documento do download, servido como blob local.
+  // A barra do visualizador nativo fica oculta (#toolbar=0), então imprimir e
+  // salvar seguem só pelos botões da página.
+  const previewUrl = useMemo(() => {
+    if (fileFormat !== 'pdf' || !reportData) return null
+    return URL.createObjectURL(buildPatientReportPdf(reportData).output('blob'))
+  }, [fileFormat, reportData])
+  useEffect(() => {
+    if (!previewUrl) return
+    return () => URL.revokeObjectURL(previewUrl)
+  }, [previewUrl])
+
   if (!patientId) {
     return (
       <div className="flex flex-1 items-center justify-center">
@@ -131,29 +164,10 @@ export function PatientReportPage() {
     )
   }
 
-  const buildExportData = (): ReportData => {
-    const masked = anonymized
-      ? {
-          ...patient,
-          name: maskName(patient.name, true),
-          cpf: maskCpf(patient.cpf, true),
-          phone: maskPhone(patient.phone, true),
-        }
-      : patient
-    return {
-      patient: masked,
-      sections: selectedSections,
-      realizedApplications,
-      reactionsCount,
-      generatedAt: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
-      anonymized,
-    }
-  }
-
   const handleExport = () => {
-    const data = buildExportData()
-    if (fileFormat === 'csv') exportCsv(data)
-    else exportPdf(data)
+    if (!reportData) return
+    if (fileFormat === 'csv') exportCsv(reportData)
+    else exportPdf(reportData)
   }
 
   const exportDisabled = !consented || !justification.trim() || dosesQuery.isPending
@@ -168,7 +182,7 @@ export function PatientReportPage() {
             <div className="flex items-center gap-1.5">
             <Pill
               icon={faPrint}
-              onClick={() => !exportDisabled && exportPdf(buildExportData())}
+              onClick={() => !exportDisabled && reportData && exportPdf(reportData)}
               disabled={exportDisabled}
               className={exportDisabled ? 'opacity-50 cursor-not-allowed' : undefined}
             >
@@ -211,21 +225,46 @@ export function PatientReportPage() {
           patientStatus={patient.status}
         />
 
-        <div className="ml-auto w-full max-w-3xl flex-1 overflow-y-auto rounded-xl border border-(--border-custom) bg-gray-50/50 p-5">
-          <ReportClinicalPreview
-            patient={patient}
-            realizedApplications={realizedApplications}
-            inductionStart={
-              selectedTherapy
-                ? formatInstantDate(selectedTherapy.inductionStartDate)
-                : null
-            }
-            reactionsCount={reactionsCount}
-            selectedSections={selectedSections}
-            fileFormat={fileFormat}
-            anonymized={anonymized}
-          />
-        </div>
+        {fileFormat === 'pdf' ? (
+          <div className="flex w-full min-w-0 flex-1 min-h-0 flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-2">
+              <h2 className="text-[0.8rem] font-semibold text-(--text)">Pré-visualização</h2>
+              <span className="text-[0.66rem] text-(--text-muted)">
+                Documento idêntico ao do download
+              </span>
+            </div>
+            {previewUrl ? (
+              <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-(--border-custom) bg-white">
+                <iframe
+                  key={previewUrl}
+                  src={`${previewUrl}#toolbar=0&navpanes=0&view=FitH`}
+                  title="Pré-visualização do relatório em PDF"
+                  className="h-full w-full"
+                />
+              </div>
+            ) : (
+              <div className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-(--border-custom) bg-gray-50 px-6 text-center text-[0.72rem] text-(--text-muted)">
+                Pré-visualização indisponível
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="ml-auto w-full max-w-3xl flex-1 overflow-y-auto rounded-xl border border-(--border-custom) bg-gray-50/50 p-5">
+            <ReportClinicalPreview
+              patient={patient}
+              realizedApplications={realizedApplications}
+              inductionStart={
+                selectedTherapy
+                  ? formatInstantDate(selectedTherapy.inductionStartDate)
+                  : null
+              }
+              reactionsCount={reactionsCount}
+              selectedSections={selectedSections}
+              fileFormat={fileFormat}
+              anonymized={anonymized}
+            />
+          </div>
+        )}
       </div>
 
       <Modal

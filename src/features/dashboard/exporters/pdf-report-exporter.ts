@@ -9,9 +9,32 @@ import type {
 } from '@/features/dashboard/hooks/useDashboardAggregates'
 import type { ClinicalMetrics } from '@/shared/api/contracts/clinical'
 
+export type DashboardSectionId =
+  | 'indicators'
+  | 'comparison'
+  | 'status'
+  | 'phases'
+  | 'concentrations'
+  | 'types'
+  | 'matrix'
+
+export const DASHBOARD_SECTIONS: { id: DashboardSectionId; label: string }[] = [
+  { id: 'indicators', label: 'Indicadores do período' },
+  { id: 'comparison', label: 'Comparativo de aplicações' },
+  { id: 'status', label: 'Status de imunoterapias' },
+  { id: 'phases', label: 'Distribuição de fases' },
+  { id: 'concentrations', label: 'Ciclos por concentração' },
+  { id: 'types', label: 'Imunoterapias ativas por tipo' },
+  { id: 'matrix', label: 'Volume × concentração' },
+]
+
+export const ALL_DASHBOARD_SECTIONS = DASHBOARD_SECTIONS.map((section) => section.id)
+
 export interface DashboardReportData {
   generatedAt: string
   periodLabel: string
+  /** Seções incluídas; ausente = todas. */
+  sections?: DashboardSectionId[]
   metrics: ClinicalMetrics
   comparisonSeries: ComparisonEntry[]
   statusSeries: StatusBucketEntry[]
@@ -43,7 +66,8 @@ interface LineSeries {
   points: number[]
 }
 
-export function exportDashboardReportPdf(data: DashboardReportData) {
+/** Monta o documento sem gravá-lo — usado pela pré-visualização e pelo download. */
+export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
@@ -282,126 +306,143 @@ export function exportDashboardReportPdf(data: DashboardReportData) {
   doc.line(margin, (y += 3), pageW - margin, y)
   y += 6
 
+  const includes = (section: DashboardSectionId) =>
+    (data.sections ?? ALL_DASHBOARD_SECTIONS).includes(section)
+
   // Indicadores
-  addSectionTitle('Indicadores do Período')
-  const adherencePct =
-    data.metrics.adherence.ratio !== null
-      ? `${Math.round(data.metrics.adherence.ratio * 100)}%`
-      : '—'
-  const kpis: [string, string][] = [
-    [String(data.metrics.therapies.inProgress), 'Tratamentos ativos'],
-    [String(data.metrics.therapies.suspended), 'Suspensos'],
-    [String(data.metrics.applications.total), 'Aplicações no período'],
-    [String(data.metrics.therapies.buildUp), 'Em indução'],
-    [String(data.metrics.therapies.maintenance), 'Em manutenção'],
-    [adherencePct, 'Adesão no período'],
-  ]
-  const boxW = (contentW - 8) / 3
-  const boxH = 16
-  kpis.forEach(([value, label], index) => {
-    const column = index % 3
-    if (column === 0) ensureSpace(boxH + 4)
-    const x = margin + column * (boxW + 4)
-    doc.setFillColor(...SURFACE)
-    doc.roundedRect(x, y, boxW, boxH, 2, 2, 'F')
-    doc.setFontSize(13)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(...BRAND)
-    doc.text(value, x + boxW / 2, y + 8, { align: 'center' })
-    doc.setFontSize(7.5)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(...MUTED)
-    doc.text(label, x + boxW / 2, y + 13, { align: 'center' })
-    if (column === 2 || index === kpis.length - 1) y += boxH + 4
-  })
-  y += 3
+  if (includes('indicators')) {
+    addSectionTitle('Indicadores do Período')
+    const adherencePct =
+      data.metrics.adherence.ratio !== null
+        ? `${Math.round(data.metrics.adherence.ratio * 100)}%`
+        : '—'
+    const kpis: [string, string][] = [
+      [String(data.metrics.therapies.inProgress), 'Tratamentos ativos'],
+      [String(data.metrics.therapies.suspended), 'Suspensos'],
+      [String(data.metrics.applications.total), 'Aplicações no período'],
+      [String(data.metrics.therapies.buildUp), 'Em indução'],
+      [String(data.metrics.therapies.maintenance), 'Em manutenção'],
+      [adherencePct, 'Adesão no período'],
+    ]
+    const boxW = (contentW - 8) / 3
+    const boxH = 16
+    kpis.forEach(([value, label], index) => {
+      const column = index % 3
+      if (column === 0) ensureSpace(boxH + 4)
+      const x = margin + column * (boxW + 4)
+      doc.setFillColor(...SURFACE)
+      doc.roundedRect(x, y, boxW, boxH, 2, 2, 'F')
+      doc.setFontSize(13)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(...BRAND)
+      doc.text(value, x + boxW / 2, y + 8, { align: 'center' })
+      doc.setFontSize(7.5)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...MUTED)
+      doc.text(label, x + boxW / 2, y + 13, { align: 'center' })
+      if (column === 2 || index === kpis.length - 1) y += boxH + 4
+    })
+    y += 3
+  }
 
   // Comparativo de aplicações
-  addSectionTitle('Comparativo de Aplicações', 'Aplicações por dia vs período anterior')
-  if (data.comparisonSeries.length === 0) {
-    addEmptyState('Sem dados de comparação no período.')
-  } else {
-    addLegend([
-      { label: 'Atual', color: COMPARISON_COLORS.current },
-      { label: 'Anterior', color: COMPARISON_COLORS.previous },
-    ])
-    drawLineChart(
-      [
-        { label: 'Anterior', color: COMPARISON_COLORS.previous, points: data.comparisonSeries.map((entry) => entry.previous) },
-        { label: 'Atual', color: COMPARISON_COLORS.current, points: data.comparisonSeries.map((entry) => entry.current) },
-      ],
-      data.comparisonSeries.map((entry) => entry.label),
-      34,
-    )
+  if (includes('comparison')) {
+    addSectionTitle('Comparativo de Aplicações', 'Aplicações por dia vs período anterior')
+    if (data.comparisonSeries.length === 0) {
+      addEmptyState('Sem dados de comparação no período.')
+    } else {
+      addLegend([
+        { label: 'Atual', color: COMPARISON_COLORS.current },
+        { label: 'Anterior', color: COMPARISON_COLORS.previous },
+      ])
+      drawLineChart(
+        [
+          { label: 'Anterior', color: COMPARISON_COLORS.previous, points: data.comparisonSeries.map((entry) => entry.previous) },
+          { label: 'Atual', color: COMPARISON_COLORS.current, points: data.comparisonSeries.map((entry) => entry.current) },
+        ],
+        data.comparisonSeries.map((entry) => entry.label),
+        34,
+      )
+    }
   }
 
   // Status das imunoterapias
-  addSectionTitle(
-    'Status de Imunoterapias',
-    'Tratamentos por status ao fim de cada mês, reconstruídos do histórico',
-  )
-  if (data.statusSeries.length === 0) {
-    addEmptyState('Sem tratamentos registrados.')
-  } else {
-    addLegend([
-      { label: 'Ativas', color: STATUS_COLORS.active },
-      { label: 'Suspensas', color: STATUS_COLORS.suspended },
-      { label: 'Concluídas', color: STATUS_COLORS.completed },
-    ])
-    drawLineChart(
-      [
-        { label: 'Ativas', color: STATUS_COLORS.active, points: data.statusSeries.map((entry) => entry.active) },
-        { label: 'Suspensas', color: STATUS_COLORS.suspended, points: data.statusSeries.map((entry) => entry.suspended) },
-        { label: 'Concluídas', color: STATUS_COLORS.completed, points: data.statusSeries.map((entry) => entry.completed) },
-      ],
-      data.statusSeries.map((entry) => entry.label),
-      34,
+  if (includes('status')) {
+    addSectionTitle(
+      'Status de Imunoterapias',
+      'Tratamentos por status ao fim de cada mês, reconstruídos do histórico',
     )
+    if (data.statusSeries.length === 0) {
+      addEmptyState('Sem tratamentos registrados.')
+    } else {
+      addLegend([
+        { label: 'Ativas', color: STATUS_COLORS.active },
+        { label: 'Suspensas', color: STATUS_COLORS.suspended },
+        { label: 'Concluídas', color: STATUS_COLORS.completed },
+      ])
+      drawLineChart(
+        [
+          { label: 'Ativas', color: STATUS_COLORS.active, points: data.statusSeries.map((entry) => entry.active) },
+          { label: 'Suspensas', color: STATUS_COLORS.suspended, points: data.statusSeries.map((entry) => entry.suspended) },
+          { label: 'Concluídas', color: STATUS_COLORS.completed, points: data.statusSeries.map((entry) => entry.completed) },
+        ],
+        data.statusSeries.map((entry) => entry.label),
+        34,
+      )
+    }
   }
 
   // Distribuição de fases
-  addSectionTitle(
-    'Distribuição de Fases',
-    'Aplicações administradas por dia, empilhadas por fase do tratamento',
-  )
-  if (data.phaseSeries.every((entry) => entry.buildUp + entry.maintenance === 0)) {
-    addEmptyState('Sem aplicações administradas no período.')
-  } else {
-    addLegend([
-      { label: 'Indução', color: PHASE_COLORS.buildUp },
-      { label: 'Manutenção', color: PHASE_COLORS.maintenance },
-    ])
-    drawStackedBars(data.phaseSeries, 34)
+  if (includes('phases')) {
+    addSectionTitle(
+      'Distribuição de Fases',
+      'Aplicações administradas por dia, empilhadas por fase do tratamento',
+    )
+    if (data.phaseSeries.every((entry) => entry.buildUp + entry.maintenance === 0)) {
+      addEmptyState('Sem aplicações administradas no período.')
+    } else {
+      addLegend([
+        { label: 'Indução', color: PHASE_COLORS.buildUp },
+        { label: 'Manutenção', color: PHASE_COLORS.maintenance },
+      ])
+      drawStackedBars(data.phaseSeries, 34)
+    }
   }
 
   // Concentrações
-  addSectionTitle(
-    'Ciclos de Tratamento por Concentração',
-    'Aplicações administradas no período, por concentração',
-  )
-  if (data.concentrationData.length === 0) {
-    addEmptyState('Sem aplicações administradas no período.')
-  } else {
-    drawHBarList(data.concentrationData, 'aplicações')
+  if (includes('concentrations')) {
+    addSectionTitle(
+      'Ciclos de Tratamento por Concentração',
+      'Aplicações administradas no período, por concentração',
+    )
+    if (data.concentrationData.length === 0) {
+      addEmptyState('Sem aplicações administradas no período.')
+    } else {
+      drawHBarList(data.concentrationData, 'aplicações')
+    }
   }
 
   // Tipos
-  addSectionTitle(
-    'Imunoterapias Ativas por Tipo',
-    'Tratamentos em andamento, por tipo de alérgeno',
-  )
-  if (data.typeData.length === 0) {
-    addEmptyState('Sem tratamentos em andamento.')
-  } else {
-    drawHBarList(data.typeData, 'tratamentos')
+  if (includes('types')) {
+    addSectionTitle(
+      'Imunoterapias Ativas por Tipo',
+      'Tratamentos em andamento, por tipo de alérgeno',
+    )
+    if (data.typeData.length === 0) {
+      addEmptyState('Sem tratamentos em andamento.')
+    } else {
+      drawHBarList(data.typeData, 'tratamentos')
+    }
   }
 
   // Heatmap volume × concentração
-  addSectionTitle('Volume vs Concentração', 'Matriz de valores administrados no período')
-  if (data.volumeMatrix.total === 0) {
-    addEmptyState('Sem aplicações administradas no período.')
-  } else {
-    drawHeatmap(data.volumeMatrix)
+  if (includes('matrix')) {
+    addSectionTitle('Volume vs Concentração', 'Matriz de valores administrados no período')
+    if (data.volumeMatrix.total === 0) {
+      addEmptyState('Sem aplicações administradas no período.')
+    } else {
+      drawHeatmap(data.volumeMatrix)
+    }
   }
 
   // Rodapé
@@ -426,5 +467,11 @@ export function exportDashboardReportPdf(data: DashboardReportData) {
     doc.text(`Página ${page} de ${totalPages}`, pageW - margin, pageH - 5, { align: 'right' })
   }
 
-  doc.save(`relatorio_dashboard_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`)
+  return doc
+}
+
+export function exportDashboardReportPdf(data: DashboardReportData) {
+  buildDashboardReportPdf(data).save(
+    `relatorio_dashboard_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`,
+  )
 }

@@ -7,7 +7,7 @@ import type {
 } from '@/features/patient/exporters/types'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faFileArrowDown, faFileLines } from '@fortawesome/free-solid-svg-icons'
+import { faFileArrowDown, faFileLines } from '@fortawesome/free-solid-svg-icons'
 
 const REPORT_FORMATS: { id: ReportFileFormat; label: string; icon: IconDefinition }[] = [
   { id: 'pdf', label: 'PDF', icon: faFileLines },
@@ -58,7 +58,7 @@ export function ReportConfigPanel({
   patientStatus,
 }: ReportConfigPanelProps) {
   return (
-    <div className="w-[34rem] shrink-0 border-r border-(--border-custom) px-5 pt-0 pb-5 overflow-y-auto space-y-5">
+    <div className="w-[34rem] min-w-[18rem] max-w-[45%] shrink border-r border-(--border-custom) px-5 pt-0 pb-5 overflow-y-auto space-y-5">
       <div className="space-y-2">
         <span className="block text-xs font-bold" style={{ color: '#12333a' }}>Resumo</span>
         <div className="space-y-1.5 text-[0.78rem] text-(--text-muted)">
@@ -90,34 +90,20 @@ export function ReportConfigPanel({
 
       <div>
         <span className="text-xs font-semibold text-(--text-muted) mb-2 block">Seções incluídas</span>
-        <div className="grid grid-cols-2 gap-1.5">
-          {REPORT_SECTIONS.map((section) => {
-            const selected = selectedSections.includes(section.id)
-            return (
-              <button
-                key={section.id}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => toggleSection(section.id)}
-                className="flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer"
-                style={{
-                  background: selected ? 'rgba(18,51,58,0.06)' : '#F6F8F8',
-                  borderColor: selected ? '#12333a' : '#DDE6E6',
-                }}
-              >
-                <div
-                  className="flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0"
-                  style={{
-                    background: selected ? '#12333a' : '#EDF1F1',
-                    borderColor: selected ? '#12333a' : '#DDE6E6',
-                  }}
-                >
-                  {selected && <FontAwesomeIcon icon={faCheck} className="text-white" style={{ fontSize: 10 }} />}
-                </div>
-                <span className="text-[0.7rem] font-medium text-(--text)">{section.label}</span>
-              </button>
-            )
-          })}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+          {REPORT_SECTIONS.map((section) => (
+            <label
+              key={section.id}
+              className="flex items-center gap-2 text-[0.7rem] text-(--text) cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={selectedSections.includes(section.id)}
+                onChange={() => toggleSection(section.id)}
+              />
+              {section.label}
+            </label>
+          ))}
         </div>
       </div>
 
@@ -176,29 +162,12 @@ function ConsentCheckbox({
   description: string
 }) {
   return (
-    <button
-      type="button"
-      aria-pressed={checked}
-      onClick={onChange}
-      className="flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-all cursor-pointer"
-      style={{
-        background: checked ? 'rgba(18,51,58,0.06)' : '#F6F8F8',
-        borderColor: checked ? '#12333a' : '#DDE6E6',
-      }}
-    >
-      <div
-        className="flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0 mt-px"
-        style={{
-          background: checked ? '#12333a' : '#EDF1F1',
-          borderColor: checked ? '#12333a' : '#DDE6E6',
-        }}
-      >
-        {checked && <FontAwesomeIcon icon={faCheck} className="text-white" style={{ fontSize: 10 }} />}
-      </div>
-      <div>
-        <span className="text-[0.7rem] font-medium text-(--text) block">{title}</span>
-        <span className="text-[0.55rem] text-(--text-muted)">{description}</span>
-      </div>
-    </button>
+    <label className="flex items-start gap-2 cursor-pointer">
+      <input type="checkbox" checked={checked} onChange={onChange} className="mt-0.5" />
+      <span>
+        <span className="block text-[0.72rem] text-(--text)">{title}</span>
+        <span className="text-[0.66rem] leading-snug text-(--text-muted)">{description}</span>
+      </span>
+    </label>
   )
 }

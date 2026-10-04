@@ -111,6 +111,12 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Controles nativos no teal da marca, no lugar do azul padrão do sistema. */
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: #257e8c;
+  }
+
 }
 
 *:focus,
