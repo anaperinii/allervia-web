@@ -1,76 +1,174 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from '@tanstack/react-router'
-import { addDays, differenceInDays, format } from 'date-fns'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
 import { SegmentedControl, Toast } from '@/shared/components'
 import { sendReminder } from '@/shared/lib/whatsapp'
-import { usePatientStore, derivePatientDates, type Application } from '@/features/patient/stores/usePatientStore'
-import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { useAuditStore } from '@/shared/stores/useAuditStore'
-import { useDoctorFilter, useHasPermission, useUserStore } from '@/shared/stores/useUserStore'
+import { usePatientStore, type Application } from '@/features/patient/stores/usePatientStore'
 import {
-  calculateNextDose,
-  INDUCTION_INTERVAL,
-  INITIAL_DOSE,
-} from '@/features/immunotherapy/constants/scit-protocol'
-import { comparePtDateDesc, parsePtDate } from '@/shared/lib/dates'
+  buildLegacyPatient,
+  doseToLegacyApplication,
+  formatInstantDate,
+  formatStepPresentation,
+  THERAPY_STATUS_LABELS,
+} from '@/features/patient/adapters/clinical-presentation'
+import {
+  getDose,
+  getPatient,
+  listDosesForTherapy,
+  updatePatient,
+} from '@/shared/api/clinical.api'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
+import { useAuditStore } from '@/shared/stores/useAuditStore'
+import { useCurrentUser, useHasPermission } from '@/shared/stores/useUserStore'
+import { formatDurationFromDays } from '@/shared/lib/dates'
 import { monthIndexFromPtUpper } from '@/shared/constants/months-pt'
 import { PatientInfoSidebar } from '@/features/patient/components/chart/PatientInfoSidebar'
 import { SummaryCards } from '@/features/patient/components/chart/SummaryCards'
 import { ApplicationsMonthFilter } from '@/features/patient/components/chart/ApplicationsMonthFilter'
 import { ApplicationsTimeline } from '@/features/patient/components/chart/ApplicationsTimeline'
 import { ApplicationsCalendar } from '@/features/patient/components/chart/ApplicationsCalendar'
-import { ProgressIndicator, PROGRESS_INDUCTION_STEPS } from '@/features/patient/components/chart/ProgressIndicator'
+import { ProgressIndicator } from '@/features/patient/components/chart/ProgressIndicator'
 import { TreatmentTimeline } from '@/features/patient/components/treatment-completion/TreatmentTimeline'
 import { ApplicationDetailModal } from '@/features/patient/components/chart/ApplicationDetailModal'
 import { EditPatientModal } from '@/features/patient/components/chart/EditPatientModal'
-import { AdjustProtocolModal } from '@/features/patient/components/chart/AdjustProtocolModal'
+import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
+import {
+  LifecycleHistoryModal,
+  ResumeTherapyModal,
+  SuspendTherapyModal,
+} from '@/features/patient/components/chart/TherapyLifecycleModals'
+import { RevisePrescriptionModal } from '@/features/patient/components/chart/RevisePrescriptionModal'
+import {
+  LateObservationModal,
+  RetractDoseModal,
+} from '@/features/patient/components/chart/DoseCorrectionModals'
+import { PortabilityModal } from '@/features/patient/components/chart/PortabilityModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendarDays, faFloppyDisk, faList, faPowerOff } from '@fortawesome/free-solid-svg-icons'
-import { AdjustHistoryModal } from '@/features/patient/components/chart/AdjustHistoryModal'
-import { InactivateModal } from '@/features/patient/components/chart/InactivateModal'
-import { InactivationHistoryModal } from '@/features/patient/components/chart/InactivationHistoryModal'
-import { ReactivateModal } from '@/features/patient/components/chart/ReactivateModal'
-import { PortabilityModal } from '@/features/patient/components/chart/PortabilityModal'
-
-const ALL_INDUCTION_STEPS = PROGRESS_INDUCTION_STEPS.flatMap((step) => step.vols.map((volume) => `${step.conc} - ${volume}`))
 
 export function PatientChartPage() {
   const navigate = useNavigate()
   const { patientId } = useParams({ from: '/patient/$patientId' })
+  const { therapy: therapyParam } = useSearch({ from: '/patient/$patientId' })
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+  const queryClient = useQueryClient()
   const selectedPatient = usePatientStore((s) => s.selectedPatient)
-  const applications = usePatientStore((s) => s.applications)
   const setSelectedPatient = usePatientStore((s) => s.setSelectedPatient)
-  const inactivateImmunotherapy = usePatientStore((s) => s.inactivateImmunotherapy)
-  const reactivateImmunotherapy = usePatientStore((s) => s.reactivateImmunotherapy)
-  const addProtocolAdjustment = usePatientStore((s) => s.addProtocolAdjustment)
 
-  const canAdjustProtocol = useHasPermission('adjust_protocol')
+  const patientQuery = useQuery({
+    queryKey: queryKeys.patient(organizationId, patientId),
+    queryFn: ({ signal }) => getPatient(patientId, signal),
+    enabled: organizationId !== '' && patientId !== '',
+  })
+  const patientDetail = patientQuery.data ?? null
+
+  const selectedTherapy = useMemo(() => {
+    if (!patientDetail) return null
+    if (therapyParam) {
+      return (
+        patientDetail.therapies.find((item) => item.id === therapyParam) ?? null
+      )
+    }
+    return patientDetail.therapies[0] ?? null
+  }, [patientDetail, therapyParam])
+
+  const dosesQuery = useQuery({
+    queryKey: queryKeys.doses(organizationId, selectedTherapy?.id ?? ''),
+    queryFn: ({ signal }) => listDosesForTherapy(selectedTherapy!.id, signal),
+    enabled: organizationId !== '' && selectedTherapy !== null,
+  })
+  const doseRecords = useMemo(() => dosesQuery.data ?? [], [dosesQuery.data])
+
+  const lastAdministered = useMemo(() => {
+    const administered = doseRecords.filter((record) => record.administeredAt !== null)
+    if (administered.length === 0) return null
+    return [...administered].sort((a, b) =>
+      (b.administeredAt ?? '').localeCompare(a.administeredAt ?? ''),
+    )[0]
+  }, [doseRecords])
+
+  const pendingRecord = useMemo(
+    () =>
+      doseRecords.find(
+        (record) => record.status === 'SCHEDULED' && !record.isArchived,
+      ) ?? null,
+    [doseRecords],
+  )
+
+  const pendingDoseQuery = useQuery({
+    queryKey: queryKeys.dose(organizationId, pendingRecord?.id ?? ''),
+    queryFn: ({ signal }) => getDose(pendingRecord!.id, signal),
+    enabled: organizationId !== '' && pendingRecord !== null,
+  })
+  const pendingDose = pendingDoseQuery.data ?? null
+
+  // Sem previsão pendente, a meta ainda é legível pelo detalhe da última dose
+  // administrada: as etapas permitidas vêm da mesma versão fixada.
+  const fallbackDoseId = pendingRecord === null ? (lastAdministered?.id ?? null) : null
+  const fallbackDoseQuery = useQuery({
+    queryKey: queryKeys.dose(organizationId, fallbackDoseId ?? ''),
+    queryFn: ({ signal }) => getDose(fallbackDoseId!, signal),
+    enabled: organizationId !== '' && fallbackDoseId !== null,
+  })
+
+  const savePatientMutation = useMutation({
+    mutationFn: (patch: {
+      name: string
+      phone: string
+      weight: string
+      responsibleDoctor: string
+      guardianName?: string
+      guardianCpf?: string
+      guardianPhone?: string
+    }) =>
+      updatePatient(patientId, {
+        fullName: patch.name,
+        phoneNumber: patch.phone.replace(/\D/g, ''),
+        weightInKg: Number(
+          patch.weight.replace(',', '.').replace(/[^0-9.]/g, ''),
+        ),
+        ...(patch.responsibleDoctor &&
+        patch.responsibleDoctor !== patientDetail?.responsiblePhysician.id
+          ? { responsiblePhysicianId: patch.responsibleDoctor }
+          : {}),
+        ...(patch.guardianName
+          ? {
+              guardian: {
+                fullName: patch.guardianName.trim(),
+                cpf: patch.guardianCpf,
+                phoneNumber: (patch.guardianPhone ?? '').replace(/\D/g, ''),
+              },
+            }
+          : {}),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.patient(organizationId, patientId),
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['clinical', organizationId, 'patients'],
+      })
+    },
+  })
+
+  const canAdjustProtocol = useHasPermission('edit_scheduled_dose')
   const canInactivate = useHasPermission('inactivate_immunotherapy')
   const canReactivate = useHasPermission('reactivate_patient')
   const canEditPatient = useHasPermission('edit_patient_data')
   const canEvolve = useHasPermission('evolve_patient')
   const canEmitReport = useHasPermission('emit_report')
   const canLgpdPortability = useHasPermission('lgpd_portability')
-  const doctorFilter = useDoctorFilter()
 
   useEffect(() => {
-    if (doctorFilter && selectedPatient && selectedPatient.responsibleDoctor !== doctorFilter) {
-      navigate({ to: '/immunotherapies' })
-    }
-  }, [doctorFilter, selectedPatient, navigate])
+    if (!patientDetail) return
+    setSelectedPatient(buildLegacyPatient(patientDetail, selectedTherapy))
+  }, [patientDetail, selectedTherapy, setSelectedPatient])
 
-  useEffect(() => {
-    if (!patientId) return
-    if (selectedPatient?.id === patientId) return
-    const { immunotherapies } = useImmunotherapiesStore.getState()
-    const immunotherapy = immunotherapies.find((item) => item.id === patientId)
-    if (immunotherapy) setSelectedPatient(buildPatientFromImmunotherapy(immunotherapy))
-    else navigate({ to: '/immunotherapies' })
-  }, [patientId, selectedPatient, navigate, setSelectedPatient])
-
-  const currentUser = useUserStore((s) => s.current)
+  const currentUser = useCurrentUser()
   const logAccess = useAuditStore((s) => s.logAccess)
   const loggedAccessRef = useRef<string | null>(null)
   useEffect(() => {
@@ -97,72 +195,73 @@ export function PatientChartPage() {
   const [calMonth, setCalMonth] = useState(new Date().getMonth())
   const [calYear, setCalYear] = useState(new Date().getFullYear())
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showAdjustModal, setShowAdjustModal] = useState(false)
-  const [showAdjustHistory, setShowAdjustHistory] = useState(false)
-  const [showInactivateModal, setShowInactivateModal] = useState(false)
+  const [showEditDoseModal, setShowEditDoseModal] = useState(false)
+  const [showSuspendModal, setShowSuspendModal] = useState(false)
+  const [showResumeModal, setShowResumeModal] = useState(false)
+  const [showLifecycleHistory, setShowLifecycleHistory] = useState(false)
+  const [showReviseModal, setShowReviseModal] = useState(false)
+  const [retractDoseId, setRetractDoseId] = useState<string | null>(null)
+  const [lateObsDoseId, setLateObsDoseId] = useState<string | null>(null)
   const [showPortabilityModal, setShowPortabilityModal] = useState(false)
   const [showInactivateToast, setShowInactivateToast] = useState(false)
-  const [showReactivateModal, setShowReactivateModal] = useState(false)
   const [showReactivateToast, setShowReactivateToast] = useState(false)
   const [showAdjustToast, setShowAdjustToast] = useState(false)
-  const [showInactivationHistory, setShowInactivationHistory] = useState(false)
 
-  const patientApplications = useMemo(() => {
-    if (!selectedPatient) return []
-    return applications.filter((application) => application.patientId === selectedPatient.id)
-  }, [applications, selectedPatient])
-
-  const realizedApplications = useMemo(
-    () => patientApplications.filter((application) => application.status === 'completed'),
-    [patientApplications],
+  const patientApplications = useMemo(
+    () => doseRecords.map((record) => doseToLegacyApplication(record, patientId)),
+    [doseRecords, patientId],
   )
 
-  const lastRealized = useMemo(() => {
-    if (!realizedApplications.length) return null
-    return [...realizedApplications].sort((a, b) => comparePtDateDesc(a.date, b.date))[0]
-  }, [realizedApplications])
+  // Antes da primeira aplicação não há dose administrada: o intervalo vigente
+  // é o planejado para a dose agendada.
+  const currentIntervalDays =
+    lastAdministered?.administeredValues?.intervalDays ??
+    pendingRecord?.plannedValues?.intervalDays ??
+    null
+  const currentInterval =
+    currentIntervalDays !== null ? `${currentIntervalDays} dias` : '-'
+  // Vigente = o que será aplicado a seguir (planejado da dose agendada);
+  // sem agendamento, vale a última administrada.
+  const currentDoseValues =
+    pendingRecord?.plannedValues ?? lastAdministered?.administeredValues ?? null
+  const currentDose = currentDoseValues
+    ? formatStepPresentation(currentDoseValues)
+    : '-'
+  const previousDose =
+    pendingRecord?.plannedValues && lastAdministered?.administeredValues
+      ? formatStepPresentation(lastAdministered.administeredValues)
+      : null
+  // A meta da prescrição é a última etapa permitida da versão fixada.
+  const allowedSteps =
+    pendingDose?.allowedValues ?? fallbackDoseQuery.data?.allowedValues ?? []
+  const targetStep = allowedSteps.at(-1) ?? null
+  const targetValues = targetStep ? formatStepPresentation(targetStep) : null
+  const nextDate = pendingRecord
+    ? formatInstantDate(pendingRecord.scheduledAt)
+    : '-'
 
-  const { inductionStart, maintenanceStart } = useMemo(
-    () => (selectedPatient
-      ? derivePatientDates(applications, selectedPatient.id)
-      : { inductionStart: null, maintenanceStart: null }),
-    [applications, selectedPatient],
-  )
-
-  const currentInterval = lastRealized?.cycle.days ?? selectedPatient?.currentInterval ?? INDUCTION_INTERVAL
-  const currentDose = lastRealized
-    ? `${lastRealized.extractConcentration || lastRealized.dose.split(' - ')[0]} - ${lastRealized.appliedVolume || lastRealized.dose.split(' - ')[1]}`
-    : selectedPatient?.currentDoseConcentration ?? '-'
-
-  const nextCalc = useMemo(() => calculateNextDose(currentDose, currentInterval), [currentDose, currentInterval])
-
-  const nextDate = useMemo(() => {
-    if (!lastRealized) return selectedPatient?.nextApplicationDate || '-'
-    try {
-      const [d, m, y] = lastRealized.date.split('/')
-      return format(addDays(new Date(+y, +m - 1, +d), nextCalc.interval), 'dd/MM/yyyy')
-    } catch {
-      return '-'
-    }
-  }, [lastRealized, nextCalc.interval, selectedPatient])
+  const inductionStart = selectedTherapy
+    ? formatInstantDate(selectedTherapy.inductionStartDate)
+    : null
+  const maintenanceStart = selectedTherapy?.maintenanceStartDate
+    ? formatInstantDate(selectedTherapy.maintenanceStartDate)
+    : null
 
   const treatmentTime = useMemo(() => {
-    if (!inductionStart) return null
-    try {
-      const start = parsePtDate(inductionStart)
-      const days = differenceInDays(new Date(), start)
-      const months = Math.floor(days / 30)
-      const years = Math.floor(months / 12)
-      if (years > 0) return `${years} ${years === 1 ? 'ano' : 'anos'}`
-      if (months > 0) return `${months} ${months === 1 ? 'mês' : 'meses'}`
-      return `${days} ${days === 1 ? 'dia' : 'dias'}`
-    } catch {
-      return null
-    }
-  }, [inductionStart])
+    if (!selectedTherapy) return null
+    const start = new Date(selectedTherapy.inductionStartDate)
+    const days = Math.floor((Date.now() - start.getTime()) / 86_400_000)
+    if (days < 0) return null
+    return formatDurationFromDays(days)
+  }, [selectedTherapy])
 
   const sortedApplications = useMemo(
-    () => [...patientApplications].sort((a, b) => comparePtDateDesc(a.date, b.date)),
+    () =>
+      [...patientApplications].sort((a, b) => {
+        const [da, ma, ya] = a.date.split('/')
+        const [db, mb, yb] = b.date.split('/')
+        return `${yb}${mb}${db}`.localeCompare(`${ya}${ma}${da}`)
+      }),
     [patientApplications],
   )
 
@@ -199,49 +298,29 @@ export function PatientChartPage() {
     return byDate
   }, [patientApplications])
 
-  const currentDoseStr = lastRealized?.dose || selectedPatient?.currentDoseConcentration || INITIAL_DOSE
-  const currentStepIndex = useMemo(() => {
-    const [concentration, volume] = currentDoseStr.split(' - ').map((part) => part?.trim() ?? '')
-    return ALL_INDUCTION_STEPS.findIndex((step) => {
-      const [stepConcentration, stepVolume] = step.split(' - ').map((part) => part.trim())
-      return concentration === stepConcentration && volume === stepVolume
-    })
-  }, [currentDoseStr])
-  const isMaintenance = currentInterval > INDUCTION_INTERVAL
-  const progressPct = isMaintenance
-    ? 100
-    : Math.round(((currentStepIndex >= 0 ? currentStepIndex : 0) + 1) / ALL_INDUCTION_STEPS.length * 100)
-
-  const activeInactivation = useMemo(() => {
-    if (!selectedPatient?.inactivations?.length) return null
-    const last = selectedPatient.inactivations[selectedPatient.inactivations.length - 1]
-    return last && !last.reactivatedAt ? last : null
-  }, [selectedPatient])
-
-  const inactivationCount = selectedPatient?.inactivations?.length ?? 0
-
-  const suggestedNextDose = useMemo(() => {
-    if (isMaintenance) return selectedPatient?.currentDoseConcentration ?? '1:10 - 0,5ml'
-    if (currentStepIndex < 0) return selectedPatient?.currentDoseConcentration ?? ''
-    const nextIdx = Math.min(currentStepIndex + 1, ALL_INDUCTION_STEPS.length - 1)
-    return ALL_INDUCTION_STEPS[nextIdx]
-  }, [isMaintenance, currentStepIndex, selectedPatient])
-
-  const pauseDays = useMemo(() => {
-    if (!activeInactivation) return 0
-    try {
-      const startStr = activeInactivation.startDate.split(' às ')[0]
-      const start = parsePtDate(startStr)
-      return Math.max(0, differenceInDays(new Date(), start))
-    } catch {
-      return 0
-    }
-  }, [activeInactivation])
-
-  if (!selectedPatient) {
+  if (patientQuery.isPending || (patientDetail && !selectedPatient)) {
     return (
       <div className="flex h-full items-center justify-center">
-        <span className="text-xs text-(--text-muted)">Carregando...</span>
+        <span className="text-xs text-(--text-muted)">Carregando prontuário…</span>
+      </div>
+    )
+  }
+
+  if (patientQuery.error || !patientDetail || !selectedPatient) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-2">
+        <span className="text-xs text-(--text-muted)" role="alert">
+          {patientQuery.error instanceof ApiError
+            ? patientQuery.error.message
+            : 'Não foi possível carregar o prontuário.'}
+        </span>
+        <button
+          type="button"
+          onClick={() => navigate({ to: '/immunotherapies' })}
+          className="text-xs font-semibold text-brand underline cursor-pointer bg-transparent border-none"
+        >
+          Voltar para a lista
+        </button>
       </div>
     )
   }
@@ -251,32 +330,96 @@ export function PatientChartPage() {
       <div className="ml-1 mr-1 mt-1 mb-1 flex flex-1 gap-4 min-h-0 min-w-0">
         <PatientInfoSidebar
           patient={selectedPatient}
+          targetValues={targetValues}
+          therapyStatus={selectedTherapy?.status ?? null}
+          evolutionTherapyId={selectedTherapy?.id ?? null}
           treatmentTime={treatmentTime}
           inductionStart={inductionStart}
           maintenanceStart={maintenanceStart}
-          activeInactivation={activeInactivation}
-          inactivationCount={inactivationCount}
+          activeInactivation={null}
+          inactivationCount={0}
           canReactivate={canReactivate}
           canEvolve={canEvolve}
           canEmitReport={canEmitReport}
           canEditPatient={canEditPatient}
-          canAdjustProtocol={canAdjustProtocol}
-          canInactivate={canInactivate}
+          canInactivate={canInactivate && selectedTherapy?.status === 'IN_PROGRESS'}
           canComplete={canInactivate}
-          completeDisabled={selectedPatient.currentInterval !== 28}
+          completeDisabled={selectedTherapy?.status !== 'IN_PROGRESS'}
           canLgpdPortability={canLgpdPortability}
-          onReactivate={() => setShowReactivateModal(true)}
+          canRevisePrescription={canInactivate && pendingDose !== null}
+          onRevisePrescription={() => setShowReviseModal(true)}
+          onShowLifecycleHistory={() => setShowLifecycleHistory(true)}
+          onReactivate={() => setShowResumeModal(true)}
           onEditPatient={() => setShowEditModal(true)}
-          onAdjustProtocol={() => setShowAdjustModal(true)}
-          onShowAdjustHistory={() => setShowAdjustHistory(true)}
-          onInactivate={() => setShowInactivateModal(true)}
-          onShowInactivationHistory={() => setShowInactivationHistory(true)}
+          onInactivate={() => setShowSuspendModal(true)}
           onPortability={() => setShowPortabilityModal(true)}
-          onComplete={() => navigate({ to: '/patient-completion', search: { patientId: selectedPatient.id } })}
+          onComplete={() =>
+            navigate({
+              to: '/patient-completion',
+              search: { patientId, therapy: selectedTherapy?.id },
+            })
+          }
         />
 
         <div className="flex flex-1 flex-col gap-3 min-w-0">
-          <SummaryCards currentInterval={currentInterval} nextDate={nextDate} currentDose={currentDose} />
+          {patientDetail.therapies.length > 1 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[0.7rem] font-semibold text-(--text-muted)">
+                Tratamento:
+              </span>
+              {patientDetail.therapies.map((therapy) => {
+                const active = therapy.id === selectedTherapy?.id
+                return (
+                  <button
+                    key={therapy.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() =>
+                      navigate({
+                        to: '/patient/$patientId',
+                        params: { patientId },
+                        search: { therapy: therapy.id },
+                      })
+                    }
+                    className={cn(
+                      'rounded-lg border px-3 py-1 text-[0.7rem] font-semibold transition-colors cursor-pointer',
+                      active
+                        ? 'border-brand bg-brand-50 text-brand-dark'
+                        : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50',
+                    )}
+                  >
+                    {therapy.immunoType} - {therapy.extract}
+                    <span className="ml-1.5 font-normal opacity-70">
+                      {THERAPY_STATUS_LABELS[therapy.status]}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+          {pendingDose?.migrationRequired && (
+            <div className="flex items-center gap-2.5 bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-2.5">
+              <span className="text-xs text-amber-800">
+                Tratamento legado sem prescrição vinculada: novos comandos clínicos
+                ficam bloqueados até a migração assistida.
+              </span>
+              {canAdjustProtocol && (
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: '/migration' })}
+                  className="ml-auto text-xs font-semibold text-amber-800 underline cursor-pointer bg-transparent border-none shrink-0"
+                >
+                  Abrir migração
+                </button>
+              )}
+            </div>
+          )}
+          <SummaryCards
+            currentInterval={currentInterval}
+            nextDate={nextDate}
+            currentDose={currentDose}
+            previousDose={previousDose}
+          />
 
           <div className="flex flex-1 flex-col min-h-0 min-w-0">
           <div className="relative z-10 flex items-end justify-between gap-2">
@@ -326,7 +469,7 @@ export function PatientChartPage() {
             )}
           </div>
 
-          <div className="flex-1 flex flex-col rounded-tr-xl rounded-b-xl bg-white overflow-hidden min-h-0 min-w-0">
+          <div className="flex-1 flex flex-col rounded-tr-xl rounded-b-xl border border-(--border-custom) bg-white overflow-hidden min-h-0 min-w-0">
             {activeTab === 'applications' ? (
               <>
                 <div className="px-5 py-3 border-b border-(--border-custom) min-w-0">
@@ -353,7 +496,7 @@ export function PatientChartPage() {
                     <ApplicationsTimeline
                       applicationsByMonth={groupedByMonth}
                       onSelect={setSelectedApp}
-                      onEditScheduled={setSelectedApp}
+                      onEditScheduled={() => setShowEditDoseModal(true)}
                       onSendReminder={(app) => sendReminder(selectedPatient.phone, selectedPatient.name.split(' ')[0], app.date, app.startTime)}
                     />
                   </div>
@@ -370,8 +513,8 @@ export function PatientChartPage() {
             ) : (
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
                 <ProgressIndicator
-                  currentStepIndex={currentStepIndex}
-                  progressPct={progressPct}
+                  steps={pendingDose?.allowedValues ?? []}
+                  currentStepId={lastAdministered?.administeredStepId ?? null}
                 />
                 <TreatmentTimeline
                   applications={patientApplications}
@@ -390,94 +533,109 @@ export function PatientChartPage() {
         open={showEditModal}
         patient={selectedPatient}
         onClose={() => setShowEditModal(false)}
-        onSave={(patch) => setSelectedPatient({ ...selectedPatient, ...patch })}
+        onSave={(patch) => savePatientMutation.mutate(patch)}
       />
 
-      <AdjustProtocolModal
-        open={showAdjustModal}
-        patient={selectedPatient}
-        onClose={() => setShowAdjustModal(false)}
-        onConfirm={(adjustment, patch) => {
-          setSelectedPatient({
-            ...selectedPatient,
-            immunotherapyType: patch.newType,
-            administrationRoute: patch.newRoute,
-            extract: patch.newExtract,
-          })
-          addProtocolAdjustment(adjustment)
-          setShowAdjustToast(true)
-        }}
+      <EditScheduledDoseModal
+        open={showEditDoseModal}
+        dose={pendingDose}
+        organizationId={organizationId}
+        onClose={() => setShowEditDoseModal(false)}
+        onSaved={() => setShowAdjustToast(true)}
       />
 
-      <AdjustHistoryModal
-        open={showAdjustHistory}
-        adjustments={selectedPatient.protocolAdjustments ?? []}
-        onClose={() => setShowAdjustHistory(false)}
-      />
+      {selectedTherapy && (
+        <>
+          <SuspendTherapyModal
+            open={showSuspendModal}
+            therapyId={selectedTherapy.id}
+            therapyRevision={selectedTherapy.revision}
+            organizationId={organizationId}
+            onClose={() => setShowSuspendModal(false)}
+            onDone={() => setShowInactivateToast(true)}
+          />
+          <ResumeTherapyModal
+            open={showResumeModal}
+            therapyId={selectedTherapy.id}
+            therapyRevision={selectedTherapy.revision}
+            organizationId={organizationId}
+            onClose={() => setShowResumeModal(false)}
+            onDone={() => setShowReactivateToast(true)}
+          />
+          <LifecycleHistoryModal
+            open={showLifecycleHistory}
+            therapyId={selectedTherapy.id}
+            organizationId={organizationId}
+            onClose={() => setShowLifecycleHistory(false)}
+          />
+          <RevisePrescriptionModal
+            open={showReviseModal}
+            therapyId={selectedTherapy.id}
+            therapyRevision={selectedTherapy.revision}
+            currentVersionId={selectedTherapy.prescription?.versionId ?? null}
+            organizationId={organizationId}
+            onClose={() => setShowReviseModal(false)}
+          />
+        </>
+      )}
 
-      <InactivateModal
-        open={showInactivateModal}
-        patient={selectedPatient}
-        onClose={() => setShowInactivateModal(false)}
-        onConfirm={(inactivation) => {
-          inactivateImmunotherapy(inactivation)
-          setShowInactivateToast(true)
-        }}
+      <RetractDoseModal
+        doseId={retractDoseId}
+        organizationId={organizationId}
+        onClose={() => setRetractDoseId(null)}
+      />
+      <LateObservationModal
+        doseId={lateObsDoseId}
+        organizationId={organizationId}
+        onClose={() => setLateObsDoseId(null)}
       />
 
       <PortabilityModal
         open={showPortabilityModal}
         patient={selectedPatient}
+        therapyId={selectedTherapy?.id ?? null}
         onClose={() => setShowPortabilityModal(false)}
       />
 
-      <InactivationHistoryModal
-        open={showInactivationHistory}
-        inactivations={selectedPatient.inactivations ?? []}
-        onClose={() => setShowInactivationHistory(false)}
+      <ApplicationDetailModal
+        application={selectedApplication}
+        organizationId={organizationId}
+        onClose={() => setSelectedApp(null)}
+        onRetract={
+          canAdjustProtocol
+            ? (doseId) => { setSelectedApp(null); setRetractDoseId(doseId) }
+            : undefined
+        }
+        onLateObservation={
+          canAdjustProtocol
+            ? (doseId) => { setSelectedApp(null); setLateObsDoseId(doseId) }
+            : undefined
+        }
       />
-
-      <ReactivateModal
-        open={showReactivateModal && !!activeInactivation}
-        patient={selectedPatient}
-        activeInactivation={activeInactivation}
-        suggestedNextDose={suggestedNextDose}
-        lastRealized={lastRealized}
-        pauseDays={pauseDays}
-        isMaintenance={isMaintenance}
-        progressPct={progressPct}
-        onClose={() => setShowReactivateModal(false)}
-        onConfirm={(payload) => {
-          reactivateImmunotherapy(payload)
-          setShowReactivateToast(true)
-        }}
-      />
-
-      <ApplicationDetailModal application={selectedApplication} onClose={() => setSelectedApp(null)} />
 
       <Toast
         open={showAdjustToast}
         onClose={() => setShowAdjustToast(false)}
         variant="success"
         icon={<FontAwesomeIcon icon={faFloppyDisk} style={{ fontSize: 16 }} />}
-        title="Protocolo ajustado com sucesso!"
-        description="A alteração foi registrada no histórico clínico e marcará as próximas aplicações como desvio de protocolo."
+        title="Previsão atualizada!"
+        description="A sessão prevista foi ajustada com motivo registrado. Nenhuma sucessora foi criada."
       />
       <Toast
         open={showInactivateToast}
         onClose={() => setShowInactivateToast(false)}
         variant="warning"
         icon={<FontAwesomeIcon icon={faPowerOff} style={{ fontSize: 16 }} />}
-        title="Imunoterapia inativada"
-        description='As aplicações foram pausadas. Use "Reativar paciente" quando ele estiver apto a continuar o protocolo.'
+        title="Tratamento suspenso"
+        description="Novos comandos clínicos ficam bloqueados até a retomada."
       />
       <Toast
         open={showReactivateToast}
         onClose={() => setShowReactivateToast(false)}
         variant="success"
         icon={<FontAwesomeIcon icon={faPowerOff} style={{ fontSize: 16 }} />}
-        title="Paciente reativado"
-        description="O paciente está ativo novamente e pode continuar o protocolo a partir do ponto definido."
+        title="Tratamento retomado"
+        description="O tratamento está ativo novamente a partir da previsão preservada."
       />
     </div>
   )

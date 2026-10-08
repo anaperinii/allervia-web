@@ -40,15 +40,15 @@ export function WizardStepsBreadcrumb({
               onClick={() => clickable && onSelect?.(i)}
               aria-current={active ? 'step' : undefined}
               className={cn(
-                'relative flex h-8 items-center gap-2 overflow-hidden rounded-full pl-4 pr-5 text-[0.72rem] font-medium whitespace-nowrap transition-all duration-300',
+                'relative flex h-8 items-center gap-2 overflow-hidden rounded-lg pl-4 pr-5 text-[0.72rem] font-medium whitespace-nowrap transition-all duration-300',
                 i > 0 && 'pl-7',
                 clickable ? 'cursor-pointer' : 'cursor-default',
               )}
               style={{
-                background: active ? SHOWCASE.ink : SHOWCASE.white,
+                background: active ? '#1D6772' : SHOWCASE.white,
                 border: active ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
                 color: active ? SHOWCASE.onAccent : SHOWCASE.muted,
-                boxShadow: active ? '0 4px 12px -6px rgba(16,60,68,0.30)' : '0 1px 4px rgba(16,60,68,0.05)',
+                boxShadow: active ? '0 4px 12px -6px rgba(37,126,140,0.35)' : '0 1px 4px rgba(16,60,68,0.05)',
               }}
             >
               {step.icon && (

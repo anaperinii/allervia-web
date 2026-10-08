@@ -30,7 +30,7 @@ export function FieldLabel({ label, required, hint, children, error, helperText 
 
 const FIELD_BASE =
   'w-full border bg-white px-4 text-xs placeholder:text-(--text-muted)/60 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#257E8C]/35 focus:border-[#257E8C] transition-all'
-const FIELD_INVALID = 'border-red-400 bg-red-50/40'
+const FIELD_INVALID = 'border-red-400'
 const FIELD_VALID = 'border-[#DDE6E6]'
 
 interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -42,7 +42,7 @@ export function TextInput({ invalid, className, ...rest }: TextInputProps) {
     <input
       {...rest}
       aria-invalid={invalid || undefined}
-      className={cn(FIELD_BASE, 'h-9 rounded-full', invalid ? FIELD_INVALID : FIELD_VALID, className)}
+      className={cn(FIELD_BASE, 'h-9 rounded-lg', invalid ? FIELD_INVALID : FIELD_VALID, className)}
     />
   )
 }
@@ -66,7 +66,7 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   children: ReactNode
 }
 const SELECT_BASE =
-  'w-full h-9 appearance-none cursor-pointer rounded-full border bg-white pl-4 pr-9 text-[0.78rem] font-medium text-[#4A6469] transition-all focus:outline-none focus:border-[#12333a]/40'
+  'w-full h-9 appearance-none cursor-pointer rounded-lg border bg-white pl-4 pr-9 text-[0.78rem] font-medium text-[#4A6469] transition-all focus:outline-none focus:border-[#12333a]/40'
 
 export function Select({ invalid, className, children, ...rest }: SelectProps) {
   return (

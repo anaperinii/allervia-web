@@ -1,49 +1,176 @@
+import { useState, type ReactNode } from 'react'
 import { Modal, Button } from '@/shared/components'
+import { cn } from '@/shared/lib/cn'
+import { formatPhone } from '@/shared/lib/formatters'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
-import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import { openWhatsApp, sendReminder } from '@/shared/lib/whatsapp'
 import { APPLICATION_STATUS_DISPLAY } from '@/features/scheduling/constants/application-display'
+import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowUpRightFromSquare, faCalendar, faClock, faPhone, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
+import { faArrowRight } from '@fortawesome/free-solid-svg-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import {
+  InformationCircleIcon,
+  StickyNote01Icon,
+  WhatsappIcon,
+} from '@hugeicons/core-free-icons'
+
+type TabId = 'info' | 'notes'
+
+const TABS: { id: TabId; label: string; icon: typeof InformationCircleIcon }[] = [
+  { id: 'info', label: 'Informações', icon: InformationCircleIcon },
+  { id: 'notes', label: 'Observações', icon: StickyNote01Icon },
+]
 
 interface ApplicationDetailsModalProps {
   application: Application | null
-  googleConnected: boolean
   onClose: () => void
   onOpenPatient: (patientId: string) => void
+  onReschedule?: (doseId: string) => void
 }
 
-export function ApplicationDetailsModal({
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <div className="mb-1 text-[0.75rem] font-medium text-(--text-muted)">{label}</div>
+      <div className="flex h-9 items-center rounded-lg border border-(--border-custom) bg-white px-3">
+        <div className="min-w-0 flex-1 truncate text-xs font-medium text-(--text)">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+export function ApplicationDetailsModal(props: ApplicationDetailsModalProps) {
+  // Remonta a cada agendamento para a aba voltar ao início.
+  return <DetailsModal key={props.application?.id ?? 'empty'} {...props} />
+}
+
+function DetailsModal({
   application,
-  googleConnected,
   onClose,
   onOpenPatient,
+  onReschedule,
 }: ApplicationDetailsModalProps) {
-  const { getFullName, getPhone } = useImmunotherapyLookup()
+  const [tab, setTab] = useState<TabId>('info')
+
+  const initials = (application?.patientName ?? '')
+    .split(' ')
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+
+  // Aplicação realizada abre o prontuário; previsão pendente abre a edição.
+  const action = !application
+    ? null
+    : application.status === 'completed'
+      ? { label: 'Ver no prontuário', run: () => onOpenPatient(application.patientId) }
+      : application.status === 'scheduled' && onReschedule
+        ? { label: 'Editar', run: () => onReschedule(application.id) }
+        : null
+
+  const headerAction = action ? (
+    <button
+      type="button"
+      onClick={action.run}
+      className="shrink-0 cursor-pointer self-start rounded-lg border border-transparent px-3 py-1.5 text-[0.7rem] font-semibold text-white transition-[filter] duration-200 hover:brightness-110"
+      style={{ background: '#12333a' }}
+    >
+      {action.label}
+    </button>
+  ) : (
+    <span />
+  )
 
   return (
     <Modal
       open={!!application}
       onClose={onClose}
-      title="Detalhes do Agendamento"
+      ariaLabel="Detalhes do agendamento"
       size="md"
+      headerSlot={
+        application ? (
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-3">
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                style={{
+                  background: 'linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
+                  boxShadow: '0 6px 14px -8px rgba(16,60,68,0.55)',
+                }}
+              >
+                {initials}
+              </div>
+              <div className="min-w-0">
+                <button
+                  onClick={() => onOpenPatient(application.patientId)}
+                  className="block max-w-full truncate text-left text-[1.05rem] font-bold text-(--text) transition-colors hover:text-brand"
+                >
+                  {application.patientName ?? ''}
+                </button>
+                <div className="text-[0.82rem] text-(--text-muted)">
+                  {application.modality === 'sublingual' ? 'Sublingual' : 'Subcutânea'} ·{' '}
+                  {APPLICATION_STATUS_DISPLAY[application.status].label}
+                </div>
+              </div>
+            </div>
+
+            <div className="-mb-3.5 mt-4 flex items-center gap-1" role="tablist">
+              {TABS.map((item) => {
+                const active = item.id === tab
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setTab(item.id)}
+                    className={cn(
+                      'flex cursor-pointer items-center gap-1.5 rounded-t-lg px-3 py-1.5 text-[0.7rem] font-medium transition-colors',
+                      active
+                        ? 'bg-white text-(--text)'
+                        : 'text-(--text-muted) hover:text-(--text)',
+                    )}
+                    style={
+                      active
+                        ? { border: '1px solid var(--border-custom)', borderBottomColor: '#ffffff' }
+                        : { border: '1px solid transparent' }
+                    }
+                  >
+                    <HugeiconsIcon icon={item.icon} size={13} strokeWidth={1.8} />
+                    {item.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ) : undefined
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.75rem',
+      }}
+      headerAction={headerAction}
       footer={
         application ? (
           <>
             <button
+              type="button"
               onClick={() =>
                 sendReminder(
-                  getPhone(application.patientId),
-                  getFullName(application.patientId).split(' ')[0],
+                  application.patientPhone ?? '',
+                  (application.patientName ?? '').split(' ')[0],
                   application.date,
                   application.startTime,
                 )
               }
-              className="text-[0.65rem] font-medium text-[#25D366] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none mr-auto"
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-transparent bg-emerald-500 px-3 py-1.5 text-[0.7rem] font-semibold text-white transition-colors hover:bg-emerald-600"
             >
-              <FontAwesomeIcon icon={faPhone} style={{ fontSize: 11 }} />
+              <HugeiconsIcon icon={WhatsappIcon} size={14} strokeWidth={1.8} />
               Enviar lembrete via WhatsApp
             </button>
             <Button variant="outline" onClick={onClose}>
@@ -53,121 +180,110 @@ export function ApplicationDetailsModal({
         ) : null
       }
     >
-      {application && (
+      {application && tab === 'info' && (
         <>
-          <div className="flex items-center gap-3">
-            <div
-              className="relative flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white shrink-0 overflow-hidden"
-              style={{
-                background:
-                  'radial-gradient(circle at 22% 20%, rgba(255,255,255,0.38) 0%, transparent 45%), radial-gradient(circle at 80% 82%, rgba(255,255,255,0.18) 0%, transparent 48%), linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
-                border: '1px solid rgba(255,255,255,0.4)',
-                boxShadow:
-                  'inset 0 1px 0 rgba(255,255,255,0.5), inset 0 0 12px rgba(255,255,255,0.15), 0 4px 12px rgba(0,0,0,0.15)',
-              }}
-            >
-              {getFullName(application.patientId)
-                .split(' ')
-                .map((part) => part[0])
-                .slice(0, 2)
-                .join('')
-                .toUpperCase()}
+          <Field label="Data">
+            {application.date}
+          </Field>
+
+          <div className="flex items-end gap-2">
+            <div className="min-w-0 flex-1">
+              <Field label="Início">
+                {application.startTime}
+              </Field>
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex h-9 shrink-0 items-center text-(--text-muted)">
+              <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <Field label="Fim">
+                {application.endTime || '—'}
+              </Field>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Dose">
+              {application.dose}
+            </Field>
+            <Field label="Intervalo">
+              {(() => {
+                const intervalColor = getIntervalColor(application.cycle.days)
+                return (
+                  <span
+                    className="inline-flex items-center rounded-md border px-2 py-0.5 text-[0.65rem] font-semibold"
+                    style={{
+                      backgroundColor: intervalColor.bg + '4D',
+                      color: intervalColor.text,
+                      borderColor: intervalColor.dot + '30',
+                    }}
+                  >
+                    {application.cycle.days} dias
+                  </span>
+                )
+              })()}
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Médico responsável">
+              {application.administrator || '—'}
+            </Field>
+            <Field label="Contato">
               <button
-                onClick={() => onOpenPatient(application.patientId)}
-                className="text-sm font-bold text-(--text) hover:text-brand hover:underline transition-colors text-left truncate"
+                onClick={() => openWhatsApp(application.patientPhone ?? '')}
+                className="cursor-pointer truncate border-none bg-transparent p-0 text-xs font-medium text-(--text) transition-colors hover:text-brand"
               >
-                {getFullName(application.patientId)}
+                {application.patientPhone ? formatPhone(application.patientPhone) : '—'}
               </button>
-              <div className="text-[0.65rem] text-(--text-muted)">{getPhone(application.patientId)}</div>
-            </div>
-            <button
-              onClick={() => openWhatsApp(getPhone(application.patientId))}
-              className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-[#25D366] text-white text-[0.65rem] font-semibold hover:bg-[#20BD5A] transition-all shrink-0"
-            >
-              <FontAwesomeIcon icon={faPhone} style={{ fontSize: 12 }} />
-              WhatsApp
-            </button>
+            </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom)">
-            <div className="bg-white px-3.5 py-2.5">
-              <div className="flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
-                <FontAwesomeIcon icon={faCalendar} style={{ fontSize: 9 }} />
-                Data
-              </div>
-              <div className="text-xs font-medium text-(--text)">{application.date}</div>
-            </div>
-            <div className="bg-white px-3.5 py-2.5">
-              <div className="flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
-                <FontAwesomeIcon icon={faClock} style={{ fontSize: 9 }} />
-                Horário
-              </div>
-              <div className="text-xs font-medium text-(--text)">
-                {application.startTime} – {application.endTime}
-              </div>
-            </div>
-            <div className="bg-white px-3.5 py-2.5">
-              <div className="flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
-                <FontAwesomeIcon icon={faSyringe} style={{ fontSize: 9 }} />
-                Dose
-              </div>
-              <div className="text-xs font-medium text-(--text)">{application.dose}</div>
-            </div>
-            <div className="bg-white px-3.5 py-2.5">
-              <div className="text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
-                Intervalo
-              </div>
-              <div className="text-xs font-medium text-(--text)">
-                {(() => {
-                  const intervalColor = getIntervalColor(application.cycle.days)
-                  return (
-                    <span
-                      className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border"
-                      style={{ backgroundColor: intervalColor.bg + '4D', color: intervalColor.text, borderColor: intervalColor.dot + '30' }}
-                    >
-                      {application.cycle.days} dias
-                    </span>
-                  )
-                })()}
-              </div>
-            </div>
-            <div className="bg-white px-3.5 py-2.5">
-              <div className="text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">Status</div>
-              <div className="text-xs font-medium text-(--text)">
-                {APPLICATION_STATUS_DISPLAY[application.status].label}
-              </div>
-            </div>
-            <div className="bg-white px-3.5 py-2.5">
-              <div className="flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-wider text-(--text-muted) mb-0.5">
-                <FontAwesomeIcon icon={faUser} style={{ fontSize: 9 }} />
-                Modalidade
-              </div>
-              <div className="text-xs font-medium text-(--text)">
-                {application.modality === 'sublingual' ? 'Sublingual' : 'Subcutânea'}
-              </div>
-            </div>
-          </div>
+        </>
+      )}
 
-          {googleConnected && (
-            <div className="flex items-center gap-2 bg-brand/5 border border-brand/20 rounded-lg px-3 py-2">
-              <FontAwesomeIcon icon={faCalendar} className="text-brand shrink-0" style={{ fontSize: 13 }} />
-              <div className="flex-1">
-                <p className="text-[0.6rem] text-brand font-medium">Sincronizado com Google Agenda</p>
-                <p className="text-[0.5rem] text-brand/60">
-                  Este evento está visível na agenda do profissional responsável.
-                </p>
+      {application && tab === 'notes' && (
+        <>
+          <Field label="Reação adversa">
+            {application.sideEffect === 'yes' ? 'Sim' : 'Não registrada'}
+          </Field>
+          {application.reportedEffects && (
+            <div>
+              <div className="mb-1 text-[0.75rem] font-medium text-(--text-muted)">
+                Efeitos relatados
               </div>
-              <a
-                href="#"
-                className="text-[0.55rem] text-brand font-semibold hover:underline no-underline flex items-center gap-0.5 shrink-0"
-              >
-                <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ fontSize: 9 }} />
-                Abrir
-              </a>
+              <p className="rounded-lg border border-(--border-custom) bg-white px-3 py-2 text-xs leading-relaxed text-(--text)">
+                {application.reportedEffects}
+              </p>
             </div>
           )}
+          {application.medications && (
+            <div>
+              <div className="mb-1 text-[0.75rem] font-medium text-(--text-muted)">
+                Medicação utilizada
+              </div>
+              <p className="rounded-lg border border-(--border-custom) bg-white px-3 py-2 text-xs leading-relaxed text-(--text)">
+                {application.medications}
+              </p>
+            </div>
+          )}
+          {application.administratorNote && (
+            <div>
+              <div className="mb-1 text-[0.75rem] font-medium text-(--text-muted)">
+                Observação do profissional
+              </div>
+              <p className="rounded-lg border border-(--border-custom) bg-white px-3 py-2 text-xs leading-relaxed text-(--text)">
+                {application.administratorNote}
+              </p>
+            </div>
+          )}
+          {!application.reportedEffects &&
+            !application.medications &&
+            !application.administratorNote && (
+              <p className="py-6 text-center text-xs text-(--text-muted)">
+                Nenhuma observação registrada para esta aplicação.
+              </p>
+            )}
         </>
       )}
     </Modal>

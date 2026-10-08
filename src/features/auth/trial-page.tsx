@@ -1,20 +1,21 @@
-import { useState } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { AUTH_FIELD_CLASSES, AUTH_THEMES, authThemeVars } from '@/features/auth/constants/auth-theme'
+import { trialSchema, type TrialForm } from '@/features/auth/schemas/trial'
+import { HERO_PLATE } from '@/features/landing-page/components/HeroSection'
+import { Button, FieldLabel, Modal, Select, TextInput } from '@/shared/components'
+import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
+import { Aurora } from '@/shared/components/Aurora'
+import { AURORA_STOPS } from '@/shared/constants/aurora'
+import { cn } from '@/shared/lib/cn'
+import { formatPhone } from '@/shared/lib/formatters'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useRouter } from '@tanstack/react-router'
-import { Modal, Button, FieldLabel, TextInput, Select } from '@/shared/components'
-import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
-import { AUTH_THEMES, AUTH_FIELD_CLASSES, authThemeVars } from '@/features/auth/components/AuthLayout'
-import { useLandingTheme } from '@/features/landing-page/theme-context'
-import { ThemeSwitch } from '@/features/landing-page/components/ThemeSwitch'
-import { trialSchema, type TrialForm } from '@/features/auth/schemas/trial'
-import { formatPhone } from '@/shared/lib/formatters'
-import { Aurora, AURORA_STOPS } from '@/shared/components/Aurora'
-import { HERO_PLATE } from '@/features/landing-page/components/HeroSection'
-import { cn } from '@/shared/lib/cn'
+import { useRef, useState, type FormEvent } from 'react'
+import { requestDemo, type DemoReceipt } from '@/shared/api/demo.api'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { Controller, useForm } from 'react-hook-form'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faChevronLeft, faClock, faEnvelope, faShield } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const ROLE_OPTIONS = [
   { value: 'doctor', label: 'Médico(a)' },
@@ -33,17 +34,19 @@ const SOLUTION_OPTIONS = [
 const TRUST_BADGES = [
   { icon: faShield, label: 'Dados seguros' },
   { icon: faCheck, label: 'Sem compromisso' },
-  { icon: faClock, label: 'Retorno em 1 dia útil' },
+  { icon: faClock, label: 'Contato personalizado' },
 ] as const
 
 const RAIL_SHADOW = '-30px 0 80px -40px rgba(0,0,0,0.45)'
 
 export function TrialPage() {
   const [showModal, setShowModal] = useState(false)
+  const [receipt, setReceipt] = useState<DemoReceipt | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const pending = useRef<{ payload: string; requestId: string } | null>(null)
+  const submitting = useRef(false)
   const router = useRouter()
-  const { theme } = useLandingTheme()
-  const darkTheme = theme === 'dark'
-  const t = darkTheme ? AUTH_THEMES.dark : AUTH_THEMES.light
+  const t = AUTH_THEMES.light
 
   const goBack = () => {
     if (router.history.canGoBack()) router.history.back()
@@ -64,7 +67,27 @@ export function TrialPage() {
     },
   })
 
-  const onSubmit = handleSubmit(() => setShowModal(true))
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => handleSubmit(async (values) => {
+    if (submitting.current || receipt) return
+    submitting.current = true
+    setSubmitError(null)
+    try {
+      const payload = JSON.stringify(values)
+      if (!pending.current || pending.current.payload !== payload) {
+        pending.current = { payload, requestId: crypto.randomUUID() }
+      }
+      const result = await requestDemo(values, pending.current.requestId)
+      if (result.received !== true || !result.id) throw new Error('Invalid receipt')
+      setReceipt(result)
+      setShowModal(true)
+    } catch (error) {
+      setSubmitError(error instanceof ApiError && error.statusCode !== 0
+        ? error.message
+        : 'Não foi possível confirmar o recebimento. Tente novamente; seus dados continuam preenchidos.')
+    } finally {
+      submitting.current = false
+    }
+  })(event)
 
   return (
     <>
@@ -122,17 +145,15 @@ export function TrialPage() {
 
         <div className="relative z-10 h-full min-h-[calc(100vh-1.5rem)] lg:min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,42rem)] items-stretch overflow-hidden rounded-3xl">
           <div className="flex flex-col px-6 py-6 sm:px-10 lg:pl-14 lg:pr-10">
-            <div className="auth-brand flex items-center justify-between gap-5">
+            <div className="auth-brand flex items-center gap-5">
               <Link
                 to="/"
                 aria-label="Voltar para a página inicial"
-                className="flex items-center gap-3 no-underline"
+                className="flex items-center gap-1.5 no-underline"
                 >
                 <img src={AUTH_THEMES.light.mark} alt="" className="h-7 w-auto object-contain" />
                 <AllerviaWordmark className="text-xl" style={{ color: '#0E2E34' }} />
               </Link>
-
-              <ThemeSwitch />
             </div>
 
             <div className="auth-art-copy flex-1 flex flex-col justify-end max-w-2xl pt-8 pb-[4vh]">
@@ -199,16 +220,16 @@ export function TrialPage() {
                 </h1>
               </div>
               <p className="mt-2 mb-4 text-[0.9rem] leading-snug" style={{ color: 'var(--ink-soft)' }}>
-                Preencha os dados abaixo e nossa equipe entrará em contato em até 1 dia útil para
+                Preencha os dados abaixo e nossa equipe entrará em contato para
                 agendar uma demonstração personalizada da plataforma.
               </p>
 
               <div className="grid grid-cols-2 gap-2.5 mb-2">
                 <FieldLabel label="Nome" required error={errors.name?.message}>
-                  <TextInput placeholder="Insira aqui" invalid={!!errors.name} maxLength={60} {...register('name')} />
+                  <TextInput placeholder="Insira aqui" invalid={!!errors.name} maxLength={60} aria-label="Nome" {...register('name')} />
                 </FieldLabel>
                 <FieldLabel label="Sobrenome" required error={errors.lastName?.message}>
-                  <TextInput placeholder="Insira aqui" invalid={!!errors.lastName} maxLength={80} {...register('lastName')} />
+                  <TextInput placeholder="Insira aqui" invalid={!!errors.lastName} maxLength={80} aria-label="Sobrenome" {...register('lastName')} />
                 </FieldLabel>
               </div>
 
@@ -220,7 +241,7 @@ export function TrialPage() {
                     invalid={!!errors.email}
                     maxLength={254}
                     autoComplete="email"
-                    {...register('email')}
+                    aria-label="E-mail profissional" {...register('email')}
                   />
                 </FieldLabel>
               </div>
@@ -233,6 +254,7 @@ export function TrialPage() {
                     render={({ field }) => (
                       <TextInput
                         type="tel"
+                        aria-label="Telefone"
                         placeholder="(00) 00000-0000"
                         invalid={!!errors.phone}
                         maxLength={16}
@@ -247,7 +269,7 @@ export function TrialPage() {
 
               <div className="grid grid-cols-2 gap-2.5 mb-2">
                 <FieldLabel label="Qual é a sua atuação?" required error={errors.role?.message}>
-                  <Select invalid={!!errors.role} {...register('role')} defaultValue="">
+                  <Select invalid={!!errors.role} aria-label="Atuação" {...register('role')} defaultValue="">
                     <option value="" disabled>Selecionar</option>
                     {ROLE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -255,7 +277,7 @@ export function TrialPage() {
                   </Select>
                 </FieldLabel>
                 <FieldLabel label="Solução digital para quem?" required error={errors.solution?.message}>
-                  <Select invalid={!!errors.solution} {...register('solution')} defaultValue="">
+                  <Select invalid={!!errors.solution} aria-label="Uso pretendido" {...register('solution')} defaultValue="">
                     <option value="" disabled>Selecionar</option>
                     {SOLUTION_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -266,7 +288,7 @@ export function TrialPage() {
 
               <div className="grid grid-cols-2 gap-2.5 mb-3">
                 <FieldLabel label="Especialidade da clínica" required error={errors.specialty?.message}>
-                  <TextInput placeholder="Ex.: Alergia e Imunologia" invalid={!!errors.specialty} maxLength={80} {...register('specialty')} />
+                  <TextInput placeholder="Ex.: Alergia e Imunologia" invalid={!!errors.specialty} maxLength={80} aria-label="Especialidade" {...register('specialty')} />
                 </FieldLabel>
                 <FieldLabel label="Nº de profissionais" required error={errors.professionals?.message}>
                   <TextInput
@@ -275,19 +297,21 @@ export function TrialPage() {
                     max="9999"
                     placeholder="Ex.: 5"
                     invalid={!!errors.professionals}
-                    {...register('professionals')}
+                    aria-label="Número de profissionais" {...register('professionals')}
                   />
                 </FieldLabel>
               </div>
 
               <div className="pt-4 shrink-0">
+              {submitError && <p role="alert" className="mb-3 text-sm" style={{ color: 'var(--err)' }}>{submitError}</p>}
+              {receipt && <p role="status" className="mb-3 text-sm">Solicitação recebida. Protocolo: {receipt.id}</p>}
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !!receipt}
                 className="inline-flex w-full items-center justify-center rounded-lg h-10 text-sm font-semibold transition-[filter] duration-200 hover:brightness-110 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                 style={{ background: 'var(--btn)', color: 'var(--btn-ink)', border: 'none' }}
               >
-                Solicitar demonstração
+                {isSubmitting ? 'Enviando solicitação…' : receipt ? 'Solicitação recebida' : 'Solicitar demonstração'}
               </button>
 
               <p className="text-[0.62rem] text-center mt-4 leading-snug" style={{ color: 'var(--ink-soft)' }}>
@@ -336,15 +360,14 @@ export function TrialPage() {
               <FontAwesomeIcon icon={faEnvelope} className="text-emerald-600" style={{ fontSize: 24 }} />
             </div>
           </div>
-          <h3 className="text-lg font-bold text-(--text)">Solicitação enviada com sucesso!</h3>
+          <h3 className="text-lg font-bold text-(--text)">Solicitação recebida!</h3>
           <p className="text-xs text-(--text-muted) leading-relaxed">
             Recebemos sua solicitação de demonstração e nossa equipe entrará em contato em breve
-            para agendar um horário. Você receberá a confirmação diretamente no e-mail informado.
+            para agendar um horário pelos dados de contato informados.
           </p>
           <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-4 py-3">
-            <p className="text-[0.65rem] text-(--text-muted) font-medium mb-1">Fique atento à sua caixa de entrada</p>
-            <p className="text-sm font-semibold text-brand">contato@allervia.com.br</p>
-            <p className="text-[0.6rem] text-(--text-muted) mt-1">Prazo de retorno: até 1 dia útil</p>
+            <p className="text-[0.65rem] text-(--text-muted) font-medium mb-1">Protocolo da solicitação</p>
+            <p className="text-sm font-semibold text-brand break-all">{receipt?.id}</p>
           </div>
           <Button tone="brand" variant="solid" prominent fullWidth size="lg" to="/">
             Voltar para a página inicial

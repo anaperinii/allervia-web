@@ -1,10 +1,10 @@
+import type { CardFilter } from '@/features/dashboard/hooks/useChartWindow'
+import { CircleButton, SelectPill, SHOWCASE } from '@/shared/components/showcase'
+import { cn } from '@/shared/lib/cn'
+import { faSliders } from '@fortawesome/free-solid-svg-icons'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { faSliders } from '@fortawesome/free-solid-svg-icons'
-import { CircleButton, SelectPill, SHOWCASE } from '@/shared/components/showcase'
-import type { CardFilter } from '@/features/dashboard/hooks/useChartWindow'
 import { WeekPicker } from './WeekPickerPopover'
-import { cn } from '@/shared/lib/cn'
 
 const PANEL_WIDTH = 208
 
@@ -15,6 +15,10 @@ const FILTER_LABELS: Record<string, string> = {
   range: 'Intervalo',
   top: 'Exibir',
   order: 'Ordem',
+  granularity: 'Granularidade',
+  phase: 'Fase',
+  concentration: 'Concentração',
+  zeros: 'Sem tratamentos',
 }
 
 export function CardFilters({
@@ -53,7 +57,7 @@ export function CardFilters({
       window.removeEventListener('scroll', place, true)
       window.removeEventListener('resize', place)
     }
-  }, [open])
+  }, [open, inline])
 
   useEffect(() => {
     if (!open) return
@@ -80,7 +84,7 @@ export function CardFilters({
       <div
         ref={inlineRef}
         className={cn(
-          'flex items-center gap-1.5 rounded-full transition-all duration-500 ease-out',
+          'flex items-center gap-1.5 rounded-lg transition-all duration-500 ease-out',
           open ? 'py-0.5 pl-2 pr-0.5' : 'p-0',
         )}
         style={{

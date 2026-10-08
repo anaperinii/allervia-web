@@ -18,7 +18,6 @@ interface ValueLabelProps {
   value?: number | string
 }
 
-// draw the volume (in ml) centered inside each segment; skip empty or too-small cells
 function renderVolumeLabel({ x, y, width, height, value }: ValueLabelProps, volume: VolumeKey) {
   const count = Number(value)
   const w = Number(width)
@@ -85,7 +84,6 @@ export function VolumeStackedBarChart({ data, height = 208, showValueLabels = tr
                 <Bar key={key} dataKey={key} stackId="a" barSize={22}>
                   {data.map((row) => {
                     const ramp = CONCENTRATION_VOLUME_COLORS[String(row.conc)]
-                    // Round only the ends that actually exist in this row's stack.
                     const filled = VOLUME_KEYS.filter((volume) => Number(row[volume]) > 0)
                     const isRowFirst = filled[0] === key
                     const isRowLast = filled[filled.length - 1] === key

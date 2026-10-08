@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import type { UserRole } from '@/shared/stores/useUserStore'
 
 export type AuditAction = 'view_chart' | 'view_report' | 'export_lgpd' | 'edit_patient' | 'adjust_protocol' | 'inactivate' | 'reactivate' | 'apply_dose'
 
@@ -7,7 +6,7 @@ export interface AccessLog {
   id: string
   userId: string
   userName: string
-  userRole: UserRole
+  userRole: string
   userRegistration: string
   patientId: string
   patientName: string

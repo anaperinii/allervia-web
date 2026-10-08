@@ -1,22 +1,30 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
 import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
-import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { useHasPermission, useDoctorFilter } from '@/shared/stores/useUserStore'
-import { usePatientStore } from '@/features/patient/stores/usePatientStore'
+import { useHasPermission } from '@/shared/stores/useUserStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
+import { scheduleItemToApplication } from '@/features/patient/adapters/clinical-presentation'
+import { getDose, listAppointments, listDoseSchedule } from '@/shared/api/clinical.api'
+import type { Appointment, ScheduleDoseItem } from '@/shared/api/contracts/clinical'
+import {
+  AppointmentActionModal,
+  NewAppointmentModal,
+} from '@/features/scheduling/components/AppointmentModals'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
+import { toOffsetIso } from '@/shared/lib/dates'
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import { useCalendarNav } from '@/features/scheduling/hooks/useCalendarNav'
 import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolbar'
 import { WeekView } from '@/features/scheduling/components/WeekView'
 import { MonthView } from '@/features/scheduling/components/MonthView'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
-import { NewAppointmentModal } from '@/features/scheduling/components/NewAppointmentModal'
-import type { NewAppointmentForm } from '@/features/scheduling/schemas/new-appointment'
+import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
@@ -40,82 +48,150 @@ const MONTH_OPTIONS = [
 const CURRENT_YEAR = new Date().getFullYear()
 const YEAR_OPTIONS = Array.from({ length: 7 }, (_, i) => CURRENT_YEAR - 2 + i)
 
+const SCHEDULE_PAGE_SIZE = 100
+const SCHEDULE_MAX_PAGES = 5
+
+function dayInput(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+async function fetchSchedule(
+  query: { from: string; to: string; search?: string },
+  signal?: AbortSignal,
+): Promise<{ items: ScheduleDoseItem[]; total: number }> {
+  const items: ScheduleDoseItem[] = []
+  let total = 0
+  for (let page = 1; page <= SCHEDULE_MAX_PAGES; page++) {
+    const result = await listDoseSchedule(
+      { ...query, page, pageSize: SCHEDULE_PAGE_SIZE },
+      signal,
+    )
+    items.push(...result.items)
+    total = result.total
+    if (items.length >= total) break
+  }
+  return { items, total }
+}
+
 export function AppointmentsPage() {
-  const { applications: allApplications, scheduleApplication } = usePatientStore()
-  const { immunotherapies } = useImmunotherapiesStore()
-  const googleCalendarConnected = useSettingsStore((state) => state.googleCalendarConnected)
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
   const canNewAppointment = useHasPermission('new_appointment')
-  const doctorFilter = useDoctorFilter()
+  const canReschedule = useHasPermission('edit_scheduled_dose')
   const navigate = useNavigate()
   const calendar = useCalendarNav()
 
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [showToast, setShowToast] = useState(false)
+  const [showNewModal, setShowNewModal] = useState(false)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [patientSearch, setPatientSearch] = useState('')
   const [dayModal, setDayModal] = useState<{ date: Date; apps: Application[] } | null>(null)
-  const { getName } = useImmunotherapyLookup()
+  const [rescheduleDoseId, setRescheduleDoseId] = useState<string | null>(null)
+  const [showRescheduledToast, setShowRescheduledToast] = useState(false)
+
+  const visibleDays = calendar.viewMode === 'week' ? calendar.weekDays : calendar.monthDays
+  const range = useMemo(() => {
+    if (visibleDays.length === 0) return null
+    return {
+      from: toOffsetIso(dayInput(visibleDays[0]), '00:00'),
+      to: toOffsetIso(dayInput(visibleDays[visibleDays.length - 1]), '23:59'),
+    }
+  }, [visibleDays])
+
+  // A busca alimenta a chave da query: sem o atraso, cada tecla dispararia um
+  // novo ciclo de paginação no servidor.
+  const search = useDebouncedValue(patientSearch.trim())
+  const scheduleQuery = useQuery({
+    queryKey: queryKeys.schedule(organizationId, {
+      ...range,
+      search: search || undefined,
+    }),
+    queryFn: ({ signal }) =>
+      fetchSchedule({ ...range!, search: search || undefined }, signal),
+    enabled: organizationId !== '' && range !== null,
+    placeholderData: keepPreviousData,
+  })
+
+  const scheduleItems = useMemo(
+    () => scheduleQuery.data?.items ?? [],
+    [scheduleQuery.data],
+  )
+  const truncated =
+    scheduleQuery.data !== undefined &&
+    !scheduleQuery.isPlaceholderData &&
+    scheduleQuery.data.items.length < scheduleQuery.data.total
+
+  // `listAppointments` não filtra por nome — a busca é aplicada no cliente logo
+  // abaixo, então a chave fica fora dela e o período é reaproveitado do cache.
+  const appointmentsQuery = useQuery({
+    queryKey: queryKeys.schedule(organizationId, {
+      appointments: true,
+      ...range,
+    }),
+    queryFn: ({ signal }) =>
+      listAppointments({ ...range!, pageSize: 100 }, signal),
+    enabled: organizationId !== '' && range !== null,
+    placeholderData: keepPreviousData,
+  })
+  const appointmentItems = useMemo(() => {
+    const items = appointmentsQuery.data?.items ?? []
+    const term = search.toLowerCase()
+    return term
+      ? items.filter((item) => item.patient.fullName.toLowerCase().includes(term))
+      : items
+  }, [appointmentsQuery.data, search])
+  const appointmentById = useMemo(
+    () => new Map(appointmentItems.map((item) => [item.id, item])),
+    [appointmentItems],
+  )
+  const linkedDoseIds = useMemo(
+    () =>
+      new Set(
+        appointmentItems
+          .filter((item) => item.doseId && item.status === 'SCHEDULED')
+          .map((item) => item.doseId!),
+      ),
+    [appointmentItems],
+  )
 
   const applications = useMemo(() => {
-    let list = allApplications
-    if (doctorFilter) {
-      const ownedIds = new Set(
-        immunotherapies.filter((immunotherapy) => immunotherapy.responsibleDoctor === doctorFilter).map((immunotherapy) => immunotherapy.id),
+    const doseApplications = scheduleItems
+      .filter(
+        (item) =>
+          !(item.status === 'SCHEDULED' && linkedDoseIds.has(item.id)),
       )
-      list = list.filter((application) => ownedIds.has(application.patientId))
-    }
-    const term = patientSearch.trim().toLowerCase()
-    if (term) {
-      const nameById = new Map(immunotherapies.map((immunotherapy) => [immunotherapy.id, immunotherapy.name.toLowerCase()]))
-      list = list.filter((application) => (nameById.get(application.patientId) ?? '').includes(term))
-    }
-    return list
-  }, [allApplications, immunotherapies, doctorFilter, patientSearch])
-
-  const scheduled = useMemo(
-    () => applications.filter((application) => application.status === 'scheduled' || application.status === 'missed'),
-    [applications],
-  )
+      .map(scheduleItemToApplication)
+    const appointmentApplications = appointmentItems
+      .filter((item) => item.status !== 'CANCELLED')
+      .map((item) => appointmentToApplication(item))
+    return [...doseApplications, ...appointmentApplications]
+  }, [scheduleItems, appointmentItems, linkedDoseIds])
 
   const applicationsByDate = useMemo(() => {
     const map = new Map<string, Application[]>()
-    for (const application of scheduled) {
+    for (const application of applications) {
       const existing = map.get(application.date) ?? []
       existing.push(application)
       map.set(application.date, existing)
     }
     return map
-  }, [scheduled])
+  }, [applications])
+
+  const rescheduleDoseQuery = useQuery({
+    queryKey: queryKeys.dose(organizationId, rescheduleDoseId ?? ''),
+    queryFn: ({ signal }) => getDose(rescheduleDoseId!, signal),
+    enabled: organizationId !== '' && rescheduleDoseId !== null,
+  })
 
   const openPatient = (patientId: string) => {
     setSelectedApplication(null)
     navigate({ to: '/patient/$patientId', params: { patientId } })
   }
 
-  const handleNewAppointmentSubmit = (data: NewAppointmentForm) => {
-    const immunotherapy = immunotherapies.find((candidate) => candidate.id === data.patientId)
-    if (!immunotherapy) return
-
-    const [yyyy, mm, dd] = data.date.split('-')
-    const parsedDate = new Date(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10))
-    const monthName = format(parsedDate, 'MMMM', { locale: ptBR }).toUpperCase()
-
-    scheduleApplication({
-      id: `app-new-${Date.now()}`,
-      patientId: data.patientId,
-      date: `${dd}/${mm}/${yyyy}`,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      status: 'scheduled',
-      dose: data.dose,
-      cycle: { number: 1, days: parseInt(data.interval.trim(), 10) },
-      month: monthName,
-      year: parseInt(yyyy, 10),
-      modality: immunotherapy.modality,
-    })
-
-    setShowAddModal(false)
-    setShowToast(true)
+  const handleSelect = (application: Application) => {
+    const appointment = appointmentById.get(application.id)
+    if (appointment) setSelectedAppointment(appointment)
+    else setSelectedApplication(application)
   }
 
   return (
@@ -164,15 +240,29 @@ export function AppointmentsPage() {
               aria-label="Modo de visualização"
             />
             {canNewAppointment && (
-              <Pill active icon={faPlus} onClick={() => setShowAddModal(true)}>
-                Novo Agendamento
+              <Pill active icon={faPlus} onClick={() => setShowNewModal(true)}>
+                Novo agendamento
               </Pill>
             )}
           </>
         }
       />
 
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-3xl border border-(--border-custom) bg-[#F6F8F8]">
+      {scheduleQuery.error && (
+        <p role="alert" className="px-2 pb-2 text-[0.72rem] text-red-700">
+          {scheduleQuery.error instanceof ApiError
+            ? scheduleQuery.error.message
+            : 'Não foi possível carregar a agenda.'}
+        </p>
+      )}
+      {truncated && (
+        <p role="alert" className="px-2 pb-2 text-[0.72rem] text-amber-700">
+          Exibindo {scheduleQuery.data!.items.length} de {scheduleQuery.data!.total} doses do
+          período. Refine a busca ou o período para ver o restante.
+        </p>
+      )}
+
+      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-[#F6F8F8]">
         <CalendarToolbar
           monthLabel={calendar.monthLabel}
           onPrev={calendar.goToPrev}
@@ -186,7 +276,7 @@ export function AppointmentsPage() {
               selectedDate={calendar.selectedDate}
               onSelectDate={calendar.setSelectedDate}
               applicationsByDate={applicationsByDate}
-              onSelectApplication={setSelectedApplication}
+              onSelectApplication={handleSelect}
             />
           ) : (
             <MonthView
@@ -195,7 +285,7 @@ export function AppointmentsPage() {
               selectedDate={calendar.selectedDate}
               onSelectDate={calendar.setSelectedDate}
               applicationsByDate={applicationsByDate}
-              onSelectApplication={setSelectedApplication}
+              onSelectApplication={handleSelect}
               onOpenDay={(date, apps) => setDayModal({ date, apps })}
             />
           )}
@@ -222,20 +312,18 @@ export function AppointmentsPage() {
               <button
                 key={app.id}
                 type="button"
-                onClick={() => { setSelectedApplication(app); setDayModal(null) }}
-                className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:brightness-95 cursor-pointer ${app.status === 'missed' ? 'opacity-60' : ''}`}
-                style={{
-                  backgroundColor: c.bg,
-                  backgroundImage:
-                    app.status === 'missed'
-                      ? `repeating-linear-gradient(45deg, rgba(100,116,139,0.22) 0 1.5px, transparent 1.5px 6px), ${c.grad}`
-                      : c.grad,
-                  color: c.text,
-                }}
+                onClick={() => { handleSelect(app); setDayModal(null) }}
+                className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:brightness-95 cursor-pointer"
+                style={{ backgroundColor: c.bg, backgroundImage: c.grad, color: c.text }}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold">{app.startTime} – {app.endTime}</div>
-                  <div className="text-[0.7rem] font-medium opacity-90 truncate">{getName(app.patientId)} · {app.dose}</div>
+                  <div className="text-xs font-bold">
+                    {app.startTime}
+                    {app.endTime ? ` – ${app.endTime}` : ''}
+                  </div>
+                  <div className="text-[0.7rem] font-medium opacity-90 truncate">
+                    {app.patientName} · {app.dose}
+                  </div>
                 </div>
               </button>
             )
@@ -245,30 +333,78 @@ export function AppointmentsPage() {
 
       <ApplicationDetailsModal
         application={selectedApplication}
-        googleConnected={googleCalendarConnected}
         onClose={() => setSelectedApplication(null)}
         onOpenPatient={openPatient}
+        onReschedule={
+          canReschedule
+            ? (doseId) => {
+                setSelectedApplication(null)
+                setRescheduleDoseId(doseId)
+              }
+            : undefined
+        }
+      />
+
+      <EditScheduledDoseModal
+        open={rescheduleDoseId !== null && rescheduleDoseQuery.data !== undefined}
+        dose={rescheduleDoseQuery.data ?? null}
+        organizationId={organizationId}
+        onClose={() => setRescheduleDoseId(null)}
+        onSaved={() => setShowRescheduledToast(true)}
       />
 
       <NewAppointmentModal
-        open={showAddModal}
-        googleConnected={googleCalendarConnected}
-        onClose={() => setShowAddModal(false)}
-        onSubmit={handleNewAppointmentSubmit}
+        open={showNewModal}
+        onClose={() => setShowNewModal(false)}
+        onCreated={() => {}}
+      />
+
+      <AppointmentActionModal
+        appointment={selectedAppointment}
+        organizationId={organizationId}
+        onClose={() => setSelectedAppointment(null)}
       />
 
       <Toast
-        open={showToast}
-        onClose={() => setShowToast(false)}
+        open={showRescheduledToast}
+        onClose={() => setShowRescheduledToast(false)}
         variant="success"
         icon={<FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />}
-        title="Agendamento criado com sucesso!"
-        description={
-          googleCalendarConnected
-            ? 'O agendamento foi registrado e sincronizado automaticamente com o Google Agenda.'
-            : 'O agendamento foi registrado. O paciente será notificado conforme as configurações definidas.'
-        }
+        title="Previsão reagendada!"
+        description="A dose pendente foi atualizada com motivo registrado. Nenhuma sucessora foi criada."
       />
     </div>
   )
 }
+
+function localTime(iso: string): string {
+  const date = new Date(iso)
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+const MONTHS_UPPER = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO']
+
+function appointmentToApplication(item: Appointment): Application {
+  const starts = new Date(item.startsAt)
+  return {
+    id: item.id,
+    patientId: item.patientId,
+    date: `${String(starts.getDate()).padStart(2, '0')}/${String(starts.getMonth() + 1).padStart(2, '0')}/${starts.getFullYear()}`,
+    startTime: localTime(item.startsAt),
+    endTime: localTime(item.endsAt),
+    status:
+      item.status === 'MISSED'
+        ? 'missed'
+        : item.status === 'COMPLETED'
+          ? 'completed'
+          : 'scheduled',
+    dose: item.title ?? (item.dose ? 'Aplicação prevista' : 'Compromisso'),
+    cycle: { number: 1, days: 0 },
+    month: MONTHS_UPPER[starts.getMonth()],
+    year: starts.getFullYear(),
+    patientName: item.patient.fullName,
+    patientPhone: item.patient.phoneNumber,
+    modality: 'subcutaneous',
+  }
+}
+

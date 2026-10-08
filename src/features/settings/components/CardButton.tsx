@@ -1,9 +1,9 @@
 import { cn } from '@/shared/lib/cn'
-import { Link } from '@tanstack/react-router'
+import { Link, type LinkProps } from '@tanstack/react-router'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowUpRightFromSquare, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 type Orientation = 'horizontal' | 'vertical'
 
@@ -22,9 +22,9 @@ type CardButtonAsAction = SharedProps & Omit<ButtonHTMLAttributes<HTMLButtonElem
 }
 
 type CardButtonAsLink = SharedProps & {
-  to: string
-  params?: Record<string, unknown>
-  search?: Record<string, unknown>
+  to: NonNullable<LinkProps['to']>
+  params?: LinkProps['params']
+  search?: LinkProps['search']
   onClick?: never
 }
 
@@ -90,7 +90,7 @@ export function CardButton(props: CardButtonProps) {
   }
   if ('to' in props && props.to !== undefined) {
     return (
-      <Link to={props.to as any} params={props.params as any} search={props.search as any} className={cls}>
+      <Link to={props.to} params={props.params} search={props.search} className={cls}>
         <Inner {...innerProps} />
       </Link>
     )

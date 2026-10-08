@@ -1,5 +1,5 @@
 import { Button } from '@/shared/components'
-import type { RegisterForm } from '@/features/auth/schemas/register'
+import { PROFESSION_OPTIONS, type RegisterForm } from '@/features/auth/schemas/register'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowRight, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
@@ -36,8 +36,10 @@ export function DoneStep({ data, maskedEmail }: DoneStepProps) {
             <span className="text-[0.7rem] font-semibold text-[color:var(--accent)]">{maskedEmail}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[0.7rem] text-[color:var(--ink-soft)]">Especialidade</span>
-            <span className="text-[0.7rem] font-semibold text-[color:var(--ink)]">{data.specialty}</span>
+            <span className="text-[0.7rem] text-[color:var(--ink-soft)]">Profissão</span>
+            <span className="text-[0.7rem] font-semibold text-[color:var(--ink)]">
+              {PROFESSION_OPTIONS.find((option) => option.value === data.profession)?.label}
+            </span>
           </div>
         </div>
       </div>

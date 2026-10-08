@@ -1,6 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { RegisterPage } from '@/features/auth/register-page'
+import { RegisterRoute } from '@/features/auth/register-route'
+
+type SearchParams = {
+  token?: string
+}
 
 export const Route = createFileRoute('/register')({
-  component: RegisterPage,
+  validateSearch: (search: Record<string, unknown>): SearchParams => ({
+    token: typeof search.token === 'string' ? search.token : undefined,
+  }),
+  component: RegisterRoute,
 })

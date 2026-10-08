@@ -7,7 +7,8 @@ import {
 import { derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import type { ReportData } from './types'
 
-export function exportPdf(data: ReportData) {
+/** Monta o documento sem gravá-lo — usado pela pré-visualização e pelo download. */
+export function buildPatientReportPdf(data: ReportData): jsPDF {
   const { patient, realizedApplications, sections, anonymized, reactionsCount } = data
   const { inductionStart } = derivePatientDates(realizedApplications, patient.id)
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
@@ -293,5 +294,11 @@ export function exportPdf(data: ReportData) {
     doc.text(`Página ${i} de ${totalPages}`, pageW - margin, pageH - 5, { align: 'right' })
   }
 
-  doc.save(`relatorio_${patient.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`)
+  return doc
+}
+
+export function exportPdf(data: ReportData) {
+  buildPatientReportPdf(data).save(
+    `relatorio_${data.patient.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`,
+  )
 }

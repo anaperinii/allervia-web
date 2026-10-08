@@ -1,6 +1,6 @@
-import { Link } from '@tanstack/react-router'
 import { cn } from '@/shared/lib/cn'
-import type { ReactNode, AnchorHTMLAttributes, CSSProperties } from 'react'
+import { Link, type LinkProps } from '@tanstack/react-router'
+import type { AnchorHTMLAttributes, CSSProperties, ReactNode } from 'react'
 
 type MarketingCTAVariant = 'filled' | 'outline'
 type MarketingCTAShape = 'pill' | 'block'
@@ -13,10 +13,10 @@ interface SharedProps {
 }
 
 interface AsLink extends SharedProps {
-  to: string
+  to: NonNullable<LinkProps['to']>
   href?: never
-  params?: Record<string, unknown>
-  search?: Record<string, unknown>
+  params?: LinkProps['params']
+  search?: LinkProps['search']
 }
 
 interface AsAnchor extends SharedProps, Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'className' | 'children' | 'href'> {
@@ -29,8 +29,8 @@ type MarketingCTAProps = AsLink | AsAnchor
 const BASE = 'font-semibold cursor-pointer transition-all duration-250 no-underline'
 
 const SHAPE: Record<MarketingCTAShape, string> = {
-  pill: 'inline-block px-6 py-2.5 rounded-full text-[0.9rem]',
-  block: 'block w-full py-3 rounded-full text-center text-sm',
+  pill: 'inline-block px-6 py-2.5 rounded-lg text-[0.9rem]',
+  block: 'block w-full py-3 rounded-lg text-center text-sm',
 }
 
 const VARIANT_CLASS: Record<MarketingCTAVariant, string> = {
@@ -57,9 +57,9 @@ export function MarketingCTA(props: MarketingCTAProps) {
   if ('to' in props && props.to !== undefined) {
     return (
       <Link
-        to={props.to as any}
-        params={props.params as any}
-        search={props.search as any}
+        to={props.to}
+        params={props.params}
+        search={props.search}
         className={cls}
         style={style}
       >

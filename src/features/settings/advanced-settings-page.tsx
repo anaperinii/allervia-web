@@ -1,50 +1,116 @@
 import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
 import {
   useSettingsStore,
   type EventColor,
   type Language,
-  type Timezone,
 } from '@/features/settings/stores/useSettingsStore'
+import { readOrganization, updateOrganization } from '@/shared/api/team.api'
+import { queryKeys } from '@/shared/api/query-keys'
+import { ApiError } from '@/shared/api/contracts/errors'
 import {
   Button,
   FieldLabel,
   IconButton,
   Select,
-  Switch,
   TextInput,
 } from '@/shared/components'
 import { MediaRow } from '@/features/settings/components/MediaRow'
+import { GoogleCalendarRow } from '@/features/settings/components/GoogleCalendarRow'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
+import { AuditTrailPanel } from '@/features/settings/components/AuditTrailPanel'
+import { NotificationPreferencesPanel } from '@/features/settings/components/NotificationPreferencesPanel'
+
+function UnavailableBadge() {
+  return (
+    <span className="text-[0.6rem] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
+      Indisponível
+    </span>
+  )
+}
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowUpRightFromSquare, faBell, faCalendar, faCheck, faCircleCheck, faDatabase, faLock, faPalette, faPencil, faPlus, faServer, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faBell, faCheck, faDatabase, faLock, faPalette, faPencil, faPlus, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 
 const FIXED_EVENT_IDS = ['subcutaneous', 'sublingual', 'missed']
 
+const SESSION_TIMEOUT_MIN = 5
+const SESSION_TIMEOUT_MAX = 720
+
+const SESSION_TIMEOUT_OPTIONS: { value: string; label: string }[] = [
+  { value: '15', label: '15 minutos' },
+  { value: '30', label: '30 minutos' },
+  { value: '60', label: '1 hora' },
+  { value: '120', label: '2 horas' },
+]
+
+function isValidTimeout(value: string): boolean {
+  const minutes = Number(value)
+  return (
+    Number.isInteger(minutes) &&
+    minutes >= SESSION_TIMEOUT_MIN &&
+    minutes <= SESSION_TIMEOUT_MAX
+  )
+}
+
+const TIMEZONE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'America/Noronha', label: 'Fernando de Noronha (GMT-2)' },
+  { value: 'America/Sao_Paulo', label: 'Brasília (GMT-3)' },
+  { value: 'America/Bahia', label: 'Salvador (GMT-3)' },
+  { value: 'America/Fortaleza', label: 'Fortaleza (GMT-3)' },
+  { value: 'America/Recife', label: 'Recife (GMT-3)' },
+  { value: 'America/Belem', label: 'Belém (GMT-3)' },
+  { value: 'America/Araguaina', label: 'Araguaína (GMT-3)' },
+  { value: 'America/Maceio', label: 'Maceió (GMT-3)' },
+  { value: 'America/Santarem', label: 'Santarém (GMT-3)' },
+  { value: 'America/Campo_Grande', label: 'Campo Grande (GMT-4)' },
+  { value: 'America/Cuiaba', label: 'Cuiabá (GMT-4)' },
+  { value: 'America/Manaus', label: 'Manaus (GMT-4)' },
+  { value: 'America/Porto_Velho', label: 'Porto Velho (GMT-4)' },
+  { value: 'America/Boa_Vista', label: 'Boa Vista (GMT-4)' },
+  { value: 'America/Eirunepe', label: 'Eirunepé (GMT-5)' },
+  { value: 'America/Rio_Branco', label: 'Rio Branco (GMT-5)' },
+]
+
 export function AdvancedSettingsPage() {
   const canAdvanced = useHasPermission('advanced_settings')
-  const autoBackup = useSettingsStore((s) => s.autoBackup)
-  const setAutoBackup = useSettingsStore((s) => s.setAutoBackup)
-  const emailNotifications = useSettingsStore((s) => s.emailNotifications)
-  const setEmailNotifications = useSettingsStore((s) => s.setEmailNotifications)
-  const pushNotifications = useSettingsStore((s) => s.pushNotifications)
-  const setPushNotifications = useSettingsStore((s) => s.setPushNotifications)
-  const timezone = useSettingsStore((s) => s.timezone)
-  const setTimezone = useSettingsStore((s) => s.setTimezone)
+  const canViewAudit = useHasPermission('view_audit')
+  const queryClient = useQueryClient()
+  const [timezoneError, setTimezoneError] = useState<string | null>(null)
+  const organizationQuery = useQuery({
+    queryKey: queryKeys.organization(),
+    queryFn: ({ signal }) => readOrganization(signal),
+    enabled: canAdvanced,
+  })
+  const timezoneMutation = useMutation({
+    mutationFn: (timeZone: string) => updateOrganization({ timeZone }),
+    onSuccess: async () => {
+      setTimezoneError(null)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.organization() })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.account() })
+      await queryClient.invalidateQueries({ queryKey: ['clinical'] })
+    },
+    onError: (error) =>
+      setTimezoneError(
+        error instanceof ApiError
+          ? error.message
+          : 'Não foi possível alterar o fuso horário.',
+      ),
+  })
+  const timezone = organizationQuery.data?.timeZone ?? ''
+  const timezoneOptions =
+    timezone && !TIMEZONE_OPTIONS.some((option) => option.value === timezone)
+      ? [{ value: timezone, label: timezone }, ...TIMEZONE_OPTIONS]
+      : TIMEZONE_OPTIONS
   const sessionTimeout = useSettingsStore((s) => s.sessionTimeout)
   const setSessionTimeout = useSettingsStore((s) => s.setSessionTimeout)
+  const [customTimeout, setCustomTimeout] = useState(
+    () => !SESSION_TIMEOUT_OPTIONS.some((option) => option.value === sessionTimeout),
+  )
   const language = useSettingsStore((s) => s.language)
   const setLanguage = useSettingsStore((s) => s.setLanguage)
-  const googleConnected = useSettingsStore((s) => s.googleCalendarConnected)
-  const setGoogleConnected = useSettingsStore((s) => s.setGoogleCalendarConnected)
-  const autoSync = useSettingsStore((s) => s.autoSync)
-  const setAutoSync = useSettingsStore((s) => s.setAutoSync)
-  const reminderWhatsapp = useSettingsStore((s) => s.reminderWhatsapp)
-  const setReminderWhatsapp = useSettingsStore((s) => s.setReminderWhatsapp)
-  const reminderHours = useSettingsStore((s) => s.reminderHours)
-  const setReminderHours = useSettingsStore((s) => s.setReminderHours)
   const eventColors = useSettingsStore((s) => s.eventColors)
   const setEventColors = useSettingsStore((s) => s.setEventColors)
 
@@ -91,9 +157,9 @@ export function AdvancedSettingsPage() {
     ])
   }
 
-  const notificationToggles = [
-    { label: 'Notificações por e-mail', desc: 'Receba alertas de aplicações, reações e agendamentos por e-mail', value: emailNotifications, set: setEmailNotifications },
-    { label: 'Notificações push', desc: 'Receba notificações em tempo real no navegador', value: pushNotifications, set: setPushNotifications },
+  const unavailableChannels = [
+    { label: 'Notificações por e-mail', desc: 'Entrega automática requer provedor de e-mail definido para notificações' },
+    { label: 'Notificações push', desc: 'Entrega em tempo real requer serviço de push contratado' },
   ] as const
 
   if (!canAdvanced) {
@@ -116,53 +182,98 @@ export function AdvancedSettingsPage() {
   return (
     <SettingsLayout subtitle="Configurações Avançadas">
       <div className="flex flex-col gap-5">
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Notificações</h2>
               </div>
               <div className="p-4 space-y-3">
-                {notificationToggles.map((item, i) => (
-                  <div key={item.label}>
-                    {i > 0 && <div className="border-t border-(--border-custom) mb-3" />}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 shrink-0">
-                          <FontAwesomeIcon icon={faBell} className="text-brand" style={{ fontSize: 14 }} />
-                        </div>
-                        <div>
-                          <div className="text-xs font-semibold text-(--text)">{item.label}</div>
-                          <div className="text-[0.65rem] text-(--text-muted)">{item.desc}</div>
-                        </div>
+                <NotificationPreferencesPanel />
+                <div className="border-t border-(--border-custom)" />
+                {unavailableChannels.map((item) => (
+                  <div key={item.label} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 shrink-0">
+                        <FontAwesomeIcon icon={faBell} className="text-gray-400" style={{ fontSize: 14 }} />
                       </div>
-                      <Switch checked={item.value} onChange={item.set} aria-label={item.label} />
+                      <div>
+                        <div className="text-xs font-semibold text-(--text-muted)">{item.label}</div>
+                        <div className="text-[0.65rem] text-(--text-muted)">{item.desc}</div>
+                      </div>
                     </div>
+                    <UnavailableBadge />
                   </div>
                 ))}
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Sistema</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
                 <FieldLabel label="Fuso horário">
-                  <Select value={timezone} onChange={(e) => setTimezone(e.target.value as Timezone)}>
-                    <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
-                    <option value="America/Manaus">Manaus (GMT-4)</option>
-                    <option value="America/Noronha">Fernando de Noronha (GMT-2)</option>
+                  <Select
+                    value={timezone}
+                    disabled={organizationQuery.isPending || timezoneMutation.isPending}
+                    onChange={(e) => {
+                      setTimezoneError(null)
+                      timezoneMutation.mutate(e.target.value)
+                    }}
+                  >
+                    {timezoneOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </Select>
+                  <p className="mt-1 text-[0.6rem] leading-relaxed text-(--text-muted)">
+                    Fuso clínico da organização: governa as datas previstas das
+                    aplicações.
+                  </p>
+                  {(timezoneError || organizationQuery.error) && (
+                    <p role="alert" className="mt-1 text-[0.6rem] text-red-700">
+                      {timezoneError ??
+                        'Não foi possível carregar o fuso da organização.'}
+                    </p>
+                  )}
                 </FieldLabel>
                 <FieldLabel label="Tempo de sessão (minutos)">
                   <Select
-                    value={sessionTimeout}
-                    onChange={(e) => setSessionTimeout(e.target.value as typeof sessionTimeout)}
+                    value={customTimeout ? 'custom' : sessionTimeout}
+                    onChange={(e) => {
+                      if (e.target.value === 'custom') {
+                        setCustomTimeout(true)
+                        return
+                      }
+                      setCustomTimeout(false)
+                      setSessionTimeout(e.target.value)
+                    }}
                   >
-                    <option value="15">15 minutos</option>
-                    <option value="30">30 minutos</option>
-                    <option value="60">1 hora</option>
-                    <option value="120">2 horas</option>
+                    {SESSION_TIMEOUT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                    <option value="custom">Outro…</option>
                   </Select>
+                  {customTimeout && (
+                    <TextInput
+                      type="number"
+                      min={SESSION_TIMEOUT_MIN}
+                      max={SESSION_TIMEOUT_MAX}
+                      step={1}
+                      value={sessionTimeout}
+                      aria-label="Tempo de sessão personalizado, em minutos"
+                      onChange={(e) => setSessionTimeout(e.target.value)}
+                      className="mt-2"
+                    />
+                  )}
+                  {customTimeout && !isValidTimeout(sessionTimeout) && (
+                    <p role="alert" className="mt-1 text-[0.6rem] text-red-700">
+                      Informe um valor inteiro entre {SESSION_TIMEOUT_MIN} e{' '}
+                      {SESSION_TIMEOUT_MAX} minutos.
+                    </p>
+                  )}
                 </FieldLabel>
                 <FieldLabel label="Idioma">
                   <Select value={language} onChange={(e) => setLanguage(e.target.value as Language)}>
@@ -174,76 +285,23 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Agendamentos</h2>
               </div>
               <div className="p-4 space-y-4">
-                <div>
-                  <MediaRow
-                    className="mb-3"
-                    icon={<FontAwesomeIcon icon={faCalendar} style={{ fontSize: 14 }} />}
-                    title="Google Agenda"
-                    description="Sincronize agendamentos automaticamente"
-                    trailing={googleConnected ? (
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-1 text-[0.6rem] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 10 }} />
-                          Conectado
-                        </span>
-                        <Button tone="danger" variant="ghost" size="sm" onClick={() => setGoogleConnected(false)}>
-                          Desconectar
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button variant="outline" onClick={() => setGoogleConnected(true)}>
-                        Conectar conta Google
-                      </Button>
-                    )}
-                  />
-
-                  {googleConnected && (
-                    <div className="bg-gray-50 rounded-lg p-3 space-y-3 ml-11">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-[0.7rem] font-medium text-(--text)">Sincronização automática</div>
-                          <div className="text-[0.55rem] text-(--text-muted)">Novos agendamentos são enviados ao Google Agenda</div>
-                        </div>
-                        <Switch checked={autoSync} onChange={setAutoSync} aria-label="Sincronização automática" />
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[0.6rem] text-(--text-muted)">
-                        <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ fontSize: 10 }} />
-                        <span>Conta vinculada: <span className="font-medium text-(--text)">clinica@allervia.com.br</span></span>
-                      </div>
-                    </div>
-                  )}
+                <div className="mb-3">
+                  <GoogleCalendarRow />
                 </div>
 
                 <div className="border-t border-(--border-custom)" />
 
                 <MediaRow
                   icon={<FontAwesomeIcon icon={faBell} style={{ fontSize: 14 }} />}
-                  title="Lembrete via WhatsApp"
-                  description="Enviar lembrete automático ao paciente antes da consulta"
-                  trailing={<Switch checked={reminderWhatsapp} onChange={setReminderWhatsapp} aria-label="Lembrete via WhatsApp" />}
+                  title="Lembrete automático via WhatsApp"
+                  description="Envio automático exige canal/provedor definido; o lembrete manual pelo link do WhatsApp continua disponível na agenda"
+                  trailing={<UnavailableBadge />}
                 />
-
-                {reminderWhatsapp && (
-                  <div className="ml-11 w-40">
-                    <FieldLabel label="Antecedência do lembrete">
-                      <Select
-                        value={reminderHours}
-                        onChange={(e) => setReminderHours(e.target.value as typeof reminderHours)}
-                      >
-                        <option value="2">2 horas antes</option>
-                        <option value="6">6 horas antes</option>
-                        <option value="12">12 horas antes</option>
-                        <option value="24">24 horas antes</option>
-                        <option value="48">48 horas antes</option>
-                      </Select>
-                    </FieldLabel>
-                  </div>
-                )}
 
                 <div className="border-t border-(--border-custom)" />
 
@@ -309,7 +367,7 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Tipos de Imunoterapia</h2>
               </div>
@@ -365,26 +423,34 @@ export function AdvancedSettingsPage() {
               </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados e Backup</h2>
               </div>
               <div className="p-4 space-y-3">
                 <MediaRow
                   icon={<FontAwesomeIcon icon={faDatabase} style={{ fontSize: 14 }} />}
-                  title="Backup automático"
-                  description="Backup diário dos dados clínicos às 03:00"
-                  trailing={<Switch checked={autoBackup} onChange={setAutoBackup} aria-label="Backup automático" />}
-                />
-                <div className="border-t border-(--border-custom)" />
-                <MediaRow
-                  icon={<FontAwesomeIcon icon={faServer} style={{ fontSize: 14 }} />}
-                  title="Último backup"
-                  description="10/04/2026 às 03:00 — 42.3 MB"
-                  trailing={<span className="text-[0.65rem] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Sucesso</span>}
+                  title="Backup"
+                  description="Backup é operação real de infraestrutura com evidência de restauração — não uma preferência desta tela; capacidade bloqueada até a operação existir"
+                  trailing={<UnavailableBadge />}
                 />
               </div>
         </section>
+
+            {canViewAudit && (
+              <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
+                <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
+                  <h2 className="text-xs font-bold text-(--text)">Auditoria administrativa</h2>
+                  <p className="text-[0.62rem] text-(--text-muted) mt-0.5">
+                    Trilha oficial do servidor. O histórico clínico de cada tratamento
+                    tem leitura própria no prontuário.
+                  </p>
+                </div>
+                <div className="p-4">
+                  <AuditTrailPanel />
+                </div>
+              </section>
+            )}
       </div>
     </SettingsLayout>
   )

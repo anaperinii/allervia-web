@@ -1,6 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ForgotPasswordPage } from '@/features/auth/forgot-password-page'
+import { ForgotPasswordRoute } from '@/features/auth/forgot-password-route'
+
+type SearchParams = {
+  token?: string
+}
 
 export const Route = createFileRoute('/forgot-password')({
-  component: ForgotPasswordPage,
+  validateSearch: (search: Record<string, unknown>): SearchParams => ({
+    token: typeof search.token === 'string' ? search.token : undefined,
+  }),
+  component: ForgotPasswordRoute,
 })

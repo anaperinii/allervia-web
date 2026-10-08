@@ -9,8 +9,13 @@ interface CountdownState {
 export function useCountdown(initialSeconds: number, resetKey: unknown = null): CountdownState {
   const [seconds, setSeconds] = useState(initialSeconds)
 
-  useEffect(() => {
+  const [previous, setPrevious] = useState({ initialSeconds, resetKey })
+  if (previous.initialSeconds !== initialSeconds || !Object.is(previous.resetKey, resetKey)) {
+    setPrevious({ initialSeconds, resetKey })
     setSeconds(initialSeconds)
+  }
+
+  useEffect(() => {
     const id = setInterval(() => {
       setSeconds((s) => (s > 0 ? s - 1 : 0))
     }, 1000)

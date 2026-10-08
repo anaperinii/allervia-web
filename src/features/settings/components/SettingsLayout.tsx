@@ -2,16 +2,22 @@ import type { ReactNode } from 'react'
 import { PageHeader } from '@/shared/components/showcase'
 
 interface SettingsLayoutProps {
-  subtitle?: string
+  subtitle?: ReactNode
+  /** Páginas entre "Configurações" e a atual, na ordem em que aparecem. */
+  parents?: string[]
   headerActions?: ReactNode
   children: ReactNode
 }
 
-export function SettingsLayout({ subtitle, headerActions, children }: SettingsLayoutProps) {
+export function SettingsLayout({ subtitle, parents, headerActions, children }: SettingsLayoutProps) {
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
       <PageHeader
-        breadcrumb={subtitle ? ['Configurações'] : undefined}
+        breadcrumb={
+          subtitle
+            ? [{ label: 'Configurações', to: '/settings' }, ...(parents ?? [])]
+            : undefined
+        }
         title={subtitle ?? 'Configurações'}
         actions={headerActions}
       />

@@ -1,12 +1,12 @@
-import type { UseFormReturn } from 'react-hook-form'
-import { cn } from '@/shared/lib/cn'
-import { FieldLabel, StepHeading, TextArea } from '@/shared/components'
-import { GLASS_CARD_SHADOW } from '@/shared/components/glass-card'
 import type { CompletionForm } from '@/features/patient/schemas/completion'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
+import { FieldLabel, StepHeading, TextArea } from '@/shared/components'
+import { GLASS_CARD_SHADOW } from '@/shared/constants/glass-card'
+import { cn } from '@/shared/lib/cn'
+import type { UseFormReturn } from 'react-hook-form'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faLock, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface CompletionReviewStepProps {
   form: UseFormReturn<CompletionForm>
@@ -45,7 +45,7 @@ export function CompletionReviewStep({
     <div className="space-y-4">
       <StepHeading description="Confira o resumo do desfecho e assine o encerramento. O registro vai para o prontuário e a imunoterapia é inativada." />
 
-      <div className="border border-(--border-custom) rounded-3xl bg-[#F6F8F8] overflow-hidden">
+      <div className="border border-(--border-custom) rounded-xl bg-[#F6F8F8] overflow-hidden">
         <div className="px-4 py-2.5 border-b border-(--border-custom) bg-gray-50 flex items-center justify-between gap-2">
           <div className="text-xs font-semibold text-(--text-muted)">Resumo a ser gravado no prontuário</div>
           <span className="inline-flex items-center gap-1 text-[0.55rem] font-semibold text-amber-700 bg-amber-100/70 border border-amber-200 rounded-md px-2 py-0.5 shrink-0">
@@ -78,7 +78,7 @@ export function CompletionReviewStep({
         />
       </FieldLabel>
 
-      <div className="border border-(--border-custom) rounded-3xl bg-[#F6F8F8] p-4 flex items-center justify-between gap-3">
+      <div className="border border-(--border-custom) rounded-xl bg-[#F6F8F8] p-4 flex items-center justify-between gap-3">
         <div>
           <div className="text-xs font-semibold text-(--text-muted)">Médico responsável pela conclusão</div>
           <div className="text-sm font-bold text-(--text) mt-0.5">{patient.responsibleDoctor}</div>

@@ -1,7 +1,6 @@
 import { format, isSameDay, isToday } from 'date-fns'
 import { cn } from '@/shared/lib/cn'
-import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
-import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { modalityStyle } from '@/features/scheduling/components/modality-colors'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
@@ -25,8 +24,6 @@ export function MonthView({
   onSelectApplication,
   onOpenDay,
 }: MonthViewProps) {
-  const { getName } = useImmunotherapyLookup()
-
   return (
     <div>
       <div className="grid grid-cols-7 border-b border-(--border-custom)">
@@ -72,29 +69,32 @@ export function MonthView({
               </div>
               <div className="space-y-0.5">
                 {applications.slice(0, 2).map((application) => {
-                  const color = getApplicationEventColor(application)
+                  const tone = modalityStyle(application)
                   return (
-                    <div
-                      key={application.id}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onSelectApplication(application)
-                      }}
-                      className={cn(
-                        'rounded px-1 py-0.5 text-[0.55rem] font-medium truncate backdrop-blur-md cursor-pointer hover:opacity-80 transition-opacity',
-                        application.status === 'missed' && 'opacity-70',
-                      )}
-                      style={{
-                        backgroundColor: color.bg,
-                        backgroundImage:
-                          application.status === 'missed'
-                            ? `repeating-linear-gradient(45deg, rgba(100,116,139,0.22) 0 1.5px, transparent 1.5px 6px), ${color.grad}`
-                            : color.grad,
-                        color: color.text,
-                      }}
-                    >
-                      {application.startTime} · {getName(application.patientId)}
-                    </div>
+                  <div
+                    key={application.id}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelectApplication(application)
+                    }}
+                    className={cn(
+                      'flex items-center gap-1 rounded border px-1 py-0.5 text-[0.55rem] font-medium cursor-pointer transition-all',
+                      application.status === 'missed' && 'opacity-70',
+                    )}
+                    style={{
+                      background: tone.surface,
+                      borderColor: tone.border,
+                      color: tone.ink,
+                      backgroundImage:
+                        application.status === 'missed'
+                          ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.14) 0 1.5px, transparent 1.5px 6px)'
+                          : undefined,
+                    }}
+                  >
+                    <span className="min-w-0 flex-1 truncate">
+                      {application.startTime} · {application.patientName ?? ''} · {application.cycle.days} dias
+                    </span>
+                  </div>
                   )
                 })}
                 {applications.length > 2 && (

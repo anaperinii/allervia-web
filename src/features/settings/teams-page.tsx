@@ -1,29 +1,45 @@
-import { useEffect, useMemo, useState } from 'react'
+import { InviteMemberModal } from '@/features/settings/components/InviteMemberModal'
+import { InvitesTable } from '@/features/settings/components/InvitesTable'
+import { ManageRolesModal } from '@/features/settings/components/ManageRolesModal'
+import { MembersTable } from '@/features/settings/components/MembersTable'
+import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
+import {
+  TeamConfirmModal,
+  type TeamConfirmState,
+} from '@/features/settings/components/TeamConfirmModal'
+import type { TeamRole } from '@/features/settings/constants/team-roles'
+import { Button, Select, TablePagination, TextInput } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
 import { useHasPermission } from '@/shared/stores/useUserStore'
-import { Button, Select, TextInput } from '@/shared/components'
-import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
-import type { TeamRole } from '@/features/settings/constants/team-roles'
-import { useTeamsStore, type Invite, type TeamMember } from '@/features/settings/stores/useTeamsStore'
-import { MembersTable } from '@/features/settings/components/MembersTable'
-import { InvitesTable } from '@/features/settings/components/InvitesTable'
-import { InviteMemberModal } from '@/features/settings/components/InviteMemberModal'
-import { TeamConfirmModal, type TeamConfirmState } from '@/features/settings/components/TeamConfirmModal'
-import { TablePagination } from '@/shared/components'
+import { useSession } from '@/shared/auth/useSession'
+import { queryKeys } from '@/shared/api/query-keys'
+import { ApiError } from '@/shared/api/contracts/errors'
+import type { Invite, TeamMember } from '@/shared/api/contracts/team'
+import {
+  cancelInvite,
+  createInvite,
+  listInvites,
+  listTeamMembers,
+  updateMemberAccess,
+} from '@/shared/api/team.api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-type StatusFilter = TeamMember['status'] | 'all'
+type StatusFilter = 'active' | 'inactive' | 'all'
 type RoleFilter = TeamRole | 'all'
+
+function describe(error: unknown, fallback: string): string {
+  return error instanceof ApiError ? error.message : fallback
+}
 
 export function TeamsPage() {
   const canManageTeam = useHasPermission('manage_team')
-  const members = useTeamsStore((s) => s.members)
-  const invites = useTeamsStore((s) => s.invites)
-  const removeMember = useTeamsStore((s) => s.removeMember)
-  const setMemberStatus = useTeamsStore((s) => s.setMemberStatus)
-  const deleteInvite = useTeamsStore((s) => s.deleteInvite)
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+  const queryClient = useQueryClient()
 
   const [tab, setTab] = useState<'members' | 'invites'>('members')
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -31,43 +47,106 @@ export function TeamsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const itemsPerPage = 10
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [confirmState, setConfirmState] = useState<TeamConfirmState | null>(null)
+  const [rolesTarget, setRolesTarget] = useState<TeamMember | null>(null)
 
-  const filteredMembers = useMemo(() => members
-    .filter((m) => !search.trim() || m.name.toLowerCase().includes(search.trim().toLowerCase()))
-    .filter((m) => statusFilter === 'all' || m.status === statusFilter)
-    .filter((m) => roleFilter === 'all' || m.role === roleFilter)
-    .sort((a, b) => a.status === 'active' && b.status !== 'active' ? -1 : a.status !== 'active' && b.status === 'active' ? 1 : 0)
-  , [members, search, statusFilter, roleFilter])
+  const memberFilters = {
+    page: currentPage,
+    pageSize: itemsPerPage,
+    search: search.trim() || undefined,
+    role: roleFilter === 'all' ? undefined : roleFilter,
+    isActive: statusFilter === 'all' ? undefined : statusFilter === 'active',
+  }
 
-  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / itemsPerPage))
-  const paginatedMembers = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage
-    return filteredMembers.slice(start, start + itemsPerPage)
-  }, [filteredMembers, currentPage, itemsPerPage])
+  const inviteFilters = { page: 1, pageSize: 50, includeExpired: true }
 
-  useEffect(() => { setCurrentPage(1) }, [search, statusFilter, roleFilter, itemsPerPage])
+  const membersQuery = useQuery({
+    queryKey: queryKeys.team(organizationId, memberFilters),
+    queryFn: ({ signal }) => listTeamMembers(memberFilters, signal),
+    enabled: canManageTeam && organizationId !== '',
+  })
+
+  const invitesQuery = useQuery({
+    queryKey: queryKeys.invites(organizationId, inviteFilters),
+    queryFn: ({ signal }) => listInvites(inviteFilters, signal),
+    enabled: canManageTeam && organizationId !== '',
+  })
+
+  const refreshAll = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['team', organizationId] }),
+      queryClient.invalidateQueries({ queryKey: ['invites', organizationId] }),
+    ])
+  }
+
+  const accessMutation = useMutation({
+    mutationFn: (input: { professionalId: string; isActive: boolean }) =>
+      updateMemberAccess(input.professionalId, input.isActive),
+    onSuccess: refreshAll,
+  })
+
+  const inviteMutation = useMutation({
+    mutationFn: (input: { email: string; fullName: string; role: TeamRole }) =>
+      createInvite({
+        email: input.email,
+        fullName: input.fullName,
+        userRole: input.role,
+      }),
+    onSuccess: async () => {
+      setShowInviteModal(false)
+      await refreshAll()
+    },
+  })
+
+  const cancelMutation = useMutation({
+    mutationFn: (inviteId: string) => cancelInvite(inviteId),
+    onSuccess: refreshAll,
+  })
+
+  const resendMutation = useMutation({
+    mutationFn: async (invite: Invite) => {
+      if (invite.status === 'ACTIVE') await cancelInvite(invite.id)
+      await createInvite({
+        email: invite.email,
+        fullName: invite.fullName,
+        userRole: invite.role,
+      })
+    },
+    onSuccess: refreshAll,
+  })
+
+  const members = membersQuery.data?.items ?? []
+  const invites = invitesQuery.data?.items ?? []
+  const totalMembers = membersQuery.data?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(totalMembers / itemsPerPage))
+
+  const applyFilter = (apply: () => void) => {
+    apply()
+    setCurrentPage(1)
+  }
 
   const handleConfirm = () => {
     if (!confirmState) return
+
     switch (confirmState.type) {
-      case 'remove-member':
-        removeMember(confirmState.id)
-        break
       case 'deactivate':
-        setMemberStatus(confirmState.id, 'inactive')
+        accessMutation.mutate({ professionalId: confirmState.id, isActive: false })
         break
       case 'activate':
-        setMemberStatus(confirmState.id, 'active')
+        accessMutation.mutate({ professionalId: confirmState.id, isActive: true })
         break
-      case 'delete-invite':
-        deleteInvite(confirmState.id)
+      case 'cancel-invite':
+        cancelMutation.mutate(confirmState.id)
         break
-      case 'resend-invite':
+      case 'resend-invite': {
+        const invite = invites.find((item) => item.id === confirmState.id)
+        if (invite) resendMutation.mutate(invite)
         break
+      }
     }
+
     setConfirmState(null)
   }
 
@@ -80,13 +159,17 @@ export function TeamsPage() {
           </div>
           <h2 className="text-base font-bold text-(--text) mb-1.5">Acesso restrito</h2>
           <p className="text-xs text-(--text-muted) max-w-sm leading-relaxed mb-5">
-            A gestão de equipe está disponível apenas para o perfil <span className="font-semibold text-(--text)">Administrador</span>. Troque de perfil pelo menu de usuário para acessar esta área.
+            A gestão de equipe é concedida pelo papel de{' '}
+            <span className="font-semibold text-(--text)">Administrador</span> na
+            sua organização. Peça a concessão a quem administra a clínica.
           </p>
           <Button variant="outline" to="/settings">Voltar para configurações</Button>
         </div>
       </SettingsLayout>
     )
   }
+
+  const loadFailure = membersQuery.error ?? invitesQuery.error
 
   return (
     <SettingsLayout subtitle="Equipes e Convites">
@@ -97,38 +180,53 @@ export function TeamsPage() {
           <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) z-10" style={{ fontSize: 14 }} />
           <TextInput
             id="team-search"
-            placeholder="Pesquisar usuário"
+            placeholder="Pesquisar por nome ou e-mail"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => applyFilter(() => setSearch(e.target.value))}
             className="h-9 pl-8"
           />
         </div>
         <Select
-          aria-label="Filtrar por status"
+          aria-label="Filtrar por acesso"
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+          onChange={(e) => applyFilter(() => setStatusFilter(e.target.value as StatusFilter))}
           className="h-9 w-auto"
         >
-          <option value="active">Ativos</option>
-          <option value="inactive">Inativos</option>
+          <option value="active">Com acesso</option>
+          <option value="inactive">Acesso encerrado</option>
           <option value="all">Todos</option>
         </Select>
         <Select
-          aria-label="Filtrar por perfil"
+          aria-label="Filtrar por papel"
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+          onChange={(e) => applyFilter(() => setRoleFilter(e.target.value as RoleFilter))}
           className="h-9 w-auto"
         >
-          <option value="all">Todos os perfis</option>
-          <option value="admin">Administrador</option>
-          <option value="doctor">Médico</option>
-          <option value="nurse">Enfermeiro</option>
-          <option value="technician">Técnico</option>
+          <option value="all">Todos os papéis</option>
+          <option value="ADMINISTRATOR">Administrador</option>
+          <option value="PHYSICIAN">Médico</option>
+          <option value="NURSE">Enfermeiro</option>
+          <option value="RECEPTIONIST">Recepção</option>
         </Select>
-        <Button tone="brand" variant="solid" prominent onClick={() => setShowInviteModal(true)} className="w-44">
+        <Button
+          tone="brand"
+          variant="solid"
+          prominent
+          onClick={() => setShowInviteModal(true)}
+          className="w-44"
+        >
           Convidar membro
         </Button>
       </div>
+
+      {loadFailure && (
+        <div
+          role="alert"
+          className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[0.7rem] text-red-700"
+        >
+          {describe(loadFailure, 'Não foi possível carregar a equipe.')}
+        </div>
+      )}
 
       <div className="relative z-10 flex items-end justify-between gap-3">
         <div role="tablist" aria-label="Equipe" className="flex items-end gap-1">
@@ -148,7 +246,7 @@ export function TeamsPage() {
                 style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)' }}
               />
             )}
-            Membros <span className="text-[0.65rem] font-normal opacity-60">({members.length})</span>
+            Membros <span className="text-[0.65rem] font-normal opacity-60">({totalMembers})</span>
           </button>
           <button
             role="tab"
@@ -173,7 +271,7 @@ export function TeamsPage() {
                 />
               </>
             )}
-            Convites <span className="text-[0.65rem] font-normal opacity-60">({invites.length})</span>
+            Convites <span className="text-[0.65rem] font-normal opacity-60">({invitesQuery.data?.total ?? 0})</span>
           </button>
         </div>
       </div>
@@ -181,32 +279,72 @@ export function TeamsPage() {
       {tab === 'members' ? (
         <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-[#F6F8F8]">
           <div className="flex-1 overflow-auto">
-            <MembersTable
-              members={paginatedMembers}
-              openMenuId={openMenuId}
-              onToggleMenu={(id) => setOpenMenuId(openMenuId === id ? null : id)}
-              onCloseMenu={() => setOpenMenuId(null)}
-              onDeactivate={(member) => { setOpenMenuId(null); setConfirmState({ type: 'deactivate', id: member.id, name: member.name }) }}
-              onActivate={(member) => { setOpenMenuId(null); setConfirmState({ type: 'activate', id: member.id, name: member.name }) }}
-              onRemove={(member) => { setOpenMenuId(null); setConfirmState({ type: 'remove-member', id: member.id, name: member.name }) }}
-            />
+            {membersQuery.isPending ? (
+              <div className="py-12 text-center text-xs text-(--text-muted)">
+                Carregando equipe…
+              </div>
+            ) : (
+              <MembersTable
+                members={members}
+                currentProfessionalId={account?.professional?.id}
+                openMenuId={openMenuId}
+                onToggleMenu={(id) => setOpenMenuId(openMenuId === id ? null : id)}
+                onCloseMenu={() => setOpenMenuId(null)}
+                onDeactivate={(member: TeamMember) => {
+                  setOpenMenuId(null)
+                  setConfirmState({
+                    type: 'deactivate',
+                    id: member.professionalId,
+                    name: member.fullName,
+                  })
+                }}
+                onActivate={(member: TeamMember) => {
+                  setOpenMenuId(null)
+                  setConfirmState({
+                    type: 'activate',
+                    id: member.professionalId,
+                    name: member.fullName,
+                  })
+                }}
+                onManageRoles={(member: TeamMember) => {
+                  setOpenMenuId(null)
+                  setRolesTarget(member)
+                }}
+              />
+            )}
           </div>
           <TablePagination
             currentPage={currentPage}
             totalPages={totalPages}
-            itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
           />
         </div>
       ) : (
         <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-[#F6F8F8]">
           <div className="flex-1 overflow-auto">
-            <InvitesTable
-              invites={invites}
-              onResend={(invite: Invite) => setConfirmState({ type: 'resend-invite', id: invite.id, name: invite.email })}
-              onDelete={(invite: Invite) => setConfirmState({ type: 'delete-invite', id: invite.id, name: invite.email })}
-            />
+            {invitesQuery.isPending ? (
+              <div className="py-12 text-center text-xs text-(--text-muted)">
+                Carregando convites…
+              </div>
+            ) : (
+              <InvitesTable
+                invites={invites}
+                onResend={(invite) =>
+                  setConfirmState({
+                    type: 'resend-invite',
+                    id: invite.id,
+                    name: invite.email,
+                  })
+                }
+                onCancel={(invite) =>
+                  setConfirmState({
+                    type: 'cancel-invite',
+                    id: invite.id,
+                    name: invite.email,
+                  })
+                }
+              />
+            )}
           </div>
         </div>
       )}
@@ -214,12 +352,26 @@ export function TeamsPage() {
 
       <InviteMemberModal
         open={showInviteModal}
+        submitting={inviteMutation.isPending}
         onClose={() => setShowInviteModal(false)}
-        onSubmit={() => setShowInviteModal(false)}
+        onSubmit={(data) => inviteMutation.mutate(data)}
+      />
+
+      <ManageRolesModal
+        member={rolesTarget}
+        organizationId={organizationId}
+        currentProfessionalId={account?.professional?.id}
+        onClose={() => setRolesTarget(null)}
+        onSaved={refreshAll}
       />
 
       <TeamConfirmModal
         state={confirmState}
+        submitting={
+          accessMutation.isPending ||
+          cancelMutation.isPending ||
+          resendMutation.isPending
+        }
         onClose={() => setConfirmState(null)}
         onConfirm={handleConfirm}
       />

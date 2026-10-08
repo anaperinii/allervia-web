@@ -1,8 +1,7 @@
 import { format, isSameDay, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/cn'
-import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
-import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
+import { modalityStyle } from '@/features/scheduling/components/modality-colors'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 interface WeekViewProps {
@@ -20,8 +19,6 @@ export function WeekView({
   applicationsByDate,
   onSelectApplication,
 }: WeekViewProps) {
-  const { getName } = useImmunotherapyLookup()
-
   return (
     <div className="grid grid-cols-7 h-full">
       {weekDays.map((day) => {
@@ -34,7 +31,7 @@ export function WeekView({
             onClick={() => onSelectDate(day)}
             className={cn(
               'border-r border-(--border-custom) last:border-r-0 p-2.5 cursor-pointer transition-colors flex flex-col min-h-0 relative',
-              today || selected ? 'bg-[#1d6772]/14' : 'hover:bg-brand/6',
+              today || selected ? 'bg-[#1d6772]/6' : 'hover:bg-brand/6',
             )}
           >
             {today && (
@@ -61,36 +58,37 @@ export function WeekView({
             </div>
             <div className="flex-1 space-y-1 overflow-y-auto">
               {applications.map((application) => {
-                const color = getApplicationEventColor(application)
+                const tone = modalityStyle(application)
                 return (
-                  <div
-                    key={application.id}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onSelectApplication(application)
-                    }}
-                    className={cn(
-                      'group relative rounded-md px-2.5 py-1.5 text-[0.6rem] backdrop-blur-sm cursor-pointer hover:brightness-95 transition-all',
-                      application.status === 'missed' && 'opacity-70',
-                    )}
-                    style={{
-                      backgroundColor: color.bg,
-                      backgroundImage:
-                        application.status === 'missed'
-                          ? `repeating-linear-gradient(45deg, rgba(100,116,139,0.22) 0 1.5px, transparent 1.5px 6px), ${color.grad}`
-                          : color.grad,
-                      color: color.text,
-                      boxShadow: '0 1px 4px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.04)',
-                    }}
-                  >
-                    <div className="space-y-0.5">
-                      <div className="text-[0.72rem] font-bold">
-                        {application.startTime} – {application.endTime}
-                      </div>
-                      <div className="font-semibold opacity-90 truncate">{getName(application.patientId)}</div>
-                      <div className="font-medium opacity-90 truncate">{application.dose}</div>
-                    </div>
+                <div
+                  key={application.id}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSelectApplication(application)
+                  }}
+                  className={cn(
+                    'group cursor-pointer space-y-0.5 rounded-lg border px-2.5 py-1.5 text-[0.6rem] transition-all hover:-translate-y-px',
+                    application.status === 'missed' && 'opacity-70',
+                  )}
+                  style={{
+                    background: tone.surface,
+                    borderColor: tone.border,
+                    color: tone.ink,
+                    backgroundImage:
+                      application.status === 'missed'
+                        ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.14) 0 1.5px, transparent 1.5px 6px)'
+                        : undefined,
+                  }}
+                >
+                  <div className="truncate text-[0.68rem] font-bold">
+                    {application.startTime}
+                    {application.endTime ? ` – ${application.endTime}` : ''}
                   </div>
+                  <div className="truncate font-semibold">{application.patientName ?? ''}</div>
+                  <div className="truncate font-medium opacity-75">
+                    {application.dose} · {application.cycle.days} dias
+                  </div>
+                </div>
                 )
               })}
             </div>

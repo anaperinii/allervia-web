@@ -1,22 +1,94 @@
+import { useMemo } from 'react'
 import { Controller, type UseFormReturn } from 'react-hook-form'
+import { useQuery } from '@tanstack/react-query'
 import { FieldLabel, Select, StepHeading, TextInput } from '@/shared/components'
-import { formatConcentration, formatVolume } from '@/shared/lib/formatters'
 import { todayStr } from '@/shared/lib/dates'
+import { cn } from '@/shared/lib/cn'
 import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
-import { MODALITY_OPTIONS } from '@/features/immunotherapy/constants/modality'
+import { listProtocols, readAutomation } from '@/shared/api/protocols.api'
+import type { ProtocolStep, ProtocolVersion } from '@/shared/api/contracts/protocols'
+import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
 import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
+
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface ImmunotherapyDataStepProps {
   form: UseFormReturn<AddImmunotherapyForm>
 }
 
+interface PublishedOption {
+  version: ProtocolVersion
+  protocolName: string
+  isDefault: boolean
+}
+
 export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
-  const { control, register, formState: { errors } } = form
+  const { control, register, setValue, watch, formState: { errors } } = form
   const customTypes = useCustomTypesStore((s) => s.types)
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+
+  const protocolsQuery = useQuery({
+    queryKey: queryKeys.protocols(organizationId),
+    queryFn: ({ signal }) => listProtocols(signal),
+    enabled: organizationId !== '',
+  })
+  const automationQuery = useQuery({
+    queryKey: queryKeys.automation(organizationId),
+    queryFn: ({ signal }) => readAutomation(signal),
+    enabled: organizationId !== '',
+  })
+
+  const defaultVersionIds = useMemo(
+    () => new Set((automationQuery.data?.defaults ?? []).map((d) => d.versionId)),
+    [automationQuery.data],
+  )
+
+  const publishedOptions = useMemo<PublishedOption[]>(() => {
+    return (protocolsQuery.data ?? []).flatMap((protocol) =>
+      protocol.versions
+        .filter((version) => version.status === 'PUBLISHED')
+        .map((version) => ({
+          version,
+          protocolName: protocol.name,
+          isDefault: defaultVersionIds.has(version.id),
+        })),
+    )
+  }, [protocolsQuery.data, defaultVersionIds])
+
+  const selectedVersionId = watch('protocolVersionId')
+  const selectedStepIds = watch('stepIds')
+  const selectedVersion = publishedOptions.find(
+    (option) => option.version.id === selectedVersionId,
+  )?.version
+
+  const steps: ProtocolStep[] = selectedVersion?.definition.steps ?? []
+
+  const applyStepIds = (next: string[]) => {
+    setValue('stepIds', next, { shouldValidate: true })
+    if (!next.includes(watch('startingStepId'))) setValue('startingStepId', '')
+    if (!next.includes(watch('targetStepId'))) setValue('targetStepId', '')
+  }
+
+  const toggleStep = (stepId: string) => {
+    const next = selectedStepIds.includes(stepId)
+      ? selectedStepIds.filter((id) => id !== stepId)
+      :
+        steps.map((step) => step.id).filter(
+          (id) => id === stepId || selectedStepIds.includes(id),
+        )
+    applyStepIds(next)
+  }
+
+  const allSelected =
+    steps.length > 0 && steps.every((step) => selectedStepIds.includes(step.id))
 
   return (
     <div className="space-y-5">
-      <StepHeading description="Tipo de alérgeno, via de administração, extrato, data de início e as metas de concentração e volume do protocolo." />
+      <StepHeading description="Tipo de alérgeno, extrato, data de início e a versão publicada do protocolo com as etapas permitidas." />
       <div className="grid grid-cols-2 gap-4">
         <FieldLabel label="Tipo" error={errors.type?.message}>
           <Select invalid={!!errors.type} {...register('type')}>
@@ -24,55 +96,148 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
             {customTypes.map((t) => <option key={t.id} value={t.label}>{t.label}</option>)}
           </Select>
         </FieldLabel>
-        <FieldLabel label="Via Cutânea" error={errors.modality?.message}>
-          <Select invalid={!!errors.modality} {...register('modality')}>
-            <option value="" disabled>Selecione</option>
-            {MODALITY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </Select>
+        <FieldLabel label="Via de Administração">
+          <TextInput value="Subcutânea (SCIT)" readOnly className="text-(--text-muted) bg-gray-100/60" />
         </FieldLabel>
         <FieldLabel label="Data de Início" error={errors.startDate?.message}>
           <TextInput type="date" min={todayStr()} invalid={!!errors.startDate} {...register('startDate')} />
         </FieldLabel>
         <FieldLabel label="Extrato" error={errors.extract?.message}>
-          <TextInput placeholder="Ex: Der p 60 + Der f 10% + Blt 30%" invalid={!!errors.extract} {...register('extract')} />
+          <TextInput placeholder="Ex: Der p 60% + Der f 10% + Blt 30%" invalid={!!errors.extract} {...register('extract')} />
         </FieldLabel>
-        <FieldLabel label="Meta de Concentração" error={errors.targetConcentration?.message}>
+        <FieldLabel label="Versão do protocolo" error={errors.protocolVersionId?.message}>
           <Controller
             control={control}
-            name="targetConcentration"
+            name="protocolVersionId"
             render={({ field }) => (
-              <TextInput
-                placeholder="1:10"
-                invalid={!!errors.targetConcentration}
+              <Select
+                invalid={!!errors.protocolVersionId}
                 value={field.value}
-                onBlur={field.onBlur}
-                onChange={(e) => field.onChange(formatConcentration(e.target.value))}
-              />
+                onChange={(e) => {
+                  field.onChange(e.target.value)
+                  // Caso comum é prescrever o protocolo inteiro: já entra com
+                  // todas as etapas marcadas e o médico desmarca as exceções.
+                  const version = publishedOptions.find(
+                    (option) => option.version.id === e.target.value,
+                  )?.version
+                  setValue(
+                    'stepIds',
+                    version?.definition.steps.map((step) => step.id) ?? [],
+                  )
+                  setValue('startingStepId', '')
+                  setValue('targetStepId', '')
+                }}
+              >
+                <option value="" disabled>
+                  {protocolsQuery.isPending
+                    ? 'Carregando versões…'
+                    : publishedOptions.length === 0
+                      ? 'Nenhuma versão publicada'
+                      : 'Selecione a versão'}
+                </option>
+                {publishedOptions.map((option) => (
+                  <option key={option.version.id} value={option.version.id}>
+                    {option.protocolName} — v{option.version.number}
+                    {option.isDefault ? ' (padrão)' : ''}
+                  </option>
+                ))}
+              </Select>
             )}
           />
         </FieldLabel>
-        <FieldLabel label="Meta de Volume" error={errors.targetVolume?.message}>
-          <div className="relative">
-            <Controller
-              control={control}
-              name="targetVolume"
-              render={({ field }) => (
-                <TextInput
-                  placeholder="Ex: 0.5"
-                  invalid={!!errors.targetVolume}
-                  className="pr-10"
-                  value={field.value}
-                  onBlur={field.onBlur}
-                  onChange={(e) => field.onChange(formatVolume(e.target.value))}
-                />
-              )}
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-(--text-muted)">ml</span>
-          </div>
-        </FieldLabel>
       </div>
+
+      {selectedVersion && (
+        <div className="space-y-3">
+          <fieldset
+            className="relative rounded-xl border px-3.5 pb-3.5 pt-2.5"
+            style={{ borderColor: 'rgba(18,51,58,0.22)' }}
+          >
+            <legend className="flex items-center gap-2 px-1.5">
+              <span className="text-xs font-semibold text-(--text-muted)">
+                Etapas permitidas na prescrição
+              </span>
+              <span className="text-[0.6rem] text-(--text-muted)">
+                {selectedStepIds.length} de {steps.length} selecionadas
+              </span>
+            </legend>
+            <button
+              type="button"
+              onClick={() =>
+                applyStepIds(allSelected ? [] : steps.map((step) => step.id))
+              }
+              className={cn(
+                'absolute -top-5 right-5 flex items-center gap-1.5 rounded-md border px-2 py-1 text-[0.65rem] font-semibold transition-colors cursor-pointer',
+                allSelected
+                  ? 'border-red-300 bg-red-50 text-red-700 hover:border-red-400 hover:bg-red-100'
+                  : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50 hover:text-brand-dark',
+              )}
+            >
+              {allSelected && (
+                <FontAwesomeIcon icon={faXmark} style={{ fontSize: 10 }} />
+              )}
+              {allSelected ? 'Limpar seleção' : 'Selecionar todas'}
+            </button>
+            <div className="flex flex-wrap gap-2">
+              {steps.map((step) => {
+                const selected = selectedStepIds.includes(step.id)
+                return (
+                  <button
+                    key={step.id}
+                    type="button"
+                    role="checkbox"
+                    aria-checked={selected}
+                    onClick={() => toggleStep(step.id)}
+                    className={cn(
+                      'rounded-lg border px-3 py-1.5 text-[0.7rem] font-semibold transition-colors cursor-pointer',
+                      selected
+                        ? 'border-brand bg-brand-50 text-brand-dark'
+                        : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50',
+                    )}
+                  >
+                    {formatStepOption(step)}
+                    <span className="ml-1.5 font-normal opacity-75">
+                      {step.intervalDays}d
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            {errors.stepIds?.message && (
+              <span className="mt-0.5 block text-[0.6rem] text-red-500">
+                {errors.stepIds.message}
+              </span>
+            )}
+          </fieldset>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FieldLabel label="Etapa inicial" error={errors.startingStepId?.message}>
+              <Select invalid={!!errors.startingStepId} {...register('startingStepId')}>
+                <option value="" disabled>Selecione</option>
+                {steps
+                  .filter((step) => selectedStepIds.includes(step.id))
+                  .map((step) => (
+                    <option key={step.id} value={step.id}>
+                      {formatStepOption(step)}
+                    </option>
+                  ))}
+              </Select>
+            </FieldLabel>
+            <FieldLabel label="Etapa meta" error={errors.targetStepId?.message}>
+              <Select invalid={!!errors.targetStepId} {...register('targetStepId')}>
+                <option value="" disabled>Selecione</option>
+                {steps
+                  .filter((step) => selectedStepIds.includes(step.id))
+                  .map((step) => (
+                    <option key={step.id} value={step.id}>
+                      {formatStepOption(step)}
+                    </option>
+                  ))}
+              </Select>
+            </FieldLabel>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,9 +1,10 @@
-import type { CSSProperties } from 'react'
+import { Aurora } from '@/shared/components/Aurora'
+import { AURORA_STOPS } from '@/shared/constants/aurora'
 import { Link } from '@tanstack/react-router'
-import { Aurora, AURORA_STOPS } from '@/shared/components/Aurora'
+import type { CSSProperties } from 'react'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const heroRiseStyle = (delay: number): CSSProperties => ({
   opacity: 0,
@@ -129,7 +130,7 @@ export function HeroSection() {
           <div className="mt-9" style={socialRiseStyle(1.2)}>
             <Link
               to="/trial"
-              className="group inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold no-underline transition-all hover:-translate-y-0.5"
+              className="group inline-flex items-center gap-2 rounded-lg px-7 py-3 text-sm font-semibold no-underline transition-all hover:-translate-y-0.5"
               style={{
                 background: '#12333a',
                 color: '#ffffff',

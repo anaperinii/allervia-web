@@ -1,5 +1,13 @@
-import { useEffect, useRef, useState, type ReactNode, type ElementType, type CSSProperties, type HTMLAttributes } from 'react'
 import { cn } from '@/shared/lib/cn'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ElementType,
+  type HTMLAttributes,
+  type ReactNode,
+} from 'react'
 
 interface RevealProps extends Omit<HTMLAttributes<HTMLElement>, 'children' | 'className' | 'style'> {
   children: ReactNode
@@ -48,7 +56,7 @@ export function Reveal({
 
   return (
 
-    <Tag {...rest} ref={ref as any} className={cn('reveal', visible && 'visible', className)} style={mergedStyle}>
+    <Tag {...rest} ref={ref} className={cn('reveal', visible && 'visible', className)} style={mergedStyle}>
       {children}
     </Tag>
   )

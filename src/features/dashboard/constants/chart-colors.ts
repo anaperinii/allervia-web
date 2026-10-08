@@ -38,9 +38,6 @@ export const SEQUENTIAL_TYPE_COLORS = ['#CBE7EC', '#A2D5DE', '#78BFCC', '#4FA3B4
 export const VOLUME_KEYS = ['0,1ml', '0,2ml', '0,4ml', '0,5ml', '0,8ml'] as const
 export type VolumeKey = (typeof VOLUME_KEYS)[number]
 
-// Volume is encoded as tonal intensity of each concentration's own donut color:
-// light tint for the smallest volume, progressively stronger toward the largest.
-// Explicit hex ramps per concentration (0,1ml lightest -> 0,8ml strongest).
 export const CONCENTRATION_VOLUME_COLORS: Record<string, Record<VolumeKey, string>> = {
   '1:10.000': { '0,1ml': '#E2F2C4', '0,2ml': '#CFE99E', '0,4ml': '#B7E06A', '0,5ml': '#9BC94D', '0,8ml': '#7BA634' },
   '1:1.000': { '0,1ml': '#D5EDD0', '0,2ml': '#BCE3B4', '0,4ml': '#8FD285', '0,5ml': '#6FB865', '0,8ml': '#52944A' },
@@ -48,7 +45,6 @@ export const CONCENTRATION_VOLUME_COLORS: Record<string, Record<VolumeKey, strin
   '1:10': { '0,1ml': '#B5D6D2', '0,2ml': '#8CBEB8', '0,4ml': '#64A69F', '0,5ml': '#3E8E86', '0,8ml': '#2A6B65' },
 }
 
-// neutral ramp for the volume-intensity legend (hue-independent)
 export const VOLUME_LEGEND_COLORS: Record<VolumeKey, string> = {
   '0,1ml': '#DBE3E6',
   '0,2ml': '#B4C4C9',

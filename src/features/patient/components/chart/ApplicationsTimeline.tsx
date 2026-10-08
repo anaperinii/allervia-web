@@ -74,7 +74,8 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditSche
 
                   <div className="flex-1 min-w-0 px-5 py-2.5">
                     <div className="text-[0.8rem] text-(--text-muted)">
-                      {weekday}, {application.startTime}–{application.endTime}
+                      {weekday}, {application.startTime}
+                      {application.endTime ? `–${application.endTime}` : ''}
                     </div>
                     <div className="mt-1 flex items-center gap-2 flex-wrap">
                       <span className="text-sm text-(--text-muted)">{withSmallMl(application.dose)}</span>

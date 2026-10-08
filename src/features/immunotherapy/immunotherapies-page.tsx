@@ -1,78 +1,87 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { TablePagination } from '@/shared/components'
-import { useImmunotherapiesStore, type Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
-import { usePatientStore } from '@/features/patient/stores/usePatientStore'
-import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { useDoctorFilter, useHasPermission } from '@/shared/stores/useUserStore'
-import { ImmunotherapiesFilterBar, MODALITY_OPTIONS, type ModalityTab } from '@/features/immunotherapy/components/ImmunotherapiesFilterBar'
+import {
+  ImmunotherapiesFilterBar,
+  type ModalityTab,
+  type StatusFilter,
+} from '@/features/immunotherapy/components/ImmunotherapiesFilterBar'
 import { ImmunotherapiesTable } from '@/features/immunotherapy/components/ImmunotherapiesTable'
+import { MODALITY_OPTIONS } from '@/features/immunotherapy/constants/modality-options'
+import { legacyModalityToRoute } from '@/features/patient/adapters/clinical-presentation'
+import {
+  listImmunotherapies,
+  listImmunotherapyTypes,
+} from '@/shared/api/clinical.api'
+import { readAutomation } from '@/shared/api/protocols.api'
+import type { ImmunotherapyListItem } from '@/shared/api/contracts/clinical'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
+import { SegmentedControl, TablePagination } from '@/shared/components'
 import { PageHeader, Pill, SHOWCASE } from '@/shared/components/showcase'
-import { SegmentedControl } from '@/shared/components'
+import { useHasPermission } from '@/shared/stores/useUserStore'
+import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 
 export function ImmunotherapiesPage() {
   const navigate = useNavigate()
-  const immunotherapies = useImmunotherapiesStore((s) => s.immunotherapies)
-  const customTypes = useCustomTypesStore((s) => s.types)
-  const setSelectedPatient = usePatientStore((s) => s.setSelectedPatient)
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
   const canAddImmunotherapy = useHasPermission('add_immunotherapy')
   const canEvolve = useHasPermission('evolve_patient')
-  const doctorFilter = useDoctorFilter()
 
   const [searchTerm, setSearchTerm] = useState('')
-  const [typeFilter, setTypeFilter] = useState('Todos os tipos')
-  const [intervalFilter, setIntervalFilter] = useState('Todos os intervalos')
-  const [statusFilter, setStatusFilter] = useState('active')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('IN_PROGRESS')
+  const [typeFilter, setTypeFilter] = useState('all')
   const [modalityTab, setModalityTab] = useState<ModalityTab>('all')
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const itemsPerPage = 10
 
-  const types = useMemo(
-    () => customTypes.map((t) => t.label),
-    [customTypes],
-  )
+  const filters = {
+    page: currentPage,
+    pageSize: itemsPerPage,
+    search: searchTerm.trim() || undefined,
+    status: statusFilter === 'all' ? undefined : statusFilter,
+    immunoType: typeFilter === 'all' ? undefined : typeFilter,
+    route:
+      modalityTab === 'all' ? undefined : legacyModalityToRoute(modalityTab),
+  }
 
-  const intervals = useMemo(
-    () => Array.from(new Set(immunotherapies.map((i) => i.cycleInterval.days.toString())))
-      .sort((a, b) => Number(a) - Number(b)),
-    [immunotherapies],
-  )
+  const listQuery = useQuery({
+    queryKey: queryKeys.immunotherapies(organizationId, filters),
+    queryFn: ({ signal }) => listImmunotherapies(filters, signal),
+    enabled: organizationId !== '',
+  })
 
-  const filtered = useMemo(() => {
-    return immunotherapies.filter((item) => {
-      const matchDoctor = !doctorFilter || item.responsibleDoctor === doctorFilter
-      const matchSearch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchType = typeFilter === 'Todos os tipos' || item.type === typeFilter
-      const matchInterval = intervalFilter === 'Todos os intervalos' || item.cycleInterval.days.toString() === intervalFilter
-      const matchStatus = statusFilter === 'all' || item.status === statusFilter
-      const matchModality = modalityTab === 'all' || item.modality === modalityTab
-      return matchDoctor && matchSearch && matchType && matchInterval && matchStatus && matchModality
-    })
-  }, [immunotherapies, searchTerm, typeFilter, intervalFilter, statusFilter, doctorFilter, modalityTab])
+  const typesQuery = useQuery({
+    queryKey: queryKeys.immunotherapyTypes(organizationId),
+    queryFn: ({ signal }) => listImmunotherapyTypes(signal),
+    enabled: organizationId !== '',
+  })
 
-  const modalityCounts = useMemo(() => {
-    const base = immunotherapies.filter((i) => !doctorFilter || i.responsibleDoctor === doctorFilter)
-    return {
-      all: base.length,
-      subcutaneous: base.filter((i) => i.modality === 'subcutaneous').length,
-      sublingual: base.filter((i) => i.modality === 'sublingual').length,
-    } as Record<ModalityTab, number>
-  }, [immunotherapies, doctorFilter])
+  const automationQuery = useQuery({
+    queryKey: queryKeys.automation(organizationId),
+    queryFn: ({ signal }) => readAutomation(signal),
+    enabled: organizationId !== '',
+  })
+  const configurationPending =
+    automationQuery.data?.defaults !== undefined &&
+    automationQuery.data.defaults.length === 0
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage
-    return filtered.slice(start, start + itemsPerPage)
-  }, [filtered, currentPage, itemsPerPage])
+  const items = listQuery.data?.items ?? []
+  const total = listQuery.data?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / itemsPerPage))
 
-  useEffect(() => {
+  const applyFilter = (apply: () => void) => {
+    apply()
     setCurrentPage(1)
-  }, [searchTerm, typeFilter, intervalFilter, statusFilter, itemsPerPage, modalityTab])
+  }
 
-  const handleSelect = (item: Immunotherapy) => {
-    setSelectedPatient(buildPatientFromImmunotherapy(item))
-    navigate({ to: '/patient/$patientId', params: { patientId: item.id } })
+  const handleSelect = (item: ImmunotherapyListItem) => {
+    navigate({
+      to: '/patient/$patientId',
+      params: { patientId: item.patient.id },
+      search: { therapy: item.id },
+    })
   }
 
   return (
@@ -82,15 +91,14 @@ export function ImmunotherapiesPage() {
         actions={
           <ImmunotherapiesFilterBar
             searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
-            intervalFilter={intervalFilter}
-            setIntervalFilter={setIntervalFilter}
+            setSearchTerm={(value) => applyFilter(() => setSearchTerm(value))}
             statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            types={types}
-            intervals={intervals}
+            setStatusFilter={(value) => applyFilter(() => setStatusFilter(value))}
+            typeFilter={typeFilter}
+            setTypeFilter={(value) => applyFilter(() => setTypeFilter(value))}
+            typeOptions={
+              Array.isArray(typesQuery.data) ? typesQuery.data : []
+            }
           />
         }
       />
@@ -98,16 +106,11 @@ export function ImmunotherapiesPage() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <SegmentedControl
           value={modalityTab}
-          onChange={setModalityTab}
+          onChange={(value) => applyFilter(() => setModalityTab(value))}
           aria-label="Modalidade"
           options={MODALITY_OPTIONS.map((option) => ({
             value: option.value,
-            label: (
-              <>
-                {option.label}
-                <span className="text-[0.65rem] font-normal opacity-60">({modalityCounts[option.value]})</span>
-              </>
-            ),
+            label: option.label,
           }))}
         />
 
@@ -125,20 +128,49 @@ export function ImmunotherapiesPage() {
         </div>
       </div>
 
+      {configurationPending && (
+        <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[0.7rem] text-amber-800">
+          <span className="font-semibold">Configuração de protocolo pendente.</span>{' '}
+          Novas prescrições dependem de uma versão publicada e padrão.{' '}
+          <button
+            type="button"
+            onClick={() => navigate({ to: '/protocols' })}
+            className="font-semibold underline cursor-pointer bg-transparent border-none text-amber-800"
+          >
+            Abrir catálogo de protocolos
+          </button>
+        </div>
+      )}
+
+      {listQuery.error && (
+        <div
+          role="alert"
+          className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[0.7rem] text-red-700"
+        >
+          {listQuery.error instanceof ApiError
+            ? listQuery.error.message
+            : 'Não foi possível carregar os tratamentos.'}
+        </div>
+      )}
+
       <div
-        className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-3xl"
-        style={{ background: SHOWCASE.card, border: `1px solid ${SHOWCASE.line}` }}
+        className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-xl"
+        style={{ background: SHOWCASE.white, border: `1px solid ${SHOWCASE.line}` }}
       >
         <div className="flex-1 overflow-auto">
-          <ImmunotherapiesTable items={paginated} onSelect={handleSelect} />
+          {listQuery.isPending ? (
+            <div className="py-12 text-center text-xs text-(--text-muted)">
+              Carregando tratamentos…
+            </div>
+          ) : (
+            <ImmunotherapiesTable items={items} onSelect={handleSelect} />
+          )}
         </div>
 
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
-          itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
         />
       </div>
     </div>

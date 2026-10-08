@@ -1,17 +1,18 @@
 import { useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import {
-  faArrowLeft,
   faBell,
   faCalendarDays,
   faChartColumn,
   faCircleInfo,
   faCircleQuestion,
   faCreditCard,
-  faDesktop,
+  faFlask,
   faGear,
   faShield,
   faSliders,
+  faTableColumns,
   faUser,
   faUsers,
   faRightFromBracket,
@@ -20,17 +21,33 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import allerviaMark from '@/assets/allervia-mark-light.png'
-import userAvatar from '@/assets/user-avatar.jpg'
-import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { Button, Modal } from '@/shared/components'
+import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
 import { cn } from '@/shared/lib/cn'
 import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
-import { useNotificationsStore } from '@/features/notification/stores/useNotificationsStore'
-import { useHasPermission, useUserStore, type Permission } from '@/shared/stores/useUserStore'
+import { useSidebarStore } from '@/shared/layout/useSidebarStore'
+import { useQuery } from '@tanstack/react-query'
+import { listNotifications } from '@/shared/api/notifications.api'
+import { hasPermission, useUserStore, type Permission } from '@/shared/stores/useUserStore'
 
-const DARK_INK = '#DCE1E5'
-const RAIL_ACTIVE_BACKGROUND = 'linear-gradient(150deg, #257E8C, #12333a)'
-const RAIL_ACTIVE_SHADOW = '0 6px 16px rgba(16,60,68,0.28)'
+const RAIL_ACTIVE_SOLID = 'linear-gradient(150deg, #257E8C, #12333a)'
+const RAIL_ACTIVE_MARKER = '#1D6772'
+const RAIL_ACTIVE_BLEED_INK = '#10454F'
+const RAIL_ACTIVE_SOLID_SHADOW = '0 6px 16px rgba(16,60,68,0.28)'
+
+const PAGE_BACKGROUND = '#F7FAFA'
+const CONTENT_EDGE = 'rgba(18,51,58,0.16)'
+const CONTENT_SHADOW = '-8px 0 20px -10px rgba(16,60,68,0.32)'
+
+const SIDEBAR_BACKGROUND = `linear-gradient(to top,
+  #BCD6D8 0%,
+  #CFE0E1 26%,
+  #DDE5E5 52%,
+  #E6EAEA 80%,
+  #E6EAEA 100%)`
+const SIDEBAR_HOVER = 'rgba(37,126,140,0.10)'
+const SIDEBAR_TREE_LINE = 'rgba(18,51,58,0.28)'
+const SIDEBAR_SUBITEM_ACTIVE = 'rgba(37,126,140,0.16)'
 
 interface RailItem {
   icon: IconDefinition
@@ -39,12 +56,24 @@ interface RailItem {
   match?: string[]
 }
 
+function greeting(hour: number) {
+  if (hour < 12) return 'Bom dia'
+  if (hour < 18) return 'Boa tarde'
+  return 'Boa noite'
+}
+
 const RAIL: RailItem[] = [
   { icon: faSyringe, path: '/immunotherapies', label: 'Imunoterapias', match: ['/add-immunotherapy', '/patient'] },
   { icon: faCalendarDays, path: '/appointments', label: 'Agendamentos' },
   { icon: faChartColumn, path: '/dashboard', label: 'Painel de Métricas', match: ['/export-report'] },
   { icon: faBell, path: '/notifications', label: 'Notificações' },
 ]
+
+const SETTINGS_ITEM: RailItem = {
+  icon: faGear,
+  path: '/settings',
+  label: 'Configurações',
+}
 
 interface SettingsLink {
   icon: IconDefinition
@@ -56,59 +85,126 @@ interface SettingsLink {
 const SETTINGS_LINKS: SettingsLink[] = [
   { icon: faUser, path: '/profile', label: 'Perfil' },
   { icon: faShield, path: '/security', label: 'Segurança' },
+  { icon: faFlask, path: '/protocols', label: 'Protocolos', requires: 'adjust_protocol' },
   { icon: faSliders, path: '/advanced-settings', label: 'Avançado', requires: 'advanced_settings' },
-  { icon: faDesktop, path: '/personalization', label: 'Aparência' },
   { icon: faUsers, path: '/teams', label: 'Equipes', requires: 'manage_team' },
   { icon: faCreditCard, path: '/plans', label: 'Planos', requires: 'manage_team' },
   { icon: faCircleQuestion, path: '/help', label: 'Ajuda' },
   { icon: faCircleInfo, path: '/about', label: 'Sobre' },
 ]
 
-function greeting(hour: number) {
-  if (hour < 12) return 'Bom dia'
-  if (hour < 18) return 'Boa tarde'
-  return 'Boa noite'
-}
-
 function RailLink({
   item,
   active,
   badge,
-  dark = false,
+  collapsed,
+  compact = false,
+  subtle = false,
 }: {
   item: RailItem
   active: boolean
   badge?: number
-  dark?: boolean
+  collapsed: boolean
+  compact?: boolean
+  subtle?: boolean
 }) {
+  const size = compact ? 'h-7.5' : 'h-9'
+  const solidActive = !subtle
+  const bleedActive = active && solidActive && !collapsed
+  const activeBackground = subtle ? SIDEBAR_SUBITEM_ACTIVE : RAIL_ACTIVE_SOLID
+  const activeColor = subtle
+    ? SHOWCASE.accent
+    : bleedActive
+      ? RAIL_ACTIVE_BLEED_INK
+      : SHOWCASE.white
+  const idleColor = subtle && collapsed ? SHOWCASE.muted : SHOWCASE.inkSoft
+  const [tip, setTip] = useState<{ top: number; left: number } | null>(null)
+  const [hovered, setHovered] = useState(false)
   return (
     <Link
       to={item.path}
       aria-label={item.label}
-      className="group relative flex h-12 w-12 items-center justify-center rounded-full no-underline transition-all duration-300 hover:scale-105"
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        'group relative flex shrink-0 items-center no-underline transition-colors duration-200',
+        size,
+        collapsed
+          ? cn('justify-center rounded-lg', compact ? 'w-7.5' : 'w-9')
+          : 'w-full gap-3.5 rounded-lg px-2.5',
+      )}
       style={{
-        background: active ? RAIL_ACTIVE_BACKGROUND : dark ? 'rgba(220,225,229,0.10)' : SHOWCASE.white,
-        color: active ? SHOWCASE.white : dark ? DARK_INK : SHOWCASE.inkSoft,
-        border: active ? '1px solid transparent' : `1px solid ${dark ? 'rgba(220,225,229,0.20)' : SHOWCASE.line}`,
-        boxShadow: active ? RAIL_ACTIVE_SHADOW : undefined,
+        background: active
+          ? bleedActive
+            ? 'transparent'
+            : activeBackground
+          : hovered
+            ? SIDEBAR_HOVER
+            : 'transparent',
+        backgroundClip: 'padding-box',
+        color: active ? activeColor : idleColor,
+        border: 'none',
+        boxShadow: active && solidActive && collapsed ? RAIL_ACTIVE_SOLID_SHADOW : undefined,
+      }}
+      onMouseEnter={(e) => {
+        setHovered(true)
+        if (collapsed) {
+          const rect = e.currentTarget.getBoundingClientRect()
+          setTip({ top: rect.top + rect.height / 2, left: rect.right + 12 })
+        }
+      }}
+      onMouseLeave={() => {
+        setHovered(false)
+        setTip(null)
       }}
     >
-      <FontAwesomeIcon icon={item.icon} style={{ fontSize: 13 }} />
+      {bleedActive && (
+        <>
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-4 top-0 bottom-0 w-1.5 rounded-l-full"
+            style={{ background: RAIL_ACTIVE_MARKER }}
+          />
+        </>
+      )}
+      <FontAwesomeIcon
+        icon={item.icon}
+        className="relative shrink-0"
+        style={{ fontSize: compact ? 12 : 14 }}
+      />
+      {!collapsed && (
+        <span
+          className={cn(
+            'relative truncate whitespace-nowrap',
+            active ? 'font-bold' : 'font-normal',
+            compact ? 'text-[0.74rem]' : 'text-[0.85rem]',
+          )}
+        >
+          {item.label}
+        </span>
+      )}
       {badge !== undefined && badge > 0 && (
         <span
           aria-hidden="true"
-          className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.55rem] font-bold"
+          className={cn(
+            'flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.55rem] font-bold',
+            collapsed ? 'absolute -top-0.5 -right-0.5' : 'relative ml-auto',
+          )}
           style={{ background: SHOWCASE.danger, color: '#FFFFFF' }}
         >
           {badge > 9 ? '9+' : badge}
         </span>
       )}
-      <span
-        className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-medium opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-50"
-        style={{ background: SHOWCASE.ink, color: '#eef3f4' }}
-      >
-        {item.label}
-      </span>
+      {collapsed &&
+        tip &&
+        createPortal(
+          <span
+            className="pointer-events-none fixed z-100 -translate-y-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-medium"
+            style={{ top: tip.top, left: tip.left, background: SHOWCASE.ink, color: '#eef3f4' }}
+          >
+            {item.label}
+          </span>,
+          document.body,
+        )}
     </Link>
   )
 }
@@ -117,16 +213,25 @@ export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const path = location.pathname
-  const unreadCount = useNotificationsStore((s) => s.notifications.filter((n) => !n.read).length)
-  const userName = useUserStore((s) => s.current.name)
+  const unreadQuery = useQuery({
+    queryKey: ['notifications', 'unread-badge'],
+    queryFn: ({ signal }) =>
+      listNotifications({ page: 1, pageSize: 1, unreadOnly: true }, signal),
+    refetchInterval: 60_000,
+    retry: false,
+  })
+  const unreadCount = unreadQuery.data?.unread ?? 0
+  const userName = useUserStore((s) => s.current?.name ?? '')
   const [showLogout, setShowLogout] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const collapsed = useSidebarStore((s) => s.isCollapsed)
+  const toggleSidebar = useSidebarStore((s) => s.toggle)
 
-  const canAdvancedSettings = useHasPermission('advanced_settings')
-  const canManageTeam = useHasPermission('manage_team')
-  const visibleSettingsLinks = SETTINGS_LINKS.filter((link) =>
-    link.requires === 'advanced_settings' ? canAdvancedSettings : link.requires === 'manage_team' ? canManageTeam : true,
+  const capabilities = useUserStore((s) => s.capabilities)
+  const visibleSettingsLinks = SETTINGS_LINKS.filter(
+    (link) => !link.requires || hasPermission(capabilities, link.requires),
   )
+  const settingsActive =
+    path === SETTINGS_ITEM.path || visibleSettingsLinks.some((link) => path === link.path)
 
   const isActive = (item: RailItem) =>
     path === item.path || path.startsWith(item.path + '/') || (item.match?.some((m) => path.startsWith(m)) ?? false)
@@ -136,172 +241,120 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className="h-screen w-full overflow-hidden"
-      style={{
-        background: `linear-gradient(to bottom, #DFE5E5 0%, ${SHOWCASE.canvas} 42%), ${SHOWCASE.canvas}`,
-      }}
+      className="flex h-screen w-full overflow-hidden"
+      style={{ background: SIDEBAR_BACKGROUND }}
     >
-      <div
-        data-app-scroll={pageScroll ? '' : undefined}
+      <aside
         className={cn(
-          'w-full',
-          pageScroll ? 'h-full overflow-y-auto' : 'flex h-full flex-col overflow-hidden px-8 py-6',
+          'relative z-50 flex h-screen shrink-0 flex-col py-5 transition-[width] duration-300 ease-out',
+          collapsed ? 'w-18 items-center px-3' : 'w-54 px-4',
         )}
       >
-        <div className={cn('flex items-center gap-4 shrink-0', pageScroll ? 'px-8 pt-6 pb-4' : 'mb-4')}>
-          <div className="flex flex-1 items-center min-w-0 overflow-hidden">
-            <Link to="/immunotherapies" className="ml-1.5 flex items-center no-underline shrink-0">
-              {pageScroll ? (
-                <span aria-hidden="true" className="h-9 w-9 shrink-0" />
-              ) : (
-                <img src={allerviaMark} alt="Allervia" className="h-9 w-9 object-contain" />
-              )}
-              <AllerviaWordmark className="ml-6 text-lg" style={{ color: SHOWCASE.ink }} />
-            </Link>
-          </div>
+        <div className={cn('flex items-center', collapsed ? 'flex-col gap-3' : 'justify-between gap-2')}>
+          <Link to="/immunotherapies" aria-label="Allervia" className="flex items-center gap-3 no-underline">
+            <img src={allerviaMark} alt="" className="h-7 w-7 shrink-0 object-contain" />
+            {!collapsed && (
+              <AllerviaWordmark className="text-lg font-semibold" style={{ color: SHOWCASE.ink }} />
+            )}
+          </Link>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+            title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-colors duration-200"
+            style={{ background: 'transparent', border: 'none', color: SHOWCASE.inkSoft }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = SIDEBAR_HOVER
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+            }}
+          >
+            <FontAwesomeIcon icon={faTableColumns} style={{ fontSize: 15 }} />
+          </button>
+        </div>
 
-          {pageScroll && (
-            <span className="fixed left-9.5 top-6 z-40 block h-9 w-9">
-              <Link to="/immunotherapies" aria-label="Allervia" className="block no-underline">
-                <img
-                  src={allerviaMark}
-                  alt="Allervia"
-                  className="h-9 w-9 object-contain"
-                />
-              </Link>
+        <nav
+          className={cn(
+            'mt-6 flex min-h-0 flex-1 flex-col gap-1',
+            collapsed ? 'items-center overflow-visible' : 'w-full overflow-visible',
+          )}
+        >
+          {RAIL.map((item) => (
+            <span key={item.path} data-rail-item="" className={cn('block', collapsed ? '' : 'w-full')}>
+              <RailLink
+                item={item}
+                active={isActive(item)}
+                collapsed={collapsed}
+                badge={item.path === '/notifications' ? unreadCount : undefined}
+              />
+            </span>
+          ))}
+
+          <span data-rail-item="" className={cn('mt-1 block', collapsed ? '' : 'w-full')}>
+            <RailLink
+              item={SETTINGS_ITEM}
+              active={settingsActive}
+              collapsed={collapsed}
+            />
+          </span>
+        </nav>
+
+        <div
+          className={cn(
+            'mt-4 flex shrink-0 items-center gap-2 pt-4',
+            collapsed ? 'justify-center' : 'w-full justify-between',
+          )}
+          style={{ borderTop: `1px solid ${SIDEBAR_TREE_LINE}` }}
+        >
+          {!collapsed && (
+            <span className="flex min-w-0 flex-col">
+              <span className="text-[0.7rem] font-normal leading-tight" style={{ color: SHOWCASE.inkSoft }}>
+                {greeting(new Date().getHours())}
+              </span>
+              <span className="truncate text-[0.8rem] font-semibold leading-tight" style={{ color: SHOWCASE.ink }}>
+                {userName}
+              </span>
             </span>
           )}
 
-          <div className="flex shrink-0 items-center gap-3">
-            <div
-              className={cn(
-                'flex items-center gap-2 rounded-full backdrop-blur-md transition-all duration-500 ease-out',
-                settingsOpen ? 'pl-3 pr-1 py-0.5' : 'p-0',
-              )}
-              style={{
-                background: settingsOpen ? 'rgba(255,255,255,0.45)' : 'transparent',
-                border: settingsOpen ? '1px solid rgba(255,255,255,0.65)' : '1px solid transparent',
-              }}
-            >
-              <div
-                className={cn(
-                  'group/settings flex items-center gap-1.5 overflow-hidden transition-all duration-500 ease-out',
-                  settingsOpen ? 'max-w-5xl opacity-100 translate-x-0' : 'max-w-0 opacity-0 translate-x-8',
-                )}
-              >
-                {visibleSettingsLinks.map((link) => {
-                  const current = path === link.path
-                  return (
-                    <Link
-                      key={link.path}
-                      to={link.path}
-                      aria-current={current ? 'page' : undefined}
-                      className="flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[0.66rem] font-medium whitespace-nowrap no-underline transition-all duration-300 group-hover/settings:blur-[1.5px] group-hover/settings:opacity-55 hover:blur-none! hover:opacity-100!"
-                      style={{
-                        background: current ? SHOWCASE.ink : SHOWCASE.white,
-                        border: current ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
-                        color: current ? SHOWCASE.onAccent : SHOWCASE.inkSoft,
-                      }}
-                    >
-                      <FontAwesomeIcon icon={link.icon} style={{ fontSize: 10 }} />
-                      {link.label}
-                    </Link>
-                  )
-                })}
-              </div>
-
-              <CircleButton
-                icon={faGear}
-                size={40}
-                iconSize={13}
-                active={settingsOpen}
-                activeBackground={RAIL_ACTIVE_BACKGROUND}
-                activeShadow={RAIL_ACTIVE_SHADOW}
-                iconRotateDeg={settingsOpen ? 180 : 0}
-                aria-label="Configurações"
-                aria-expanded={settingsOpen}
-                onClick={() => setSettingsOpen((open) => !open)}
-              />
-            </div>
-            <Link to="/profile" aria-label="Perfil" className="flex items-center no-underline">
-              <img
-                src={userAvatar}
-                alt={userName}
-                title={userName}
-                className="relative z-10 h-10 w-10 rounded-full object-cover"
-                style={{ border: `2px solid ${SHOWCASE.white}` }}
-              />
-              <span
-                className="-ml-10 flex h-10 flex-col justify-center whitespace-nowrap rounded-full pl-12 pr-5 backdrop-blur-md"
-                style={{
-                  background: 'rgba(255,255,255,0.45)',
-                  border: '1px solid rgba(255,255,255,0.65)',
-                  color: SHOWCASE.ink,
-                }}
-              >
-                <span className="text-[0.62rem] font-medium leading-tight" style={{ color: SHOWCASE.inkSoft }}>
-                  {greeting(new Date().getHours())}
-                </span>
-                <span className="text-[0.72rem] font-semibold leading-tight">{userName}</span>
-              </span>
-            </Link>
-          </div>
+          <span data-rail-item="" className="block shrink-0">
+            <CircleButton
+              icon={faRightFromBracket}
+              size={36}
+              iconSize={13}
+              onClick={() => setShowLogout(true)}
+              aria-label="Sair"
+              title="Sair"
+              idleBackground="transparent"
+              idleColor={SHOWCASE.inkSoft}
+              idleBorderColor={SIDEBAR_TREE_LINE}
+            />
+          </span>
         </div>
+      </aside>
 
-        <div className={cn('flex gap-5', pageScroll ? 'px-8' : 'flex-1 min-h-0')}>
-          {pageScroll && <div aria-hidden="true" className="w-12 shrink-0" />}
-          <div
-            className={cn(
-              'flex w-12 shrink-0 flex-col items-center pt-6',
-              pageScroll ? 'fixed left-8 top-20 z-52 h-[calc(100vh-6.5rem)]' : 'relative z-50',
-            )}
-          >
-            <span data-rail-item="" className="block">
-              <CircleButton
-                icon={faArrowLeft}
-                size={48}
-                iconSize={13}
-                onClick={() => window.history.back()}
-                aria-label="Voltar"
-                title="Voltar"
-              />
-            </span>
-
-            <div className="mt-8 flex flex-col gap-1">
-              {RAIL.map((item) => (
-                <span key={item.path} data-rail-item="" className="block">
-                  <RailLink
-                    item={item}
-                    active={isActive(item)}
-                    badge={item.path === '/notifications' ? unreadCount : undefined}
-                  />
-                </span>
-              ))}
-            </div>
-
-            <div className="mt-auto pt-8">
-              <span data-rail-item="" className="block">
-                <CircleButton
-                  icon={faRightFromBracket}
-                  size={48}
-                  iconSize={13}
-                  onClick={() => setShowLogout(true)}
-                  aria-label="Sair"
-                  title="Sair"
-                />
-              </span>
-            </div>
-          </div>
-
-          <main
-            className={cn(
-              'flex min-w-0 flex-1 flex-col',
-              pageScroll ? 'min-h-[calc(100vh-6.5rem)]' : 'overflow-y-auto',
-            )}
-          >
-            {children}
-          </main>
-        </div>
+      <div
+        data-app-scroll={pageScroll ? '' : undefined}
+        className={cn(
+          'min-w-0 flex-1 rounded-l-2xl',
+          pageScroll ? 'overflow-y-auto' : 'flex h-full flex-col overflow-hidden px-8 py-6',
+        )}
+        style={{
+          background: PAGE_BACKGROUND,
+          borderLeft: `1px solid ${CONTENT_EDGE}`,
+          boxShadow: CONTENT_SHADOW,
+        }}
+      >
+        <main
+          className={cn(
+            'flex min-w-0 flex-col',
+            pageScroll ? 'min-h-full px-8 py-6' : 'flex-1 min-h-0 overflow-y-auto',
+          )}
+        >
+          {children}
+        </main>
       </div>
 
       <Modal

@@ -30,8 +30,5 @@ export function formatConcentration(value: string): string {
 }
 
 export function formatVolume(value: string): string {
-  const cleaned = value.replace(/[^0-9,.]/g, '').replace(',', '.')
-  const parts = cleaned.split('.')
-  if (parts.length === 1) return parts[0]
-  return parts[0] + '.' + parts[1].slice(0, 3)
+  return value.replace(',', '.')
 }

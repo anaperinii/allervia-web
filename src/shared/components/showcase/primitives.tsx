@@ -36,7 +36,7 @@ export function CircleButton({
   return (
     <button
       type="button"
-      className={cn('inline-flex items-center justify-center rounded-full shrink-0 cursor-pointer transition-all duration-200 hover:scale-105', className)}
+      className={cn('inline-flex items-center justify-center rounded-lg shrink-0 cursor-pointer transition-all duration-200 hover:scale-105', className)}
       style={{
         width: size,
         height: size,
@@ -67,7 +67,7 @@ export function Pill({ icon, active = false, children, className, ...rest }: Pil
     <button
       type="button"
       className={cn(
-        'inline-flex h-9 items-center gap-2 rounded-full px-4 text-[0.78rem] font-medium whitespace-nowrap shrink-0 cursor-pointer transition-all duration-200',
+        'inline-flex h-9 items-center gap-2 rounded-lg px-4 text-[0.78rem] font-medium whitespace-nowrap shrink-0 cursor-pointer transition-all duration-200',
         className,
       )}
       style={{
@@ -99,7 +99,7 @@ export function SelectPill({ value, onChange, options, compact = false, dark = f
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className={cn(
-        'rounded-full whitespace-nowrap shrink-0 cursor-pointer appearance-none outline-none font-medium',
+        'rounded-lg whitespace-nowrap shrink-0 cursor-pointer appearance-none outline-none font-medium',
         compact ? 'h-8 pl-3 pr-7 text-[0.7rem]' : 'h-9 px-4 pr-8 text-[0.78rem]',
       )}
       style={{
@@ -137,16 +137,54 @@ interface CardProps {
   children: ReactNode
   className?: string
   padded?: boolean
+  /** `plain` usa superfície branca — leitura de gráfico com contraste máximo. */
+  tone?: 'default' | 'plain'
 }
 
-export function Card({ children, className, padded = true }: CardProps) {
+export function Card({ children, className, padded = true, tone = 'default' }: CardProps) {
   return (
     <section
-      className={cn('relative flex h-full flex-col overflow-hidden rounded-3xl', padded && 'p-5', className)}
-      style={{ background: SHOWCASE.card, border: `1px solid ${SHOWCASE.line}` }}
+      className={cn('relative flex h-full flex-col overflow-hidden rounded-xl', padded && 'p-5', className)}
+      style={{
+        background: tone === 'plain' ? SHOWCASE.white : SHOWCASE.card,
+        border: `1px solid ${SHOWCASE.line}`,
+      }}
     >
       {children}
     </section>
+  )
+}
+
+/**
+ * Valor numérico com a cauda em tom claro — dígitos finais recuam, a ordem de
+ * grandeza salta primeiro. Unidade sempre no tom claro.
+ */
+export function StatValue({
+  value,
+  unit,
+  className,
+}: {
+  value: string
+  unit?: string
+  className?: string
+}) {
+  const tailLength = value.length > 3 ? Math.min(3, value.length - 1) : 0
+  const head = tailLength > 0 ? value.slice(0, value.length - tailLength) : value
+  const tail = tailLength > 0 ? value.slice(value.length - tailLength) : ''
+
+  return (
+    <span
+      className={cn('flex items-baseline leading-none tracking-tight tabular-nums', className)}
+      style={{ color: SHOWCASE.ink }}
+    >
+      <span className="font-medium">{head}</span>
+      {tail && <span style={{ color: SHOWCASE.muted }}>{tail}</span>}
+      {unit && (
+        <span className="ml-0.5 text-[0.5em] font-medium" style={{ color: SHOWCASE.muted }}>
+          {unit}
+        </span>
+      )}
+    </span>
   )
 }
 

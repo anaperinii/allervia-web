@@ -1,13 +1,10 @@
-import { useState, useEffect } from 'react'
-import { Link } from '@tanstack/react-router'
-import allerviaMarkWhite from '@/assets/allervia-mark-dark.png'
-import allerviaMarkBlack from '@/assets/allervia-mark-light.png'
+import allerviaMark from '@/assets/allervia-mark-light.png'
 import { AllerviaWordmark } from '@/shared/components/AllerviaWordmark'
-import { ThemeSwitch } from '@/features/landing-page/components/ThemeSwitch'
-import { useLandingTheme } from '@/features/landing-page/theme-context'
 import { cn } from '@/shared/lib/cn'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Link } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
 
 const navLinks = [
   { label: 'Funcionalidades', href: '#features' },
@@ -23,7 +20,6 @@ interface HeaderProps {
 
 export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
   const showNavLinks = !isAuthPage
-  const showThemeSwitch = hasHero
   const [pastHero, setPastHero] = useState(() => {
     if (typeof window === 'undefined') return false
     return window.scrollY > window.innerHeight - 80
@@ -39,13 +35,9 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const { theme } = useLandingTheme()
   const bareBar = hasHero && !showNavLinks
   const heroPill = hasHero && showNavLinks
   const overHeroTop = heroPill && !pastHero
-  const isLightBrand = !overHeroTop && theme === 'light'
-  const onLightPlate = overHeroTop || isLightBrand
-  const markSrc = onLightPlate ? allerviaMarkBlack : allerviaMarkWhite
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -105,10 +97,10 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
       >
         <Link
           to="/"
-          className="relative flex items-center gap-2.5 no-underline"
+          className="relative flex items-center gap-1.5 no-underline"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <img src={markSrc} alt="" className="h-8 w-8 object-contain" />
+          <img src={allerviaMark} alt="" className="h-7 w-7 object-contain" />
           <AllerviaWordmark className="text-xl" style={{ color: brandColor }} />
         </Link>
 
@@ -133,7 +125,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
         <div className="hidden md:flex gap-2.5 items-center">
           <Link
             to="/login"
-            className="px-5 py-2 rounded-full text-[0.8rem] font-medium cursor-pointer transition-all duration-200 no-underline hover:shadow-[0_6px_16px_var(--ll-halo-accent)]"
+            className="px-5 py-2 rounded-lg text-[0.8rem] font-medium cursor-pointer transition-all duration-200 no-underline hover:shadow-[0_6px_16px_var(--ll-halo-accent)]"
             style={{
               border: loginBorder,
               color: loginInk,
@@ -152,18 +144,15 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
           </Link>
           <Link
             to="/trial"
-            className="px-5 py-2 rounded-full text-[0.8rem] font-semibold cursor-pointer no-underline text-white transition-[filter] duration-200 hover:brightness-95"
+            className="px-5 py-2 rounded-lg text-[0.8rem] font-semibold cursor-pointer no-underline text-white transition-[filter] duration-200 hover:brightness-95"
             style={{ background: ctaSolidBg, boxShadow: ctaSolidShadow, border: ctaSolidBorder }}
           >
             Começar agora
           </Link>
-          {showThemeSwitch && (
-            <ThemeSwitch overHero={onDarkPlate} scheme={overHeroTop ? 'dark' : 'auto'} />
-          )}
         </div>
 
         <button
-          className="md:hidden flex items-center justify-center w-10 h-10 rounded-full border transition-all duration-200"
+          className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg border transition-all duration-200"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Menu"
           style={{
@@ -201,7 +190,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
               key={link.href}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="text-base font-medium no-underline py-3 px-4 rounded-full transition-all duration-200"
+              className="text-base font-medium no-underline py-3 px-4 rounded-lg transition-all duration-200"
               style={{ color: 'var(--ll-ink-muted)' }}
             >
               {link.label}
@@ -213,7 +202,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
           >
             <Link
               to="/login"
-              className="text-center px-4 py-2.5 rounded-full text-sm font-semibold no-underline"
+              className="text-center px-4 py-2.5 rounded-lg text-sm font-semibold no-underline"
               style={{
                 border: '1.5px solid var(--ll-border-strong)',
                 color: 'var(--ll-ink-strong)',
@@ -223,16 +212,11 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
             </Link>
             <Link
               to="/trial"
-              className="text-center px-4 py-2.5 rounded-full text-sm font-semibold no-underline text-white"
+              className="text-center px-4 py-2.5 rounded-lg text-sm font-semibold no-underline text-white"
               style={{ background: ctaSolidBg, boxShadow: ctaSolidShadow, border: ctaSolidBorder }}
             >
               Começar agora
             </Link>
-            {showThemeSwitch && (
-              <div className="flex justify-center pt-2">
-                <ThemeSwitch />
-              </div>
-            )}
           </div>
         </div>
       </div>

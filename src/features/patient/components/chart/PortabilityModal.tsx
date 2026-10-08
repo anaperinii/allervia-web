@@ -1,38 +1,60 @@
-import { useEffect, useMemo, useState } from 'react'
-import { cn } from '@/shared/lib/cn'
-import { Button, ConfirmDiscardModal, Modal, SegmentedControl, TextArea } from '@/shared/components'
-import { usePatientStore } from '@/features/patient/stores/usePatientStore'
-import { useAuditStore } from '@/shared/stores/useAuditStore'
-import { useUserStore } from '@/shared/stores/useUserStore'
-import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import { exportLgpd, type LgpdFileFormat } from '@/features/patient/exporters'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
+import { doseToLegacyApplication } from '@/features/patient/adapters/clinical-presentation'
+import { getClinicalHistory, listDosesForTherapy } from '@/shared/api/clinical.api'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
+import { Button, ConfirmDiscardModal, Modal, SegmentedControl, TextArea } from '@/shared/components'
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
+import { cn } from '@/shared/lib/cn'
+import { useCurrentUser } from '@/shared/stores/useUserStore'
+import { useQuery } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
 
+import {
+  faCheck,
+  faCircleInfo,
+  faDownload,
+  faFileCode,
+  faFileExcel,
+  faSquareCheck,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faCircleInfo, faDownload, faFileCode, faFileExcel, faSquareCheck } from '@fortawesome/free-solid-svg-icons'
 
 interface PortabilityModalProps {
   open: boolean
   patient: Patient
+  therapyId: string | null
   onClose: () => void
 }
 
-export function PortabilityModal({ open, patient, onClose }: PortabilityModalProps) {
-  const applications = usePatientStore((s) => s.applications)
-  const auditLogs = useAuditStore((s) => s.logs)
-  const currentUser = useUserStore((s) => s.current)
+export function PortabilityModal(props: PortabilityModalProps) {
+  return props.open ? <PortabilityModalForm key={props.patient.id} {...props} /> : null
+}
+
+function PortabilityModalForm({ open, patient, therapyId, onClose }: PortabilityModalProps) {
+  const currentUser = useCurrentUser()
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+
+  const dosesQuery = useQuery({
+    queryKey: queryKeys.doses(organizationId, therapyId ?? ''),
+    queryFn: ({ signal }) => listDosesForTherapy(therapyId!, signal),
+    enabled: organizationId !== '' && therapyId !== null,
+  })
+  const historyQuery = useQuery({
+    queryKey: [
+      ...queryKeys.immunotherapy(organizationId, therapyId ?? ''),
+      'history',
+    ],
+    queryFn: ({ signal }) => getClinicalHistory(therapyId!, signal),
+    enabled: organizationId !== '' && therapyId !== null,
+  })
 
   const [lgpdFormat, setLgpdFormat] = useState<LgpdFileFormat>('json')
   const [justification, setJustification] = useState('')
   const [consented, setConsented] = useState(false)
 
-  useEffect(() => {
-    if (open) {
-      setLgpdFormat('json')
-      setJustification('')
-      setConsented(false)
-    }
-  }, [open])
 
   const isDirty = !!justification.trim() || consented
   const { requestClose, guardOpen, cancelDiscard, confirmDiscard } = useUnsavedChangesGuard({
@@ -42,31 +64,38 @@ export function PortabilityModal({ open, patient, onClose }: PortabilityModalPro
   })
 
   const patientApplications = useMemo(
-    () => applications.filter((application) => application.patientId === patient.id),
-    [applications, patient.id],
+    () =>
+      (dosesQuery.data ?? []).map((dose) =>
+        doseToLegacyApplication(dose, patient.id, {
+          hasReaction: dose.immediateConduct !== null,
+        }),
+      ),
+    [dosesQuery.data, patient.id],
   )
-  const patientAccessLog = useMemo(
-    () => auditLogs.filter((log) => log.patientId === patient.id),
-    [auditLogs, patient.id],
+  const clinicalHistory = useMemo(
+    () => historyQuery.data?.entries ?? [],
+    [historyQuery.data],
   )
 
   const dataItems = [
     { label: 'Dados cadastrais', count: 1 },
-    { label: 'Dados da imunoterapia', count: 1 },
-    { label: 'Aplicações', count: patientApplications.length },
-    { label: 'Acessos ao prontuário', count: patientAccessLog.length },
-    { label: 'Ajustes de protocolo', count: patient.protocolAdjustments?.length ?? 0 },
-    { label: 'Inativações', count: patient.inactivations?.length ?? 0 },
+    { label: 'Dados da imunoterapia', count: therapyId ? 1 : 0 },
+    { label: 'Doses (previstas e realizadas)', count: patientApplications.length },
+    { label: 'Trilha clínica do tratamento', count: clinicalHistory.length },
   ]
 
-  const exportDisabled = !consented || !justification.trim()
+  const exportDisabled =
+    !consented ||
+    !justification.trim() ||
+    dosesQuery.isPending ||
+    historyQuery.isPending
 
   const handleExport = () => {
     exportLgpd(
       {
         patient,
         applications: patientApplications,
-        accessLogs: patientAccessLog,
+        accessLogs: clinicalHistory,
         exportedAt: new Date().toISOString(),
         exportedBy: `${currentUser.name} (${currentUser.registration})`,
         justification: justification.trim(),

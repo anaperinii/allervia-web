@@ -1,81 +1,111 @@
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  Button,
-  FieldLabel,
-  Modal,
-  ReadOnlyField,
-  TextInput,
-} from '@/shared/components'
-import { cn } from '@/shared/lib/cn'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
-import userAvatar from '@/assets/user-avatar.jpg'
-import { useUserStore, PROFILES, ROLE_LABELS } from '@/shared/stores/useUserStore'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
+import { PROFESSION_LABELS, ROLE_BADGES } from '@/features/settings/constants/team-roles'
+import { Button, FieldLabel, Modal, ReadOnlyField, TextInput } from '@/shared/components'
+import { queryKeys } from '@/shared/api/query-keys'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { readOwnProfile, updateOwnProfile } from '@/shared/api/team.api'
+import { useSession } from '@/shared/auth/useSession'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 
+import { faCamera, faFloppyDisk, faUser, faUserGear } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCamera, faCheck, faFloppyDisk, faUserGear } from '@fortawesome/free-solid-svg-icons'
-
-const formatBirthDate = (iso: string) => {
-  const [year, month, day] = iso.split('-')
-  return `${day}/${month}/${year}`
-}
 
 export function ProfilePage() {
-  const currentUser = useUserStore((s) => s.current)
-  const updateCurrentProfile = useUserStore((s) => s.updateCurrentProfile)
-  const setProfile = useUserStore((s) => s.setProfile)
+  const { account, refresh } = useSession()
+  const queryClient = useQueryClient()
 
   const [editing, setEditing] = useState(false)
   const [showSaveModal, setShowSaveModal] = useState(false)
+
+  const profileQuery = useQuery({
+    queryKey: queryKeys.professionalProfile(),
+    queryFn: ({ signal }) => readOwnProfile(signal),
+  })
+
+  const profile = profileQuery.data
+
   const {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     getValues,
     formState: { errors },
   } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: currentUser.name,
-      email: currentUser.email,
-      phone: currentUser.phone,
-      specialty: currentUser.specialty,
-      institution: currentUser.institution,
-      birthDate: currentUser.birthDate,
+    values: {
+      name: profile?.fullName ?? '',
+      phone: profile?.phoneNumber ?? '',
+      councilNumber: profile?.councilNumber ?? '',
+      councilUf: profile?.councilUf ?? '',
     },
   })
 
-  const watched = watch()
+  const watched = useWatch({ control }) as ProfileForm
+
+  const saveMutation = useMutation({
+    mutationFn: (values: ProfileForm) =>
+      updateOwnProfile({
+        fullName: values.name,
+        phoneNumber: values.phone,
+        councilNumber: values.councilNumber || undefined,
+        councilUf: values.councilUf || undefined,
+      }),
+    onSuccess: async () => {
+      setShowSaveModal(false)
+      setEditing(false)
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.professionalProfile(),
+      })
+      await refresh()
+    },
+    onError: () => setShowSaveModal(false),
+  })
 
   const handleCancel = () => {
-    reset({
-      name: currentUser.name,
-      email: currentUser.email,
-      phone: currentUser.phone,
-      specialty: currentUser.specialty,
-      institution: currentUser.institution,
-      birthDate: currentUser.birthDate,
-    })
+    reset()
     setEditing(false)
   }
 
-  const handleConfirmSave = () => {
-    updateCurrentProfile(getValues())
-    setShowSaveModal(false)
-    setEditing(false)
+  if (profileQuery.isPending) {
+    return (
+      <SettingsLayout subtitle="Meu Perfil">
+        <p className="p-6 text-xs text-(--text-muted)">Carregando perfil…</p>
+      </SettingsLayout>
+    )
   }
+
+  if (profileQuery.error || !profile) {
+    return (
+      <SettingsLayout subtitle="Meu Perfil">
+        <p className="p-6 text-xs text-(--text-muted)" role="alert">
+          {profileQuery.error instanceof ApiError
+            ? profileQuery.error.message
+            : 'Não foi possível carregar o seu perfil.'}
+        </p>
+      </SettingsLayout>
+    )
+  }
+
+  const roles = account?.roles ?? []
 
   return (
     <SettingsLayout subtitle="Meu Perfil">
       <form onSubmit={(e) => e.preventDefault()}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-            <div className="flex items-center justify-between gap-5 lg:col-span-2">
+        <div className="flex flex-col gap-6">
+            <div className="flex items-center justify-between gap-5">
               <div className="flex items-center gap-5 min-w-0">
                 <div className="relative shrink-0">
-                  <img src={userAvatar} alt="" className="h-20 w-20 rounded-full object-cover border border-(--border-custom)" />
+                  <span
+                    aria-hidden="true"
+                    className="flex h-20 w-20 items-center justify-center rounded-full border border-(--border-custom) bg-gray-100 text-(--text-muted)"
+                  >
+                    <FontAwesomeIcon icon={faUser} style={{ fontSize: 30 }} />
+                  </span>
                   {editing && (
                     <button
                       type="button"
@@ -88,8 +118,12 @@ export function ProfilePage() {
                 </div>
                 <div className="min-w-0">
                   <div className="text-lg font-bold text-(--text)">{watched.name}</div>
-                  <div className="text-xs text-(--text-muted)">{watched.specialty}</div>
-                  <div className="text-xs text-(--text-muted) mt-0.5">{watched.institution}</div>
+                  <div className="text-xs text-(--text-muted)">
+                    {PROFESSION_LABELS[profile.profession]}
+                  </div>
+                  <div className="text-xs text-(--text-muted) mt-0.5">
+                    {account?.organization?.name ?? ''}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -115,7 +149,11 @@ export function ProfilePage() {
               </div>
             </div>
 
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
+            {/* Coluna esquerda: dados pessoais e, abaixo, acesso e papéis —
+                que estica só até a altura dos dados profissionais ao lado. */}
+            <div className="flex flex-col gap-6">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Pessoais</h2>
               </div>
@@ -125,80 +163,78 @@ export function ProfilePage() {
                     ? <TextInput invalid={!!errors.name} {...register('name')} />
                     : <ReadOnlyField>{watched.name}</ReadOnlyField>}
                 </FieldLabel>
-                <FieldLabel label="CPF">
-                  <ReadOnlyField>{currentUser.cpf}</ReadOnlyField>
-                </FieldLabel>
-                <FieldLabel label="Data de nascimento" error={errors.birthDate?.message}>
-                  {editing
-                    ? <TextInput type="date" invalid={!!errors.birthDate} {...register('birthDate')} />
-                    : <ReadOnlyField>{formatBirthDate(watched.birthDate)}</ReadOnlyField>}
-                </FieldLabel>
                 <FieldLabel label="Telefone" error={errors.phone?.message}>
                   {editing
                     ? <TextInput invalid={!!errors.phone} {...register('phone')} />
                     : <ReadOnlyField>{watched.phone}</ReadOnlyField>}
                 </FieldLabel>
               </div>
+              <div className="px-4 pb-4 text-[0.65rem] leading-relaxed text-(--text-muted)">
+                CPF e data de nascimento ainda não têm campo no servidor; por
+                isso não aparecem aqui em vez de exibirem um valor inventado.
+              </div>
             </section>
 
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
+            <section className="flex flex-1 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-[#F6F8F8]">
+              <div className="flex items-center gap-2 border-b border-(--border-custom) bg-gray-50/50 px-4 py-2.5">
+                <FontAwesomeIcon icon={faUserGear} className="text-(--text-muted)" style={{ fontSize: 13 }} />
+                <h2 className="text-xs font-bold text-(--text)">Acesso e papéis</h2>
+              </div>
+              <div className="flex flex-1 flex-col gap-2 px-4 py-3">
+                <div className="flex flex-wrap gap-1.5">
+                  {roles.length > 0 ? (
+                    roles.map((role) => (
+                      <span
+                        key={role}
+                        className="rounded-full border border-(--border-custom) bg-white px-2.5 py-0.5 text-[0.65rem] font-semibold text-(--text)"
+                      >
+                        {ROLE_BADGES[role].label}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-[0.7rem] text-(--text-muted)">
+                      Nenhum papel atribuído nesta organização.
+                    </span>
+                  )}
+                </div>
+                <p className="text-[0.65rem] leading-relaxed text-(--text-muted)">
+                  Os papéis são concedidos pela administração da organização e
+                  valem para todas as suas sessões. Cada ação continua sendo
+                  autorizada pelo servidor no momento em que é executada.
+                </p>
+              </div>
+            </section>
+            </div>
+
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Profissionais</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
-                <FieldLabel label="E-mail" error={errors.email?.message}>
-                  {editing
-                    ? <TextInput type="email" invalid={!!errors.email} {...register('email')} />
-                    : <ReadOnlyField>{watched.email}</ReadOnlyField>}
+                <FieldLabel label="E-mail">
+                  <ReadOnlyField>{account?.user.email ?? ''}</ReadOnlyField>
                 </FieldLabel>
-                <FieldLabel label="CRM">
-                  <ReadOnlyField>{currentUser.registration}</ReadOnlyField>
+                <FieldLabel label="Profissão">
+                  <ReadOnlyField>{PROFESSION_LABELS[profile.profession]}</ReadOnlyField>
                 </FieldLabel>
-                <FieldLabel label="Especialidade" error={errors.specialty?.message}>
+                <FieldLabel label="Conselho" error={errors.councilNumber?.message}>
                   {editing
-                    ? <TextInput invalid={!!errors.specialty} {...register('specialty')} />
-                    : <ReadOnlyField>{watched.specialty}</ReadOnlyField>}
+                    ? <TextInput invalid={!!errors.councilNumber} {...register('councilNumber')} />
+                    : <ReadOnlyField>{watched.councilNumber || '—'}</ReadOnlyField>}
                 </FieldLabel>
-                <FieldLabel label="Instituição" error={errors.institution?.message}>
+                <FieldLabel label="UF do conselho" error={errors.councilUf?.message}>
                   {editing
-                    ? <TextInput invalid={!!errors.institution} {...register('institution')} />
-                    : <ReadOnlyField>{watched.institution}</ReadOnlyField>}
+                    ? <TextInput invalid={!!errors.councilUf} maxLength={2} {...register('councilUf')} />
+                    : <ReadOnlyField>{watched.councilUf || '—'}</ReadOnlyField>}
                 </FieldLabel>
               </div>
-          </section>
-
-            <section className="lg:col-span-2 border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center gap-2">
-                <FontAwesomeIcon icon={faUserGear} className="text-(--text-muted)" style={{ fontSize: 14 }} />
-                <h2 className="text-xs font-bold text-(--text)">Trocar de profissional</h2>
-              </div>
-              <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {PROFILES.map((profile) => {
-                  const active = profile.id === currentUser.id
-                  return (
-                    <button
-                      key={profile.id}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => setProfile(profile.id)}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg border p-3 text-left transition-all cursor-pointer',
-                        active ? 'border-brand bg-brand-50/40' : 'border-(--border-custom) hover:border-gray-300 hover:bg-gray-50/60',
-                      )}
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-bold text-brand">
-                        {profile.name.split(' ').filter((w) => !w.endsWith('.')).slice(0, 2).map((w) => w[0]).join('')}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-semibold text-(--text) truncate">{profile.name}</div>
-                        <div className="text-[0.65rem] text-(--text-muted) truncate">{ROLE_LABELS[profile.role]}</div>
-                      </div>
-                      {active && <FontAwesomeIcon icon={faCheck} className="shrink-0 text-brand" style={{ fontSize: 15 }} />}
-                    </button>
-                  )
-                })}
+              <div className="px-4 pb-4 text-[0.65rem] leading-relaxed text-(--text-muted)">
+                E-mail e profissão são mantidos por contratos próprios: o
+                primeiro exige verificação do novo endereço, a segunda é
+                atualizada pela administração.
               </div>
             </section>
+            </div>
         </div>
       </form>
 
@@ -211,11 +247,20 @@ export function ProfilePage() {
         footer={
           <>
             <Button variant="outline" onClick={() => setShowSaveModal(false)}>Cancelar</Button>
-            <Button tone="brand" variant="solid" onClick={handleConfirmSave}>Confirmar</Button>
+            <Button
+              tone="brand"
+              variant="solid"
+              disabled={saveMutation.isPending}
+              onClick={() => saveMutation.mutate(getValues())}
+            >
+              Confirmar
+            </Button>
           </>
         }
       >
-        <p className="text-xs text-(--text-muted)">As alterações no seu perfil serão salvas e aplicadas imediatamente.</p>
+        <p className="text-xs text-(--text-muted)">
+          As alterações do seu cadastro profissional serão salvas no servidor.
+        </p>
       </Modal>
     </SettingsLayout>
   )

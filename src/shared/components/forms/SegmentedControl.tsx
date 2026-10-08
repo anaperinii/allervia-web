@@ -45,7 +45,7 @@ export function SegmentedControl<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        'inline-flex w-max items-stretch gap-0.5 rounded-full border border-[#DDE6E6] bg-white p-0.5',
+        'inline-flex w-max items-stretch gap-0.5 rounded-lg border border-[#DDE6E6] bg-white p-0.5',
         SIZE_CLASS[size],
         fullWidth && 'flex w-full',
         className,
@@ -56,11 +56,12 @@ export function SegmentedControl<T extends string>({
         return (
           <button
             key={opt.value}
+            type="button"
             role="tab"
             aria-selected={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'rounded-full font-medium transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap',
+              'rounded-md font-medium transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap',
               ITEM_PADDING[size],
               fullWidth && 'flex-1',
               active ? 'bg-[#12333a] text-white' : 'text-[#4A6469] hover:text-[#12333a]'

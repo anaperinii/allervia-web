@@ -16,7 +16,7 @@ const LEGEND_ITEMS = [
 ]
 
 const NAV_BUTTON_CLASS =
-  'flex h-8 w-8 items-center justify-center rounded-full cursor-pointer transition-colors text-(--text) hover:text-brand'
+  'flex h-8 w-8 items-center justify-center rounded-lg cursor-pointer transition-colors text-(--text) hover:text-brand'
 
 export function CalendarToolbar({ monthLabel, onPrev, onNext, onToday, rightContent }: CalendarToolbarProps) {
   return (
@@ -27,7 +27,7 @@ export function CalendarToolbar({ monthLabel, onPrev, onNext, onToday, rightCont
         <button
           type="button"
           onClick={onToday}
-          className="h-7 rounded-full border border-[#257E8C] bg-[#257E8C]/10 px-4 text-[0.75rem] font-medium text-[#257E8C] cursor-pointer transition-colors hover:bg-[#257E8C]/20"
+          className="h-7 rounded-lg border border-[#257E8C] bg-[#257E8C]/10 px-4 text-[0.75rem] font-medium text-[#257E8C] cursor-pointer transition-colors hover:bg-[#257E8C]/20"
         >
           Hoje
         </button>

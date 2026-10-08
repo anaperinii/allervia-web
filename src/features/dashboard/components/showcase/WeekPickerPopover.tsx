@@ -1,25 +1,16 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import proArt from '@/assets/pro-art.jpg'
+import { weekKey, weekRangeFromKey } from '@/features/dashboard/hooks/useChartWindow'
+import { formatWeek } from '@/features/dashboard/lib/format-week'
+import { SHOWCASE } from '@/shared/components/showcase'
 import { faCalendar } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { DayPicker } from 'react-day-picker'
 import { ptBR } from 'react-day-picker/locale'
-import { format } from 'date-fns'
-import { ptBR as ptBRDateFns } from 'date-fns/locale'
-import proArt from '@/assets/pro-art.jpg'
-import { SHOWCASE } from '@/shared/components/showcase'
-import { weekKey, weekRangeFromKey } from '@/features/dashboard/hooks/useChartWindow'
 import 'react-day-picker/style.css'
+import { createPortal } from 'react-dom'
 
 const POPOVER_WIDTH = 340
-
-export function formatWeek(value: string) {
-  const range = weekRangeFromKey(value)
-  if (!range) return 'Semana'
-  const from = format(range.from, 'dd/MM', { locale: ptBRDateFns })
-  const to = format(range.to, 'dd/MM', { locale: ptBRDateFns })
-  return `${from} – ${to}`
-}
 
 export function WeekPicker({
   value,
@@ -83,7 +74,7 @@ export function WeekPicker({
         aria-label={ariaLabel}
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="flex h-8 shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full py-0 pl-1 pr-3.5 text-[0.7rem] font-medium"
+        className="flex h-8 shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg py-0 pl-1 pr-3.5 text-[0.7rem] font-medium"
         style={{
           background: range ? SHOWCASE.ink : SHOWCASE.white,
           border: range ? '1px solid transparent' : `1px solid ${SHOWCASE.line}`,
@@ -108,7 +99,7 @@ export function WeekPicker({
             ref={panelRef}
             role="dialog"
             aria-label={ariaLabel}
-            className="fixed z-[60] overflow-hidden rounded-3xl p-4 shadow-[0_18px_48px_-20px_rgba(16,60,68,0.45)]"
+            className="fixed z-[60] overflow-hidden rounded-xl p-4 shadow-[0_18px_48px_-20px_rgba(16,60,68,0.45)]"
             style={{
               top: coords.top,
               left: coords.left,
@@ -121,11 +112,11 @@ export function WeekPicker({
               src={proArt}
               alt=""
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 h-full w-full scale-110 rounded-3xl object-cover blur-2xl"
+              className="pointer-events-none absolute inset-0 h-full w-full scale-110 rounded-xl object-cover blur-2xl"
             />
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 rounded-3xl"
+              className="pointer-events-none absolute inset-0 rounded-xl"
               style={{ background: 'rgba(255,255,255,0.62)' }}
             />
 
@@ -156,7 +147,7 @@ export function WeekPicker({
                     onChange('all')
                     setOpen(false)
                   }}
-                  className="h-8 cursor-pointer rounded-full px-3.5 text-[0.7rem] font-medium"
+                  className="h-8 cursor-pointer rounded-lg px-3.5 text-[0.7rem] font-medium"
                   style={{ border: `1px solid ${SHOWCASE.line}`, color: SHOWCASE.inkSoft }}
                 >
                   Limpar

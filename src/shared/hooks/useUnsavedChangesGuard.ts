@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 interface UseUnsavedChangesGuardOptions {
   isDirty: boolean
@@ -20,9 +20,11 @@ export function useUnsavedChangesGuard({
 }: UseUnsavedChangesGuardOptions): UseUnsavedChangesGuardReturn {
   const [guardOpen, setGuardOpen] = useState(false)
 
-  useEffect(() => {
+  const [previousOpen, setPreviousOpen] = useState(open)
+  if (previousOpen !== open) {
+    setPreviousOpen(open)
     if (open === false) setGuardOpen(false)
-  }, [open])
+  }
 
   const requestClose = useCallback(() => {
     if (isDirty) setGuardOpen(true)

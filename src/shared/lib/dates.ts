@@ -22,6 +22,19 @@ export function isoToPtDate(iso: string): string {
   return `${day}/${month}/${year}`
 }
 
+/**
+ * Normaliza uma data civil da API — que pode vir como instante ISO em UTC —
+ * para o `YYYY-MM-DD` exigido por `<input type="date">`.
+ */
+export function toDateInputValue(value: string | null | undefined): string {
+  if (!value) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+  const match = /^(\d{4}-\d{2}-\d{2})T/.exec(value)
+  if (match) return match[1]
+  const parsed = new Date(value)
+  return isNaN(parsed.getTime()) ? '' : parsed.toISOString().slice(0, 10)
+}
+
 export function calculateAge(birthDateIso: string): number {
   const birth = new Date(birthDateIso + 'T12:00')
   if (isNaN(birth.getTime())) return 0
@@ -47,11 +60,21 @@ export function formatIsoToPtOrDash(value: string): string {
 }
 
 export function parseIsoDate(value: string): Date | null {
-  if (!value) return null
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
   const [year, month, day] = value.split('-').map(Number)
   if (!year || !month || !day) return null
   const parsed = new Date(year, month - 1, day)
-  return isNaN(parsed.getTime()) ? null : parsed
+  return parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day ? parsed : null
+}
+
+export function toOffsetIso(date: string, time: string): string {
+  const local = new Date(`${date}T${time}:00`)
+  const offsetMinutes = -local.getTimezoneOffset()
+  const sign = offsetMinutes >= 0 ? '+' : '-'
+  const abs = Math.abs(offsetMinutes)
+  const hours = String(Math.floor(abs / 60)).padStart(2, '0')
+  const minutes = String(abs % 60).padStart(2, '0')
+  return `${date}T${time}:00${sign}${hours}:${minutes}`
 }
 
 export function addMinutesToTime(time: string, minutes: number): string {
@@ -86,7 +109,7 @@ export function comparePtDateAsc(a: string, b: string): number {
 
 export function formatDurationFromDays(days: number): string {
   if (days < 0) return '—'
-  if (days === 0) return 'iniciado hoje'
+  if (days === 0) return 'Iniciado hoje'
   if (days < 30) return `${days} ${days === 1 ? 'dia' : 'dias'}`
   if (days < 365) {
     const months = Math.round(days / 30)

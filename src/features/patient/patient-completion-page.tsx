@@ -1,289 +1,297 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  Button,
-  CancelWizardModal,
-  toast,
-  WizardStepsBreadcrumb,
-  type WizardStep,
-} from '@/shared/components'
-import { usePatientStore, derivePatientDates } from '@/features/patient/stores/usePatientStore'
-import { buildPatientFromImmunotherapy } from '@/features/patient/constants/patient-profiles'
-import { useImmunotherapiesStore } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
-import { PROFILES } from '@/shared/stores/useUserStore'
-import { formatDurationFromIsoStart } from '@/shared/lib/dates'
+  executeTherapyLifecycle,
+  getImmunotherapy,
+  listDosesForTherapy,
+} from '@/shared/api/clinical.api'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
+import { Button, FieldLabel, showApiErrorToast, TextArea, TextInput, toast } from '@/shared/components'
+import { PageHeader } from '@/shared/components/showcase'
 import {
-  completionSchema,
-  COMPLETION_DEFAULTS,
-  type CompletionForm,
-} from '@/features/patient/schemas/completion'
-import { CompletionOverviewStep } from '@/features/patient/components/treatment-completion/CompletionOverviewStep'
-import { CompletionFollowupStep } from '@/features/patient/components/treatment-completion/CompletionFollowupStep'
-import { CompletionReviewStep } from '@/features/patient/components/treatment-completion/CompletionReviewStep'
-import { useCompletionDraftsStore } from '@/features/patient/stores/useCompletionDraftsStore'
+  formatInstantDate,
+  THERAPY_STATUS_LABELS,
+} from '@/features/patient/adapters/clinical-presentation'
+import { cn } from '@/shared/lib/cn'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChartColumn, faCircleCheck, faClipboardCheck, faFilePen, faListCheck } from '@fortawesome/free-solid-svg-icons'
-import { PageHeader, SHOWCASE } from '@/shared/components/showcase'
-
-const STEPS: WizardStep[] = [
-  { label: 'Visão geral', icon: faChartColumn, description: 'Métricas do tratamento que está sendo encerrado: aplicações realizadas, aderência, reações adversas e duração total.' },
-  { label: 'Plano pós-alta', icon: faListCheck, description: 'Defina as recomendações de alta, os retornos de monitoramento e os sinais de alerta para retorno antecipado.' },
-  { label: 'Revisão', icon: faClipboardCheck, description: 'Confira o resumo do desfecho e assine o encerramento. O registro vai para o prontuário e a imunoterapia é inativada.' },
-]
+import { faCircleCheck, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
 export function PatientCompletionPage() {
   const navigate = useNavigate()
-  const { patientId } = useSearch({ from: '/patient-completion' })
-  const selectedPatient = usePatientStore((s) => s.selectedPatient)
-  const applications = usePatientStore((s) => s.applications)
-  const inactivateImmunotherapy = usePatientStore((s) => s.inactivateImmunotherapy)
-  const immunotherapies = useImmunotherapiesStore((s) => s.immunotherapies)
-
-  const [step, setStep] = useState<0 | 1 | 2>(0)
-  const [showCancelModal, setShowCancelModal] = useState(false)
-  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null)
-  const restoredRef = useRef(false)
-  const saveDraft = useCompletionDraftsStore((s) => s.saveDraft)
-  const loadDraft = useCompletionDraftsStore((s) => s.loadDraft)
-  const clearDraft = useCompletionDraftsStore((s) => s.clearDraft)
-
-  const patient = useMemo(() => {
-    if (selectedPatient && (!patientId || selectedPatient.id === patientId)) return selectedPatient
-    if (!patientId) return null
-    const imm = immunotherapies.find((i) => i.id === patientId)
-    return imm ? buildPatientFromImmunotherapy(imm) : null
-  }, [selectedPatient, patientId, immunotherapies])
-
-  const form = useForm<CompletionForm>({
-    resolver: zodResolver(completionSchema),
-    mode: 'onBlur',
-    defaultValues: COMPLETION_DEFAULTS,
+  const { patientId, therapy: therapyParam } = useSearch({
+    from: '/patient-completion',
   })
-  const { handleSubmit, trigger, reset, getValues } = form
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    if (restoredRef.current || !patient) return
-    restoredRef.current = true
-    const draft = loadDraft(patient.id)
-    if (draft) {
-      reset(draft.values)
-      setStep(draft.step)
-      setDraftSavedAt(draft.savedAt)
-    }
-  }, [patient, loadDraft, reset])
+  const therapyQuery = useQuery({
+    queryKey: queryKeys.immunotherapy(organizationId, therapyParam ?? ''),
+    queryFn: ({ signal }) => getImmunotherapy(therapyParam!, signal),
+    enabled: organizationId !== '' && !!therapyParam,
+  })
+  const therapy = therapyQuery.data ?? null
 
-  const patientApplications = useMemo(
-    () => (patient ? applications.filter((application) => application.patientId === patient.id) : []),
-    [applications, patient],
-  )
-  const realizedApplications = useMemo(
-    () => patientApplications.filter((application) => application.status === 'completed'),
-    [patientApplications],
-  )
-  const adverseEventsCount = useMemo(
-    () => realizedApplications.filter((application) => application.sideEffect === 'yes').length,
-    [realizedApplications],
-  )
-  const rescheduledCount = useMemo(
-    () => patientApplications.filter((application) => application.status === 'missed' || application.status === 'canceled').length,
-    [patientApplications],
-  )
-  const adherencePct = useMemo(() => {
-    const base = realizedApplications.length + rescheduledCount
-    if (base === 0) return 100
-    return Math.round((realizedApplications.length / base) * 100)
-  }, [realizedApplications, rescheduledCount])
-
-  const { inductionStart, maintenanceStart } = useMemo(
-    () => (patient ? derivePatientDates(applications, patient.id) : { inductionStart: null, maintenanceStart: null }),
-    [patient, applications],
+  const dosesQuery = useQuery({
+    queryKey: queryKeys.doses(organizationId, therapyParam ?? ''),
+    queryFn: ({ signal }) => listDosesForTherapy(therapyParam!, signal),
+    enabled: organizationId !== '' && !!therapyParam,
+  })
+  const administered = useMemo(
+    () =>
+      (dosesQuery.data ?? []).filter((dose) => dose.administeredAt !== null),
+    [dosesQuery.data],
   )
 
-  const totalDurationLabel = useMemo(
-    () => formatDurationFromIsoStart(inductionStart),
-    [inductionStart],
-  )
+  const [retesting, setRetesting] = useState(true)
+  const [rescueMedication, setRescueMedication] = useState(true)
+  const [environmentalControl, setEnvironmentalControl] = useState(true)
+  const [customText, setCustomText] = useState('')
+  const [monitoringSchedule, setMonitoringSchedule] = useState('')
+  const [warningSigns, setWarningSigns] = useState('')
+  const [note, setNote] = useState('')
+  const [reason, setReason] = useState('')
+  const [confirmed, setConfirmed] = useState(false)
 
-  const doctorRegistration = useMemo(() => {
-    if (!patient) return '—'
-    const doctor = PROFILES.find((profile) => profile.name === patient.responsibleDoctor)
-    return doctor?.registration ?? '—'
-  }, [patient])
+  const mutation = useMutation({
+    mutationFn: () =>
+      executeTherapyLifecycle(therapy!.id, {
+        action: 'COMPLETE',
+        expectedRevision: therapy!.revision,
+        reason: reason.trim(),
+        recommendations: {
+          retesting,
+          rescueMedication,
+          environmentalControl,
+          custom: customText
+            .split(/[;\n]/)
+            .map((item) => item.trim())
+            .filter(Boolean),
+          ...(monitoringSchedule.trim()
+            ? { monitoringSchedule: monitoringSchedule.trim() }
+            : {}),
+          ...(warningSigns.trim() ? { warningSigns: warningSigns.trim() } : {}),
+          ...(note.trim() ? { note: note.trim() } : {}),
+        },
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
+      toast.success({
+        icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
+        title: 'Tratamento encerrado',
+        description:
+          'Recomendações finais persistidas no histórico do tratamento; previsões pendentes arquivadas.',
+        autoDismissMs: 8000,
+      })
+      navigate({
+        to: '/patient/$patientId',
+        params: { patientId: therapy!.patient.id },
+        search: { therapy: therapy!.id },
+      })
+    },
+    meta: { suppressErrorToast: true },
+    onError: (error) => {
+      showApiErrorToast(
+        error,
+        error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION'
+          ? {
+              title: 'Tratamento desatualizado',
+              description:
+                'O tratamento mudou desde a abertura da tela. Recarregue e confirme novamente.',
+            }
+          : {},
+      )
+    },
+  })
 
-  if (!patient) {
+  if (!therapyParam) {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        <span className="text-xs text-(--text-muted)">Paciente não encontrado</span>
-      </div>
+      <MissingState
+        message="Selecione o tratamento a encerrar pelo prontuário do paciente."
+        onBack={() =>
+          patientId
+            ? navigate({ to: '/patient/$patientId', params: { patientId } })
+            : navigate({ to: '/immunotherapies' })
+        }
+      />
+    )
+  }
+  if (therapyQuery.isPending) {
+    return <MissingState message="Carregando tratamento…" />
+  }
+  if (!therapy) {
+    return (
+      <MissingState
+        message="Tratamento não encontrado."
+        onBack={() => navigate({ to: '/immunotherapies' })}
+      />
     )
   }
 
-  const advanceStep = async () => {
-    if (step === 1) {
-      const ok = await trigger(['monitoringSchedule', 'warningSigns'])
-      if (!ok) return
-    }
-    setStep((s) => (s + 1) as 0 | 1 | 2)
-  }
-
-  const persistDraft = () => {
-    if (!patient) return
-    const savedAt = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
-    saveDraft({ patientId: patient.id, step, values: getValues(), savedAt })
-    setDraftSavedAt(savedAt)
-  }
-
-  const onConfirm = handleSubmit((data) => {
-    clearDraft(patient.id)
-    const recommendations: string[] = []
-    if (data.recommendRetesting) recommendations.push('Retestagem alérgica')
-    if (data.maintainRescueMed) recommendations.push('Medicação de resgate')
-    if (data.environmentalControl) recommendations.push('Controle ambiental')
-    recommendations.push(...(data.customRecommendations ?? []).map((recommendation) => recommendation.trim()).filter(Boolean))
-
-    const detailParts = [
-      'Tratamento concluído — desfecho de sucesso.',
-      `Período: ${inductionStart ?? '-'} → hoje (${totalDurationLabel}).`,
-      `${realizedApplications.length} aplicações · ${adverseEventsCount} eventos adversos · aderência ${adherencePct}%.`,
-      recommendations.length ? `Recomendações: ${recommendations.join(', ')}.` : null,
-      data.monitoringSchedule?.trim() ? `Retornos: ${data.monitoringSchedule.trim()}.` : null,
-      data.warningSigns?.trim() ? `Sinais de alerta: ${data.warningSigns.trim()}.` : null,
-      data.note?.trim() ? `Nota: ${data.note.trim()}.` : null,
-    ].filter(Boolean) as string[]
-
-    inactivateImmunotherapy({
-      id: `complete-${Date.now()}`,
-      category: 'treatment_completion',
-      detail: detailParts.join(' '),
-      startDate: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
-      expectedReturnDate: null,
-      responsibleDoctor: patient.responsibleDoctor,
-      snapshotConcentration: patient.currentDoseConcentration,
-      snapshotInterval: patient.currentInterval,
-    })
-
-    toast.success({
-      icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
-      title: 'Tratamento concluído',
-      description: 'O protocolo foi encerrado com desfecho de sucesso e o registro está disponível no prontuário.',
-      autoDismissMs: 8000,
-    })
-
-    navigate({ to: '/patient/$patientId', params: { patientId: patient.id } })
-  })
-
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (step < 2) void advanceStep()
-    else void onConfirm()
-  }
+  const canSubmit =
+    therapy.status === 'IN_PROGRESS' &&
+    reason.trim().length >= 10 &&
+    confirmed &&
+    !mutation.isPending
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
       <PageHeader
         breadcrumb={['Prontuário', 'Conclusão de Tratamento']}
-        title={patient.name}
-        actions={
-          draftSavedAt && (
-            <span
-              className="inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[0.7rem] font-semibold"
-              style={{ background: SHOWCASE.white, color: SHOWCASE.inkSoft, border: `1px solid ${SHOWCASE.line}` }}
-            >
-              <FontAwesomeIcon icon={faFilePen} style={{ fontSize: 11 }} />
-              Rascunho salvo · {draftSavedAt}
-            </span>
-          )
-        }
+        title={therapy.patient.fullName}
       />
-
-      <div className="mb-2">
-        <WizardStepsBreadcrumb
-          steps={STEPS}
-          current={step}
-          ariaLabel="Etapas da conclusão"
-          onSelect={(i) => setStep(i as 0 | 1 | 2)}
-        />
-      </div>
-
-      <form onSubmit={handleFormSubmit} noValidate className="wizard-fields flex flex-1 min-h-0 flex-col">
-        <div
-          key={step}
-          className="flex flex-1 flex-col overflow-y-auto pt-1 pb-4 animate-in fade-in-0 slide-in-from-right-2 duration-300"
-        >
-          <div className="w-full">
-          {step === 0 && (
-            <CompletionOverviewStep
-              patient={patient}
-              applications={patientApplications}
-              inductionStart={inductionStart}
-              maintenanceStart={maintenanceStart}
-              totalApplications={realizedApplications.length}
-              adherencePct={adherencePct}
-              rescheduledCount={rescheduledCount}
-              adverseEventsCount={adverseEventsCount}
-              totalDurationLabel={totalDurationLabel}
+      <div className="flex-1 overflow-y-auto px-1 pb-8">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
+        <div className="rounded-xl border border-(--border-custom) bg-white px-4 py-3 xl:col-span-2">
+          <div className="text-xs font-bold text-(--text) mb-2">Resumo do tratamento</div>
+          <div className="grid grid-cols-3 gap-px bg-(--border-custom) rounded-lg overflow-hidden border border-(--border-custom) md:grid-cols-6">
+            <Cell label="Tipo" value={`${therapy.immunoType} · ${therapy.extract}`} />
+            <Cell label="Situação" value={THERAPY_STATUS_LABELS[therapy.status]} />
+            <Cell label="Início" value={formatInstantDate(therapy.inductionStartDate)} />
+            <Cell
+              label="Manutenção desde"
+              value={therapy.maintenanceStartDate ? formatInstantDate(therapy.maintenanceStartDate) : '—'}
             />
-          )}
-          {step === 1 && <CompletionFollowupStep form={form} />}
-          {step === 2 && (
-            <CompletionReviewStep
-              form={form}
-              patient={patient}
-              doctorRegistration={doctorRegistration}
-              inductionStart={inductionStart}
-              totalApplications={realizedApplications.length}
-              adverseEventsCount={adverseEventsCount}
-              totalDurationLabel={totalDurationLabel}
+            <Cell label="Aplicações realizadas" value={String(administered.length)} />
+            <Cell
+              label="Previsão pendente"
+              value={therapy.nextDose ? formatInstantDate(therapy.nextDose.scheduledAt) : 'Nenhuma'}
             />
+          </div>
+          {therapy.nextDose && (
+            <p className="mt-2 text-[0.65rem] text-amber-700">
+              A previsão pendente será arquivada pelo encerramento — efeito explícito e auditado.
+            </p>
           )}
+        </div>
+
+        <div className="rounded-xl border border-(--border-custom) bg-white px-4 py-3 space-y-3">
+          <div className="text-xs font-bold text-(--text)">Recomendações finais</div>
+          <div className="flex flex-wrap gap-2">
+            <ToggleChip label="Retestagem alérgica" active={retesting} onToggle={() => setRetesting((v) => !v)} />
+            <ToggleChip label="Medicação de resgate" active={rescueMedication} onToggle={() => setRescueMedication((v) => !v)} />
+            <ToggleChip label="Controle ambiental" active={environmentalControl} onToggle={() => setEnvironmentalControl((v) => !v)} />
+          </div>
+          <FieldLabel label="Recomendações adicionais" hint="(separe por ponto e vírgula)">
+            <TextInput
+              value={customText}
+              onChange={(e) => setCustomText(e.target.value)}
+              placeholder="Ex: retorno em 6 meses; evitar exposição a ácaros"
+            />
+          </FieldLabel>
+          <div className="grid grid-cols-2 gap-3">
+            <FieldLabel label="Plano de retornos">
+              <TextArea rows={2} value={monitoringSchedule} onChange={(e) => setMonitoringSchedule(e.target.value)} placeholder="Ex: semestral no primeiro ano." />
+            </FieldLabel>
+            <FieldLabel label="Sinais de alerta">
+              <TextArea rows={2} value={warningSigns} onChange={(e) => setWarningSigns(e.target.value)} placeholder="Ex: recorrência de sintomas respiratórios." />
+            </FieldLabel>
+          </div>
+          <FieldLabel label="Nota clínica" hint="(opcional)">
+            <TextArea rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
+          </FieldLabel>
+        </div>
+
+        <div className="rounded-xl border border-(--border-custom) bg-white px-4 py-3 space-y-3">
+          <FieldLabel
+            label="Motivo do encerramento"
+            required
+            helperText={`Mínimo 10 caracteres · ${reason.trim().length} digitados`}
+          >
+            <TextArea
+              rows={2}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Ex: meta terapêutica atingida e sustentada."
+            />
+          </FieldLabel>
+          <label className="flex items-start gap-2 text-[0.7rem] text-(--text) cursor-pointer">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+              className="mt-0.5"
+            />
+            Confirmo o encerramento deste tratamento com as recomendações acima; o
+            registro é persistido no histórico e as previsões pendentes serão arquivadas.
+          </label>
+          {therapy.status !== 'IN_PROGRESS' && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              <FontAwesomeIcon icon={faCircleInfo} className="text-amber-700 shrink-0" style={{ fontSize: 13 }} />
+              <p className="text-[0.68rem] text-amber-800">
+                Só tratamentos em andamento podem ser encerrados; retome antes, se suspenso.
+              </p>
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() =>
+                navigate({
+                  to: '/patient/$patientId',
+                  params: { patientId: therapy.patient.id },
+                  search: { therapy: therapy.id },
+                })
+              }
+            >
+              Voltar ao prontuário
+            </Button>
+            <Button tone="brand" variant="solid" disabled={!canSubmit} onClick={() => mutation.mutate()}>
+              Encerrar tratamento
+            </Button>
           </div>
         </div>
-
-        <div className="border-t border-(--border-custom) pt-3 flex items-center justify-end gap-2">
-          <Button type="button" tone="danger" variant="outline" onClick={() => setShowCancelModal(true)}>
-            Cancelar
-          </Button>
-          {step > 0 && (
-            <Button type="button" tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 0 | 1 | 2)}>
-              Voltar
-            </Button>
-          )}
-          <Button type="submit" tone="brand" variant="solid">
-            {step < 2 ? 'Continuar' : 'Concluir tratamento'}
-          </Button>
         </div>
-      </form>
-
-      <CancelWizardModal
-        open={showCancelModal}
-        title="Sair da conclusão?"
-        description="Suas últimas inserções serão salvas automaticamente como rascunho. Você pode retomar a conclusão de onde parou a qualquer momento."
-        keepEditingLabel="Continuar editando"
-        secondaryLabel="Sair sem salvar"
-        onSecondary={() => {
-          setShowCancelModal(false)
-          clearDraft(patient.id)
-          navigate({ to: '/patient/$patientId', params: { patientId: patient.id } })
-        }}
-        cancelLabel="Salvar e sair"
-        cancelTone="brand"
-        onClose={() => setShowCancelModal(false)}
-        onConfirm={() => {
-          persistDraft()
-          toast.success({
-            icon: <FontAwesomeIcon icon={faFilePen} style={{ fontSize: 16 }} />,
-            title: 'Rascunho salvo',
-            description: 'Você pode retomar a conclusão de onde parou.',
-            autoDismissMs: 4000,
-          })
-          navigate({ to: '/patient/$patientId', params: { patientId: patient.id } })
-        }}
-      />
+      </div>
     </div>
+  )
+}
+
+function MissingState({ message, onBack }: { message: string; onBack?: () => void }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-2">
+      <span className="text-xs text-(--text-muted)">{message}</span>
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-xs font-semibold text-brand underline cursor-pointer bg-transparent border-none"
+        >
+          Voltar
+        </button>
+      )}
+    </div>
+  )
+}
+
+function Cell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-white px-3 py-2">
+      <div className="text-[0.6rem] font-semibold text-(--text-muted) mb-0.5">{label}</div>
+      <div className="text-[0.72rem] font-medium text-(--text)">{value}</div>
+    </div>
+  )
+}
+
+function ToggleChip({ label, active, onToggle }: { label: string; active: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={active}
+      onClick={onToggle}
+      className={cn(
+        'rounded-lg border px-3 py-1.5 text-[0.7rem] font-semibold transition-colors cursor-pointer',
+        active
+          ? 'border-brand bg-brand-50 text-brand-dark'
+          : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50',
+      )}
+    >
+      {label}
+    </button>
   )
 }

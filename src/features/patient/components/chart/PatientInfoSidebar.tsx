@@ -1,16 +1,22 @@
 import { useState } from 'react'
 import { PatientInitials } from '@/shared/components/glass-card'
 import { cn } from '@/shared/lib/cn'
+import { formatCPF, formatPhone } from '@/shared/lib/formatters'
 import { Button } from '@/shared/components'
 import { INACTIVATION_CATEGORY_LABELS } from '@/features/patient/constants/clinical-labels'
 import { PatientActionsMenu } from '@/features/patient/components/chart/PatientActionsMenu'
 import type { Inactivation, Patient } from '@/features/patient/stores/usePatientStore'
+import type { TherapyStatus } from '@/shared/api/contracts/clinical'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronDown, faChevronUp, faCircleInfo, faClockRotateLeft, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 
 interface PatientInfoSidebarProps {
   patient: Patient
+  /** Meta da prescrição: última etapa permitida da versão fixada. */
+  targetValues: string | null
+  therapyStatus: TherapyStatus | null
+  evolutionTherapyId: string | null
   treatmentTime: string | null
   inductionStart: string | null
   maintenanceStart: string | null
@@ -20,23 +26,25 @@ interface PatientInfoSidebarProps {
   canEvolve: boolean
   canEmitReport: boolean
   canEditPatient: boolean
-  canAdjustProtocol: boolean
   canInactivate: boolean
   canComplete: boolean
   completeDisabled: boolean
   canLgpdPortability: boolean
+  canRevisePrescription: boolean
+  onRevisePrescription: () => void
+  onShowLifecycleHistory: () => void
   onReactivate: () => void
   onEditPatient: () => void
-  onAdjustProtocol: () => void
-  onShowAdjustHistory: () => void
   onInactivate: () => void
-  onShowInactivationHistory: () => void
   onPortability: () => void
   onComplete: () => void
 }
 
 export function PatientInfoSidebar({
   patient,
+  targetValues,
+  therapyStatus,
+  evolutionTherapyId,
   treatmentTime,
   inductionStart,
   maintenanceStart,
@@ -46,17 +54,16 @@ export function PatientInfoSidebar({
   canEvolve,
   canEmitReport,
   canEditPatient,
-  canAdjustProtocol,
   canInactivate,
   canComplete,
   completeDisabled,
   canLgpdPortability,
+  canRevisePrescription,
+  onRevisePrescription,
+  onShowLifecycleHistory,
   onReactivate,
   onEditPatient,
-  onAdjustProtocol,
-  onShowAdjustHistory,
   onInactivate,
-  onShowInactivationHistory,
   onPortability,
   onComplete,
 }: PatientInfoSidebarProps) {
@@ -68,42 +75,65 @@ export function PatientInfoSidebar({
   const personalRows: [string, string][] = [
     ['Data de Nascimento', patient.birthDate],
     ['Idade', `${patient.age} anos`],
-    ['CPF', patient.cpf],
-    ['Telefone', patient.phone],
+    ['CPF', formatCPF(patient.cpf)],
+    ['Telefone', formatPhone(patient.phone)],
     ['Peso', patient.weight],
     ['Médico Responsável', patient.responsibleDoctor],
+    ...(patient.guardian
+      ? ([
+          ['Responsável Legal', patient.guardian.name],
+          ['CPF do Responsável', patient.guardian.cpf ? formatCPF(patient.guardian.cpf) : '—'],
+          ['Tel. do Responsável', formatPhone(patient.guardian.phone)],
+        ] as [string, string][])
+      : []),
   ]
 
-  const immunoRows: [string, string][] = [
+  const therapyStatusDisplay =
+    therapyStatus === 'IN_PROGRESS'
+      ? { label: 'Tratamento em andamento', dot: 'bg-emerald-500' }
+      : therapyStatus === 'SUSPENDED'
+        ? { label: 'Tratamento suspenso', dot: 'bg-yellow-500' }
+        : therapyStatus === 'COMPLETED'
+          ? { label: 'Tratamento concluído', dot: 'bg-gray-400' }
+          : { label: 'Sem tratamento selecionado', dot: 'bg-gray-300' }
+
+  const immunoRows: [string, React.ReactNode][] = [
     ['Tipo', patient.immunotherapyType],
     ['Via de Administração', patient.administrationRoute],
-    ['Início Indução', inductionStart || '-'],
+    [
+      'Início Indução',
+      <span className="inline-flex items-center gap-1.5">
+        {treatmentTime && <StatusBadge tone="gray">{treatmentTime}</StatusBadge>}
+        {inductionStart || '-'}
+      </span>,
+    ],
     ['Início Manutenção', maintenanceStart || '-'],
-    ['Meta Concentração e Volume', patient.targetConcentrationVolume],
+    ['Meta Concentração e Volume', targetValues || patient.targetConcentrationVolume || '-'],
   ]
 
   const showImmunoActions =
-    canAdjustProtocol ||
+    canRevisePrescription ||
+    therapyStatus !== null ||
     (patient.protocolAdjustments?.length ?? 0) > 0 ||
     inactivationCount > 0
 
   return (
-    <div className="flex w-[360px] shrink-0 flex-col rounded-xl bg-white overflow-hidden">
+    <div className="flex w-104 shrink-0 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-white">
       <div className="border-b border-(--border-custom) px-5 py-4">
         <div className="flex items-center gap-3">
-          <PatientInitials name={patient.name} size={48} />
+          <span className="relative shrink-0">
+            <PatientInitials name={patient.name} size={48} />
+            <span
+              title={therapyStatusDisplay.label}
+              aria-label={therapyStatusDisplay.label}
+              className={cn(
+                'absolute -left-0.5 top-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-white',
+                therapyStatusDisplay.dot,
+              )}
+            />
+          </span>
           <div className="min-w-0">
-            <h1 className="text-base font-bold text-(--text) leading-tight">{patient.name}</h1>
-            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-              {patient.status === 'active' ? (
-                <StatusBadge tone="emerald" dot>Tratamento Ativo</StatusBadge>
-              ) : (
-                <StatusBadge tone="yellow" dot>Tratamento Inativo</StatusBadge>
-              )}
-              {treatmentTime && (
-                <StatusBadge tone="gray">{treatmentTime}</StatusBadge>
-              )}
-            </div>
+            <h1 className="text-xl font-bold text-(--text) leading-tight">{patient.name}</h1>
           </div>
         </div>
 
@@ -130,27 +160,35 @@ export function PatientInfoSidebar({
         )}
 
         <div className="mt-3 flex gap-1.5">
-          {patient.status === 'inactive' ? (
+          {therapyStatus === 'SUSPENDED' ? (
             canReactivate && (
               <Button tone="brand" variant="solid" fullWidth onClick={onReactivate}>
-                Reativar paciente
+                Retomar tratamento
               </Button>
             )
           ) : (
-            canEvolve && (
+            canEvolve &&
+            evolutionTherapyId !== null &&
+            therapyStatus === 'IN_PROGRESS' && (
               <Button
                 tone="brand"
                 variant="solid"
                 fullWidth
                 to="/patient-evolution"
-                search={{ patientId: patient.id }}
+                search={{ therapy: evolutionTherapyId }}
               >
                 Evoluir Paciente
               </Button>
             )
           )}
           {canEmitReport && (
-            <Button tone="brand" variant="outline" fullWidth to="/patient-report" search={{ patientId: patient.id }}>
+            <Button
+              tone="brand"
+              variant="outline"
+              fullWidth
+              to="/patient-report"
+              search={{ patientId: patient.id, therapy: evolutionTherapyId ?? undefined }}
+            >
               Emitir Relatório
             </Button>
           )}
@@ -179,7 +217,7 @@ export function PatientInfoSidebar({
             Dados Pessoais
             {showPersonal ? <FontAwesomeIcon icon={faChevronUp} style={{ fontSize: 14 }} /> : <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 14 }} />}
           </button>
-          <div id={personalId} className={cn('overflow-hidden transition-all duration-300', showPersonal ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0')}>
+          <div id={personalId} className={cn('overflow-hidden transition-all duration-300', showPersonal ? 'max-h-120 opacity-100' : 'max-h-0 opacity-0')}>
             <div className="px-3.5 pb-3 space-y-2">
               {personalRows.map(([label, value]) => (
                 <Row key={label} label={label} value={value} />
@@ -227,36 +265,27 @@ export function PatientInfoSidebar({
                 <span className="font-medium text-(--text) text-right max-w-[55%] wrap-break-word leading-relaxed">{patient.extract}</span>
               </div>
               {showImmunoActions && (
-                <div className="pt-2 mt-1 border-t border-(--border-custom) space-y-1.5">
-                  {(canAdjustProtocol || (patient.protocolAdjustments?.length ?? 0) > 0) && (
-                    <div className="flex gap-2">
-                      {canAdjustProtocol && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={patient.status === 'inactive'}
-                          onClick={onAdjustProtocol}
-                          className="flex-1"
-                        >
-                          Ajustar protocolo
-                        </Button>
-                      )}
-                      {(patient.protocolAdjustments?.length ?? 0) > 0 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          leftIcon={<FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 11 }} />}
-                          onClick={onShowAdjustHistory}
-                          className={cn(!canAdjustProtocol && 'flex-1')}
-                        >
-                          {canAdjustProtocol ? String(patient.protocolAdjustments!.length) : `Histórico de ajustes (${patient.protocolAdjustments!.length})`}
-                        </Button>
-                      )}
-                    </div>
+                <div className="pt-2 mt-1 border-t border-(--border-custom) flex items-center gap-1.5">
+                  {canRevisePrescription && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      disabled={therapyStatus !== 'IN_PROGRESS'}
+                      onClick={onRevisePrescription}
+                    >
+                      Revisar prescrição
+                    </Button>
                   )}
-                  {inactivationCount > 0 && (
-                    <Button variant="outline" size="sm" fullWidth leftIcon={<FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 10 }} />} onClick={onShowInactivationHistory}>
-                      Histórico de inativações ({inactivationCount})
+                  {therapyStatus !== null && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      leftIcon={<FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 10 }} />}
+                      onClick={onShowLifecycleHistory}
+                    >
+                      Histórico
                     </Button>
                   )}
                 </div>
@@ -269,11 +298,21 @@ export function PatientInfoSidebar({
   )
 }
 
-function Row({ label, value, truncate }: { label: string; value: string; truncate?: boolean }) {
+function Row({
+  label,
+  value,
+  truncate,
+}: {
+  label: string
+  value: React.ReactNode
+  truncate?: boolean
+}) {
   return (
-    <div className="flex justify-between text-[0.7rem]">
-      <span className="text-(--text-muted)">{label}:</span>
-      <span className={cn('font-medium text-(--text) text-right', truncate && 'max-w-[55%] truncate')}>{value}</span>
+    <div className="flex justify-between gap-2 text-[0.7rem]">
+      <span className="shrink-0 text-(--text-muted)">{label}:</span>
+      <span className={cn('font-medium text-(--text) text-right', truncate && 'max-w-[62%] truncate')}>
+        {value}
+      </span>
     </div>
   )
 }

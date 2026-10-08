@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react'
-import { Renderer, Program, Mesh, Color, Triangle } from 'ogl'
+import { AURORA_STOPS } from '@/shared/constants/aurora'
 import { cn } from '@/shared/lib/cn'
+import { Color, Mesh, Program, Renderer, Triangle } from 'ogl'
+import { useEffect, useRef } from 'react'
 
 const VERT = `#version 300 es
 in vec2 position;
@@ -108,11 +109,6 @@ void main() {
 }
 `
 
-export const AURORA_STOPS = {
-  dark: ['#0f3a42', '#4d7e85', '#9BC1C4'],
-  light: ['#9BC1C4', '#588a91', '#257E8C'],
-} as const
-
 export interface AuroraProps {
   colorStops?: readonly string[]
   amplitude?: number
@@ -123,18 +119,14 @@ export interface AuroraProps {
 }
 
 export function Aurora(props: AuroraProps) {
-  const {
-    colorStops = AURORA_STOPS.dark,
-    amplitude = 1.0,
-    blend = 0.5,
-    className,
-  } = props
+  const { className } = props
   const propsRef = useRef<AuroraProps>(props)
-  propsRef.current = props
+  useEffect(() => { propsRef.current = props }, [props])
 
   const ctnDom = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    const { colorStops = AURORA_STOPS.dark, amplitude = 1, blend = 0.5 } = propsRef.current
     const ctn = ctnDom.current
     if (!ctn) return
 
@@ -145,7 +137,6 @@ export function Aurora(props: AuroraProps) {
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
     gl.canvas.style.backgroundColor = 'transparent'
 
-    let program: Program | undefined
 
     function resize() {
       if (!ctn) return
@@ -164,7 +155,7 @@ export function Aurora(props: AuroraProps) {
       return [c.r, c.g, c.b]
     }
 
-    program = new Program(gl, {
+    const program = new Program(gl, {
       vertex: VERT,
       fragment: FRAG,
       uniforms: {
@@ -211,8 +202,7 @@ export function Aurora(props: AuroraProps) {
       if (ctn && gl.canvas.parentNode === ctn) ctn.removeChild(gl.canvas)
       gl.getExtension('WEBGL_lose_context')?.loseContext()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amplitude])
+  }, [])
 
   return <div ref={ctnDom} className={cn('w-full h-full', className)} />
 }

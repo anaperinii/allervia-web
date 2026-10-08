@@ -30,7 +30,7 @@ export function ChartCard({
   return (
     <section
       className={cn(
-        'group relative overflow-hidden rounded-3xl p-5',
+        'group relative overflow-hidden rounded-xl p-5',
         fullWidth ? 'basis-full w-full' : 'flex-1 min-w-72',
       )}
       style={{

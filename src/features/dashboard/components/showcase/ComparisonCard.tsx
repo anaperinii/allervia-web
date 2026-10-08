@@ -12,8 +12,8 @@ interface ComparisonCardProps {
   title: string
   caption: string
   totalSuffix: string
-  previousYear: number
-  currentYear: number
+  previousLabel: string
+  currentLabel: string
   series: { date: string; label: string; previous: number; current: number }[]
 }
 
@@ -33,8 +33,8 @@ export function ComparisonCard({
   title,
   caption,
   totalSuffix,
-  previousYear,
-  currentYear,
+  previousLabel,
+  currentLabel,
   series,
 }: ComparisonCardProps) {
   const { slice: rows, filters, active } = useSeriesFilters(series, { range: true })
@@ -73,8 +73,8 @@ export function ComparisonCard({
 
       <div className="relative flex-1 flex gap-3 min-h-30">
         <div className="flex flex-col justify-center gap-8 text-[0.62rem] font-medium shrink-0" style={{ color: SHOWCASE.muted }}>
-          <span>{currentYear}</span>
-          <span>{previousYear}</span>
+          <span>{currentLabel}</span>
+          <span>{previousLabel}</span>
         </div>
 
         <div className="relative flex-1">
@@ -111,10 +111,10 @@ export function ComparisonCard({
               topPct={(y(hovered.current) / VIEW_H) * 100}
               label={hovered.label}
             >
-              {currentYear}: {hovered.current.toLocaleString('pt-BR')}
+              {currentLabel}: {hovered.current.toLocaleString('pt-BR')}
               <span className="opacity-70">
                 {' · '}
-                {previousYear}: {hovered.previous.toLocaleString('pt-BR')}
+                {previousLabel}: {hovered.previous.toLocaleString('pt-BR')}
               </span>
             </ChartTooltip>
           )}

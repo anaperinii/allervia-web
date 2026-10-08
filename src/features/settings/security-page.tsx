@@ -1,123 +1,335 @@
 import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
-import { Button, FieldLabel, Modal, Switch, TextInput } from '@/shared/components'
+import { Button, FieldLabel, Modal, showApiErrorToast, TextInput, toast } from '@/shared/components'
 import { MediaRow } from '@/features/settings/components/MediaRow'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
-import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
+import { EnrollMfaFactorModal } from '@/features/settings/components/EnrollMfaFactorModal'
+import { ReauthenticateModal } from '@/features/settings/components/ReauthenticateModal'
+import { RecoveryCodesModal } from '@/features/settings/components/RecoveryCodesModal'
+import {
+  listDevices,
+  listMfaFactors,
+  regenerateRecoveryCodes,
+  revokeDevice,
+  revokeMfaFactor,
+} from '@/shared/api/auth.api'
+import { ApiError, API_ERROR_CODES } from '@/shared/api/contracts/errors'
+import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faEye, faFileArrowDown, faLock, faMobileScreen, faRightFromBracket, faUserXmark } from '@fortawesome/free-solid-svg-icons'
+import {
+  faCheck,
+  faChevronRight,
+  faEye,
+  faFileArrowDown,
+  faLock,
+  faMobileScreen,
+  faPlus,
+  faRightFromBracket,
+  faShieldHalved,
+  faTrashCan,
+  faUserXmark,
+} from '@fortawesome/free-solid-svg-icons'
 
-const sessions = [
-  { id: '1', device: 'Chrome · Windows 11', location: 'Anápolis, GO', time: 'Agora (sessão atual)', current: true },
-  { id: '2', device: 'Safari · iPhone 15', location: 'Anápolis, GO', time: 'há 2 horas', current: false },
-  { id: '3', device: 'Chrome · MacBook Pro', location: 'Goiânia, GO', time: 'há 3 dias', current: false },
-]
+function describeUserAgent(userAgent: string | null): string {
+  if (!userAgent) return 'Dispositivo desconhecido'
+  const browser = /Edg\//.test(userAgent)
+    ? 'Edge'
+    : /Firefox\//.test(userAgent)
+      ? 'Firefox'
+      : /Chrome\//.test(userAgent)
+        ? 'Chrome'
+        : /Safari\//.test(userAgent)
+          ? 'Safari'
+          : 'Navegador'
+  const system = /Windows/.test(userAgent)
+    ? 'Windows'
+    : /Mac OS X|Macintosh/.test(userAgent)
+      ? 'macOS'
+      : /Android/.test(userAgent)
+        ? 'Android'
+        : /iPhone|iPad|iOS/.test(userAgent)
+          ? 'iOS'
+          : /Linux/.test(userAgent)
+            ? 'Linux'
+            : 'Sistema desconhecido'
+  return `${browser} · ${system}`
+}
+
+function describeActivity(iso: string): string {
+  return new Date(iso).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 export function SecurityPage() {
-  const twoFaEnabled = useSettingsStore((s) => s.twoFaEnabled)
-  const setTwoFaEnabled = useSettingsStore((s) => s.setTwoFaEnabled)
+  const queryClient = useQueryClient()
+  const { account, refresh } = useSession()
+  const mfaEnabled = account?.security.mfaEnabled ?? false
+
+  const [showEnrollModal, setShowEnrollModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
-  const [showRevokeModal, setShowRevokeModal] = useState<string | null>(null)
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [revokeFactorTarget, setRevokeFactorTarget] = useState<string | null>(null)
+  const [revokeSessionTarget, setRevokeSessionTarget] = useState<string | null>(null)
+  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null)
+  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null)
+
+  const factorsQuery = useQuery({
+    queryKey: queryKeys.mfaFactors(),
+    queryFn: ({ signal }) => listMfaFactors(signal),
+  })
+
+  const devicesQuery = useQuery({
+    queryKey: queryKeys.devices(),
+    queryFn: ({ signal }) => listDevices(signal),
+  })
+
+  const invalidateMfaState = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.mfaFactors() }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.devices() }),
+      refresh(),
+    ])
+  }
+
+  const runSensitive = async (action: () => Promise<void>) => {
+    try {
+      await action()
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.code === API_ERROR_CODES.reauthenticationRequired
+      ) {
+        setPendingAction(() => action)
+        return
+      }
+      showApiErrorToast(error)
+    }
+  }
+
+  const revokeFactor = async (credentialId: string) => {
+    await revokeMfaFactor(credentialId)
+    setRevokeFactorTarget(null)
+    await invalidateMfaState()
+    toast.success({
+      icon: <FontAwesomeIcon icon={faCheck} style={{ fontSize: 14 }} />,
+      title: 'Fator de autenticação removido',
+      position: 'top-right',
+      compact: true,
+      autoDismissMs: 3000,
+    })
+  }
+
+  const regenerateCodes = async () => {
+    const result = await regenerateRecoveryCodes()
+    setRecoveryCodes(result.recoveryCodes)
+    await queryClient.invalidateQueries({ queryKey: queryKeys.mfaFactors() })
+  }
+
+  const revokeSessionMutation = useMutation({
+    mutationFn: revokeDevice,
+    onSuccess: async () => {
+      setRevokeSessionTarget(null)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.devices() })
+      toast.success({
+        icon: <FontAwesomeIcon icon={faCheck} style={{ fontSize: 14 }} />,
+        title: 'Sessão encerrada',
+        position: 'top-right',
+        compact: true,
+        autoDismissMs: 3000,
+      })
+    },
+    onError: (error) => showApiErrorToast(error),
+  })
+
+  const factors = factorsQuery.data?.factors.filter((f) => f.confirmed) ?? []
+  const recoveryCodesRemaining = factorsQuery.data?.recoveryCodesRemaining ?? 0
+  const devices = devicesQuery.data ?? []
 
   return (
     <SettingsLayout subtitle="Segurança e Privacidade">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-            <section className="lg:col-span-2 border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
-                <h2 className="text-xs font-bold text-(--text)">Autenticação</h2>
-              </div>
-              <div className="p-4 space-y-3">
-                <MediaRow
-                  icon={<FontAwesomeIcon icon={faLock} style={{ fontSize: 14 }} />}
-                  title="Alterar senha"
-                  description="Última alteração há 30 dias"
-                  trailing={
-                    <Button variant="outline" size="sm" rightIcon={<FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />} onClick={() => setShowPasswordModal(true)}>
-                      Alterar
-                    </Button>
-                  }
-                />
-                <div className="border-t border-(--border-custom)" />
-                <MediaRow
-                  icon={<FontAwesomeIcon icon={faMobileScreen} style={{ fontSize: 14 }} />}
-                  title="Autenticação em dois fatores (2FA)"
-                  description="Proteja sua conta com verificação adicional"
-                  trailing={<Switch checked={twoFaEnabled} onChange={setTwoFaEnabled} aria-label="Autenticação em dois fatores" />}
-                />
-              </div>
-            </section>
-
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center justify-between">
-                <h2 className="text-xs font-bold text-(--text)">Sessões ativas</h2>
-                <span className="text-[0.6rem] text-(--text-muted) bg-gray-100 px-2 py-0.5 rounded-full">{sessions.length} dispositivos</span>
-              </div>
-              <div className="divide-y divide-(--border-custom)">
-                {sessions.map((session) => (
-                  <div key={session.id} className="px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg shrink-0', session.current ? 'bg-brand-50' : 'bg-gray-100')}>
-                        <FontAwesomeIcon icon={faMobileScreen} className={session.current ? 'text-brand' : 'text-(--text-muted)'} style={{ fontSize: 14 }} />
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-(--text) flex items-center gap-1.5">
-                          {session.device}
-                          {session.current && <span className="text-[0.55rem] font-medium text-green-600 bg-green-50 px-1.5 py-px rounded-full">Atual</span>}
-                        </div>
-                        <div className="text-[0.65rem] text-(--text-muted)">{session.location} · {session.time}</div>
-                      </div>
-                    </div>
-                    {!session.current && (
-                      <Button tone="danger" variant="outline" size="sm" leftIcon={<FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 10 }} />} onClick={() => setShowRevokeModal(session.id)}>
-                        Encerrar
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="border border-(--border-custom) rounded-3xl overflow-hidden bg-[#F6F8F8]">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
-                <h2 className="text-xs font-bold text-(--text)">Privacidade e LGPD</h2>
-              </div>
-              <div className="p-4 space-y-3">
-                <MediaRow
-                  icon={<FontAwesomeIcon icon={faEye} style={{ fontSize: 14 }} />}
-                  title="Visibilidade do perfil"
-                  description="Controle quem pode ver seus dados na equipe"
-                  trailing={<span className="text-[0.65rem] font-medium text-brand bg-brand-50 px-2 py-0.5 rounded-full">Equipe</span>}
-                />
-                <div className="border-t border-(--border-custom)" />
-                <MediaRow
-                  icon={<FontAwesomeIcon icon={faFileArrowDown} style={{ fontSize: 14 }} />}
-                  title="Exportar meus dados"
-                  description="Solicite uma cópia de todos os seus dados pessoais"
-                  trailing={
-                    <Button variant="outline" size="sm" rightIcon={<FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />} onClick={() => setShowExportModal(true)}>
-                      Solicitar
-                    </Button>
-                  }
-                />
-                <div className="border-t border-(--border-custom)" />
-                <MediaRow
-                  icon={<FontAwesomeIcon icon={faUserXmark} style={{ fontSize: 14 }} />}
-                  title="Anonimização de pacientes"
-                  description="Gerencie solicitações de anonimização de dados de pacientes (Art. 18 LGPD)"
-                  trailing={
-                    <Button variant="outline" size="sm" rightIcon={<FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />}>
-                      Gerenciar
-                    </Button>
-                  }
-                />
-              </div>
-            </section>
+        <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
+            <h2 className="text-xs font-bold text-(--text)">Autenticação</h2>
           </div>
+          <div className="p-4 space-y-3">
+            <MediaRow
+              icon={<FontAwesomeIcon icon={faLock} style={{ fontSize: 14 }} />}
+              title="Alterar senha"
+              description="Atualize sua senha de acesso"
+              trailing={
+                <Button variant="outline" size="sm" rightIcon={<FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />} onClick={() => setShowPasswordModal(true)}>
+                  Alterar
+                </Button>
+              }
+            />
+            <div className="border-t border-(--border-custom)" />
+            <MediaRow
+              icon={<FontAwesomeIcon icon={faMobileScreen} style={{ fontSize: 14 }} />}
+              title="Aplicativo autenticador"
+              description={
+                mfaEnabled
+                  ? 'Sua conta exige um código do aplicativo a cada login'
+                  : 'Proteja sua conta com códigos gerados pelo seu celular'
+              }
+              trailing={
+                <div className="flex items-center gap-2">
+                  {mfaEnabled && (
+                    <span className="text-[0.55rem] font-medium text-green-600 bg-green-50 px-1.5 py-px rounded-full">
+                      Ativa
+                    </span>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<FontAwesomeIcon icon={faPlus} style={{ fontSize: 10 }} />}
+                    onClick={() => setShowEnrollModal(true)}
+                  >
+                    Adicionar fator
+                  </Button>
+                </div>
+              }
+            />
+
+            {factorsQuery.isLoading && (
+              <div className="text-[0.65rem] text-(--text-muted)">Carregando fatores…</div>
+            )}
+
+            {factors.map((factor) => (
+              <div key={factor.id}>
+                <div className="border-t border-(--border-custom)" />
+                <div className="pt-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0 bg-brand-50">
+                      <FontAwesomeIcon icon={faShieldHalved} className="text-brand" style={{ fontSize: 14 }} />
+                    </div>
+                    <div className="text-xs font-semibold text-(--text)">{factor.label}</div>
+                  </div>
+                  <Button
+                    tone="danger"
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<FontAwesomeIcon icon={faTrashCan} style={{ fontSize: 10 }} />}
+                    onClick={() => setRevokeFactorTarget(factor.id)}
+                  >
+                    Remover
+                  </Button>
+                </div>
+              </div>
+            ))}
+
+            {mfaEnabled && (
+              <>
+                <div className="border-t border-(--border-custom)" />
+                <MediaRow
+                  icon={<FontAwesomeIcon icon={faShieldHalved} style={{ fontSize: 14 }} />}
+                  title="Códigos de recuperação"
+                  description={`${recoveryCodesRemaining} código${recoveryCodesRemaining === 1 ? '' : 's'} disponível${recoveryCodesRemaining === 1 ? '' : 'eis'}`}
+                  trailing={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void runSensitive(regenerateCodes)}
+                    >
+                      Gerar novos
+                    </Button>
+                  }
+                />
+              </>
+            )}
+          </div>
+        </section>
+
+        <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center justify-between">
+            <h2 className="text-xs font-bold text-(--text)">Sessões ativas</h2>
+            <span className="text-[0.6rem] text-(--text-muted) bg-gray-100 px-2 py-0.5 rounded-full">
+              {devices.length} dispositivo{devices.length === 1 ? '' : 's'}
+            </span>
+          </div>
+          <div className="divide-y divide-(--border-custom)">
+            {devicesQuery.isLoading && (
+              <div className="px-4 py-3 text-[0.65rem] text-(--text-muted)">Carregando sessões…</div>
+            )}
+            {devices.map((device) => (
+              <div key={device.id} className="px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg shrink-0', device.current ? 'bg-brand-50' : 'bg-gray-100')}>
+                    <FontAwesomeIcon icon={faMobileScreen} className={device.current ? 'text-brand' : 'text-(--text-muted)'} style={{ fontSize: 14 }} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-(--text) flex items-center gap-1.5">
+                      {describeUserAgent(device.userAgent)}
+                      {device.current && <span className="text-[0.55rem] font-medium text-green-600 bg-green-50 px-1.5 py-px rounded-full">Atual</span>}
+                    </div>
+                    <div className="text-[0.65rem] text-(--text-muted)">
+                      Última atividade em {describeActivity(device.lastInteractiveAt)}
+                    </div>
+                  </div>
+                </div>
+                {!device.current && (
+                  <Button
+                    tone="danger"
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 10 }} />}
+                    onClick={() => setRevokeSessionTarget(device.id)}
+                  >
+                    Encerrar
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
+            <h2 className="text-xs font-bold text-(--text)">Privacidade e LGPD</h2>
+          </div>
+          <div className="p-4 space-y-3">
+            <MediaRow
+              icon={<FontAwesomeIcon icon={faEye} style={{ fontSize: 14 }} />}
+              title="Visibilidade do perfil"
+              description="Controle quem pode ver seus dados na equipe"
+              trailing={<span className="text-[0.65rem] font-medium text-brand bg-brand-50 px-2 py-0.5 rounded-full">Equipe</span>}
+            />
+            <div className="border-t border-(--border-custom)" />
+            <MediaRow
+              icon={<FontAwesomeIcon icon={faFileArrowDown} style={{ fontSize: 14 }} />}
+              title="Exportar meus dados"
+              description="Solicite uma cópia de todos os seus dados pessoais"
+              trailing={
+                <Button variant="outline" size="sm" rightIcon={<FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />} onClick={() => setShowExportModal(true)}>
+                  Solicitar
+                </Button>
+              }
+            />
+            <div className="border-t border-(--border-custom)" />
+            <MediaRow
+              icon={<FontAwesomeIcon icon={faUserXmark} style={{ fontSize: 14 }} />}
+              title="Anonimização de pacientes"
+              description="Gerencie solicitações de anonimização de dados de pacientes (Art. 18 LGPD)"
+              trailing={
+                <Button variant="outline" size="sm" rightIcon={<FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />}>
+                  Gerenciar
+                </Button>
+              }
+            />
+          </div>
+        </section>
+      </div>
 
       <Modal
         open={showPasswordModal}
@@ -160,22 +372,86 @@ export function SecurityPage() {
         </p>
       </Modal>
 
+      {showEnrollModal && (
+        <EnrollMfaFactorModal
+          open
+          onClose={() => setShowEnrollModal(false)}
+          onCompleted={() => void invalidateMfaState()}
+        />
+      )}
+
+      <RecoveryCodesModal codes={recoveryCodes} onClose={() => setRecoveryCodes(null)} />
+
+      {pendingAction && (
+      <ReauthenticateModal
+        open
+        requireCode={mfaEnabled}
+        onClose={() => setPendingAction(null)}
+        onSuccess={() => {
+          const action = pendingAction
+          setPendingAction(null)
+          if (action) {
+            void action().catch((error: unknown) => showApiErrorToast(error))
+          }
+        }}
+      />
+      )}
+
       <Modal
-        open={!!showRevokeModal}
-        onClose={() => setShowRevokeModal(null)}
+        open={!!revokeFactorTarget}
+        onClose={() => setRevokeFactorTarget(null)}
+        size="sm"
+        title="Remover fator de autenticação"
+        icon={<FontAwesomeIcon icon={faTrashCan} style={{ fontSize: 16 }} />}
+        tone="danger"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setRevokeFactorTarget(null)}>Cancelar</Button>
+            <Button
+              tone="danger"
+              variant="solid"
+              onClick={() => {
+                const target = revokeFactorTarget
+                if (target) void runSensitive(() => revokeFactor(target))
+              }}
+            >
+              Remover
+            </Button>
+          </>
+        }
+      >
+        <p className="text-xs text-(--text-muted)">
+          Sua conta deixará de exigir este fator no login e todas as outras
+          sessões serão encerradas por segurança.
+        </p>
+      </Modal>
+
+      <Modal
+        open={!!revokeSessionTarget}
+        onClose={() => setRevokeSessionTarget(null)}
         size="sm"
         title="Encerrar sessão"
         icon={<FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 16 }} />}
         tone="danger"
         footer={
           <>
-            <Button variant="outline" onClick={() => setShowRevokeModal(null)}>Cancelar</Button>
-            <Button tone="danger" variant="solid" onClick={() => setShowRevokeModal(null)}>Encerrar</Button>
+            <Button variant="outline" onClick={() => setRevokeSessionTarget(null)}>Cancelar</Button>
+            <Button
+              tone="danger"
+              variant="solid"
+              disabled={revokeSessionMutation.isPending}
+              onClick={() => {
+                if (revokeSessionTarget) revokeSessionMutation.mutate(revokeSessionTarget)
+              }}
+            >
+              Encerrar
+            </Button>
           </>
         }
       >
         <p className="text-xs text-(--text-muted)">
-          Este dispositivo será desconectado imediatamente e precisará fazer login novamente para acessar o sistema.
+          Este dispositivo será desconectado imediatamente e precisará fazer
+          login novamente para acessar o sistema.
         </p>
       </Modal>
     </SettingsLayout>
