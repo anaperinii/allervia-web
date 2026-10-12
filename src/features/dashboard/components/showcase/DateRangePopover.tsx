@@ -40,6 +40,8 @@ export function DateRangePopover({ open, range, onRangeChange, onClose }: DateRa
     }
   }, [open, onClose])
 
+  if (!open) return null
+
   return (
     <div
       ref={ref}
