@@ -22,6 +22,8 @@ export function buildSessionState(
     lastInteractiveAt: '2026-09-19T12:00:00.000Z',
     mfaVerified: true,
     reauthenticatedAt: null,
+    organizationId: 'organization-1',
+    userId: 'user-1',
     ...overrides,
   }
 }
@@ -90,7 +92,17 @@ export function buildSessionValue(
 
 export type SessionOverrides = Partial<SessionValue>
 
-export function withSession(children: ReactNode, value?: SessionOverrides) {
+interface WithSessionOptions {
+
+  toastViewport?: boolean
+}
+
+export function withSession(
+  children: ReactNode,
+  value?: SessionOverrides,
+  options: WithSessionOptions = {},
+) {
+  const { toastViewport = true } = options
   const queryClient = createAppQueryClient({
     defaultOptions: { queries: { retry: false } },
   })
@@ -103,7 +115,7 @@ export function withSession(children: ReactNode, value?: SessionOverrides) {
     <QueryClientProvider client={queryClient}>
       <SessionContext.Provider value={session}>
         {children}
-        <ToastViewport />
+        {toastViewport && <ToastViewport />}
       </SessionContext.Provider>
     </QueryClientProvider>
   )

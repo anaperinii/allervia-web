@@ -15,7 +15,35 @@ const json = (body: unknown, status = 200) =>
 const envelope = {
   authenticated: true,
   csrfToken: 'csrf',
-  session: { id: 'family', mfaVerified: true },
+  session: {
+    id: 'family',
+    organizationId: 'org-1',
+    userId: 'user-1',
+    createdAt: '2026-10-10T12:00:00.000Z',
+    expiresAt: '2026-10-10T20:00:00.000Z',
+    lastInteractiveAt: '2026-10-10T12:05:00.000Z',
+    mfaVerified: true,
+    reauthenticatedAt: null,
+  },
+}
+const account = {
+  user: {
+    id: 'user-1',
+    email: 'professional@example.test',
+    type: 'PROFESSIONAL',
+    isActive: true,
+    createdAt: '2026-01-01T12:00:00.000Z',
+  },
+  professional: null,
+  organization: {
+    id: 'org-1',
+    name: 'Clínica Exemplo',
+    timeZone: 'America/Sao_Paulo',
+    automationEnabled: false,
+  },
+  roles: ['PHYSICIAN'],
+  capabilities: ['clinical:read'],
+  security: { mfaEnabled: true, mfaRequired: true, sessionBased: true },
 }
 
 function Probe() {
@@ -43,8 +71,7 @@ describe('Opaque session provider', () => {
     const fetchMock = vi.fn(async (url: string) => {
       if (url.includes('/auth/csrf')) return json({ csrfToken: 'csrf' })
       if (url.endsWith('/auth/session')) return json(envelope)
-      if (url.endsWith('/account/me'))
-        return json({ user: { email: 'professional@example.test' } })
+      if (url.endsWith('/account/me')) return json(account)
       if (url.endsWith('/auth/logout')) {
         if (offlineLogout) throw new TypeError('offline')
         return new Response(null, { status: 204 })

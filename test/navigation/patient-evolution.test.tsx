@@ -1,14 +1,17 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
   createMemoryHistory,
   createRootRoute,
   createRoute,
   createRouter,
+  Outlet,
   RouterProvider,
 } from '@tanstack/react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PatientEvolutionPage } from '@/features/patient/patient-evolution-page'
+import { ToastViewport } from '@/shared/components'
+import { useToastStore } from '@/shared/components'
 import { withSession } from '../helpers/session'
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -167,7 +170,14 @@ function stubApi(overrides: {
 }
 
 async function renderWizard() {
-  const root = createRootRoute()
+  const root = createRootRoute({
+    component: () => (
+      <>
+        <Outlet />
+        <ToastViewport />
+      </>
+    ),
+  })
   const evolution = createRoute({
     getParentRoute: () => root,
     path: '/patient-evolution',
@@ -196,7 +206,7 @@ async function renderWizard() {
     }),
   })
   await router.load()
-  render(withSession(<RouterProvider router={router} />))
+  render(withSession(<RouterProvider router={router} />, undefined, { toastViewport: false }))
   return router
 }
 
@@ -227,13 +237,14 @@ async function fillToReview(user: ReturnType<typeof userEvent.setup>) {
 
 describe('wizard de evolução sobre o contrato de doses', () => {
   afterEach(() => {
+    cleanup()
     vi.unstubAllGlobals()
   })
 
   it('administra o valor previsto com prévia do servidor e comando idempotente', async () => {
     const fetchMock = stubApi()
     const user = userEvent.setup()
-    await renderWizard()
+    const router = await renderWizard()
 
     await fillToReview(user)
 
@@ -266,6 +277,18 @@ describe('wizard de evolução sobre o contrato de doses', () => {
       expect(body.reason).toBeUndefined()
       expect(body.nextInterval).toBeUndefined()
     })
+
+    await waitFor(
+      () => expect(useToastStore.getState().toasts.length).toBeGreaterThan(0),
+      { timeout: 5000 },
+    )
+    await waitFor(
+      () => expect(router.state.location.pathname).toBe('/immunotherapies'),
+      { timeout: 5000 },
+    )
+    expect(
+      await screen.findByText('Lista', {}, { timeout: 5000 }),
+    ).toBeInTheDocument()
   })
 
   it('revisão desatualizada recarrega a dose e mantém o formulário, sem sucesso local', async () => {

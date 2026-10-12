@@ -36,3 +36,31 @@ describe('Opaque session client', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('Identity generation guard', () => {
+  it('aborts an in-flight read when a different session is adopted', async () => {
+    acceptSession('session-a', 'csrf-a')
+    let release: (value: Response) => void
+    const pending = new Promise<Response>((resolveFn) => {
+      release = resolveFn
+    })
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(pending))
+    const request = apiRequest('/patients')
+    acceptSession('session-b', 'csrf-b')
+    release!(json({ items: ['stale'] }))
+    await expect(request).rejects.toMatchObject({ name: 'AbortError' })
+  })
+
+  it('keeps an in-flight read when the same session is re-accepted', async () => {
+    acceptSession('session-a', 'csrf-a')
+    let release: (value: Response) => void
+    const pending = new Promise<Response>((resolveFn) => {
+      release = resolveFn
+    })
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(pending))
+    const request = apiRequest('/patients')
+    acceptSession('session-a', 'csrf-rotated')
+    release!(json({ items: ['fresh'] }))
+    await expect(request).resolves.toEqual({ items: ['fresh'] })
+  })
+})

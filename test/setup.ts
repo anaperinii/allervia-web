@@ -4,8 +4,13 @@ import { cleanup } from '@testing-library/react'
 
 afterEach(cleanup)
 Object.defineProperty(window, 'scrollTo', { value: vi.fn(), writable: true })
-// jsdom não implementa scrollIntoView; listas com navegação por teclado o chamam.
+
 Object.defineProperty(Element.prototype, 'scrollIntoView', {
+  value: vi.fn(),
+  writable: true,
+})
+
+Object.defineProperty(Element.prototype, 'scrollTo', {
   value: vi.fn(),
   writable: true,
 })
@@ -20,7 +25,6 @@ Object.defineProperty(globalThis, 'ResizeObserver', {
   writable: true,
 })
 
-// Model the browser lock queue for authentication concurrency tests.
 let authLockQueue: Promise<unknown> = Promise.resolve()
 Object.defineProperty(navigator, 'locks', {
   configurable: true,
