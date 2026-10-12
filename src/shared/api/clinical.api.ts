@@ -1,3 +1,11 @@
+import { parseClinicalMetrics } from '@/shared/api/contracts/clinical-metrics.schema'
+import {
+  parseAdministerDoseResult,
+  parseClinicalExportPage,
+  parseImmunotherapyDetail,
+  parseImmunotherapyTypes,
+  parsePreviewDoseResult,
+} from '@/shared/api/contracts/clinical-workflow.schema'
 import { apiRequest } from '@/shared/api/client'
 import type {
   AdministerDoseBody,
@@ -73,7 +81,7 @@ export interface UpdatePatientBody {
   birthDate?: string
   cpf?: string
   responsiblePhysicianId?: string
-  /** Responsável legal (menores de idade); null remove o vínculo. */
+
   guardian?: {
     fullName: string
     cpf?: string
@@ -108,18 +116,21 @@ export function listImmunotherapies(
   })
 }
 
-/** Tipos de alérgeno presentes no acervo visível — alimenta o filtro da listagem. */
 export function listImmunotherapyTypes(
   signal?: AbortSignal,
 ): Promise<string[]> {
-  return apiRequest('/immunotherapies/types', { signal })
+  return apiRequest<unknown>('/immunotherapies/types', { signal }).then(
+    parseImmunotherapyTypes,
+  )
 }
 
 export function getImmunotherapy(
   immunotherapyId: string,
   signal?: AbortSignal,
 ): Promise<ImmunotherapyDetail> {
-  return apiRequest(`/immunotherapies/${immunotherapyId}`, { signal })
+  return apiRequest<unknown>(`/immunotherapies/${immunotherapyId}`, {
+    signal,
+  }).then(parseImmunotherapyDetail)
 }
 
 export function listTherapiesForPatient(
@@ -138,7 +149,7 @@ export interface RegisterImmunotherapyBody {
     phoneNumber: string
     cpf?: string
     responsiblePhysicianId: string
-    /** Responsável legal — obrigatório para menores de idade. */
+
     guardian?: {
       fullName: string
       cpf?: string
@@ -210,7 +221,8 @@ export function addLateObservation(
 }
 
 export interface ClinicalExportQuery {
-  asOf: string
+  asOf?: string
+  justification?: string
   status?: TherapyStatus
   responsiblePhysicianId?: string
   page?: number
@@ -221,9 +233,10 @@ export function exportClinicalDoses(
   query: ClinicalExportQuery,
   signal?: AbortSignal,
 ): Promise<ClinicalExportPage> {
-  return apiRequest(`/immunotherapies/export${toQueryString({ ...query })}`, {
-    signal,
-  })
+  return apiRequest<unknown>(
+    `/immunotherapies/export${toQueryString({ ...query })}`,
+    { signal },
+  ).then(parseClinicalExportPage)
 }
 
 export function getClinicalHistory(
@@ -306,7 +319,7 @@ export function getClinicalMetrics(
   query: { from: string; to: string },
   signal?: AbortSignal,
 ): Promise<ClinicalMetrics> {
-  return apiRequest(`/doses/metrics${toQueryString({ ...query })}`, { signal })
+  return apiRequest<unknown>(`/doses/metrics${toQueryString({ ...query })}`, { signal }).then(parseClinicalMetrics)
 }
 
 export function listDosesForTherapy(
@@ -328,11 +341,11 @@ export function previewDose(
   body: PreviewDoseBody,
   signal?: AbortSignal,
 ): Promise<PreviewDoseResult> {
-  return apiRequest(`/doses/${doseId}/preview`, {
+  return apiRequest<unknown>(`/doses/${doseId}/preview`, {
     method: 'POST',
     body,
     signal,
-  })
+  }).then(parsePreviewDoseResult)
 }
 
 export function updateScheduledDose(
@@ -346,5 +359,8 @@ export function administerDose(
   doseId: string,
   body: AdministerDoseBody,
 ): Promise<AdministerDoseResult> {
-  return apiRequest(`/doses/${doseId}/administer`, { method: 'POST', body })
+  return apiRequest<unknown>(`/doses/${doseId}/administer`, {
+    method: 'POST',
+    body,
+  }).then(parseAdministerDoseResult)
 }

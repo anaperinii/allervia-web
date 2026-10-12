@@ -1,29 +1,13 @@
 import { apiRequest } from '@/shared/api/client'
-import type { Page } from '@/shared/api/contracts/team'
+import type { Schema } from '@/shared/api/generated/helpers'
 
-export type ServerNotificationKind =
-  | 'PHYSICIAN_REVIEW_REQUESTED'
-  | 'TREATMENT_SUSPENDED'
+export type ServerNotificationKind = Schema<'NotificationDto'>['kind']
 
-export interface ServerNotification {
-  id: string
-  kind: ServerNotificationKind
-  title: string
-  body: string
-  entityType: string | null
-  entityId: string | null
-  readAt: string | null
-  createdAt: string
-}
+export type ServerNotification = Schema<'NotificationDto'>
 
-export interface NotificationPage extends Page<ServerNotification> {
-  unread: number
-}
+export type NotificationPage = Schema<'NotificationPageDto'>
 
-export interface NotificationPreference {
-  kind: ServerNotificationKind
-  enabled: boolean
-}
+export type NotificationPreference = Schema<'NotificationPreferenceDto'>
 
 export function listNotifications(
   query: { page?: number; pageSize?: number; unreadOnly?: boolean },
@@ -41,7 +25,9 @@ export function markNotificationRead(id: string): Promise<ServerNotification> {
   return apiRequest(`/notifications/${id}/read`, { method: 'PATCH', body: {} })
 }
 
-export function markAllNotificationsRead(): Promise<{ marked: number }> {
+export function markAllNotificationsRead(): Promise<
+  Schema<'MarkAllReadResponseDto'>
+> {
   return apiRequest('/notifications/read-all', { method: 'POST', body: {} })
 }
 
@@ -64,17 +50,11 @@ export function setNotificationPreference(
 export function createSupportRequest(body: {
   subject: string
   message: string
-}): Promise<{ received: boolean; id: string; status: string; createdAt: string }> {
+}): Promise<Schema<'SupportRequestReceiptDto'>> {
   return apiRequest('/support-requests', { method: 'POST', body })
 }
 
-export interface SupportRequestItem {
-  id: string
-  subject: string
-  message: string
-  status: 'RECEIVED' | 'HANDLED'
-  createdAt: string
-}
+export type SupportRequestItem = Schema<'SupportRequestListItemDto'>
 
 export function listSupportRequests(
   signal?: AbortSignal,
