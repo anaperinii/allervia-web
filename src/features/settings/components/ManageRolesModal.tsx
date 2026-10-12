@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Modal, showApiErrorToast, Switch } from '@/shared/components'
 import {
   ROLE_BADGES,
@@ -19,7 +19,7 @@ const ALL_ROLES = Object.keys(ROLE_BADGES) as TeamRole[]
 interface ManageRolesModalProps {
   member: TeamMember | null
   organizationId: string
-  /** Profissional da sessão: remover o próprio papel de Administrador merece aviso. */
+
   currentProfessionalId?: string
   onClose: () => void
   onSaved: () => Promise<void>
@@ -85,6 +85,7 @@ function RolesForm({
   onClose: () => void
   onSaved: () => Promise<void>
 }) {
+  const queryClient = useQueryClient()
   const active = grants.filter((grant) => grant.revokedAt === null)
   const grantIdByRole = new Map(active.map((grant) => [grant.role, grant.id]))
 
@@ -103,8 +104,7 @@ function RolesForm({
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      // Concede antes de revogar: se algo falhar no meio, o membro não fica
-      // momentaneamente sem papel algum.
+
       for (const role of toGrant) {
         await grantRole({ professionalId: member.professionalId, name: role })
       }
@@ -114,6 +114,9 @@ function RolesForm({
     },
     onSuccess: async () => {
       await onSaved()
+      if (isSelf) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.account() })
+      }
       onClose()
     },
     meta: { suppressErrorToast: true },

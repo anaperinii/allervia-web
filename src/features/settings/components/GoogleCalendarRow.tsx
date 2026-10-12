@@ -91,7 +91,11 @@ export function GoogleCalendarRow() {
             </div>
           ) : isConnected ? (
             <div className="flex items-center gap-2 shrink-0">
-              <StatusBadge tone="ok" label="Conectado" />
+              {(connection?.pendingJobs ?? 0) > 0 ? (
+                <StatusBadge tone="warn" label="Sincronização pendente" />
+              ) : (
+                <StatusBadge tone="ok" label="Conectado" />
+              )}
               <Button
                 variant="outline"
                 disabled={disconnect.isPending}

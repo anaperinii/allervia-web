@@ -21,6 +21,7 @@ export function getCsrfToken(): string | null {
   return csrfToken
 }
 export function acceptSession(id: string, csrf: string): void {
+  if (sessionContext !== id) generation++
   sessionContext = id
   csrfToken = csrf
 }
@@ -65,7 +66,15 @@ export interface RequestOptions {
   body?: unknown
   signal?: AbortSignal
   headers?: Record<string, string>
+  preserveSessionOn401?: boolean
 }
+
+const SESSION_TERMINATING_CODES = new Set<string>([
+  'SESSION_MISSING',
+  'SESSION_CONTEXT_CHANGED',
+  API_ERROR_CODES.sessionExpired,
+  API_ERROR_CODES.sessionRevoked,
+])
 
 function buildUrl(path: string): string {
   if (!path.startsWith('/') || path.startsWith('//'))
@@ -81,6 +90,11 @@ function buildUrl(path: string): string {
 }
 
 async function parseEnvelope(response: Response): Promise<ApiErrorEnvelope> {
+  const retryAfterHeader = Number(response.headers.get('Retry-After'))
+  const retryAfterSeconds =
+    Number.isFinite(retryAfterHeader) && retryAfterHeader > 0
+      ? retryAfterHeader
+      : undefined
   try {
     const body = (await response.json()) as Partial<ApiErrorEnvelope>
     return {
@@ -89,12 +103,14 @@ async function parseEnvelope(response: Response): Promise<ApiErrorEnvelope> {
       message: body.message ?? 'Não foi possível concluir a operação.',
       fieldErrors: body.fieldErrors,
       requestId: body.requestId,
+      retryAfterSeconds,
     }
   } catch {
     return {
       statusCode: response.status,
       code: 'UNEXPECTED_ERROR',
       message: 'Resposta inesperada do servidor.',
+      retryAfterSeconds,
     }
   }
 }
@@ -128,9 +144,8 @@ async function send(path: string, options: RequestOptions): Promise<Response> {
   }
 }
 
-/** Only identity-changing operations need coordination; reads never wait for renewal. */
 let identityOperation: Promise<unknown> = Promise.resolve()
-export function withAuthLock<T>(action: () => Promise<T>): Promise<T> {
+export async function withAuthLock<T>(action: () => Promise<T>): Promise<T> {
   if (navigator.locks) return navigator.locks.request('allervia-auth-identity', action)
   const next = identityOperation.then(action, action)
   identityOperation = next.catch(() => undefined)
@@ -147,7 +162,12 @@ export async function apiRequest<T>(
     throw new DOMException('Authentication changed', 'AbortError')
   if (!response.ok) {
     const error = new ApiError(await parseEnvelope(response))
-    if (error.isUnauthenticated && !options.anonymous) {
+    if (
+      error.isUnauthenticated &&
+      !options.anonymous &&
+      (!options.preserveSessionOn401 ||
+        SESSION_TERMINATING_CODES.has(error.code))
+    ) {
       clearSession()
       onUnauthenticated?.(error)
     }

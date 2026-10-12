@@ -1,41 +1,18 @@
-import type { Profession } from '@/shared/api/contracts/account'
+import type { Schema } from '@/shared/api/generated/helpers'
 
-export type CalendarConnectionStatus = 'ACTIVE' | 'BROKEN'
+export type CalendarConnectionStatus =
+  Schema<'GoogleCalendarStatusConnectedDto'>['status']
 
-export interface CalendarConnectionDisconnected {
-  connected: false
-}
+export type CalendarConnectionDisconnected =
+  Schema<'GoogleCalendarStatusDisconnectedDto'>
 
-export interface CalendarConnectionDetails {
-  connected: true
-  googleAccountEmail: string
-  status: CalendarConnectionStatus
-  brokenReason: string | null
-  channelExpiresAt: string | null
-  lastIncrementalSyncAt: string | null
-  pendingJobs: number
-  deadLetteredJobs: number
-}
+export type CalendarConnectionDetails = Schema<'GoogleCalendarStatusConnectedDto'>
 
 export type CalendarConnection =
   | CalendarConnectionDisconnected
   | CalendarConnectionDetails
 
-export interface CalendarConnectionSummary {
-  professionalId: string
-  googleAccountEmail: string
-  status: CalendarConnectionStatus
-  brokenReason: string | null
-  channelExpiresAt: string | null
-  lastIncrementalSyncAt: string | null
-  createdAt: string
-  professional: {
-    id: string
-    fullName: string
-    profession: Profession
-  } | null
-}
+export type CalendarConnectionSummary =
+  Schema<'GoogleCalendarConnectionListItemDto'>
 
-export interface CalendarAuthorization {
-  authorizationUrl: string
-}
+export type CalendarAuthorization = Schema<'GoogleAuthorizationUrlDto'>

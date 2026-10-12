@@ -1,14 +1,16 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
   createMemoryHistory,
   createRootRoute,
   createRoute,
   createRouter,
+  Outlet,
   RouterProvider,
 } from '@tanstack/react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AddImmunotherapyPage } from '@/features/immunotherapy/add-immunotherapy-page'
+import { ToastViewport } from '@/shared/components'
 import { withSession } from '../helpers/session'
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -52,7 +54,6 @@ const CATALOG = [
   },
 ]
 
-// CPF válido pelo dígito verificador; o passo 1 exige CPF desde o cadastro unificado.
 const VALID_CPF_DIGITS = '52998224725'
 const VALID_CPF_MASKED = '529.982.247-25'
 
@@ -74,7 +75,6 @@ const PATIENTS_PAGE = {
   total: 1,
 }
 
-// O detalhe é o único lugar que devolve o CPF completo; a listagem só mascara.
 const PATIENT_7_DETAIL = {
   ...PATIENT_7,
   cpf: VALID_CPF_DIGITS,
@@ -82,11 +82,16 @@ const PATIENT_7_DETAIL = {
   updatedAt: '2026-09-01T12:00:00.000Z',
 }
 
+const SERVER_TYPES = ['Ácaros', 'Gramíneas']
+
 function stubApi() {
   const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input)
     const method = init?.method ?? 'GET'
 
+    if (url.includes('/immunotherapies/types')) {
+      return Promise.resolve(jsonResponse(SERVER_TYPES))
+    }
     if (url.includes('/treatment-protocols/automation')) {
       return Promise.resolve(
         jsonResponse({
@@ -131,7 +136,14 @@ function stubApi() {
 }
 
 async function renderWizard() {
-  const root = createRootRoute()
+  const root = createRootRoute({
+    component: () => (
+      <>
+        <Outlet />
+        <ToastViewport />
+      </>
+    ),
+  })
   const add = createRoute({
     getParentRoute: () => root,
     path: '/add-immunotherapy',
@@ -156,7 +168,7 @@ async function renderWizard() {
   })
 
   await router.load()
-  render(withSession(<RouterProvider router={router} />))
+  render(withSession(<RouterProvider router={router} />, undefined, { toastViewport: false }))
   return router
 }
 
@@ -168,7 +180,7 @@ function controlByLabel(labelText: RegExp): HTMLElement {
 }
 
 async function fillPatientStep(user: ReturnType<typeof userEvent.setup>) {
-  // Nome é um combobox: digitar abre as sugestões, que só viram vínculo ao clicar.
+
   await user.type(screen.getByPlaceholderText('Nome completo'), 'Paciente Novo')
   await user.type(controlByLabel(/^cpf$/i), VALID_CPF_DIGITS)
   await user.type(screen.getByPlaceholderText('(00) 00000-0000'), '62999998888')
@@ -180,7 +192,7 @@ async function fillPatientStep(user: ReturnType<typeof userEvent.setup>) {
 async function linkExistingPatient(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByPlaceholderText('Nome completo'), 'Paula')
   await user.click(await screen.findByRole('option', { name: /paula andrade/i }))
-  // O CPF completo chega pelo detalhe e trava o campo: é o sinal de vínculo pronto.
+
   await waitFor(() =>
     expect(controlByLabel(/^cpf$/i)).toHaveValue(VALID_CPF_MASKED),
   )
@@ -188,12 +200,14 @@ async function linkExistingPatient(user: ReturnType<typeof userEvent.setup>) {
 }
 
 async function fillPrescriptionStep(user: ReturnType<typeof userEvent.setup>) {
-  await user.selectOptions(controlByLabel(/^tipo$/i), 'Ácaros')
+  await user.click(controlByLabel(/^tipo$/i))
+  await user.click(await screen.findByRole('option', { name: 'Ácaros' }))
+  expect(controlByLabel(/^tipo$/i)).toHaveValue('Ácaros')
   await user.type(
     screen.getByPlaceholderText(/Der p 60%/),
     'Der p 60% + Der f 40%',
   )
-  // Escolher a versão pré-seleciona todas as etapas do protocolo.
+
   await user.selectOptions(controlByLabel(/versão do protocolo/i), 'version-1')
   expect(screen.getByRole('checkbox', { name: /baixa/i })).toBeChecked()
   expect(screen.getByRole('checkbox', { name: /meta/i })).toBeChecked()
@@ -212,6 +226,7 @@ function registerBody(fetchMock: ReturnType<typeof vi.fn>) {
 
 describe('wizard de prescrição', () => {
   afterEach(() => {
+    cleanup()
     vi.unstubAllGlobals()
   })
 
@@ -253,6 +268,10 @@ describe('wizard de prescrição', () => {
       expect(body.targetConcentration).toBeUndefined()
       expect(body.targetVolume).toBeUndefined()
     })
+
+    expect(
+      await screen.findByText('Lista', {}, { timeout: 5000 }),
+    ).toBeInTheDocument()
   })
 
   it('prescreve para paciente existente enviando patientId sem dados de cadastro', async () => {
@@ -272,12 +291,19 @@ describe('wizard de prescrição', () => {
       expect(body.patient).toBeUndefined()
       expect(body.idempotencyKey).toEqual(expect.any(String))
     })
+
+    expect(
+      await screen.findByText('Lista', {}, { timeout: 5000 }),
+    ).toBeInTheDocument()
   })
 
   it('falha do servidor não gera sucesso local e preserva o formulário', async () => {
     const fetchMock = stubApi()
     fetchMock.mockImplementation((input: RequestInfo | URL) => {
       const url = String(input)
+      if (url.includes('/immunotherapies/types')) {
+        return Promise.resolve(jsonResponse(SERVER_TYPES))
+      }
       if (url.includes('/immunotherapies/register')) {
         return Promise.resolve(
           jsonResponse(
@@ -309,7 +335,6 @@ describe('wizard de prescrição', () => {
     await fillPrescriptionStep(user)
     await user.click(await screen.findByRole('button', { name: /salvar prescrição/i }))
 
-    // A falha só aparece no toast: o formulário não guarda mais erro inline.
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('Ação não permitida agora')
     expect(alert).toHaveTextContent(/automação de protocolos está desativada/i)

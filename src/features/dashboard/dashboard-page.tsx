@@ -30,14 +30,13 @@ import {
   type StatusGranularity,
 } from '@/features/dashboard/hooks/useDashboardAggregates'
 import type { CardFilter } from '@/features/dashboard/hooks/useChartWindow'
-import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
 import { formatRange } from '@/features/dashboard/lib/format-range'
-import { getClinicalMetrics } from '@/shared/api/clinical.api'
+import { getClinicalMetrics, listImmunotherapyTypes } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { Card, CardHeader, CircleButton, PageHeader, Pill, SHOWCASE } from '@/shared/components/showcase'
-import { toOffsetIso } from '@/shared/lib/dates'
+import { addDaysToDay, dayInZone, toZonedOffsetIso } from '@/shared/lib/dates'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import {
   faArrowTrendUp,
@@ -58,31 +57,32 @@ function dayInput(date: Date): string {
 export function DashboardPage() {
   const navigate = useNavigate()
   const canViewDashboard = useHasPermission('view_dashboard')
+  const { account, status: sessionStatus } = useSession()
   useEffect(() => {
-    if (!canViewDashboard) navigate({ to: '/immunotherapies' })
-  }, [canViewDashboard, navigate])
+    if (sessionStatus === 'authenticated' && !canViewDashboard)
+      void navigate({ to: '/immunotherapies' })
+  }, [canViewDashboard, navigate, sessionStatus])
 
-  const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
+  const timeZone =
+    account?.organization?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
 
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
   const periodDays = useMemo(() => {
-    const DAY_MS = 24 * 60 * 60 * 1000
-    const toDate = dateRange?.to ?? dateRange?.from ?? new Date()
-    const fromDate = dateRange?.from ?? new Date(toDate.getTime() - 29 * DAY_MS)
-    const fromDay = dayInput(fromDate)
-    const toDay = dayInput(toDate)
+    const selectedTo = dateRange?.to ?? dateRange?.from
+    const toDay = selectedTo ? dayInput(selectedTo) : dayInZone(new Date(), timeZone)
+    const fromDay = dateRange?.from ? dayInput(dateRange.from) : addDaysToDay(toDay, -29)
     return { fromDay, toDay }
-  }, [dateRange])
+  }, [dateRange, timeZone])
 
   const period = useMemo(
     () => ({
-      from: toOffsetIso(periodDays.fromDay, '00:00'),
-      to: toOffsetIso(periodDays.toDay, '23:59'),
+      from: toZonedOffsetIso(periodDays.fromDay, '00:00', timeZone),
+      to: toZonedOffsetIso(periodDays.toDay, '23:59', timeZone),
     }),
-    [periodDays],
+    [periodDays, timeZone],
   )
 
   const metricsQuery = useQuery({
@@ -112,14 +112,15 @@ export function DashboardPage() {
       ),
     [activeTherapiesQuery.data, periodDays],
   )
-  const knownTypes = useCustomTypesStore((state) => state.types)
+  const typesQuery = useQuery({
+    queryKey: queryKeys.immunotherapyTypes(organizationId),
+    queryFn: ({ signal }) => listImmunotherapyTypes(signal),
+    enabled: organizationId !== '',
+  })
   const typeData = useMemo(
     () =>
-      aggregateActiveByType(
-        activeTherapiesQuery.data ?? [],
-        knownTypes.map((type) => type.label),
-      ),
-    [activeTherapiesQuery.data, knownTypes],
+      aggregateActiveByType(activeTherapiesQuery.data ?? [], typesQuery.data ?? []),
+    [activeTherapiesQuery.data, typesQuery.data],
   )
   const phasesEmpty = phaseSeries.every(
     (entry) => entry.buildUp + entry.maintenance === 0,
@@ -488,8 +489,8 @@ export function DashboardPage() {
         >
           <ChartCaption>Tratamentos em andamento, por tipo de alérgeno</ChartCaption>
           <ChartState
-            loading={activeTherapiesQuery.isPending}
-            error={activeTherapiesQuery.isError}
+            loading={activeTherapiesQuery.isPending || typesQuery.isPending}
+            error={activeTherapiesQuery.isError || typesQuery.isError}
             empty={typeView.every((entry) => entry.count === 0)}
             emptyText="Sem tratamentos em andamento."
           >

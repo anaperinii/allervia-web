@@ -98,6 +98,53 @@ describe('cliente HTTP', () => {
     expect((handler.mock.calls[0][0] as ApiError).code).toBe('SESSION_EXPIRED')
   })
 
+  it('preserva a sessão em 401 de credencial quando a chamada opta por isso', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          { statusCode: 401, code: 'UNAUTHENTICATED', message: 'Senha atual incorreta.' },
+          401,
+        ),
+      ),
+    )
+
+    const handler = vi.fn()
+    setUnauthenticatedHandler(handler)
+
+    const failure = (await apiRequest('/account/me/password', {
+      method: 'POST',
+      body: {},
+      preserveSessionOn401: true,
+    }).catch((error: unknown) => error)) as ApiError
+
+    expect(failure.message).toBe('Senha atual incorreta.')
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('encerra a sessão mesmo com opt-out quando o 401 é falha de sessão', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          { statusCode: 401, code: 'SESSION_REVOKED', message: 'Entre novamente.' },
+          401,
+        ),
+      ),
+    )
+
+    const handler = vi.fn()
+    setUnauthenticatedHandler(handler)
+
+    await apiRequest('/account/me/password', {
+      method: 'POST',
+      body: {},
+      preserveSessionOn401: true,
+    }).catch(() => undefined)
+
+    expect(handler).toHaveBeenCalledTimes(1)
+  })
+
   it('classifica falha de rede como resultado indeterminado', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')))
 

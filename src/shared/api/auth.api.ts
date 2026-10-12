@@ -7,6 +7,10 @@ import {
   withAuthLock,
 } from '@/shared/api/client'
 import { ApiError } from '@/shared/api/contracts/errors'
+import {
+  parseAccountContext,
+  parseSessionEnvelope,
+} from '@/shared/api/contracts/auth.schema'
 import type {
   AccountContext,
   DeviceSession,
@@ -68,15 +72,15 @@ export async function verifySecondFactor(input: {
 export async function readSession(
   signal?: AbortSignal,
 ): Promise<SessionEnvelope> {
-  const envelope = await apiRequest<SessionEnvelope>('/auth/session', {
-    signal,
-  })
+  const envelope = parseSessionEnvelope(
+    await apiRequest<unknown>('/auth/session', { signal }),
+  )
   acceptSession(envelope.session.id, envelope.csrfToken)
   return envelope
 }
 
 export function readAccount(signal?: AbortSignal): Promise<AccountContext> {
-  return apiRequest<AccountContext>('/account/me', { signal })
+  return apiRequest<unknown>('/account/me', { signal }).then(parseAccountContext)
 }
 
 export async function endSession(): Promise<void> {
@@ -90,6 +94,18 @@ export async function endSession(): Promise<void> {
     setCsrfToken(null)
     pendingLogoutContext = null
   })
+}
+
+export async function changePassword(input: {
+  currentPassword: string
+  newPassword: string
+}): Promise<void> {
+  await apiRequest<{ message: string }>('/account/me/password', {
+    method: 'POST',
+    body: input,
+    preserveSessionOn401: true,
+  })
+  clearSession(true)
 }
 
 export async function endAllSessions(): Promise<void> {

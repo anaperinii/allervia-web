@@ -16,6 +16,7 @@ import {
   THERAPY_STATUS_LABELS,
 } from '@/features/patient/adapters/clinical-presentation'
 import { cn } from '@/shared/lib/cn'
+import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
@@ -56,11 +57,12 @@ export function PatientCompletionPage() {
   const [note, setNote] = useState('')
   const [reason, setReason] = useState('')
   const [confirmed, setConfirmed] = useState(false)
+  const idempotencyKeyFor = useIdempotencyKey()
 
   const mutation = useMutation({
-    mutationFn: () =>
-      executeTherapyLifecycle(therapy!.id, {
-        action: 'COMPLETE',
+    mutationFn: () => {
+      const command = {
+        action: 'COMPLETE' as const,
         expectedRevision: therapy!.revision,
         reason: reason.trim(),
         recommendations: {
@@ -77,7 +79,12 @@ export function PatientCompletionPage() {
           ...(warningSigns.trim() ? { warningSigns: warningSigns.trim() } : {}),
           ...(note.trim() ? { note: note.trim() } : {}),
         },
-      }),
+      }
+      return executeTherapyLifecycle(therapy!.id, {
+        ...command,
+        idempotencyKey: idempotencyKeyFor([therapy!.id, command]),
+      })
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       toast.success({

@@ -106,6 +106,18 @@ describe('conexão com o Google Agenda', () => {
     expect(screen.getByText(/Conexão revogada no Google/)).toBeInTheDocument()
   })
 
+  it('sinaliza sincronização pendente quando há jobs na fila', async () => {
+    stub({ ...CONNECTED, pendingJobs: 2 })
+
+    render(withSession(<GoogleCalendarRow />))
+
+    expect(await screen.findByText('Sincronização pendente')).toBeInTheDocument()
+    expect(screen.queryByText('Conectado')).toBeNull()
+    expect(
+      screen.getByRole('button', { name: 'Desconectar' }),
+    ).toBeInTheDocument()
+  })
+
   it('avisa sobre sincronizações em dead-letter', async () => {
     stub({ ...CONNECTED, deadLetteredJobs: 3 })
 

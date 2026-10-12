@@ -124,7 +124,70 @@ describe('ciclo de vida clínico no web', () => {
       expect(body.category).toBe('severe_adverse_reaction')
       expect(body.reason).toContain('Reação adversa extensa')
       expect(body.expectedReturnAt).toMatch(/^2026-11-01T08:00:00[+-]\d{2}:\d{2}$/)
+      expect(body.idempotencyKey).toEqual(expect.any(String))
     })
+  })
+
+  it('suspensão reutiliza a mesma chave idempotente ao reenviar após falha', async () => {
+    let attempts = 0
+    const fetchMock = stubApi((url, init) => {
+      if (url.includes('/lifecycle') && init?.method === 'POST') {
+        attempts += 1
+        if (attempts === 1) {
+          return jsonResponse(
+            { statusCode: 500, code: 'INTERNAL_ERROR', message: 'Erro interno.' },
+            500,
+          )
+        }
+      }
+      return null
+    })
+    const user = userEvent.setup()
+    render(
+      withSession(
+        <SuspendTherapyModal
+          open
+          therapyId="therapy-1"
+          therapyRevision={3}
+          organizationId="organization-1"
+          onClose={() => {}}
+          onDone={() => {}}
+        />,
+      ),
+    )
+
+    const categoryLabel = screen.getByText(/categoria do motivo/i, { selector: 'label' })
+    await user.selectOptions(
+      categoryLabel.parentElement!.querySelector('select')!,
+      'severe_adverse_reaction',
+    )
+    const reasonLabel = screen.getByText(/detalhamento clínico/i, { selector: 'label' })
+    await user.type(
+      reasonLabel.parentElement!.querySelector('textarea')!,
+      'Reação adversa extensa na última aplicação.',
+    )
+
+    const lifecycleBodies = () =>
+      fetchMock.mock.calls
+        .filter(
+          ([url, init]) =>
+            String(url).includes('/immunotherapies/therapy-1/lifecycle') &&
+            (init as RequestInit | undefined)?.method === 'POST',
+        )
+        .map(([, init]) => JSON.parse((init as RequestInit).body as string))
+
+    const submit = screen.getByRole('button', { name: /suspender tratamento/i })
+    await user.click(submit)
+    await waitFor(() => expect(lifecycleBodies()).toHaveLength(1))
+    await waitFor(() => expect(submit).toBeEnabled())
+
+    await user.click(submit)
+    await waitFor(() => expect(lifecycleBodies()).toHaveLength(2))
+
+    const [first, second] = lifecycleBodies()
+    expect(first.idempotencyKey).toEqual(expect.any(String))
+    expect(second.idempotencyKey).toBe(first.idempotencyKey)
+    expect(second.action).toBe('SUSPEND')
   })
 
   it('encerra com recomendações estruturadas, nunca só o status', async () => {
@@ -189,12 +252,26 @@ describe('ciclo de vida clínico no web', () => {
       expect(body.recommendations.retesting).toBe(true)
       expect(body.recommendations.monitoringSchedule).toBe('Semestral no primeiro ano.')
       expect(body.reason).toContain('Meta terapêutica')
+      expect(body.idempotencyKey).toEqual(expect.any(String))
     })
   })
 
   it('revisão de prescrição só confirma após ensaio do mesmo corpo', async () => {
-    stubApi((url, init) => {
+    const fetchMock = stubApi((url, init) => {
       if (url.includes('/prescription/revision') && init?.method === 'POST') {
+        const body = JSON.parse((init?.body as string) ?? '{}')
+        if (body.dryRun === false) {
+          return jsonResponse(
+            {
+              dryRun: false,
+              therapyId: 'therapy-1',
+              revision: 4,
+              prescriptionId: 'prescription-2',
+              pendingDoseId: 'dose-9',
+            },
+            201,
+          )
+        }
         return jsonResponse({
           dryRun: true,
           therapyId: 'therapy-1',
@@ -285,7 +362,23 @@ describe('ciclo de vida clínico no web', () => {
     expect(await screen.findByText(/ensaio aprovado sem gravar nada/i)).toBeInTheDocument()
     expect(confirm).toBeEnabled()
 
-    await user.type(reason.parentElement!.querySelector('textarea')!, ' Ajuste.')
-    expect(confirm).toBeDisabled()
+    await user.click(confirm)
+
+    await waitFor(() => {
+      const bodies = fetchMock.mock.calls
+        .filter(
+          ([url, init]) =>
+            String(url).includes('/prescription/revision') &&
+            (init as RequestInit | undefined)?.method === 'POST',
+        )
+        .map(([, init]) => JSON.parse((init as RequestInit).body as string))
+      expect(bodies).toHaveLength(2)
+      const [rehearsal, commit] = bodies
+      expect(rehearsal.dryRun).not.toBe(false)
+      expect(rehearsal.idempotencyKey).toBeUndefined()
+      expect(commit.dryRun).toBe(false)
+      expect(commit.idempotencyKey).toEqual(expect.any(String))
+      expect(commit.prescription).toEqual(rehearsal.prescription)
+    })
   })
 })

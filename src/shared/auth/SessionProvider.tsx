@@ -90,6 +90,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     async (session: SessionState) => {
       setForcedAnonymous(false)
       setLogoutError(false)
+      queryClient.clear()
       queryClient.setQueryData(queryKeys.session(), {
         authenticated: true,
         csrfToken: '',

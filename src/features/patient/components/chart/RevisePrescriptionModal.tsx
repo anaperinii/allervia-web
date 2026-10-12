@@ -7,6 +7,7 @@ import type { ProtocolStep } from '@/shared/api/contracts/protocols'
 import { queryKeys } from '@/shared/api/query-keys'
 import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
 import { cn } from '@/shared/lib/cn'
+import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faFlaskVial } from '@fortawesome/free-solid-svg-icons'
@@ -42,6 +43,7 @@ function ReviseForm({
   const [pendingStepId, setPendingStepId] = useState('')
   const [reason, setReason] = useState('')
   const [rehearsed, setRehearsed] = useState<{ body: string; summary: string } | null>(null)
+  const idempotencyKeyFor = useIdempotencyKey()
 
   const protocolsQuery = useQuery({
     queryKey: queryKeys.protocols(organizationId),
@@ -92,7 +94,15 @@ function ReviseForm({
   const rehearsedMatches = rehearsed !== null && rehearsed.body === currentKey
 
   const mutation = useMutation({
-    mutationFn: (dryRun: boolean) => revisePrescription(therapyId, body(dryRun)),
+    mutationFn: (dryRun: boolean) => {
+      const command = body(dryRun)
+      return revisePrescription(
+        therapyId,
+        dryRun
+          ? command
+          : { ...command, idempotencyKey: idempotencyKeyFor([therapyId, command]) },
+      )
+    },
     onSuccess: async (result, dryRun) => {
       if (dryRun && result.dryRun) {
         setRehearsed({

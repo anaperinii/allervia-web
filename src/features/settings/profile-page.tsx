@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
-import { faCamera, faFloppyDisk, faUser, faUserGear } from '@fortawesome/free-solid-svg-icons'
+import { faFloppyDisk, faUser, faUserGear } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export function ProfilePage() {
@@ -61,6 +61,13 @@ export function ProfilePage() {
       await queryClient.invalidateQueries({
         queryKey: queryKeys.professionalProfile(),
       })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.account() })
+      const organizationId = account?.organization?.id
+      if (organizationId) {
+        await queryClient.invalidateQueries({
+          queryKey: ['team', organizationId],
+        })
+      }
       await refresh()
     },
     onError: () => setShowSaveModal(false),
@@ -99,23 +106,12 @@ export function ProfilePage() {
         <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between gap-5">
               <div className="flex items-center gap-5 min-w-0">
-                <div className="relative shrink-0">
-                  <span
-                    aria-hidden="true"
-                    className="flex h-20 w-20 items-center justify-center rounded-full border border-(--border-custom) bg-gray-100 text-(--text-muted)"
-                  >
-                    <FontAwesomeIcon icon={faUser} style={{ fontSize: 30 }} />
-                  </span>
-                  {editing && (
-                    <button
-                      type="button"
-                      aria-label="Alterar foto"
-                      className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-white border border-(--border-custom) shadow-sm hover:bg-brand-50 transition-all cursor-pointer"
-                    >
-                      <FontAwesomeIcon icon={faCamera} className="text-brand" style={{ fontSize: 13 }} />
-                    </button>
-                  )}
-                </div>
+                <span
+                  aria-hidden="true"
+                  className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-(--border-custom) bg-gray-100 text-(--text-muted)"
+                >
+                  <FontAwesomeIcon icon={faUser} style={{ fontSize: 30 }} />
+                </span>
                 <div className="min-w-0">
                   <div className="text-lg font-bold text-(--text)">{watched.name}</div>
                   <div className="text-xs text-(--text-muted)">
@@ -150,8 +146,7 @@ export function ProfilePage() {
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
-            {/* Coluna esquerda: dados pessoais e, abaixo, acesso e papéis —
-                que estica só até a altura dos dados profissionais ao lado. */}
+            {}
             <div className="flex flex-col gap-6">
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">

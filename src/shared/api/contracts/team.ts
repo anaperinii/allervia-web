@@ -1,4 +1,4 @@
-import type { BackendRole, Profession } from '@/shared/api/contracts/account'
+import type { Schema } from '@/shared/api/generated/helpers'
 
 export interface Page<T> {
   items: T[]
@@ -7,72 +7,16 @@ export interface Page<T> {
   total: number
 }
 
-export interface TeamMember {
-  professionalId: string
-  userId: string
-  fullName: string
-  email: string
-  phoneNumber: string
-  profession: Profession
-  councilNumber: string | null
-  councilUf: string | null
-  roles: BackendRole[]
-  isActive: boolean
-  createdAt: string
-}
+export type TeamMember = Schema<'TeamMemberDto'>
 
-export type InviteStatus = 'ACTIVE' | 'EXPIRED' | 'USED' | 'CANCELLED'
+export type InviteStatus = Schema<'InviteResponseDto'>['status']
 
-export interface Invite {
-  id: string
-  email: string
-  fullName: string
-  role: BackendRole
-  status: InviteStatus
-  expiresAt: string
-  usedAt: string | null
-  createdAt: string
-  createdBy?: { id: string; email: string }
-}
+export type Invite = Schema<'InviteResponseDto'>
 
-export interface InviteContext {
-  email: string
-  fullName: string
-  role: BackendRole
-  organizationName: string
-  expiresAt: string
-}
+export type InviteContext = Schema<'InviteContextDto'>
 
-export interface ProfessionalRoleGrant {
-  id: string
-  professionalId: string
-  role: BackendRole
-  grantedAt: string
-  grantedById: string
-  revokedAt: string | null
-  revokedById: string | null
-}
+export type ProfessionalRoleGrant = Schema<'RoleResponseDto'>
 
-export interface ProfessionalProfile {
-  id: string
-  userId: string
-  organizationId: string
-  fullName: string
-  phoneNumber: string
-  profession: Profession
-  councilNumber: string | null
-  councilUf: string | null
-  createdAt: string
-  updatedAt: string
-}
+export type ProfessionalProfile = Schema<'ProfessionalResponseDto'>
 
-export interface Organization {
-  id: string
-  name: string
-  taxId: string
-  isActive: boolean
-  timeZone: string
-  automationEnabled: boolean
-  createdAt: string
-  updatedAt: string
-}
+export type Organization = Schema<'OrganizationResponseDto'>

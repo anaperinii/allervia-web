@@ -1,7 +1,7 @@
 import { format, isSameDay, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/cn'
-import { modalityStyle } from '@/features/scheduling/components/modality-colors'
+import { useModalityStyle } from '@/features/scheduling/components/modality-colors'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 interface WeekViewProps {
@@ -19,6 +19,7 @@ export function WeekView({
   applicationsByDate,
   onSelectApplication,
 }: WeekViewProps) {
+  const modalityStyle = useModalityStyle()
   return (
     <div className="grid grid-cols-7 h-full">
       {weekDays.map((day) => {

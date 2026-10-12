@@ -11,7 +11,6 @@ import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunothe
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
 import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
 
-
 export const ROUTE_LABELS: Record<AdministrationRoute, string> = {
   SUBCUTANEOUS: 'Subcutânea',
   SUBLINGUAL: 'Sublingual',
@@ -87,15 +86,9 @@ export function formatStepPresentation(step: {
   return `1:${concentration} - ${volume}ml`
 }
 
-/** Compara ignorando caixa, espaços e pontuação de separador. */
 const normalizeStepText = (value: string) =>
   value.toLowerCase().replace(/[^0-9a-z:]/g, '')
 
-/**
- * Nome da etapa para listas e selects. Protocolos costumam nomear a etapa com
- * os próprios valores ("1:10.000 - 0,2ml"); nesses casos exibir
- * `label — valores` duplica tudo, então o label redundante é omitido.
- */
 export function formatStepOption(step: {
   label: string
   concentration: string
@@ -163,8 +156,18 @@ function localPtDate(iso: string): string {
   return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
 }
 
+type LegacyApplicationSource = Pick<
+  DoseRecord,
+  | 'id'
+  | 'administeredAt'
+  | 'scheduledAt'
+  | 'administeredValues'
+  | 'plannedValues'
+  | 'administrationEndedAt'
+>
+
 export function doseToLegacyApplication(
-  record: DoseRecord,
+  record: LegacyApplicationSource,
   patientId: string,
   observations?: { hasReaction: boolean },
 ): Application {
@@ -198,21 +201,7 @@ export function doseToLegacyApplication(
 export function scheduleItemToApplication(
   item: ScheduleDoseItem,
 ): Application {
-  const base = doseToLegacyApplication(
-    {
-      ...item,
-      immediateConduct: null,
-      immediateConductJustification: null,
-      administeredById: null,
-      betweenDosesReport: '',
-      recommendation: null,
-      sourceDoseId: null,
-      isArchived: false,
-      createdAt: item.scheduledAt,
-      updatedAt: item.scheduledAt,
-    },
-    item.immunotherapy.patient.id,
-  )
+  const base = doseToLegacyApplication(item, item.immunotherapy.patient.id)
   return {
     ...base,
     patientName: item.immunotherapy.patient.fullName,

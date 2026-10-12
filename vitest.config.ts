@@ -8,7 +8,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['test/**/*.test.{ts,tsx}'],
-    exclude: ['test/contracts/**'],
+    exclude: ['test/contracts/**/*-http.test.ts'],
     setupFiles: ['./test/setup.ts'],
     clearMocks: true,
     restoreMocks: true,

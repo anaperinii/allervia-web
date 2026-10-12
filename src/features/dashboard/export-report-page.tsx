@@ -37,7 +37,7 @@ import {
   useStatusHistory,
 } from '@/features/dashboard/hooks/useDashboardAggregates'
 import { downloadFile } from '@/shared/lib/file-download'
-import { toOffsetIso } from '@/shared/lib/dates'
+import { addDaysToDay, dayInZone, toZonedOffsetIso } from '@/shared/lib/dates'
 import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, toast } from '@/shared/components'
 import { CircleButton, PageHeader, Pill } from '@/shared/components/showcase'
 import type { DateRange } from 'react-day-picker'
@@ -69,15 +69,18 @@ const FORMAT_FILE_LABELS: Record<ExportFormat, string> = {
   'dashboard-json': 'JSON',
 }
 
+const SERVER_DATASET_DESCRIPTION =
+  'O arquivo lista o conjunto clínico por consulta paginada com corte de pertença em asOf: linhas criadas até o corte entram com os valores atuais, com consistência por página, previsto e realizado separados e fuso da prescrição em cada linha. Exportação auditada no servidor.'
+
 const FORMAT_DESCRIPTIONS: Record<ExportFormat, string> = {
-  csv: 'O arquivo descreve o conjunto clínico persistido no instante da geração (corte temporal explícito), com previsto e realizado separados, versão fixada e fuso da prescrição em cada linha.',
-  json: 'O arquivo descreve o conjunto clínico persistido no instante da geração (corte temporal explícito), com previsto e realizado separados, versão fixada e fuso da prescrição em cada linha.',
+  csv: SERVER_DATASET_DESCRIPTION,
+  json: SERVER_DATASET_DESCRIPTION,
   'dashboard-pdf':
-    'O PDF reproduz os gráficos do painel no período e nas seções escolhidos abaixo, pronto para impressão.',
+    'O PDF reproduz os gráficos do painel no período e nas seções escolhidos abaixo, pronto para impressão. É montado no navegador a partir das consultas do painel e não gera registro de auditoria de exportação.',
   'dashboard-csv':
-    'O CSV contém os valores do painel (indicadores e séries dos gráficos) em seções tabulares, sem gráficos e sem a listagem de pacientes.',
+    'O CSV contém os valores do painel (indicadores e séries dos gráficos) em seções tabulares, sem gráficos e sem a listagem de pacientes. É montado no navegador e não gera registro de auditoria de exportação.',
   'dashboard-json':
-    'O JSON contém os valores do painel (indicadores e séries dos gráficos) em estrutura legível por máquina, sem gráficos e sem a listagem de pacientes.',
+    'O JSON contém os valores do painel (indicadores e séries dos gráficos) em estrutura legível por máquina, sem gráficos e sem a listagem de pacientes. É montado no navegador e não gera registro de auditoria de exportação.',
 }
 
 const STATUS_OPTIONS: { value: '' | TherapyStatus; label: string }[] = [
@@ -98,12 +101,15 @@ function dayLabel(day: string): string {
 export function ExportReportPage() {
   const navigate = useNavigate()
   const canViewDashboard = useHasPermission('view_dashboard')
+  const { account, status: sessionStatus } = useSession()
   useEffect(() => {
-    if (!canViewDashboard) navigate({ to: '/immunotherapies' })
-  }, [canViewDashboard, navigate])
+    if (sessionStatus === 'authenticated' && !canViewDashboard)
+      void navigate({ to: '/immunotherapies' })
+  }, [canViewDashboard, navigate, sessionStatus])
 
-  const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
+  const timeZone =
+    account?.organization?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
 
   const [format, setFormat] = useState<ExportFormat>('dashboard-pdf')
   const [status, setStatus] = useState<'' | TherapyStatus>('')
@@ -125,42 +131,38 @@ export function ExportReportPage() {
     )
   }
 
-  // Recorte temporal escolhido; sem seleção, o padrão do painel (últimos 30 dias).
   const periodDays = useMemo(() => {
-    const DAY_MS = 24 * 60 * 60 * 1000
-    const toDate = dateRange?.to ?? dateRange?.from ?? new Date()
-    const fromDate = dateRange?.from ?? new Date(toDate.getTime() - 29 * DAY_MS)
-    const fromDay = dayInput(fromDate)
-    const toDay = dayInput(toDate)
+    const selectedTo = dateRange?.to ?? dateRange?.from
+    const toDay = selectedTo ? dayInput(selectedTo) : dayInZone(new Date(), timeZone)
+    const fromDay = dateRange?.from ? dayInput(dateRange.from) : addDaysToDay(toDay, -29)
     const days = eachDay(fromDay, toDay)
-    const previousTo = new Date(fromDate.getTime() - DAY_MS)
-    const previousFrom = new Date(previousTo.getTime() - (days.length - 1) * DAY_MS)
+    const previousToDay = addDaysToDay(fromDay, -1)
+    const previousFromDay = addDaysToDay(previousToDay, -(days.length - 1))
     return {
       fromDay,
       toDay,
       days,
-      previousFromDay: dayInput(previousFrom),
-      previousToDay: dayInput(previousTo),
-      previousDays: eachDay(dayInput(previousFrom), dayInput(previousTo)),
+      previousFromDay,
+      previousToDay,
+      previousDays: eachDay(previousFromDay, previousToDay),
     }
-  }, [dateRange])
+  }, [dateRange, timeZone])
 
   const period = useMemo(
     () => ({
-      from: toOffsetIso(periodDays.fromDay, '00:00'),
-      to: toOffsetIso(periodDays.toDay, '23:59'),
+      from: toZonedOffsetIso(periodDays.fromDay, '00:00', timeZone),
+      to: toZonedOffsetIso(periodDays.toDay, '23:59', timeZone),
     }),
-    [periodDays],
+    [periodDays, timeZone],
   )
   const previousPeriod = useMemo(
     () => ({
-      from: toOffsetIso(periodDays.previousFromDay, '00:00'),
-      to: toOffsetIso(periodDays.previousToDay, '23:59'),
+      from: toZonedOffsetIso(periodDays.previousFromDay, '00:00', timeZone),
+      to: toZonedOffsetIso(periodDays.previousToDay, '23:59', timeZone),
     }),
-    [periodDays],
+    [periodDays, timeZone],
   )
 
-  // Agregados do painel só são buscados quando um formato do painel está selecionado.
   const dashboardOrganizationId = isDashboardFormat ? organizationId : ''
   const metricsQuery = useQuery({
     queryKey: queryKeys.clinicalMetrics(organizationId, period),
@@ -199,8 +201,18 @@ export function ExportReportPage() {
     const previousMetrics = previousMetricsQuery.data
     if (!metrics || !previousMetrics) return null
     const doses = doseWindowQuery.data ?? []
+    const generatedAtLabel = new Date()
+      .toLocaleString('pt-BR', {
+        timeZone,
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+      .replace(',', '')
     return {
-      generatedAt: new Date().toLocaleString('pt-BR'),
+      generatedAt: `${generatedAtLabel} (${timeZone})`,
       periodLabel: `${dayLabel(periodDays.fromDay)} a ${dayLabel(periodDays.toDay)} (${periodDays.days.length} dias)`,
       sections,
       metrics,
@@ -211,7 +223,7 @@ export function ExportReportPage() {
         periodDays.previousDays,
       ),
       statusSeries: aggregateStatusHistory(statusHistoryQuery.data ?? [], 'month', 12),
-      phaseSeries: aggregatePhasesByDay(doses, periodDays.fromDay, periodDays.toDay),
+      phaseSeries: aggregatePhasesByDay(doses, periodDays.fromDay, periodDays.toDay, timeZone),
       concentrationData: aggregateByConcentration(doses),
       typeData: aggregateActiveByType(activeTherapiesQuery.data ?? []),
       volumeMatrix: aggregateVolumeMatrix(doses),
@@ -224,11 +236,9 @@ export function ExportReportPage() {
     statusHistoryQuery.data,
     periodDays,
     sections,
+    timeZone,
   ])
 
-  // Pré-visualização: o mesmo documento do download, servido como blob local.
-  // A barra do visualizador nativo fica oculta (#toolbar=0), então imprimir e
-  // salvar seguem só pelos botões da página.
   const previewUrl = useMemo(() => {
     if (format !== 'dashboard-pdf' || !reportData) return null
     return URL.createObjectURL(buildDashboardReportPdf(reportData).output('blob'))
@@ -253,18 +263,20 @@ export function ExportReportPage() {
   }
 
   async function runDatasetExport() {
-    const asOf = new Date().toISOString()
+    let asOf = ''
     const rows: ClinicalExportRow[] = []
     let total = 0
     try {
       for (let page = 1; page <= MAX_PAGES; page++) {
         setProgress(`Buscando página ${page}…`)
         const result = await exportClinicalDoses({
-          asOf,
+          ...(asOf ? { asOf } : {}),
           page,
           pageSize: PAGE_SIZE,
+          justification: justification.trim().slice(0, 500),
           ...(status ? { status } : {}),
         })
+        if (!asOf) asOf = result.asOf
         rows.push(...result.items)
         total = result.total
         if (rows.length >= total) break
@@ -338,8 +350,9 @@ export function ExportReportPage() {
         <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
           <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
           <p className="text-[0.68rem] text-brand-dark leading-relaxed">
-            {FORMAT_DESCRIPTIONS[format]} Cada geração fica registrada na auditoria
-            do servidor com autor, filtros e corte.
+            {FORMAT_DESCRIPTIONS[format]}
+            {!isDashboardFormat &&
+              ' Cada geração fica registrada na auditoria do servidor com autor, justificativa, filtros e corte.'}
           </p>
         </div>
 
@@ -423,6 +436,7 @@ export function ExportReportPage() {
           <FieldLabel label="Justificativa" required>
             <TextArea
               rows={2}
+              maxLength={500}
               placeholder="Motivo desta exportação (LGPD)"
               value={justification}
               onChange={(e) => setJustification(e.target.value)}
@@ -501,8 +515,10 @@ export function ExportReportPage() {
         }
       >
         <p className="text-[0.7rem] text-(--text-muted) leading-relaxed">
-          A geração define o corte temporal e registra a solicitação na auditoria do
-          servidor com autor e filtros. Formato: {FORMAT_FILE_LABELS[format]}
+          {isDashboardFormat
+            ? 'O relatório é montado no navegador com os dados do painel; não gera registro de auditoria de exportação. '
+            : 'A geração define o corte temporal e registra a solicitação na auditoria do servidor com autor, justificativa e filtros. '}
+          Formato: {FORMAT_FILE_LABELS[format]}
           {!isDashboardFormat && status
             ? ` · Filtro: ${STATUS_OPTIONS.find((o) => o.value === status)?.label}`
             : ''}

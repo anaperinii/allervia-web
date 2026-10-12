@@ -84,9 +84,11 @@ export function ApplicationsCard({ title, caption, series, modalityMix, doseMix 
                 >
                   <span className="font-bold tabular-nums">{row.value.toLocaleString('pt-BR')}</span>
                   {row.label}
-                  <span className="font-semibold tabular-nums opacity-70">
-                    {total > 0 ? Math.round((row.value / total) * 100) : 0}%
-                  </span>
+                  {total > 0 && (
+                    <span className="font-semibold tabular-nums opacity-70">
+                      {Math.round((row.value / total) * 100)}%
+                    </span>
+                  )}
                 </span>
               ))}
             </div>

@@ -1,10 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Controller, type UseFormReturn } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import { FieldLabel, Select, StepHeading, TextInput } from '@/shared/components'
 import { todayStr } from '@/shared/lib/dates'
 import { cn } from '@/shared/lib/cn'
-import { useCustomTypesStore } from '@/features/immunotherapy/stores/useCustomTypesStore'
+import { listImmunotherapyTypes } from '@/shared/api/clinical.api'
 import { listProtocols, readAutomation } from '@/shared/api/protocols.api'
 import type { ProtocolStep, ProtocolVersion } from '@/shared/api/contracts/protocols'
 import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
@@ -19,6 +19,8 @@ interface ImmunotherapyDataStepProps {
   form: UseFormReturn<AddImmunotherapyForm>
 }
 
+const TYPES_LISTBOX_ID = 'add-immunotherapy-type-suggestions'
+
 interface PublishedOption {
   version: ProtocolVersion
   protocolName: string
@@ -27,9 +29,64 @@ interface PublishedOption {
 
 export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
   const { control, register, setValue, watch, formState: { errors } } = form
-  const customTypes = useCustomTypesStore((s) => s.types)
   const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
+
+  const typesQuery = useQuery({
+    queryKey: queryKeys.immunotherapyTypes(organizationId),
+    queryFn: ({ signal }) => listImmunotherapyTypes(signal),
+    enabled: organizationId !== '',
+  })
+
+  const [showTypeSuggestions, setShowTypeSuggestions] = useState(false)
+  const [highlightedTypeIndex, setHighlightedTypeIndex] = useState(-1)
+
+  const typeValue = watch('type')
+  const knownTypes = typesQuery.data
+  const typeSuggestions = useMemo(() => {
+    const term = typeValue.trim().toLowerCase()
+    if (!term) return knownTypes ?? []
+    return (knownTypes ?? []).filter((label) => label.toLowerCase().includes(term))
+  }, [knownTypes, typeValue])
+
+  const typeDropdownOpen =
+    showTypeSuggestions && (typesQuery.isPending || typeSuggestions.length > 0)
+
+  const selectType = (label: string) => {
+    setValue('type', label, { shouldValidate: true })
+    setShowTypeSuggestions(false)
+    setHighlightedTypeIndex(-1)
+  }
+
+  const handleTypeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!typeDropdownOpen) return
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setHighlightedTypeIndex((prev) =>
+        prev < typeSuggestions.length - 1 ? prev + 1 : 0,
+      )
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlightedTypeIndex((prev) =>
+        prev > 0 ? prev - 1 : typeSuggestions.length - 1,
+      )
+    } else if (e.key === 'Enter') {
+      if (highlightedTypeIndex >= 0 && typeSuggestions[highlightedTypeIndex]) {
+        e.preventDefault()
+        selectType(typeSuggestions[highlightedTypeIndex])
+      }
+    } else if (e.key === 'Escape') {
+      setShowTypeSuggestions(false)
+      setHighlightedTypeIndex(-1)
+    }
+  }
+
+  const typeField = register('type', {
+    onChange: () => {
+      setShowTypeSuggestions(true)
+      setHighlightedTypeIndex(-1)
+    },
+  })
 
   const protocolsQuery = useQuery({
     queryKey: queryKeys.protocols(organizationId),
@@ -91,10 +148,74 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
       <StepHeading description="Tipo de alérgeno, extrato, data de início e a versão publicada do protocolo com as etapas permitidas." />
       <div className="grid grid-cols-2 gap-4">
         <FieldLabel label="Tipo" error={errors.type?.message}>
-          <Select invalid={!!errors.type} {...register('type')}>
-            <option value="" disabled>Selecione o tipo</option>
-            {customTypes.map((t) => <option key={t.id} value={t.label}>{t.label}</option>)}
-          </Select>
+          <div className="relative">
+            <TextInput
+              placeholder="Ex: Ácaros, Gramíneas…"
+              invalid={!!errors.type}
+              autoComplete="off"
+              role="combobox"
+              aria-expanded={typeDropdownOpen}
+              aria-controls={TYPES_LISTBOX_ID}
+              aria-autocomplete="list"
+              aria-activedescendant={
+                highlightedTypeIndex >= 0
+                  ? `${TYPES_LISTBOX_ID}-${highlightedTypeIndex}`
+                  : undefined
+              }
+              {...typeField}
+              onFocus={() => setShowTypeSuggestions(true)}
+              onBlur={(e) => {
+                setTimeout(() => setShowTypeSuggestions(false), 200)
+                void typeField.onBlur(e)
+              }}
+              onKeyDown={handleTypeKeyDown}
+            />
+            {typeDropdownOpen && (
+              <div
+                id={TYPES_LISTBOX_ID}
+                role="listbox"
+                className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-(--border-custom) bg-white shadow-lg"
+              >
+                {typesQuery.isPending ? (
+                  <div className="px-4 py-2.5 text-xs text-(--text-muted)">
+                    Carregando tipos…
+                  </div>
+                ) : (
+                  typeSuggestions.map((label, index) => (
+                    <button
+                      key={label}
+                      id={`${TYPES_LISTBOX_ID}-${index}`}
+                      type="button"
+                      role="option"
+                      aria-selected={highlightedTypeIndex === index}
+                      onClick={() => selectType(label)}
+                      onMouseEnter={() => setHighlightedTypeIndex(index)}
+                      className={cn(
+                        'block w-full px-4 py-2.5 text-left text-xs font-medium text-(--text) transition-colors',
+                        highlightedTypeIndex === index
+                          ? 'bg-teal-50'
+                          : 'hover:bg-teal-50',
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+          {typesQuery.isError ? (
+            <p className="mt-1 text-[0.6rem] leading-relaxed text-amber-700">
+              Não foi possível carregar os tipos já usados na clínica — digite o
+              tipo manualmente.
+            </p>
+          ) : (
+            <p className="mt-1 text-[0.6rem] leading-relaxed text-(--text-muted)">
+              {knownTypes !== undefined && knownTypes.length === 0
+                ? 'Nenhum tipo cadastrado ainda — digite o primeiro.'
+                : 'Escolha um tipo já usado na clínica ou digite um novo.'}
+            </p>
+          )}
         </FieldLabel>
         <FieldLabel label="Via de Administração">
           <TextInput value="Subcutânea (SCIT)" readOnly className="text-(--text-muted) bg-gray-100/60" />
@@ -115,8 +236,7 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
                 value={field.value}
                 onChange={(e) => {
                   field.onChange(e.target.value)
-                  // Caso comum é prescrever o protocolo inteiro: já entra com
-                  // todas as etapas marcadas e o médico desmarca as exceções.
+
                   const version = publishedOptions.find(
                     (option) => option.version.id === e.target.value,
                   )?.version
