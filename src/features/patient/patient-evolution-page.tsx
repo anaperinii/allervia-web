@@ -193,6 +193,7 @@ function PatientEvolutionContent() {
         ),
         autoDismissMs: 8000,
       })
+      exitBlocker.allowNextNavigation()
       navigate({ to: '/immunotherapies' })
     },
     meta: { suppressErrorToast: true },

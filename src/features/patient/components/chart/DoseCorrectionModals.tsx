@@ -9,6 +9,7 @@ import {
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { toOffsetIso, todayStr } from '@/shared/lib/dates'
+import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
@@ -29,6 +30,7 @@ interface CorrectionModalProps {
 export function RetractDoseModal({ doseId, organizationId, onClose }: CorrectionModalProps) {
   const queryClient = useQueryClient()
   const [reason, setReason] = useState('')
+  const idempotencyKeyFor = useIdempotencyKey()
 
   const doseQuery = useQuery({
     queryKey: queryKeys.dose(organizationId, doseId ?? ''),
@@ -38,12 +40,17 @@ export function RetractDoseModal({ doseId, organizationId, onClose }: Correction
   const dose = doseQuery.data ?? null
 
   const mutation = useMutation({
-    mutationFn: () =>
-      retractDose(doseId!, {
+    mutationFn: () => {
+      const command = {
         reason: reason.trim(),
         expectedRevision: dose!.revision,
         expectedTherapyRevision: dose!.therapyRevision,
-      }),
+      }
+      return retractDose(doseId!, {
+        ...command,
+        idempotencyKey: idempotencyKeyFor([doseId, command]),
+      })
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       toast.success({
@@ -123,6 +130,7 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
   const [time, setTime] = useState('12:00')
   const [conduct, setConduct] = useState('')
   const [conductJustification, setConductJustification] = useState('')
+  const idempotencyKeyFor = useIdempotencyKey()
 
   const doseQuery = useQuery({
     queryKey: queryKeys.dose(organizationId, doseId ?? ''),
@@ -132,8 +140,8 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
   const dose = doseQuery.data ?? null
 
   const mutation = useMutation({
-    mutationFn: () =>
-      addLateObservation(doseId!, {
+    mutationFn: () => {
+      const command = {
         reportedSideEffects: toList(effects),
         administeredMedications: toList(medications),
         ...(notes.trim() ? { notes: notes.trim() } : {}),
@@ -147,7 +155,12 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
             }
           : {}),
         expectedTherapyRevision: dose!.therapyRevision,
-      }),
+      }
+      return addLateObservation(doseId!, {
+        ...command,
+        idempotencyKey: idempotencyKeyFor([doseId, command]),
+      })
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       toast.success({

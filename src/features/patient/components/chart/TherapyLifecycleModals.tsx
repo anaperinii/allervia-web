@@ -15,6 +15,7 @@ import {
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
 import { toOffsetIso } from '@/shared/lib/dates'
+import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 import { formatInstantDate } from '@/features/patient/adapters/clinical-presentation'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -51,18 +52,24 @@ function SuspendForm({
   const [category, setCategory] = useState('')
   const [reason, setReason] = useState('')
   const [expectedReturnDate, setExpectedReturnDate] = useState('')
+  const idempotencyKeyFor = useIdempotencyKey()
 
   const mutation = useMutation({
-    mutationFn: () =>
-      executeTherapyLifecycle(therapyId, {
-        action: 'SUSPEND',
+    mutationFn: () => {
+      const command = {
+        action: 'SUSPEND' as const,
         expectedRevision: therapyRevision,
         reason: reason.trim(),
         ...(category ? { category } : {}),
         ...(expectedReturnDate
           ? { expectedReturnAt: toOffsetIso(expectedReturnDate, '08:00') }
           : {}),
-      }),
+      }
+      return executeTherapyLifecycle(therapyId, {
+        ...command,
+        idempotencyKey: idempotencyKeyFor([therapyId, command]),
+      })
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       onDone('suspended')
@@ -153,13 +160,19 @@ function ResumeForm({
 }: LifecycleModalProps) {
   const queryClient = useQueryClient()
   const [reason, setReason] = useState('')
+  const idempotencyKeyFor = useIdempotencyKey()
   const mutation = useMutation({
-    mutationFn: () =>
-      executeTherapyLifecycle(therapyId, {
-        action: 'RESUME',
+    mutationFn: () => {
+      const command = {
+        action: 'RESUME' as const,
         expectedRevision: therapyRevision,
         reason: reason.trim(),
-      }),
+      }
+      return executeTherapyLifecycle(therapyId, {
+        ...command,
+        idempotencyKey: idempotencyKeyFor([therapyId, command]),
+      })
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       onDone('resumed')

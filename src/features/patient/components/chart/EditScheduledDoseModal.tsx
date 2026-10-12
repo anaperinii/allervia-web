@@ -5,6 +5,7 @@ import { updateScheduledDose } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { toOffsetIso } from '@/shared/lib/dates'
+import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
 import type { DoseDetail } from '@/shared/api/contracts/clinical'
 
@@ -50,12 +51,13 @@ function EditScheduledDoseForm({
   const [date, setDate] = useState(dose ? localDateInput(dose.scheduledAt) : '')
   const [time, setTime] = useState(dose ? localTimeInput(dose.scheduledAt) : '')
   const [reason, setReason] = useState('')
+  const idempotencyKeyFor = useIdempotencyKey()
 
   const selectedStep = dose?.allowedValues.find((step) => step.id === stepId) ?? null
 
   const mutation = useMutation({
-    mutationFn: () =>
-      updateScheduledDose(dose!.id, {
+    mutationFn: () => {
+      const command = {
         values: {
           concentration: selectedStep!.concentration,
           volume: selectedStep!.volume,
@@ -66,7 +68,12 @@ function EditScheduledDoseForm({
         reason: reason.trim(),
         expectedRevision: dose!.revision,
         expectedTherapyRevision: dose!.therapyRevision,
-      }),
+      }
+      return updateScheduledDose(dose!.id, {
+        ...command,
+        idempotencyKey: idempotencyKeyFor([dose!.id, command]),
+      })
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       onSaved()
