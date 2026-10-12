@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
@@ -96,41 +96,27 @@ export function ProtocolEditorPage({
   )
   const [conflict, setConflict] = useState(false)
 
-  useEffect(() => {
-    if (editor || mode === 'create') return
-    if (mode === 'new-version') {
-      const protocol = protocolsQuery.data?.find(
-        (item) => item.id === protocolId,
-      )
-      if (!protocol) return
+  if (!editor && mode === 'new-version') {
+    const protocol = protocolsQuery.data?.find((item) => item.id === protocolId)
+    if (protocol) {
       const latest = protocol.versions[0]
       setEditor({
         expectedRevision: 0,
         name: protocol.name,
         draft: latest
-          ? (JSON.parse(
-              JSON.stringify({
-                ...EMPTY_DRAFT,
-                steps: latest.definition.steps,
-              }),
-            ) as ProtocolDefinitionDraft)
-          : EMPTY_DRAFT,
+          ? structuredClone({ ...EMPTY_DRAFT, steps: latest.definition.steps })
+          : structuredClone(EMPTY_DRAFT),
       })
-      return
     }
+  } else if (!editor && mode === 'edit-draft' && versionQuery.data && protocolsQuery.data) {
     const version = versionQuery.data
-    if (!version) return
-    const protocol = protocolsQuery.data?.find(
-      (item) => item.id === version.protocolId,
-    )
+    const protocol = protocolsQuery.data.find((item) => item.id === version.protocolId)
     setEditor({
       expectedRevision: version.revision,
       name: protocol?.name ?? '',
-      draft: JSON.parse(
-        JSON.stringify({ ...EMPTY_DRAFT, steps: version.definition.steps }),
-      ) as ProtocolDefinitionDraft,
+      draft: structuredClone({ ...EMPTY_DRAFT, steps: version.definition.steps }),
     })
-  }, [editor, mode, protocolId, protocolsQuery.data, versionQuery.data])
+  }
 
   const leave = () => void navigate({ to: '/protocols' })
 
@@ -148,6 +134,11 @@ export function ProtocolEditorPage({
       await queryClient.invalidateQueries({
         queryKey: queryKeys.protocols(organizationId),
       })
+      if (versionId) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.protocolVersion(organizationId, versionId),
+        })
+      }
       leave()
     },
     onError: async (error) => {

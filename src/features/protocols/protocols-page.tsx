@@ -19,6 +19,7 @@ import type {
 } from '@/shared/api/contracts/protocols'
 import { PROTOCOL_ERROR_CODES } from '@/shared/api/contracts/protocols'
 import { ApiError } from '@/shared/api/contracts/errors'
+import { showApiErrorToast } from '@/shared/components'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { useHasPermission } from '@/shared/stores/useUserStore'
@@ -108,9 +109,26 @@ export function ProtocolsPage() {
   })
 
   const automationMutation = useMutation({
-    mutationFn: (input: { enabled: boolean; timeZone: string }) =>
-      updateAutomation(input),
+    mutationFn: (input: {
+      enabled: boolean
+      timeZone: string
+      expectedRevision?: number
+    }) => updateAutomation(input),
     onSuccess: refresh,
+    onError: async (error) => {
+      if (
+        error instanceof ApiError &&
+        error.message === 'STALE_ORGANIZATION_REVISION'
+      ) {
+        await automationQuery.refetch()
+        showApiErrorToast(error, {
+          title: 'Configuração desatualizada',
+          description:
+            'Outra pessoa alterou a automação. Os dados foram recarregados; revise e confirme novamente.',
+        })
+      }
+    },
+    meta: { suppressErrorToast: true },
   })
 
   const allProtocols = protocolsQuery.data ?? []
@@ -376,6 +394,7 @@ export function ProtocolsPage() {
               automationMutation.mutate({
                 enabled,
                 timeZone: automationQuery.data!.timeZone,
+                expectedRevision: automationQuery.data!.revision,
               })
             }
           />

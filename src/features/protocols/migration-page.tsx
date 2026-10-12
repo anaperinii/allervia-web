@@ -70,6 +70,9 @@ export function MigrationPage() {
       await queryClient.invalidateQueries({
         queryKey: queryKeys.protocols(organizationId),
       })
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.migrationInventory(organizationId),
+      })
       toast.success({
         icon: <FontAwesomeIcon icon={faFileMedical} style={{ fontSize: 16 }} />,
         title: 'Rascunho técnico disponível',
