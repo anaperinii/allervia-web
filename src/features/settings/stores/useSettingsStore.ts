@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-
-export type Language = 'pt-BR' | 'en' | 'es'
+import { persist } from 'zustand/middleware'
 
 export interface EventColor {
   id: string
@@ -14,51 +13,43 @@ const DEFAULT_EVENT_COLORS: EventColor[] = [
   { id: 'missed', label: 'Ausente', color: '#EF4444' },
 ]
 
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
+
 interface SettingsState {
-
-  autoSync: boolean
-
-  emailNotifications: boolean
-  pushNotifications: boolean
-
-  sessionTimeout: string
-  language: Language
-
-  reminderWhatsapp: boolean
-  reminderHours: '2' | '6' | '12' | '24' | '48'
   eventColors: EventColor[]
-
-  autoBackup: boolean
-
-  setAutoSync: (value: boolean) => void
-  setEmailNotifications: (value: boolean) => void
-  setPushNotifications: (value: boolean) => void
-  setSessionTimeout: (value: SettingsState['sessionTimeout']) => void
-  setLanguage: (value: Language) => void
-  setReminderWhatsapp: (value: boolean) => void
-  setReminderHours: (value: SettingsState['reminderHours']) => void
-  setEventColors: (value: EventColor[]) => void
-  setAutoBackup: (value: boolean) => void
+  setEventColor: (id: string, color: string) => void
 }
 
-export const useSettingsStore = create<SettingsState>((set) => ({
-  autoSync: true,
-  emailNotifications: true,
-  pushNotifications: false,
-  sessionTimeout: '30',
-  language: 'pt-BR',
-  reminderWhatsapp: true,
-  reminderHours: '24',
-  eventColors: DEFAULT_EVENT_COLORS,
-  autoBackup: true,
-
-  setAutoSync: (value) => set({ autoSync: value }),
-  setEmailNotifications: (value) => set({ emailNotifications: value }),
-  setPushNotifications: (value) => set({ pushNotifications: value }),
-  setSessionTimeout: (value) => set({ sessionTimeout: value }),
-  setLanguage: (value) => set({ language: value }),
-  setReminderWhatsapp: (value) => set({ reminderWhatsapp: value }),
-  setReminderHours: (value) => set({ reminderHours: value }),
-  setEventColors: (value) => set({ eventColors: value }),
-  setAutoBackup: (value) => set({ autoBackup: value }),
-}))
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set) => ({
+      eventColors: DEFAULT_EVENT_COLORS,
+      setEventColor: (id, color) =>
+        set((state) => ({
+          eventColors: state.eventColors.map((item) =>
+            item.id === id && HEX_COLOR.test(color)
+              ? { ...item, color }
+              : item,
+          ),
+        })),
+    }),
+    {
+      name: 'allervia-settings',
+      version: 1,
+      merge: (persisted, current) => {
+        const stored = (persisted as Partial<SettingsState> | undefined)
+          ?.eventColors
+        if (!Array.isArray(stored)) return current
+        return {
+          ...current,
+          eventColors: DEFAULT_EVENT_COLORS.map((item) => {
+            const saved = stored.find((entry) => entry?.id === item.id)
+            return saved && HEX_COLOR.test(saved.color)
+              ? { ...item, color: saved.color }
+              : item
+          }),
+        }
+      },
+    },
+  ),
+)
