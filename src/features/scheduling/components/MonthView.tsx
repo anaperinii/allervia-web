@@ -1,6 +1,6 @@
 import { format, isSameDay, isToday } from 'date-fns'
 import { cn } from '@/shared/lib/cn'
-import { modalityStyle } from '@/features/scheduling/components/modality-colors'
+import { useModalityStyle } from '@/features/scheduling/components/modality-colors'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
@@ -24,6 +24,7 @@ export function MonthView({
   onSelectApplication,
   onOpenDay,
 }: MonthViewProps) {
+  const modalityStyle = useModalityStyle()
   return (
     <div>
       <div className="grid grid-cols-7 border-b border-(--border-custom)">
