@@ -29,6 +29,7 @@ import { useSidebarStore } from '@/shared/layout/useSidebarStore'
 import { useQuery } from '@tanstack/react-query'
 import { listNotifications } from '@/shared/api/notifications.api'
 import { hasPermission, useUserStore, type Permission } from '@/shared/stores/useUserStore'
+import { useSession } from '@/shared/auth/useSession'
 
 const RAIL_ACTIVE_SOLID = 'linear-gradient(150deg, #257E8C, #12333a)'
 const RAIL_ACTIVE_MARKER = '#1D6772'
@@ -223,6 +224,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const unreadCount = unreadQuery.data?.unread ?? 0
   const userName = useUserStore((s) => s.current?.name ?? '')
   const [showLogout, setShowLogout] = useState(false)
+  const [logoutError, setLogoutError] = useState<string | null>(null)
+  const { signOut } = useSession()
   const collapsed = useSidebarStore((s) => s.isCollapsed)
   const toggleSidebar = useSidebarStore((s) => s.toggle)
 
@@ -237,7 +240,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     path === item.path || path.startsWith(item.path + '/') || (item.match?.some((m) => path.startsWith(m)) ?? false)
 
   const pageScroll = path === '/dashboard'
-
 
   return (
     <div
@@ -373,8 +375,18 @@ export function AppShell({ children }: { children: ReactNode }) {
               tone="danger"
               variant="solid"
               onClick={() => {
-                setShowLogout(false)
-                navigate({ to: '/login' })
+                void (async () => {
+                  setLogoutError(null)
+                  try {
+                    await signOut()
+                    setShowLogout(false)
+                    await navigate({ to: '/login' })
+                  } catch {
+                    setLogoutError(
+                      'Não foi possível confirmar a saída no servidor. Verifique a conexão e tente sair novamente.',
+                    )
+                  }
+                })()
               }}
             >
               Encerrar sessão
@@ -385,6 +397,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <p className="text-sm" style={{ color: SHOWCASE.inkSoft }}>
           Tem certeza que deseja encerrar a sessão?
         </p>
+        {logoutError && (
+          <p role="alert" className="mt-2 text-sm text-red-700">
+            {logoutError}
+          </p>
+        )}
       </Modal>
     </div>
   )

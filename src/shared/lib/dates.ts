@@ -22,10 +22,6 @@ export function isoToPtDate(iso: string): string {
   return `${day}/${month}/${year}`
 }
 
-/**
- * Normaliza uma data civil da API — que pode vir como instante ISO em UTC —
- * para o `YYYY-MM-DD` exigido por `<input type="date">`.
- */
 export function toDateInputValue(value: string | null | undefined): string {
   if (!value) return ''
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
@@ -70,11 +66,62 @@ export function parseIsoDate(value: string): Date | null {
 export function toOffsetIso(date: string, time: string): string {
   const local = new Date(`${date}T${time}:00`)
   const offsetMinutes = -local.getTimezoneOffset()
+  return `${date}T${time}:00${formatOffset(offsetMinutes)}`
+}
+
+function formatOffset(offsetMinutes: number): string {
   const sign = offsetMinutes >= 0 ? '+' : '-'
   const abs = Math.abs(offsetMinutes)
   const hours = String(Math.floor(abs / 60)).padStart(2, '0')
   const minutes = String(abs % 60).padStart(2, '0')
-  return `${date}T${time}:00${sign}${hours}:${minutes}`
+  return `${sign}${hours}:${minutes}`
+}
+
+function zoneOffsetMinutes(instant: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(instant)
+  const read = (type: string) => Number(parts.find((part) => part.type === type)?.value)
+  const asUtc = Date.UTC(
+    read('year'),
+    read('month') - 1,
+    read('day'),
+    read('hour'),
+    read('minute'),
+    read('second'),
+  )
+  return Math.round((asUtc - instant.getTime()) / 60_000)
+}
+
+export function toZonedOffsetIso(date: string, time: string, timeZone: string): string {
+  const reference = new Date(`${date}T${time}:00Z`)
+  const firstGuess = zoneOffsetMinutes(reference, timeZone)
+  const offsetMinutes = zoneOffsetMinutes(
+    new Date(reference.getTime() - firstGuess * 60_000),
+    timeZone,
+  )
+  return `${date}T${time}:00${formatOffset(offsetMinutes)}`
+}
+
+export function dayInZone(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}
+
+export function addDaysToDay(day: string, amount: number): string {
+  const [year, month, date] = day.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, date + amount)).toISOString().slice(0, 10)
 }
 
 export function addMinutesToTime(time: string, minutes: number): string {
