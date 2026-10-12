@@ -85,8 +85,7 @@ export function AddImmunotherapyPage() {
   const versionLabel = selectedProtocol && selectedVersion
     ? `${selectedProtocol.name} — v${selectedVersion.number}`
     : ''
-  // Carregado no passo 1 ao vincular um paciente; serve de linha-base para
-  // detectar o que o prescritor ajustou nos dados pessoais.
+
   const patientDetailQuery = useQuery({
     queryKey: queryKeys.patient(organizationId, values.patientId),
     queryFn: ({ signal }) => getPatient(values.patientId, signal),
@@ -184,6 +183,7 @@ export function AddImmunotherapyPage() {
         ),
         autoDismissMs: 8000,
       })
+      exitBlocker.allowNextNavigation()
       navigate({ to: '/immunotherapies' })
     },
   })

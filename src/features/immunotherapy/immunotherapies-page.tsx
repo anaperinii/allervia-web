@@ -96,9 +96,7 @@ export function ImmunotherapiesPage() {
             setStatusFilter={(value) => applyFilter(() => setStatusFilter(value))}
             typeFilter={typeFilter}
             setTypeFilter={(value) => applyFilter(() => setTypeFilter(value))}
-            typeOptions={
-              Array.isArray(typesQuery.data) ? typesQuery.data : []
-            }
+            typeOptions={typesQuery.data ?? []}
           />
         }
       />
