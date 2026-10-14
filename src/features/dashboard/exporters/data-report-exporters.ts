@@ -17,7 +17,7 @@ function includesSection(data: DashboardReportData, section: DashboardSectionId)
   return (data.sections ?? ALL_DASHBOARD_SECTIONS).includes(section)
 }
 
-/** CSV com os valores do painel (sem gráficos), em seções nomeadas. */
+
 export function exportDashboardReportCsv(data: DashboardReportData): void {
   const lines: string[] = []
   lines.push(csvLine([`Relatório do Painel de Métricas — período: ${data.periodLabel}`]))
@@ -95,7 +95,7 @@ export function exportDashboardReportCsv(data: DashboardReportData): void {
   downloadFile('﻿' + lines.join('\n'), filename, 'text/csv;charset=utf-8')
 }
 
-/** JSON estruturado com os valores do painel (sem gráficos). */
+
 export function exportDashboardReportJson(data: DashboardReportData): void {
   const payload = {
     generatedAt: data.generatedAt,

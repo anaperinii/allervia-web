@@ -13,7 +13,7 @@ interface SummaryCardsProps {
   currentInterval: string
   nextDate: string
   currentDose: string
-  /** Dose administrada anterior, quando difere da vigente. */
+
   previousDose?: string | null
 }
 
@@ -21,7 +21,7 @@ const CARDS: {
   key: string
   label: string
   render: (props: SummaryCardsProps) => string
-  /** Cada card ancora a marca em um canto, com um segundo eco cruzando-a. */
+
   ornament: string
   ornamentEcho: string
 }[] = [
@@ -49,8 +49,8 @@ const CARDS: {
 ]
 
 export function SummaryCards(props: SummaryCardsProps) {
-  // Com a sidebar recolhida sobra largura no card: a dose anterior cabe ao lado
-  // do valor. Expandida, ela volta a flutuar sobre a borda superior.
+
+
   const sidebarCollapsed = useSidebarStore((s) => s.isCollapsed)
 
   const previousTag = (floating: boolean) => (

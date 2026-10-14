@@ -17,14 +17,14 @@ export interface Verdict {
   detail?: string
 }
 
-/** Etapas por fileira do mapa antes da trilha dobrar para a fileira seguinte. */
+
 const DEFAULT_PER_ROW = 5
 
 const CARD_W = 128
 const CARD_H = 88
 const GAP_X = 58
 const GAP_Y = 60
-/** Braço da Bézier que faz o laço lateral quando a trilha troca de fileira. */
+
 const CURVE_ARM = 96
 
 const TRACK_HALO = '#e6edf2'
@@ -56,7 +56,7 @@ interface FlowDiagramProps {
   timeZone: string
   showDates: boolean
   onSelectStep: (stepId: string) => void
-  /** Quantas etapas cabem por fileira antes da trilha dobrar. */
+
   perRow?: number
 }
 
@@ -132,18 +132,18 @@ interface TrailMapProps extends Omit<FlowDiagramProps, 'chains'> {
 
 interface Placed {
   node: FlowNode
-  /** Centro do card, em coordenadas do mapa. */
+
   cx: number
   cy: number
   row: number
 }
 
-/**
- * Serpentina: a trilha corre para a direita, dobra na borda e volta para a
- * esquerda, de modo que dezenas de etapas cabem sem virar uma linha infinita.
- * Os cards são posicionados por coordenada e a trilha em si é um SVG por baixo:
- * reta dentro da fileira, Bézier lateral na dobra.
- */
+
+
+
+
+
+
 function TrailMap({
   chain,
   activeStepId,
@@ -159,7 +159,7 @@ function TrailMap({
   const placed: Placed[] = chain.nodes.map((node, index) => {
     const row = Math.floor(index / perRow)
     const indexInRow = index % perRow
-    // Fileira ímpar corre no sentido inverso: é o que faz a trilha serpentear.
+
     const column = row % 2 === 1 ? perRow - 1 - indexInRow : indexInRow
     return {
       node,
@@ -179,7 +179,7 @@ function TrailMap({
     const done = visited.has(to.node.step.id)
     const sameRow = from.row === to.row
 
-    // Na dobra, o laço sai pelo lado em que os dois cards estão encostados.
+
     const arm = from.cx > width / 2 ? CURVE_ARM : -CURVE_ARM
     const d = sameRow
       ? `M${from.cx} ${from.cy} L${to.cx} ${to.cy}`
@@ -197,8 +197,8 @@ function TrailMap({
   })
 
   return (
-    // mx-auto centra a trilha quando ela cabe; quando não cabe, as margens
-    // zeram e o container rola em vez de cortar o início.
+
+
     <div className="relative mx-auto w-max" style={{ width, height }}>
       <svg
         aria-hidden="true"
@@ -206,7 +206,7 @@ function TrailMap({
         height={height}
         className="pointer-events-none absolute inset-0 overflow-visible"
       >
-        {/* Leito da trilha: faixa larga e clara sob todos os segmentos. */}
+        {                                                                  }
         {segments.map((segment) => (
           <path
             key={`bed-${segment.key}`}
@@ -323,7 +323,7 @@ function StepCard({
         className={cn('absolute inset-x-0 top-0 h-1', phase.bar)}
       />
 
-      {/* Cabeçalho: ordem na trilha e fase. */}
+      {                                        }
       <div className="flex items-center justify-between gap-1 pt-1">
         <span
           className={cn(
@@ -343,7 +343,7 @@ function StepCard({
         </span>
       </div>
 
-      {/* O que se aplica: volume em destaque, diluição como qualificador. */}
+      {                                                                      }
       <div className="mt-2 flex items-baseline gap-1">
         <span className="text-[0.88rem] font-bold leading-none text-(--text)">
           {node.step.volume.replace('.', ',')}
@@ -354,12 +354,12 @@ function StepCard({
         </span>
       </div>
 
-      {/* Quando. O intervalo até a próxima etapa vive na linha, não aqui. */}
+      {                                                                      }
       <span className="mt-auto truncate text-[0.55rem] text-(--text-muted)">
         {date ?? `dia ${node.day}`}
       </span>
 
-      {/* Exceções: só aparecem quando há algo fora do fluxo normal. */}
+      {                                                                }
       {(verdict || node.repeats || node.endsSequence || node.exitsTo) && (
         <div className="flex items-center gap-1">
           {verdict && (

@@ -137,7 +137,7 @@ interface CardProps {
   children: ReactNode
   className?: string
   padded?: boolean
-  /** `plain` usa superfície branca — leitura de gráfico com contraste máximo. */
+
   tone?: 'default' | 'plain'
 }
 
@@ -155,10 +155,10 @@ export function Card({ children, className, padded = true, tone = 'default' }: C
   )
 }
 
-/**
- * Valor numérico com a cauda em tom claro — dígitos finais recuam, a ordem de
- * grandeza salta primeiro. Unidade sempre no tom claro.
- */
+
+
+
+
 export function StatValue({
   value,
   unit,

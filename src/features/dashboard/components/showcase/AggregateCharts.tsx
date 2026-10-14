@@ -10,25 +10,25 @@ import type {
 import { ChartTooltip, HoverBands } from './ChartHover'
 import { smoothPath, type Point } from './smooth-path'
 
-/** Mesmas cores de fase do Lab de Protocolos (`PHASE_VIEW`). */
+
 const PHASE_SERIES = [
   { key: 'buildUp', label: 'Indução', color: '#74C3B9', trend: '#12A594' },
   { key: 'maintenance', label: 'Manutenção', color: '#B7E06A', trend: '#7CB518' },
 ] as const
 
-/** Rampa sequencial (claro → escuro = menos → mais) para magnitude. */
+
 const SEQUENTIAL_RAMP = ['#CCE9E4', '#A6D9D1', '#74C3B9', '#4FA99E', '#37877D']
 
-/**
- * Rampa ordinal da marca — passos do mais claro ao mais escuro, todos ≥ 3:1
- * sobre a superfície branca. Ordem da categoria = posição na rampa.
- */
+
+
+
+
 const ORDINAL_RAMP = ['#4C9A8F', '#36887F', '#257E8C', '#1C5A66', '#12333A']
 
-/**
- * Rampa ordinal ancorada no verde-limão da marca — mesmo matiz (spread 7°),
- * clara → escura, ponta clara ≥ 2:1 sobre a superfície branca.
- */
+
+
+
+
 const LIME_RAMP = ['#8DBE2A', '#6FA018', '#558014', '#3F6412', '#2A4A11']
 
 export function ChartState({
@@ -76,12 +76,12 @@ export function ChartCaption({ children }: { children: ReactNode }) {
   )
 }
 
-/**
- * Barras horizontais de magnitude com valor rotulado direto.
- * `palette`: `ordinal` (teal da marca) quando a ordem da categoria tem
- * significado próprio — concentração crescente; `lime` quando a lista vem
- * ordenada por contagem e o passo mais escuro deve marcar o maior volume.
- */
+
+
+
+
+
+
 export function HBarList({
   data,
   unit,
@@ -150,7 +150,7 @@ function matrixCellInk(count: number, max: number): string {
   return step >= 3 ? SHOWCASE.white : SHOWCASE.ink
 }
 
-/** Matriz concentração × volume — rampa sequencial + contagem rotulada em cada célula. */
+
 export function VolumeConcentrationHeatmap({ matrix }: { matrix: VolumeMatrixData }) {
   return (
     <div className="flex flex-col gap-2">
@@ -205,7 +205,7 @@ export function VolumeConcentrationHeatmap({ matrix }: { matrix: VolumeMatrixDat
   )
 }
 
-/** Trio categórico validado (CVD + contraste ≥ 3:1) sobre a superfície #F6F8F8. */
+
 const STATUS_SERIES = [
   { key: 'active', label: 'Ativas', color: '#0E9E8C' },
   { key: 'suspended', label: 'Suspensas', color: '#0774B8' },
@@ -215,7 +215,7 @@ const STATUS_SERIES = [
 const STATUS_VIEW_W = 640
 const STATUS_VIEW_H = 150
 
-/** Linhas de contagem por status ao fim de cada semana/mês. */
+
 export function StatusHistoryChart({ series }: { series: StatusBucketEntry[] }) {
   const max = Math.max(
     ...series.flatMap((row) => [row.active, row.suspended, row.completed]),
@@ -293,7 +293,7 @@ export function StatusHistoryChart({ series }: { series: StatusBucketEntry[] }) 
           ))}
         </svg>
 
-        {/* Marcadores em HTML: o SVG estica sem manter proporção e achataria os círculos. */}
+        {                                                                                    }
         <div className="pointer-events-none absolute inset-0" aria-hidden="true">
           {series.map((row, index) =>
             series.length <= 14 || hover === index
@@ -380,14 +380,14 @@ const PHASE_VIEW_H = 144
 export type PhaseGranularity = 'day' | 'week'
 export type PhaseFilterKey = 'all' | 'buildUp' | 'maintenance'
 
-/** Barras empilhadas por dia (ou semana, em janelas longas): indução vs manutenção. */
+
 export function PhaseStackChart({
   series,
   granularity = 'auto',
   visiblePhase = 'all',
 }: {
   series: PhaseDayEntry[]
-  /** `auto` agrupa por semana só quando a janela passa de 60 dias. */
+
   granularity?: PhaseGranularity | 'auto'
   visiblePhase?: PhaseFilterKey
 }) {
@@ -403,7 +403,7 @@ export function PhaseStackChart({
   const [hover, setHover] = useState<number | null>(null)
   const hovered = hover !== null ? rows[hover] : undefined
 
-  // Tendência de cada fase: mesma escala das barras, traçada sobre o empilhado.
+
   const stepX = PHASE_VIEW_W / Math.max(rows.length, 1)
   const trends = phases.map((phase) => ({
     phase,
@@ -458,7 +458,7 @@ export function PhaseStackChart({
                   }}
                 />
               )}
-              {/* Dia sem aplicação: linha de base explícita — zero registrado, não lacuna. */}
+              {                                                                               }
               {total === 0 && (
                 <span
                   className="w-full rounded-[2px]"
@@ -473,8 +473,8 @@ export function PhaseStackChart({
           className="pointer-events-none absolute inset-0 h-full w-full"
           viewBox={`0 0 ${PHASE_VIEW_W} ${PHASE_VIEW_H}`}
           preserveAspectRatio="none"
-          /* O traço fica centrado na coordenada: no zero e no topo metade dele cai
-             fora da viewBox e seria cortado pelo clip padrão do SVG. */
+
+
           style={{ overflow: 'visible' }}
           aria-hidden="true"
         >

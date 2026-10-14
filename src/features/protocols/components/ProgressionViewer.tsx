@@ -43,7 +43,7 @@ function cadence(days: number): string {
   return `${days} dias`
 }
 
-/** Percorre o encadeamento real (nextStepId), não a ordem do array. */
+
 function buildProgression(steps: ProtocolStep[]): {
   rows: ProgressionRow[]
   orphans: ProtocolStep[]

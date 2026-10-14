@@ -2,7 +2,7 @@ import type { ProtocolStep } from '@/shared/api/contracts/protocols'
 
 export type ChainKind = 'main' | 'branch'
 
-/** Por que a trilha parou de avançar. */
+
 export type ChainEnding =
   | 'END_OF_SEQUENCE'
   | 'PLATEAU'
@@ -11,15 +11,15 @@ export type ChainEnding =
 
 export interface FlowNode {
   step: ProtocolStep
-  /** 1-based dentro da própria trilha. */
+
   position: number
-  /** Dias acumulados desde a primeira etapa da trilha. */
+
   day: number
-  /** A etapa aponta para si mesma: repete indefinidamente. */
+
   repeats: boolean
-  /** nextStepId === null: o motor não recomenda sucessora. */
+
   endsSequence: boolean
-  /** Etapa para onde esta aponta, quando fora da própria trilha. */
+
   exitsTo: string | null
 }
 
@@ -28,24 +28,24 @@ export interface FlowChain {
   kind: ChainKind
   nodes: FlowNode[]
   ending: ChainEnding
-  /** Dias da primeira à última etapa da trilha. */
+
   totalDays: number
 }
 
 export interface FlowGraph {
   chains: FlowChain[]
-  /** Para cada etapa, quem aponta para ela. */
+
   incoming: Map<string, string[]>
-  /** Etapas referenciadas por nextStepId que não existem na definição. */
+
   danglingRefs: { fromStepId: string; missingStepId: string }[]
 }
 
-/**
- * Percorre o encadeamento real (nextStepId) a partir de `startStepId` e depois
- * recolhe as etapas que a trilha principal não alcança, agrupando-as em
- * sub-rotas. Uma sub-rota termina quando reencontra uma etapa já percorrida —
- * nesse caso ela reentra numa trilha existente em vez de seguir sozinha.
- */
+
+
+
+
+
+
 export function buildFlowGraph(
   steps: ProtocolStep[],
   startStepId?: string,
@@ -110,7 +110,7 @@ export function buildFlowGraph(
         break
       }
       if (!next) {
-        // nextStepId aponta para etapa inexistente: já registrado em danglingRefs.
+
         ending = 'END_OF_SEQUENCE'
         break
       }
@@ -139,8 +139,8 @@ export function buildFlowGraph(
     if (main) chains.push(main)
   }
 
-  // Sub-rotas: primeiro as que ninguém alcança (raízes de verdade), depois o
-  // que sobrar — etapas presas em ciclos fechados fora da trilha principal.
+
+
   const isRoot = (step: ProtocolStep) => (incoming.get(step.id) ?? []).length === 0
   for (const step of steps) {
     if (claimed.has(step.id) || !isRoot(step)) continue
@@ -169,14 +169,14 @@ export function chainEndingLabel(ending: ChainEnding): string {
   }
 }
 
-/** Data civil projetada somando `days` a partir de `startIso` (yyyy-MM-dd). */
+
 export function projectDate(
   startIso: string,
   days: number,
   timeZone: string,
 ): string | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(startIso)) return null
-  // Meio-dia UTC: qualquer fuso brasileiro (GMT-2 a GMT-5) cai no mesmo dia civil.
+
   const base = new Date(`${startIso}T12:00:00Z`)
   if (Number.isNaN(base.getTime())) return null
   base.setUTCDate(base.getUTCDate() + days)

@@ -10,11 +10,11 @@ interface DraftFlowPreviewProps {
   perRow?: number
 }
 
-/**
- * Espelha, dentro do editor, o mesmo mapa que o laboratório desenha — só que
- * alimentado pelo rascunho em edição, para que a trilha apareça enquanto ela é
- * montada.
- */
+
+
+
+
+
 export function DraftFlowPreview({ steps, perRow }: DraftFlowPreviewProps) {
   const graph = useMemo(() => buildFlowGraph(steps), [steps])
   const visited = useMemo(

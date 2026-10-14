@@ -3,18 +3,18 @@ import type { ProtocolPhase } from '@/shared/api/contracts/protocols'
 interface PhaseView {
   label: string
   short: string
-  /** Faixa de cor no topo do card do mapa. */
+
   bar: string
-  /** Borda do card quando a etapa faz parte da trilha. */
+
   ring: string
   text: string
-  /** Tag com fundo, no padrão das tags SCIT/SLIT do painel de métricas. */
+
   chip: string
-  /** Realce do card quando a etapa está selecionada no mapa. */
+
   selected: string
 }
 
-// Mesmos tons das tags SCIT/SLIT do painel de métricas.
+
 export const PHASE_VIEW: Record<ProtocolPhase, PhaseView> = {
   BUILD_UP: {
     label: 'Indução',
@@ -23,7 +23,7 @@ export const PHASE_VIEW: Record<ProtocolPhase, PhaseView> = {
     ring: 'border-[#74C3B9]',
     text: 'text-[#2F7F76]',
     chip: 'border-[#74C3B9]/45 bg-[#74C3B9]/20 text-[#2F7F76]',
-    // Fundo sólido: translúcido deixaria a trilha aparecer por baixo do card.
+
     selected:
       'border-[#2F7F76] bg-[#E8F5F3] shadow-[0_0_0_3px_rgba(116,195,185,0.45),0_10px_22px_-10px_rgba(16,60,68,0.45)]',
   },

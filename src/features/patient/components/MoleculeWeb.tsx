@@ -1,7 +1,7 @@
-/**
- * Marca do Allervia reinterpretada como ornamento: os nós da molécula em branco
- * translúcido, no canto direito do card.
- */
+
+
+
+
 const NODES = [
   { cx: 60, cy: 34, r: 21 },
   { cx: 96, cy: 74, r: 21 },
