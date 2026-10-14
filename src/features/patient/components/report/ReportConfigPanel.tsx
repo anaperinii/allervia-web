@@ -36,7 +36,7 @@ interface ReportConfigPanelProps {
   justification: string
   setJustification: (value: string) => void
   realizedApplicationsCount: number
-  reactionsCount: number
+  reactionsCount: number | null
   intervalDays: number
   patientStatus: 'active' | 'inactive'
 }
@@ -63,8 +63,8 @@ export function ReportConfigPanel({
         <span className="block text-xs font-bold" style={{ color: '#12333a' }}>Resumo</span>
         <div className="space-y-1.5 text-[0.78rem] text-(--text-muted)">
           <Row label="Aplicações realizadas" value={String(realizedApplicationsCount)} />
-          <Row label="Reações adversas" value={String(reactionsCount)} />
-          <Row label="Intervalo atual" value={`${intervalDays} dias`} />
+          <Row label="Reações adversas" value={reactionsCount === null ? 'Indisponível nesta fonte' : String(reactionsCount)} />
+          <Row label="Intervalo atual" value={intervalDays > 0 ? `${intervalDays} dias` : 'Indisponível'} />
           <Row
             label="Status"
             value={patientStatus === 'active' ? 'Ativo' : 'Inativo'}
@@ -113,7 +113,7 @@ export function ReportConfigPanel({
           <ConsentCheckbox
             checked={anonymized}
             onChange={() => setAnonymized(!anonymized)}
-            title="Anonimizar dados pessoais"
+            title="Mascarar nome, CPF e telefone"
             description="Nome, CPF e telefone serão mascarados"
           />
           <ConsentCheckbox

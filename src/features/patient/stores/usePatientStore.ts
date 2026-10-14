@@ -81,6 +81,7 @@ export interface Patient {
 }
 
 export interface Application {
+  timeZone?: string
   id: string
   patientId: string
   date: string

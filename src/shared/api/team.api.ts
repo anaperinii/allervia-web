@@ -107,6 +107,10 @@ export function createInvite(body: {
   return apiRequest('/onboarding/invites', { method: 'POST', body })
 }
 
+export function resendInvite(inviteId: string): Promise<Invite> {
+  return apiRequest(`/onboarding/invites/${inviteId}/resend`, { method: 'POST' })
+}
+
 export function cancelInvite(inviteId: string): Promise<void> {
   return apiRequest<void>(`/onboarding/invites/${inviteId}`, {
     method: 'DELETE',
@@ -160,7 +164,7 @@ export function revokeRole(roleId: string): Promise<ProfessionalRoleGrant> {
   return apiRequest(`/roles/${roleId}`, { method: 'DELETE' })
 }
 
-/** Concessões vigentes (revokedAt null) do profissional, com os ids que a revogação exige. */
+
 export function listProfessionalRoles(
   professionalId: string,
   signal?: AbortSignal,

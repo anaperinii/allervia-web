@@ -6,46 +6,32 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { AdvancedSettingsPage } from '@/features/settings/advanced-settings-page'
 import { WeekView } from '@/features/scheduling/components/WeekView'
 import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
+import {
+  automationSettings,
+  notificationPreferences,
+  organization,
+} from '../fixtures/settings'
+import { stubApi } from '../helpers/http'
 import { withSession } from '../helpers/session'
 
-function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  })
-}
-
-function stubApi() {
-  const fetchMock = vi.fn((input: RequestInfo | URL) => {
-    const url = String(input)
-    if (url.includes('/organization/me')) {
-      return Promise.resolve(
-        jsonResponse({
-          id: 'organization-1',
-          name: 'Clínica Integrada Princípios',
-          timeZone: 'America/Sao_Paulo',
-          automationEnabled: true,
-        }),
-      )
-    }
-    if (url.includes('/immunotherapies/types')) {
-      return Promise.resolve(jsonResponse(['Ácaros']))
-    }
-    if (url.includes('/notifications/preferences')) {
-      return Promise.resolve(jsonResponse({ preferences: [] }))
-    }
-    if (url.includes('/integrations/google-calendar')) {
-      return Promise.resolve(jsonResponse({ connected: false }))
-    }
-    return Promise.resolve(jsonResponse({}))
-  })
-  vi.stubGlobal('fetch', fetchMock)
-  return fetchMock
+function stubSettingsApi() {
+  return stubApi([
+    { path: '/organization/me', handler: organization() },
+    { path: '/immunotherapies/types', handler: ['Ácaros'] },
+    { path: '/notifications/preferences', handler: notificationPreferences() },
+    { path: '/treatment-protocols/automation', handler: automationSettings() },
+    {
+      path: '/integrations/google-calendar/connection',
+      handler: { connected: false },
+    },
+    { path: '/integrations/google-calendar/connections', handler: [] },
+    { path: '/audit-logs', handler: [] },
+  ])
 }
 
 async function renderAdvancedSettings() {
@@ -82,12 +68,8 @@ function buildApplication(overrides: Partial<Application> = {}): Application {
 }
 
 describe('configurações avançadas: política de sessão e idioma', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
   it('exibe o tempo de sessão como política somente leitura do servidor', async () => {
-    stubApi()
+    stubSettingsApi()
     await renderAdvancedSettings()
 
     expect(await screen.findByText('Tempo de sessão')).toBeInTheDocument()
@@ -101,7 +83,7 @@ describe('configurações avançadas: política de sessão e idioma', () => {
   })
 
   it('não oferece seletor de idioma', async () => {
-    stubApi()
+    stubSettingsApi()
     await renderAdvancedSettings()
 
     await screen.findByText('Tempo de sessão')
@@ -119,10 +101,6 @@ describe('cores dos eventos: preferência visual consumida pela agenda', () => {
         { id: 'missed', label: 'Ausente', color: '#EF4444' },
       ],
     })
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
   })
 
   it('a agenda pinta o evento com a cor escolhida no editor', () => {

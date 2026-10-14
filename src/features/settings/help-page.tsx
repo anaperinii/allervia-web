@@ -1,3 +1,5 @@
+import { useSession } from '@/shared/auth/useSession'
+import { queryKeys } from '@/shared/api/query-keys'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
@@ -16,28 +18,34 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBook, faChevronDown, faEnvelope } from '@fortawesome/free-solid-svg-icons'
 
 const quickLinks = [
-  { icon: faBook, label: 'Documentação', desc: 'Guias e tutoriais', color: '#6C9EA5' },
+  { icon: faBook, label: 'Documentação', desc: 'Guias e tutoriais indisponíveis nesta versão', color: '#6C9EA5' },
   { icon: faEnvelope, label: 'E-mail', desc: CONTACT_SUPPORT_EMAIL, color: '#F4845F' },
 ]
 
 const STATUS_LABELS = { RECEIVED: 'Recebida', HANDLED: 'Atendida' } as const
 
 function SupportRequestSection() {
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+  const userId = account?.user.id ?? ''
   const queryClient = useQueryClient()
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
+  const [receiptId, setReceiptId] = useState('')
 
   const listQuery = useQuery({
-    queryKey: ['support-requests'],
+    queryKey: queryKeys.supportRequests(organizationId, userId),
+    enabled: userId !== '',
     queryFn: ({ signal }) => listSupportRequests(signal),
   })
   const mutation = useMutation({
     mutationFn: () =>
       createSupportRequest({ subject: subject.trim(), message: message.trim() }),
-    onSuccess: async () => {
+    onSuccess: async (receipt) => {
+      setReceiptId(receipt.id)
       setSubject('')
       setMessage('')
-      await queryClient.invalidateQueries({ queryKey: ['support-requests'] })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.supportRequests(organizationId, userId) })
     },
   })
 
@@ -54,6 +62,7 @@ function SupportRequestSection() {
         <div className="space-y-3">
           <FieldLabel label="Assunto" required>
             <TextInput
+              maxLength={200}
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Ex: dúvida sobre a agenda"
@@ -62,11 +71,13 @@ function SupportRequestSection() {
           <FieldLabel label="Mensagem" required>
             <TextArea
               rows={4}
+              maxLength={4000}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Descreva a dúvida ou o problema"
             />
           </FieldLabel>
+          {receiptId && <p role="status">Solicitação recebida: {receiptId}</p>}
           <Button
             tone="brand"
             variant="solid"
@@ -78,8 +89,9 @@ function SupportRequestSection() {
         </div>
         <div className="space-y-2">
           <div className="text-[0.7rem] font-semibold text-(--text-muted)">Minhas solicitações</div>
+          {listQuery.isError && <p role="alert">Não foi possível carregar as solicitações. <button onClick={() => void listQuery.refetch()}>Tentar novamente</button></p>}
           {listQuery.isPending && <p className="text-[0.65rem] text-(--text-muted)">Carregando…</p>}
-          {(listQuery.data ?? []).length === 0 && !listQuery.isPending && (
+          {(listQuery.data ?? []).length === 0 && listQuery.isSuccess && (
             <p className="text-[0.65rem] text-(--text-muted)">Nenhuma solicitação registrada.</p>
           )}
           <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1">
@@ -113,6 +125,8 @@ export function HelpPage() {
                 return (
                   <CardButton
                     key={item.label}
+                    disabled={item.label === 'Documentação'}
+                    onClick={item.label === 'E-mail' ? () => { window.location.href = `mailto:${CONTACT_SUPPORT_EMAIL}` } : undefined}
                     orientation="vertical"
                     icon={<FontAwesomeIcon icon={Icon} style={{ fontSize: 16 }} />}
                     iconColor={item.color}

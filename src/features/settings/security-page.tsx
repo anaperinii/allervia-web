@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useReauthenticatedAction } from '@/shared/auth/useReauthenticatedAction'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
 import {
@@ -18,6 +19,7 @@ import { ReauthenticateModal } from '@/features/settings/components/Reauthentica
 import { RecoveryCodesModal } from '@/features/settings/components/RecoveryCodesModal'
 import {
   changePassword,
+  enrollMfaFactor,
   endAllSessions,
   listDevices,
   listMfaFactors,
@@ -26,6 +28,7 @@ import {
   revokeMfaFactor,
 } from '@/shared/api/auth.api'
 import { ApiError, API_ERROR_CODES } from '@/shared/api/contracts/errors'
+import { humanErrorMessage } from '@/shared/api/error-copy'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 
@@ -43,7 +46,6 @@ import {
   faChevronRight,
 } from '@fortawesome/free-solid-svg-icons'
 
-const PASSWORD_MAX_LENGTH = 128
 
 interface PasswordFormErrors {
   current?: string
@@ -101,6 +103,7 @@ export function SecurityPage() {
   const mfaEnabled = account?.security.mfaEnabled ?? false
 
   const [showEnrollModal, setShowEnrollModal] = useState(false)
+  const [initialEnrollment, setInitialEnrollment] = useState<Awaited<ReturnType<typeof enrollMfaFactor>> | null>(null)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showLogoutAllModal, setShowLogoutAllModal] = useState(false)
   const [oldPassword, setOldPassword] = useState('')
@@ -110,7 +113,7 @@ export function SecurityPage() {
   const [revokeFactorTarget, setRevokeFactorTarget] = useState<string | null>(null)
   const [revokeSessionTarget, setRevokeSessionTarget] = useState<string | null>(null)
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null)
-  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null)
+  const sensitive = useReauthenticatedAction()
 
   const factorsQuery = useQuery({
     queryKey: queryKeys.mfaFactors(),
@@ -130,19 +133,13 @@ export function SecurityPage() {
     ])
   }
 
-  const runSensitive = async (action: () => Promise<void>) => {
-    try {
-      await action()
-    } catch (error) {
-      if (
-        error instanceof ApiError &&
-        error.code === API_ERROR_CODES.reauthenticationRequired
-      ) {
-        setPendingAction(() => action)
-        return
-      }
-      showApiErrorToast(error)
-    }
+  const runSensitive = sensitive.run
+
+  const closeEnrollment = () => { setShowEnrollModal(false); setInitialEnrollment(null) }
+  const startEnrollment = async () => {
+    const result = await enrollMfaFactor({})
+    setInitialEnrollment(result)
+    setShowEnrollModal(true)
   }
 
   const revokeFactor = async (credentialId: string) => {
@@ -183,8 +180,7 @@ export function SecurityPage() {
     if (!oldPassword) errors.current = 'Informe sua senha atual.'
     if (!PASSWORD_RULES.every((rule) => rule.test(newPassword))) {
       errors.newPassword = 'A nova senha não atende aos requisitos.'
-    } else if (newPassword.length > PASSWORD_MAX_LENGTH) {
-      errors.newPassword = `A nova senha deve ter no máximo ${PASSWORD_MAX_LENGTH} caracteres.`
+
     }
     if (newPassword !== confirmPassword) {
       errors.confirm = 'As senhas não coincidem.'
@@ -212,14 +208,15 @@ export function SecurityPage() {
         error instanceof ApiError &&
         error.code === API_ERROR_CODES.reauthenticationRequired
       ) {
-        setPendingAction(() => submitPasswordChange)
-        return
+        throw error
       }
       if (error instanceof ApiError) {
         setPasswordErrors({
           current: error.fieldErrors?.currentPassword?.join(' '),
           newPassword: error.fieldErrors?.newPassword?.join(' '),
-          general: error.fieldErrors ? undefined : error.message,
+          general: error.fieldErrors
+            ? undefined
+            : humanErrorMessage(error, 'Não foi possível alterar a senha.'),
         })
       } else {
         setPasswordErrors({ general: 'Não foi possível alterar a senha.' })
@@ -303,7 +300,8 @@ export function SecurityPage() {
                     variant="outline"
                     size="sm"
                     leftIcon={<FontAwesomeIcon icon={faPlus} style={{ fontSize: 10 }} />}
-                    onClick={() => setShowEnrollModal(true)}
+                    disabled={sensitive.busy || sensitive.pending}
+                    onClick={() => void runSensitive(startEnrollment)}
                   >
                     Adicionar fator
                   </Button>
@@ -315,6 +313,7 @@ export function SecurityPage() {
               <div className="text-[0.65rem] text-(--text-muted)">Carregando fatores…</div>
             )}
 
+            {factorsQuery.isError && <p role="alert">Não foi possível carregar os fatores de autenticação. <button type="button" onClick={() => { void factorsQuery.refetch() }}>Recarregar fatores</button></p>}
             {factors.map((factor) => (
               <div key={factor.id}>
                 <div className="border-t border-(--border-custom)" />
@@ -344,11 +343,12 @@ export function SecurityPage() {
                 <MediaRow
                   icon={<FontAwesomeIcon icon={faShieldHalved} style={{ fontSize: 14 }} />}
                   title="Códigos de recuperação"
-                  description={`${recoveryCodesRemaining} código${recoveryCodesRemaining === 1 ? '' : 's'} disponível${recoveryCodesRemaining === 1 ? '' : 'eis'}`}
+                  description={factorsQuery.isSuccess ? `${recoveryCodesRemaining} código${recoveryCodesRemaining === 1 ? '' : 's'} disponível${recoveryCodesRemaining === 1 ? '' : 'eis'}` : 'Contagem de códigos indisponível'}
                   trailing={
                     <Button
                       variant="outline"
                       size="sm"
+                      disabled={sensitive.busy || sensitive.pending || !factorsQuery.isSuccess}
                       onClick={() => void runSensitive(regenerateCodes)}
                     >
                       Gerar novos
@@ -365,7 +365,7 @@ export function SecurityPage() {
             <h2 className="text-xs font-bold text-(--text)">Sessões ativas</h2>
             <div className="flex items-center gap-2">
               <span className="text-[0.6rem] text-(--text-muted) bg-gray-100 px-2 py-0.5 rounded-full">
-                {devices.length} dispositivo{devices.length === 1 ? '' : 's'}
+                {devicesQuery.isSuccess ? `${devices.length} dispositivo${devices.length === 1 ? '' : 's'}` : 'Contagem indisponível'}
               </span>
               <Button
                 tone="danger"
@@ -382,6 +382,7 @@ export function SecurityPage() {
             {devicesQuery.isLoading && (
               <div className="px-4 py-3 text-[0.65rem] text-(--text-muted)">Carregando sessões…</div>
             )}
+            {devicesQuery.isError && <p role="alert">Não foi possível carregar as sessões. <button type="button" onClick={() => { void devicesQuery.refetch() }}>Recarregar sessões</button></p>}
             {devices.map((device) => (
               <div key={device.id} className="px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -438,6 +439,7 @@ export function SecurityPage() {
 
       <Modal
         open={showPasswordModal}
+        pending={changePasswordMutation.isPending || sensitive.busy || sensitive.pending}
         onClose={closePasswordModal}
         title="Alterar senha"
         size="sm"
@@ -454,7 +456,7 @@ export function SecurityPage() {
               tone="brand"
               variant="solid"
               disabled={changePasswordMutation.isPending}
-              onClick={() => void submitPasswordChange()}
+              onClick={() => void runSensitive(submitPasswordChange)}
             >
               {changePasswordMutation.isPending ? 'Alterando…' : 'Alterar senha'}
             </Button>
@@ -502,6 +504,7 @@ export function SecurityPage() {
 
       <Modal
         open={showLogoutAllModal}
+        pending={logoutAllMutation.isPending}
         onClose={() => setShowLogoutAllModal(false)}
         size="sm"
         title="Encerrar todas as sessões"
@@ -533,33 +536,28 @@ export function SecurityPage() {
         </p>
       </Modal>
 
-      {showEnrollModal && (
+      {showEnrollModal && initialEnrollment && (
         <EnrollMfaFactorModal
           open
-          onClose={() => setShowEnrollModal(false)}
+          initialEnrollment={initialEnrollment}
+          runSensitive={runSensitive}
+          reauthenticationPending={sensitive.pending}
+          onClose={closeEnrollment}
           onCompleted={() => void invalidateMfaState()}
         />
       )}
 
       <RecoveryCodesModal codes={recoveryCodes} onClose={() => setRecoveryCodes(null)} />
 
-      {pendingAction && (
-      <ReauthenticateModal
-        open
-        requireCode={mfaEnabled}
-        onClose={() => setPendingAction(null)}
-        onSuccess={() => {
-          const action = pendingAction
-          setPendingAction(null)
-          if (action) {
-            void action().catch((error: unknown) => showApiErrorToast(error))
-          }
-        }}
-      />
+      {sensitive.pending && (
+        <ReauthenticateModal open requireCode={mfaEnabled}
+          onClose={() => { sensitive.cancel(); closePasswordModal(); closeEnrollment(); setRevokeFactorTarget(null) }}
+          onSuccess={() => { void sensitive.resume() }} />
       )}
 
       <Modal
         open={!!revokeFactorTarget}
+        pending={sensitive.busy || sensitive.pending}
         onClose={() => setRevokeFactorTarget(null)}
         size="sm"
         title="Remover fator de autenticação"
@@ -589,6 +587,7 @@ export function SecurityPage() {
 
       <Modal
         open={!!revokeSessionTarget}
+        pending={revokeSessionMutation.isPending}
         onClose={() => setRevokeSessionTarget(null)}
         size="sm"
         title="Encerrar sessão"

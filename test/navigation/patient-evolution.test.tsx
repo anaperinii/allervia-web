@@ -10,6 +10,7 @@ import {
 } from '@tanstack/react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PatientEvolutionPage } from '@/features/patient/patient-evolution-page'
+import { doseTherapy } from '../fixtures/clinical'
 import { ToastViewport } from '@/shared/components'
 import { useToastStore } from '@/shared/components'
 import { withSession } from '../helpers/session'
@@ -74,6 +75,11 @@ const DOSE_DETAIL = {
   therapyRevision: 3,
   allowedValues: ALLOWED_VALUES,
   migrationRequired: false,
+
+
+  immunotherapy: doseTherapy({ id: 'therapy-1' }),
+  observations: [],
+  observationAddenda: [],
 }
 
 const DOSE_HISTORY = [

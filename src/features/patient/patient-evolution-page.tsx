@@ -1,3 +1,4 @@
+import { RegistrationIntent } from '@/shared/api/registration-intent'
 import {
   EvolutionReviewStep,
   NextDosePreview,
@@ -28,7 +29,7 @@ import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { Button, CancelWizardModal, showApiErrorToast, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
-import { todayStr, toOffsetIso } from '@/shared/lib/dates'
+import { todayStr, toZonedOffsetIso, tryZonedOffsetIso } from '@/shared/lib/dates'
 import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -76,9 +77,10 @@ function PatientEvolutionContent() {
 
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0)
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [pendingSelectionId, setPendingSelectionId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(preselectedId ?? null)
 
-  const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
+  const idempotencyKeyRef = useRef(new RegistrationIntent())
 
   const therapyQuery = useQuery({
     queryKey: queryKeys.immunotherapy(organizationId, selectedId ?? ''),
@@ -105,7 +107,7 @@ function PatientEvolutionContent() {
     enabled: organizationId !== '' && selectedId !== null,
   })
   const administeredDoses = (historyQuery.data ?? []).filter(
-    (record) => record.administeredAt !== null,
+    (record) => record.administeredAt !== null && record.status !== 'ENTERED_IN_ERROR',
   )
   const lastAdministered =
     administeredDoses.length > 0
@@ -140,6 +142,8 @@ function PatientEvolutionContent() {
   function previewBody(): PreviewDoseBody | null {
     if (!dose || !selectedStep || !formValues.applicationDate || !formValues.startTime)
       return null
+    const administeredAt = tryZonedOffsetIso(formValues.applicationDate, formValues.startTime, dose.immunotherapy.currentPrescription?.resolved.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo')
+    if (!administeredAt) return null
     return {
       values: {
         concentration: selectedStep.concentration,
@@ -147,7 +151,7 @@ function PatientEvolutionContent() {
         intervalDays: selectedStep.intervalDays,
         stepId: selectedStep.id,
       },
-      administeredAt: toOffsetIso(formValues.applicationDate, formValues.startTime),
+      administeredAt,
       expectedRevision: dose.revision,
       expectedTherapyRevision: dose.therapyRevision,
     }
@@ -170,7 +174,15 @@ function PatientEvolutionContent() {
   })
 
   const administerMutation = useMutation({
-    mutationFn: (body: AdministerDoseBody) => administerDose(dose!.id, body),
+    mutationFn: async (command: Omit<AdministerDoseBody, 'idempotencyKey'>) => {
+      const idempotencyKey = idempotencyKeyRef.current.prepare({ doseId: dose!.id, command })
+      try {
+        return await administerDose(dose!.id, { ...command, idempotencyKey })
+      } catch (error) {
+        idempotencyKeyRef.current.failed(error instanceof ApiError && error.statusCode >= 400 && error.statusCode < 500)
+        throw error
+      }
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       toast.success({
@@ -199,6 +211,7 @@ function PatientEvolutionContent() {
     meta: { suppressErrorToast: true },
     onError: async (error) => {
       if (error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION') {
+        setStep(2)
         await queryClient.invalidateQueries({
           queryKey: queryKeys.dose(organizationId, dose?.id ?? ''),
         })
@@ -213,23 +226,26 @@ function PatientEvolutionContent() {
     },
   })
 
-  const advanceStep = async () => {
-    if (step === 0) {
+  const selectStep = async (target: 0 | 1 | 2 | 3) => {
+    if (administerMutation.isPending) return
+    if (target <= step) { setStep(target); return }
+    if (target > 0) {
       if (!therapy || therapy.status !== 'IN_PROGRESS' || !dose || dose.migrationRequired) return
     }
-    if (step === 1) {
+    if (target > 1) {
       const ok = await trigger([...STEP_1_FIELDS])
-      if (!ok) return
+      if (!ok) { setStep(1); return }
     }
-    if (step === 2) {
+    if (target > 2) {
       const ok = await trigger([...STEP_2_FIELDS])
-      if (!ok) return
+      if (!ok) { setStep(2); return }
       const values = getValues()
       if (
         dose?.plannedStepId &&
         values.stepId !== dose.plannedStepId &&
         !values.adjustmentReason.trim()
       ) {
+        setStep(2)
         setError('adjustmentReason', {
           type: 'custom',
           message: 'Justifique o valor diferente do previsto',
@@ -237,18 +253,28 @@ function PatientEvolutionContent() {
         return
       }
     }
-    setStep((s) => (s + 1) as 0 | 1 | 2 | 3)
+    setStep(target)
+  }
+  const advanceStep = () => selectStep((step + 1) as 1 | 2 | 3)
+
+  const applySelection = (id: string) => {
+    setSelectedId(id)
+    form.reset({ ...EVOLUTION_DEFAULTS, applicationDate: todayStr() })
+    idempotencyKeyRef.current = new RegistrationIntent()
+    setStep(0)
+    setPendingSelectionId(null)
   }
 
   const { isDirty } = form.formState
   const exitBlocker = useUnsavedChangesBlocker({
     hasUnsavedChanges:
-      isDirty && !administerMutation.isPending && !administerMutation.isSuccess,
+      isDirty && !administerMutation.isSuccess,
   })
 
   const onSaveEvolution = () =>
     handleSubmit((data) => {
       if (!dose || !selectedStep) return
+      if (!tryZonedOffsetIso(data.applicationDate, data.startTime, dose.immunotherapy.currentPrescription?.resolved.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo')) { setError('startTime', { type: 'custom', message: 'Horário inválido, ambíguo ou inexistente no fuso clínico.' }); return }
       const executor = professionals.find((member) => member.professionalId === data.performerId)
       if (!executor) {
         setError('performerId', { type: 'custom', message: 'Selecione um profissional disponível.' })
@@ -269,16 +295,15 @@ function PatientEvolutionContent() {
         },
       ]
       administerMutation.mutate({
-        idempotencyKey: idempotencyKeyRef.current,
         values: {
           concentration: selectedStep.concentration,
           volume: selectedStep.volume,
           intervalDays: selectedStep.intervalDays,
           stepId: selectedStep.id,
         },
-        administeredAt: toOffsetIso(data.applicationDate, data.startTime),
+        administeredAt: toZonedOffsetIso(data.applicationDate, data.startTime, dose.immunotherapy.currentPrescription?.resolved.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo'),
         ...(data.endTime
-          ? { administrationEndedAt: toOffsetIso(data.applicationDate, data.endTime) }
+          ? { administrationEndedAt: toZonedOffsetIso(data.applicationDate, data.endTime, dose.immunotherapy.currentPrescription?.resolved.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo') }
           : {}),
         expectedRevision: dose.revision,
         expectedTherapyRevision: dose.therapyRevision,
@@ -301,6 +326,7 @@ function PatientEvolutionContent() {
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (administerMutation.isPending) return
     if (step < 3) {
       void advanceStep()
     } else {
@@ -332,7 +358,7 @@ function PatientEvolutionContent() {
           steps={STEPS}
           current={step}
           ariaLabel="Etapas da evolução"
-          onSelect={(i) => setStep(i as 0 | 1 | 2 | 3)}
+          onSelect={(i) => { void selectStep(i as 0 | 1 | 2 | 3) }}
         />
       </div>
 
@@ -350,7 +376,11 @@ function PatientEvolutionContent() {
                     therapyQuery.isPending || (pendingDoseId !== null && doseQuery.isPending)
                   }
                   preselectedLocked={!!preselectedId}
-                  onSelect={(item: ImmunotherapyListItem) => setSelectedId(item.id)}
+                  onSelect={(item: ImmunotherapyListItem) => {
+                    if (item.id === selectedId || administerMutation.isPending) return
+                    if (isDirty) setPendingSelectionId(item.id)
+                    else applySelection(item.id)
+                  }}
                 />
               )}
               {step === 1 && <PreApplicationStep form={form} />}
@@ -404,6 +434,13 @@ function PatientEvolutionContent() {
         </form>
       </div>
 
+      <CancelWizardModal
+        open={pendingSelectionId !== null}
+        title="Trocar tratamento?"
+        description="Os dados desta evolução serão descartados. Confirme a troca antes de preencher outro tratamento. Se houve uma tentativa sem resposta, confira o prontuário antes de iniciar outra operação."
+        onClose={() => setPendingSelectionId(null)}
+        onConfirm={() => { if (pendingSelectionId) applySelection(pendingSelectionId) }}
+      />
       <CancelWizardModal
         open={showCancelModal}
         title="Cancelar evolução?"

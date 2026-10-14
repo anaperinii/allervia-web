@@ -3,6 +3,7 @@ import {
   ProtocolEditorPage,
   type ProtocolEditorMode,
 } from '@/features/protocols/protocol-editor-page'
+import { RequireCapability } from '@/shared/auth/RequireCapability'
 
 type SearchParams = {
   mode: ProtocolEditorMode
@@ -25,12 +26,14 @@ export const Route = createFileRoute('/protocol-editor')({
   component: function ProtocolEditorRoute() {
     const { mode, protocolId, versionId } = Route.useSearch()
     return (
-      <ProtocolEditorPage
-        key={`${mode}:${protocolId ?? ''}:${versionId ?? ''}`}
-        mode={mode}
-        protocolId={protocolId}
-        versionId={versionId}
-      />
+      <RequireCapability capability="adjust_protocol">
+        <ProtocolEditorPage
+          key={`${mode}:${protocolId ?? ''}:${versionId ?? ''}`}
+          mode={mode}
+          protocolId={protocolId}
+          versionId={versionId}
+        />
+      </RequireCapability>
     )
   },
 })

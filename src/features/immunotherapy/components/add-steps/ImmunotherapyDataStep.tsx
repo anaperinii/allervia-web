@@ -220,6 +220,7 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
         <FieldLabel label="Via de Administração">
           <TextInput value="Subcutânea (SCIT)" readOnly className="text-(--text-muted) bg-gray-100/60" />
         </FieldLabel>
+        <p className="text-xs">Primeira previsão às 08:00 no fuso {account?.organization?.timeZone ?? 'America/Sao_Paulo'}. Esse horário será enviado ao servidor.</p>
         <FieldLabel label="Data de Início" error={errors.startDate?.message}>
           <TextInput type="date" min={todayStr()} invalid={!!errors.startDate} {...register('startDate')} />
         </FieldLabel>

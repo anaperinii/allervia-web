@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useSession } from '@/shared/auth/useSession'
+import { isPublicRoute } from '@/shared/auth/navigation-policy'
 import { useUserStore } from '@/shared/stores/useUserStore'
 
 function CenteredMessage({
@@ -43,9 +44,16 @@ export function RequireSession({ children }: { children: ReactNode }) {
   }, [account, syncFromAccount])
 
   useEffect(() => {
-    if (status === 'anonymous') {
-      void navigate({ to: '/login', replace: true })
-    }
+    if (status !== 'anonymous') return
+
+    const requested = `${window.location.pathname}${window.location.search}`
+    void navigate({
+      to: '/login',
+      replace: true,
+      search: isPublicRoute(window.location.pathname)
+        ? undefined
+        : { returnTo: requested },
+    })
   }, [status, navigate])
 
   if (status === 'loading' || status === 'anonymous') {
@@ -79,8 +87,7 @@ export function RequireSession({ children }: { children: ReactNode }) {
     )
   }
 
-  // syncFromAccount roda em efeito, ou seja, depois do render dos filhos. Soltar
-  // os filhos antes da store existir faz useCurrentUser() estourar no reload.
+
   if (!account || !profileReady) {
     return (
       <CenteredMessage

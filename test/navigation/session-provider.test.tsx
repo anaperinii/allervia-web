@@ -125,4 +125,14 @@ describe('Opaque session provider', () => {
     ).not.toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('não foi confirmada')
   })
+  it('does not treat focus refresh or synthetic polling events as human session activity', async () => {
+    const { fetchMock } = setup()
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'))
+    window.dispatchEvent(new Event('focus'))
+    window.dispatchEvent(new Event('pointerdown'))
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }))
+    await waitFor(() => expect(fetchMock.mock.calls.filter(([url]) => url.endsWith('/auth/session')).length).toBeGreaterThan(1))
+    expect(fetchMock.mock.calls.filter(([url]) => url.endsWith('/auth/session/activity'))).toHaveLength(0)
+  })
+
 })

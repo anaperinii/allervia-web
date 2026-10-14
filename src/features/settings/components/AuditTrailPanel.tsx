@@ -1,3 +1,4 @@
+import { queryKeys } from '@/shared/api/query-keys'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { listAuditLogs } from '@/shared/api/clinical.api'
@@ -16,7 +17,7 @@ export function AuditTrailPanel() {
   const [cursor, setCursor] = useState<string | undefined>(undefined)
 
   const query = useQuery({
-    queryKey: ['audit-logs', organizationId, cursor ?? 'first'],
+    queryKey: queryKeys.audit(organizationId, { cursor }),
     queryFn: ({ signal }) => listAuditLogs({ limit: PAGE, cursor }, signal),
     enabled: organizationId !== '',
     staleTime: 30_000,

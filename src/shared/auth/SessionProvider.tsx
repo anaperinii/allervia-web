@@ -1,8 +1,11 @@
+import { useUserStore } from '@/shared/stores/useUserStore'
+import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   endSession,
+  retryEndSession,
   readAccount,
   readSession,
   registerActivity,
@@ -48,6 +51,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setUnauthenticatedHandler(() => {
       setForcedAnonymous(true)
+      usePatientStore.setState({ selectedPatient: null, applications: [] })
+      useUserStore.getState().syncFromAccount(null)
+      void queryClient.cancelQueries()
       setCsrfToken(null)
       queryClient.removeQueries({
         predicate: (query) => query.meta?.public !== true,
@@ -73,6 +79,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     setLogoutError(false)
     setForcedAnonymous(true)
+    await queryClient.cancelQueries()
+    usePatientStore.setState({ selectedPatient: null, applications: [] })
+      useUserStore.getState().syncFromAccount(null)
     queryClient.clear()
     try {
       await endSession()
@@ -81,6 +90,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       throw error
     } finally {
       setForcedAnonymous(true)
+      usePatientStore.setState({ selectedPatient: null, applications: [] })
+      useUserStore.getState().syncFromAccount(null)
+      void queryClient.cancelQueries()
       setCsrfToken(null)
       queryClient.clear()
     }
@@ -90,6 +102,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     async (session: SessionState) => {
       setForcedAnonymous(false)
       setLogoutError(false)
+      await queryClient.cancelQueries()
+      usePatientStore.setState({ selectedPatient: null, applications: [] })
+      useUserStore.getState().syncFromAccount(null)
       queryClient.clear()
       queryClient.setQueryData(queryKeys.session(), {
         authenticated: true,
@@ -97,7 +112,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         session,
       })
       await queryClient.invalidateQueries({ queryKey: queryKeys.account() })
-      await queryClient.fetchQuery({
+      return queryClient.fetchQuery({
         queryKey: queryKeys.account(),
         queryFn: ({ signal }) => readAccount(signal),
       })
@@ -143,8 +158,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const failure = sessionQuery.error ?? accountQuery.error
     return {
       status,
-      account: accountQuery.data ?? null,
-      session: sessionQuery.data?.session ?? null,
+      account: status === 'authenticated' ? accountQuery.data ?? null : null,
+      session: status === 'authenticated' ? sessionQuery.data?.session ?? null : null,
       error:
         failure instanceof ApiError && !failure.isUnauthenticated
           ? failure
@@ -176,7 +191,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={() =>
-              void endSession()
+              void retryEndSession()
                 .then(() => setLogoutError(false))
                 .catch(() => setLogoutError(true))
             }

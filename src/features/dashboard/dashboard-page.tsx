@@ -20,7 +20,6 @@ import {
   aggregateActiveByType,
   aggregateByConcentration,
   aggregatePhasePatientsByDay,
-  aggregateStatusHistory,
   aggregateVolumeMatrix,
   eachDay,
   filterMatrixByConcentration,
@@ -109,8 +108,9 @@ export function DashboardPage() {
         activeTherapiesQuery.data ?? [],
         periodDays.fromDay,
         periodDays.toDay,
+        timeZone,
       ),
-    [activeTherapiesQuery.data, periodDays],
+    [activeTherapiesQuery.data, periodDays, timeZone],
   )
   const typesQuery = useQuery({
     queryKey: queryKeys.immunotherapyTypes(organizationId),
@@ -236,19 +236,12 @@ export function DashboardPage() {
     },
   ]
 
-  const statusHistoryQuery = useStatusHistory(organizationId)
   const [statusGranularity, setStatusGranularity] =
     useState<StatusGranularity>('month')
   const [statusWindow, setStatusWindow] = useState('12')
-  const statusSeries = useMemo(
-    () =>
-      aggregateStatusHistory(
-        statusHistoryQuery.data ?? [],
-        statusGranularity,
-        Number(statusWindow),
-      ),
-    [statusHistoryQuery.data, statusGranularity, statusWindow],
-  )
+  const statusHistoryQuery = useStatusHistory(organizationId, statusGranularity, Number(statusWindow))
+  const statusSeries = statusHistoryQuery.data?.buckets ?? []
+
   const statusFilters: CardFilter[] = [
     {
       key: 'granularity',
@@ -422,11 +415,6 @@ export function DashboardPage() {
             title="Aplicações Registradas"
             caption="No período"
             series={applicationSeries}
-            modalityMix={{
-              subcutaneous: metrics?.therapies.inProgress ?? 0,
-              sublingual: 0,
-              total: metrics?.therapies.inProgress ?? 0,
-            }}
             doseMix={[]}
           />
         </div>
@@ -446,9 +434,10 @@ export function DashboardPage() {
           <ChartState
             loading={statusHistoryQuery.isPending}
             error={statusHistoryQuery.isError}
-            empty={(statusHistoryQuery.data ?? []).length === 0}
+            empty={(statusHistoryQuery.data?.totalTherapies ?? 0) === 0}
             emptyText="Sem tratamentos registrados."
           >
+            {statusSeries.some(bucket => bucket.unknown > 0) && <p role="status">Existem registros legados sem histórico suficiente. Eles não foram classificados nos totais históricos.</p>}
             <StatusHistoryChart series={statusSeries} />
           </ChartState>
         </ChartCard>

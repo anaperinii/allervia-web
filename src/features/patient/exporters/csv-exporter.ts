@@ -1,4 +1,4 @@
-﻿import { format } from 'date-fns'
+import { format } from 'date-fns'
 import {
   ADJUSTMENT_TYPE_LABELS,
   INACTIVATION_CATEGORY_LABELS,
@@ -12,7 +12,7 @@ const escapeCsv = csvCell
 
 export function exportCsv(data: ReportData) {
   const { patient, realizedApplications, sections } = data
-  const { inductionStart } = derivePatientDates(realizedApplications, patient.id)
+  const inductionStart = data.inductionStart !== undefined ? data.inductionStart : derivePatientDates(realizedApplications, patient.id).inductionStart
   const lines: string[] = []
   lines.push(escapeCsv(`Relatório Clínico — ${patient.name}`))
   lines.push(escapeCsv(`Gerado em: ${data.generatedAt}`))
@@ -44,7 +44,7 @@ export function exportCsv(data: ReportData) {
       ['Início Indução', inductionStart ?? '-'],
       ['Meta', patient.targetConcentrationVolume],
       ['Dose Atual', patient.currentDoseConcentration],
-      ['Intervalo', `${patient.currentInterval} dias`],
+      ['Intervalo', patient.currentInterval > 0 ? `${patient.currentInterval} dias` : 'Indisponível'],
     ]
     rows.forEach(([label, value]) => lines.push(`${escapeCsv(label)},${escapeCsv(value)}`))
     lines.push('')
@@ -58,7 +58,7 @@ export function exportCsv(data: ReportData) {
         application.date,
         application.dose,
         `${application.cycle.days}d`,
-        application.sideEffect === 'yes' ? 'Sim' : 'Não',
+        application.sideEffect === 'yes' ? 'Sim' : application.sideEffect === 'no' ? 'Não' : 'Indisponível',
         application.administrator || '-',
       ].map(escapeCsv).join(','))
     })
@@ -67,6 +67,7 @@ export function exportCsv(data: ReportData) {
 
   if (sections.includes('reactions')) {
     lines.push(escapeCsv('=== REAÇÕES ADVERSAS ==='))
+    if (data.reactionsCount === null) lines.push(escapeCsv('Observações de reações indisponíveis nesta fonte; consulte o prontuário.'))
     lines.push('Data,Dose,Medicação,Observação')
     realizedApplications
       .filter((application) => application.sideEffect === 'yes')
@@ -85,6 +86,8 @@ export function exportCsv(data: ReportData) {
     lines.push('')
   }
 
+  if (sections.includes('adjustments') && !patient.protocolAdjustments) lines.push(escapeCsv('Histórico de ajustes indisponível nesta fonte; consulte o prontuário.'))
+  if (sections.includes('inactivations') && !patient.inactivations) lines.push(escapeCsv('Histórico de inativações indisponível nesta fonte; consulte o prontuário.'))
   if (sections.includes('adjustments') && patient.protocolAdjustments?.length) {
     lines.push(escapeCsv('=== AJUSTES DE PROTOCOLO ==='))
     lines.push('Data,Tipo,Concentração Anterior,Concentração Nova,Intervalo Anterior,Intervalo Novo,Justificativa,Responsável')
@@ -129,7 +132,7 @@ export function exportCsv(data: ReportData) {
     lines.push('Métrica,Valor')
     lines.push(`${escapeCsv('Aplicações realizadas')},${escapeCsv(realizedApplications.length)}`)
     lines.push(`${escapeCsv('Concentração atual')},${escapeCsv(patient.currentDoseConcentration.split(' - ')[0])}`)
-    lines.push(`${escapeCsv('Intervalo')},${escapeCsv(`${patient.currentInterval} dias`)}`)
+    lines.push(`${escapeCsv('Intervalo')},${escapeCsv(patient.currentInterval > 0 ? `${patient.currentInterval} dias` : 'Indisponível')}`)
   }
 
   const filename = `relatorio_${patient.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`

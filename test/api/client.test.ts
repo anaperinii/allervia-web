@@ -98,12 +98,12 @@ describe('cliente HTTP', () => {
     expect((handler.mock.calls[0][0] as ApiError).code).toBe('SESSION_EXPIRED')
   })
 
-  it('preserva a sessão em 401 de credencial quando a chamada opta por isso', async () => {
+  it('keeps a credential rejection local only for the supported endpoint and code', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
         jsonResponse(
-          { statusCode: 401, code: 'UNAUTHENTICATED', message: 'Senha atual incorreta.' },
+          { statusCode: 401, code: 'INVALID_CREDENTIALS', message: 'Senha atual incorreta.' },
           401,
         ),
       ),
@@ -115,14 +115,13 @@ describe('cliente HTTP', () => {
     const failure = (await apiRequest('/account/me/password', {
       method: 'POST',
       body: {},
-      preserveSessionOn401: true,
     }).catch((error: unknown) => error)) as ApiError
 
     expect(failure.message).toBe('Senha atual incorreta.')
     expect(handler).not.toHaveBeenCalled()
   })
 
-  it('encerra a sessão mesmo com opt-out quando o 401 é falha de sessão', async () => {
+  it('ends the session when a supported credential endpoint reports session revocation', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
@@ -139,7 +138,6 @@ describe('cliente HTTP', () => {
     await apiRequest('/account/me/password', {
       method: 'POST',
       body: {},
-      preserveSessionOn401: true,
     }).catch(() => undefined)
 
     expect(handler).toHaveBeenCalledTimes(1)

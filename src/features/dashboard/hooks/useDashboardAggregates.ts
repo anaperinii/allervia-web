@@ -1,7 +1,8 @@
+import { collectPages } from '@/shared/api/pagination'
 import { useQuery } from '@tanstack/react-query'
 import {
   getClinicalMetrics,
-  getTherapyLifecycle,
+  getStatusHistory,
   listDoseSchedule,
   listImmunotherapies,
 } from '@/shared/api/clinical.api'
@@ -14,6 +15,7 @@ import type {
   TherapyStatus,
 } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
+import { useSession } from '@/shared/auth/useSession'
 import { dayInZone } from '@/shared/lib/dates'
 
 const PAGE_SIZE = 100
@@ -23,31 +25,17 @@ async function fetchDoseWindow(
   period: { from: string; to: string },
   signal?: AbortSignal,
 ): Promise<ScheduleDoseItem[]> {
-  const items: ScheduleDoseItem[] = []
-  for (let page = 1; page <= MAX_PAGES; page++) {
-    const result = await listDoseSchedule(
-      { ...period, page, pageSize: PAGE_SIZE },
-      signal,
-    )
-    items.push(...result.items)
-    if (result.items.length === 0 || items.length >= result.total) break
-  }
-  return items
+  const result = await collectPages((page) => listDoseSchedule({ ...period, page, pageSize: PAGE_SIZE }, signal), { signal, maxPages: MAX_PAGES })
+  if (!result.complete) throw new Error('Aggregate window is incomplete; narrow the period.')
+  return result.items
 }
 
 async function fetchActiveTherapies(
   signal?: AbortSignal,
 ): Promise<ImmunotherapyListItem[]> {
-  const items: ImmunotherapyListItem[] = []
-  for (let page = 1; page <= MAX_PAGES; page++) {
-    const result = await listImmunotherapies(
-      { status: 'IN_PROGRESS', page, pageSize: PAGE_SIZE },
-      signal,
-    )
-    items.push(...result.items)
-    if (result.items.length === 0 || items.length >= result.total) break
-  }
-  return items
+  const result = await collectPages((page) => listImmunotherapies({ status: 'IN_PROGRESS', page, pageSize: PAGE_SIZE }, signal), { signal, maxPages: MAX_PAGES })
+  if (!result.complete) throw new Error('Aggregate window is incomplete; narrow the period.')
+  return result.items
 }
 
 export function useDoseWindow(
@@ -75,60 +63,23 @@ export function useActiveTherapies(organizationId: string) {
   })
 }
 
-async function fetchAllTherapies(
-  signal?: AbortSignal,
-): Promise<ImmunotherapyListItem[]> {
-  const items: ImmunotherapyListItem[] = []
-  for (let page = 1; page <= MAX_PAGES; page++) {
-    const result = await listImmunotherapies({ page, pageSize: PAGE_SIZE }, signal)
-    items.push(...result.items)
-    if (result.items.length === 0 || items.length >= result.total) break
-  }
-  return items
-}
-
 export interface TherapyStatusHistory {
   createdAt: string
   events: { type: LifecycleEventType; createdAt: string }[]
 }
 
-const LIFECYCLE_CONCURRENCY = 8
-const MAX_HISTORY_THERAPIES = 300
-
-async function fetchStatusHistories(
-  signal?: AbortSignal,
-): Promise<TherapyStatusHistory[]> {
-  const therapies = (await fetchAllTherapies(signal)).slice(
-    0,
-    MAX_HISTORY_THERAPIES,
-  )
-  const histories: TherapyStatusHistory[] = []
-  for (let i = 0; i < therapies.length; i += LIFECYCLE_CONCURRENCY) {
-    const chunk = therapies.slice(i, i + LIFECYCLE_CONCURRENCY)
-    const results = await Promise.all(
-      chunk.map(async (therapy) => {
-        const lifecycle = await getTherapyLifecycle(therapy.id, signal)
-        return {
-          createdAt: therapy.createdAt,
-          events: lifecycle.events
-            .map((event) => ({ type: event.type, createdAt: event.createdAt }))
-            .sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
-        }
-      }),
-    )
-    histories.push(...results)
-  }
-  return histories
-}
-
-export function useStatusHistory(organizationId: string) {
+export function useStatusHistory(organizationId: string, granularity: StatusGranularity = 'month', count = 12) {
+  const { account } = useSession()
+  const timeZone = account?.organization?.timeZone ?? 'America/Sao_Paulo'
+  const to = dayInZone(new Date(), timeZone)
+  const anchor = new Date(to + 'T12:00:00Z')
+  if (granularity === 'month') anchor.setUTCMonth(anchor.getUTCMonth() - count + 1, 1)
+  else anchor.setUTCDate(anchor.getUTCDate() - ((anchor.getUTCDay() + 6) % 7) - (count - 1) * 7)
+  const filters = { from: anchor.toISOString().slice(0, 10), to, timeZone, granularity }
   return useQuery({
-    queryKey: queryKeys.immunotherapies(organizationId, {
-      scope: 'status-history',
-    }),
-    queryFn: ({ signal }) => fetchStatusHistories(signal),
+    queryKey: queryKeys.statusHistory(organizationId, filters),
+    queryFn: ({ signal }) => getStatusHistory(filters, signal),
     enabled: organizationId !== '',
-    staleTime: 5 * 60 * 1000,
   })
 }
 
@@ -356,14 +307,15 @@ export function aggregatePhasePatientsByDay(
   therapies: ImmunotherapyListItem[],
   fromDay: string,
   toDay: string,
+  timeZone = 'America/Sao_Paulo',
 ): PhaseDayEntry[] {
   return eachDay(fromDay, toDay).map((day) => {
     const buildUp = new Set<string>()
     const maintenance = new Set<string>()
     for (const therapy of therapies) {
-      const induction = therapy.inductionStartDate.slice(0, 10)
+      const induction = dayInZone(new Date(therapy.inductionStartDate), timeZone)
       if (induction > day) continue
-      const maintenanceStart = therapy.maintenanceStartDate?.slice(0, 10) ?? null
+      const maintenanceStart = therapy.maintenanceStartDate ? dayInZone(new Date(therapy.maintenanceStartDate), timeZone) : null
       if (maintenanceStart !== null && maintenanceStart <= day) {
         maintenance.add(therapy.patient.id)
       } else {

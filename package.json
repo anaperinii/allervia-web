@@ -13,7 +13,7 @@
     "test:contract": "vitest run --config vitest.contract.config.ts",
     "test:typecheck": "tsc -p tsconfig.test.json",
     "e2e": "playwright test",
-    "contract:types": "openapi-typescript ../allervia-backend/docs/contracts/openapi.json -o src/shared/api/generated/openapi.d.ts",
+    "contract:types": "node scripts/generate-contract-types.cjs",
     "contract:check": "node scripts/check-generated-types.cjs"
   },
   "dependencies": {

@@ -17,8 +17,12 @@ import type {
   ProtocolVersion,
   TreatmentProtocol,
 } from '@/shared/api/contracts/protocols'
-import { PROTOCOL_ERROR_CODES } from '@/shared/api/contracts/protocols'
+import {
+  ORGANIZATION_ERROR_CODES,
+  PROTOCOL_ERROR_CODES,
+} from '@/shared/api/contracts/protocols'
 import { ApiError } from '@/shared/api/contracts/errors'
+import { humanErrorMessage } from '@/shared/api/error-copy'
 import { showApiErrorToast } from '@/shared/components'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
@@ -50,7 +54,10 @@ function describe(error: unknown, fallback: string): string {
   if (error.code === PROTOCOL_ERROR_CODES.invalidProtocol) {
     return 'O servidor recusou a definição: revise etapas e transições.'
   }
-  return error.message
+  if (error.code === PROTOCOL_ERROR_CODES.publishedRequired) {
+    return 'É preciso ter uma versão publicada antes de defini-la como padrão.'
+  }
+  return humanErrorMessage(error, fallback)
 }
 
 export function ProtocolsPage() {
@@ -75,10 +82,11 @@ export function ProtocolsPage() {
   const [confirm, setConfirm] = useState<ConfirmAction | null>(null)
   const [progression, setProgression] = useState<ProgressionTarget | null>(null)
   const [search, setSearch] = useState('')
+  const [staleAutomation, setStaleAutomation] = useState(false)
 
   const refresh = async () => {
     await queryClient.invalidateQueries({
-      queryKey: queryKeys.protocols(organizationId),
+      queryKey: queryKeys.clinical(organizationId),
     })
     await queryClient.invalidateQueries({
       queryKey: queryKeys.automation(organizationId),
@@ -105,7 +113,8 @@ export function ProtocolsPage() {
       setConfirm(null)
       await refresh()
     },
-    onError: () => setConfirm(null),
+
+
   })
 
   const automationMutation = useMutation({
@@ -116,17 +125,22 @@ export function ProtocolsPage() {
     }) => updateAutomation(input),
     onSuccess: refresh,
     onError: async (error) => {
+
       if (
         error instanceof ApiError &&
-        error.message === 'STALE_ORGANIZATION_REVISION'
+        error.code === ORGANIZATION_ERROR_CODES.staleRevision
       ) {
+        setStaleAutomation(true)
         await automationQuery.refetch()
         showApiErrorToast(error, {
           title: 'Configuração desatualizada',
           description:
-            'Outra pessoa alterou a automação. Os dados foram recarregados; revise e confirme novamente.',
+            'Outra pessoa alterou a automação. Os dados foram recarregados; revise os valores atuais e confirme novamente.',
         })
+        return
       }
+
+      showApiErrorToast(error)
     },
     meta: { suppressErrorToast: true },
   })
@@ -387,9 +401,13 @@ export function ProtocolsPage() {
         <aside className="w-full lg:sticky lg:top-0 lg:w-72 lg:shrink-0">
           <AutomationCard
             enabled={automationQuery.data?.enabled ?? false}
-            loading={automationQuery.isPending || !automationQuery.data}
+            loading={automationQuery.isPending}
+            error={automationQuery.error}
+            onRetry={() => void automationQuery.refetch()}
             saving={automationMutation.isPending}
             canManage={canManage}
+            stale={staleAutomation}
+            onAcknowledgeStale={() => setStaleAutomation(false)}
             onToggle={(enabled) =>
               automationMutation.mutate({
                 enabled,
@@ -480,6 +498,17 @@ export function ProtocolsPage() {
             </>
           )}
         </p>
+        {confirmMutation.error !== null && (
+          <p
+            role="alert"
+            className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[0.7rem] text-red-700"
+          >
+            {describe(
+              confirmMutation.error,
+              'A ação não foi concluída. Tente novamente.',
+            )}
+          </p>
+        )}
       </Modal>
 
     </SettingsLayout>

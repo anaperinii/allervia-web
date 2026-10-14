@@ -1,10 +1,11 @@
+import { ClinicalReviewNotice } from '@/shared/components/ClinicalReviewNotice'
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, TextInput } from '@/shared/components'
 import { updateScheduledDose } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
-import { toOffsetIso } from '@/shared/lib/dates'
+import { toZonedOffsetIso, dayInZone, timeInZone } from '@/shared/lib/dates'
 import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
 import type { DoseDetail } from '@/shared/api/contracts/clinical'
@@ -20,20 +21,20 @@ interface EditScheduledDoseModalProps {
   onSaved: () => void
 }
 
-function localDateInput(iso: string): string {
+function localDateInput(iso: string, timeZone = 'America/Sao_Paulo'): string {
   const date = new Date(iso)
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  return dayInZone(date, timeZone)
 }
-function localTimeInput(iso: string): string {
+function localTimeInput(iso: string, timeZone = 'America/Sao_Paulo'): string {
   const date = new Date(iso)
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+  return timeInZone(date, timeZone)
 }
 
 export function EditScheduledDoseModal(props: EditScheduledDoseModalProps) {
   if (!props.open || !props.dose) return null
   return (
     <EditScheduledDoseForm
-      key={`${props.dose.id}-${props.dose.revision}-${props.dose.therapyRevision}`}
+      key={props.dose.id}
       {...props}
     />
   )
@@ -47,14 +48,16 @@ function EditScheduledDoseForm({
   onSaved,
 }: EditScheduledDoseModalProps) {
   const queryClient = useQueryClient()
+  const timeZone = dose?.immunotherapy.currentPrescription?.resolved.timeZone ?? 'America/Sao_Paulo'
   const [stepId, setStepId] = useState(dose?.plannedStepId ?? '')
-  const [date, setDate] = useState(dose ? localDateInput(dose.scheduledAt) : '')
-  const [time, setTime] = useState(dose ? localTimeInput(dose.scheduledAt) : '')
+  const [date, setDate] = useState(dose ? localDateInput(dose.scheduledAt, timeZone) : '')
+  const [time, setTime] = useState(dose ? localTimeInput(dose.scheduledAt, timeZone) : '')
   const [reason, setReason] = useState('')
   const idempotencyKeyFor = useIdempotencyKey()
 
   const selectedStep = dose?.allowedValues.find((step) => step.id === stepId) ?? null
 
+  const [reviewRequired, setReviewRequired] = useState(false)
   const mutation = useMutation({
     mutationFn: () => {
       const command = {
@@ -64,7 +67,7 @@ function EditScheduledDoseForm({
           intervalDays: selectedStep!.intervalDays,
           stepId: selectedStep!.id,
         },
-        scheduledAt: toOffsetIso(date, time),
+        scheduledAt: toZonedOffsetIso(date, time, timeZone),
         reason: reason.trim(),
         expectedRevision: dose!.revision,
         expectedTherapyRevision: dose!.therapyRevision,
@@ -81,6 +84,7 @@ function EditScheduledDoseForm({
     },
     meta: { suppressErrorToast: true },
     onError: async (error) => {
+      if (error instanceof ApiError && error.code.startsWith('STALE_')) setReviewRequired(true)
       if (error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION') {
         await queryClient.invalidateQueries({
           queryKey: queryKeys.dose(organizationId, dose?.id ?? ''),
@@ -97,11 +101,13 @@ function EditScheduledDoseForm({
   })
 
   const canSubmit =
-    !!dose && !!selectedStep && !!date && !!time && reason.trim().length > 0 && !mutation.isPending
+    !!dose && !!selectedStep && !!date && !!time && reason.trim().length > 0 && !mutation.isPending && !reviewRequired
 
   return (
     <Modal
       open={open && !!dose}
+      pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
+      dirty={!!reason}
       onClose={onClose}
       title="Editar previsão pendente"
       footer={
@@ -118,6 +124,7 @@ function EditScheduledDoseForm({
         </>
       }
     >
+      <ClinicalReviewNotice required={reviewRequired} onReview={() => setReviewRequired(false)} />
       <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
         <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
         <p className="text-[0.65rem] text-brand-dark leading-relaxed">

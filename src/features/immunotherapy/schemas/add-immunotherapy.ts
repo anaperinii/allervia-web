@@ -44,6 +44,7 @@ export const addImmunotherapySchema = z
     targetStepId: z.string().min(1, 'Selecione a etapa meta'),
   })
   .superRefine((data, ctx) => {
+    if (!data.patientId) {
     const nameResult = nameSchema.safeParse(data.name)
     if (!nameResult.success) {
       ctx.addIssue({
@@ -78,7 +79,7 @@ export const addImmunotherapySchema = z
       })
     }
     const cpfResult = cpfSchema.safeParse(data.cpf)
-    if (!cpfResult.success) {
+    if (data.cpf.trim() && !cpfResult.success) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['cpf'],
@@ -86,7 +87,7 @@ export const addImmunotherapySchema = z
       })
     }
 
-    // Menor de idade: responsável legal obrigatório (nome, CPF e contato).
+
     if (isMinorBirthDate(data.birthDate)) {
       const guardianNameResult = nameSchema.safeParse(data.guardianName)
       if (!guardianNameResult.success) {
@@ -97,7 +98,7 @@ export const addImmunotherapySchema = z
         })
       }
       const guardianCpfResult = cpfSchema.safeParse(data.guardianCpf)
-      if (!guardianCpfResult.success) {
+      if (data.guardianCpf.trim() && !guardianCpfResult.success) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['guardianCpf'],
@@ -112,6 +113,8 @@ export const addImmunotherapySchema = z
           message: guardianPhoneResult.error.issues[0].message,
         })
       }
+    }
+
     }
 
     if (data.stepIds.length > 0) {

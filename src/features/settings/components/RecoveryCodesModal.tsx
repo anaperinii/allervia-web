@@ -9,13 +9,13 @@ interface RecoveryCodesModalProps {
   onClose: () => void
 }
 
-export function RecoveryCodesModal({ codes, onClose }: RecoveryCodesModalProps) {
+function RecoveryCodesView({ codes, onClose }: RecoveryCodesModalProps) {
   const [copied, setCopied] = useState(false)
+  const [copyError, setCopyError] = useState<string | null>(null)
 
   const copyCodes = async () => {
     if (!codes) return
-    await navigator.clipboard.writeText(codes.join('\n'))
-    setCopied(true)
+    try { await navigator.clipboard.writeText(codes.join('\n')); setCopied(true); setCopyError(null) } catch { setCopyError('Não foi possível copiar. Selecione e guarde os códigos manualmente.') }
   }
 
   return (
@@ -45,6 +45,7 @@ export function RecoveryCodesModal({ codes, onClose }: RecoveryCodesModalProps) 
         Os códigos anteriores foram invalidados. Cada código vale uma única vez
         e esta é a única vez que eles aparecem.
       </p>
+      {copyError && <p role="alert">{copyError}</p>}
       <ul className="grid grid-cols-2 gap-2 rounded-xl border border-(--border-custom) bg-gray-50 p-3">
         {(codes ?? []).map((item) => (
           <li
@@ -57,4 +58,8 @@ export function RecoveryCodesModal({ codes, onClose }: RecoveryCodesModalProps) 
       </ul>
     </Modal>
   )
+}
+
+export function RecoveryCodesModal(props: RecoveryCodesModalProps) {
+  return props.codes ? <RecoveryCodesView key={props.codes.join('|')} {...props} /> : null
 }

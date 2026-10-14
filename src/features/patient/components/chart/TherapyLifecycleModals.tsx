@@ -1,3 +1,6 @@
+import { getImmunotherapy } from '@/shared/api/clinical.api'
+import { useSession } from '@/shared/auth/useSession'
+import { ClinicalReviewNotice } from '@/shared/components/ClinicalReviewNotice'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, TextInput } from '@/shared/components'
@@ -14,7 +17,7 @@ import { queryKeys } from '@/shared/api/query-keys'
 import {
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
-import { toOffsetIso } from '@/shared/lib/dates'
+import { toZonedOffsetIso } from '@/shared/lib/dates'
 import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 import { formatInstantDate } from '@/features/patient/adapters/clinical-presentation'
 
@@ -38,7 +41,7 @@ interface LifecycleModalProps {
 
 export function SuspendTherapyModal(props: LifecycleModalProps) {
   if (!props.open) return null
-  return <SuspendForm key={`${props.therapyId}-${props.therapyRevision}`} {...props} />
+  return <SuspendForm key={props.therapyId} {...props} />
 }
 
 function SuspendForm({
@@ -49,20 +52,23 @@ function SuspendForm({
   onDone,
 }: LifecycleModalProps) {
   const queryClient = useQueryClient()
+  const { account } = useSession()
   const [category, setCategory] = useState('')
   const [reason, setReason] = useState('')
   const [expectedReturnDate, setExpectedReturnDate] = useState('')
   const idempotencyKeyFor = useIdempotencyKey()
 
+  const [reviewRequired, setReviewRequired] = useState(false)
+  const [confirmedRevision, setConfirmedRevision] = useState<number | null>(therapyRevision)
   const mutation = useMutation({
     mutationFn: () => {
       const command = {
         action: 'SUSPEND' as const,
-        expectedRevision: therapyRevision,
+        expectedRevision: confirmedRevision!,
         reason: reason.trim(),
         ...(category ? { category } : {}),
         ...(expectedReturnDate
-          ? { expectedReturnAt: toOffsetIso(expectedReturnDate, '08:00') }
+          ? { expectedReturnAt: toZonedOffsetIso(expectedReturnDate, '08:00', account?.organization?.timeZone ?? 'America/Sao_Paulo') }
           : {}),
       }
       return executeTherapyLifecycle(therapyId, {
@@ -76,7 +82,8 @@ function SuspendForm({
       onClose()
     },
     meta: { suppressErrorToast: true },
-    onError: (error) => {
+    onError: async (error) => {
+      if (error instanceof ApiError && error.code.startsWith('STALE_')) { setReviewRequired(true); setConfirmedRevision(null); try { const current = await getImmunotherapy(therapyId); setConfirmedRevision(current.revision) } catch { return }; await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) }
       showApiErrorToast(
         error,
         error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION'
@@ -90,11 +97,13 @@ function SuspendForm({
     },
   })
 
-  const canSubmit = reason.trim().length >= 10 && !!category && !mutation.isPending
+  const canSubmit = reason.trim().length >= 10 && !!category && !mutation.isPending && !reviewRequired
 
   return (
     <Modal
       open
+      pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
+      dirty={!!reason}
       onClose={onClose}
       title="Suspender tratamento"
       footer={
@@ -106,6 +115,8 @@ function SuspendForm({
         </>
       }
     >
+      {reviewRequired && confirmedRevision === null && <div role="alert"><p>Não foi possível carregar a revisão atual. Seu rascunho está preservado.</p><button type="button" onClick={async () => { try { const current = await getImmunotherapy(therapyId); setConfirmedRevision(current.revision); await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) } catch (error) { showApiErrorToast(error) } }}>Recarregar registro atual</button></div>}
+      <ClinicalReviewNotice required={reviewRequired && confirmedRevision !== null} onReview={() => { if (confirmedRevision !== null) setReviewRequired(false) }} />
       <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
         <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
         <p className="text-[0.65rem] text-brand-dark leading-relaxed">
@@ -148,7 +159,7 @@ function SuspendForm({
 
 export function ResumeTherapyModal(props: LifecycleModalProps) {
   if (!props.open) return null
-  return <ResumeForm key={`${props.therapyId}-${props.therapyRevision}`} {...props} />
+  return <ResumeForm key={props.therapyId} {...props} />
 }
 
 function ResumeForm({
@@ -161,11 +172,13 @@ function ResumeForm({
   const queryClient = useQueryClient()
   const [reason, setReason] = useState('')
   const idempotencyKeyFor = useIdempotencyKey()
+  const [reviewRequired, setReviewRequired] = useState(false)
+  const [confirmedRevision, setConfirmedRevision] = useState<number | null>(therapyRevision)
   const mutation = useMutation({
     mutationFn: () => {
       const command = {
         action: 'RESUME' as const,
-        expectedRevision: therapyRevision,
+        expectedRevision: confirmedRevision!,
         reason: reason.trim(),
       }
       return executeTherapyLifecycle(therapyId, {
@@ -173,6 +186,7 @@ function ResumeForm({
         idempotencyKey: idempotencyKeyFor([therapyId, command]),
       })
     },
+    onError: async (error) => { if (error instanceof ApiError && error.code.startsWith('STALE_')) { setReviewRequired(true); setConfirmedRevision(null); try { const current = await getImmunotherapy(therapyId); setConfirmedRevision(current.revision) } catch { return }; await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) } },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       onDone('resumed')
@@ -182,6 +196,8 @@ function ResumeForm({
   return (
     <Modal
       open
+      pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
+      dirty={!!reason}
       onClose={onClose}
       title="Retomar tratamento"
       footer={
@@ -190,7 +206,7 @@ function ResumeForm({
           <Button
             tone="success"
             variant="solid"
-            disabled={reason.trim().length < 5 || mutation.isPending}
+            disabled={reason.trim().length < 5 || mutation.isPending || reviewRequired}
             onClick={() => mutation.mutate()}
           >
             Retomar tratamento
@@ -198,6 +214,8 @@ function ResumeForm({
         </>
       }
     >
+      {reviewRequired && confirmedRevision === null && <div role="alert"><p>Não foi possível carregar a revisão atual. Seu rascunho está preservado.</p><button type="button" onClick={async () => { try { const current = await getImmunotherapy(therapyId); setConfirmedRevision(current.revision); await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) } catch (error) { showApiErrorToast(error) } }}>Recarregar registro atual</button></div>}
+      <ClinicalReviewNotice required={reviewRequired && confirmedRevision !== null} onReview={() => { if (confirmedRevision !== null) setReviewRequired(false) }} />
       <p className="text-xs text-(--text) leading-relaxed">
         O tratamento volta a aceitar comandos clínicos a partir da previsão preservada.
         Para retomar em outro valor ou data, edite os dados previstos na linha do tempo após a retomada.

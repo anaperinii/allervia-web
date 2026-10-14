@@ -15,9 +15,7 @@ function buildPayload(data: LgpdExportData) {
     exportedAt,
     exportedBy,
     justification,
-    lgpdCompliance: {
-      legalBasis: 'LGPD Art. 18, V — Direito à portabilidade / Art. 19 — Direito de acesso',
-    },
+    scope: { therapyId: data.therapyId ?? null, kind: 'SELECTED_THERAPY', completePatientRecord: false, historyLimit: 200, downloadAudited: false },
     patient: {
       id: patient.id,
       nome: patient.name,
@@ -33,12 +31,12 @@ function buildPayload(data: LgpdExportData) {
       tipo: patient.immunotherapyType,
       viaAdministracao: patient.administrationRoute,
       extrato: patient.extract,
-      inicioInducao: inductionStart,
-      inicioManutencao: maintenanceStart,
-      concentracaoVolumeMeta: patient.targetConcentrationVolume,
-      concentracaoDoseAtuais: patient.currentDoseConcentration,
-      intervaloAtual: patient.currentInterval,
-      metaAtingida: patient.targetReached,
+      inicioInducaoDerivadoDasDoses: inductionStart,
+      inicioManutencaoDerivadoDasDoses: maintenanceStart,
+      concentracaoVolumeMeta: patient.targetConcentrationVolume || null,
+      concentracaoDoseAtuais: patient.currentDoseConcentration || null,
+      intervaloAtual: patient.currentInterval > 0 ? patient.currentInterval : null,
+      metaAtingida: null,
       dataProximaAplicacao: patient.nextApplicationDate,
     },
     ajustesProtocolo: (patient.protocolAdjustments ?? []).map((adj) => ({
@@ -66,19 +64,15 @@ function buildPayload(data: LgpdExportData) {
       observacaoRetomada: inact.reactivateNote ?? null,
       reativadoPor: inact.reactivatedBy ?? null,
     })),
+    doses: data.doses ?? [],
     aplicacoes: applications,
-    historicoClinico: accessLogs.map((entry) => ({
-      data: entry.timestamp,
-      profissional: entry.user.professional?.fullName ?? entry.user.id,
-      acao: entry.action,
-      entidade: `${entry.entityType}:${entry.entityId}`,
-    })),
+    historicoClinico: accessLogs,
   }
 }
 
 export function exportLgpd(data: LgpdExportData, fileFormat: LgpdFileFormat) {
   const payload = buildPayload(data)
-  const filename = `allervia_lgpd_${data.patient.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.${fileFormat}`
+  const filename = `allervia_tratamento_${data.patient.name.replace(/\s+/g, '_').toLowerCase()}_${format(new Date(), 'yyyyMMdd_HHmm')}.${fileFormat}`
 
   if (fileFormat === 'json') {
     downloadFile(JSON.stringify(payload, null, 2), filename, 'application/json')
@@ -89,13 +83,15 @@ export function exportLgpd(data: LgpdExportData, fileFormat: LgpdFileFormat) {
   const pushPair = (category: string, key: string, value: unknown) => {
     lines.push(`${csvCell(category)},${csvCell(key)},${csvCell(value)}`)
   }
+  Object.entries(payload.scope).forEach(([k, v]) => pushPair('Escopo', k, v))
   Object.entries(payload.patient).forEach(([k, v]) => pushPair('Paciente', k, v))
   Object.entries(payload.imunoterapia).forEach(([k, v]) => pushPair('Imunoterapia', k, v))
   payload.ajustesProtocolo.forEach((adj, i) => Object.entries(adj).forEach(([k, v]) => pushPair(`Ajuste ${i + 1}`, k, v)))
   payload.inativacoes.forEach((inact, i) => Object.entries(inact).forEach(([k, v]) => pushPair(`Inativacao ${i + 1}`, k, v)))
+  payload.doses.forEach((dose, i) => Object.entries(dose).forEach(([k, v]) => pushPair(`Dose ${i + 1}`, k, typeof v === 'object' ? JSON.stringify(v) : v)))
   payload.aplicacoes.forEach((a, i) =>
     Object.entries(a).forEach(([k, v]) => pushPair(`Aplicacao ${i + 1}`, k, typeof v === 'object' ? JSON.stringify(v) : v)),
   )
-  payload.historicoClinico.forEach((l, i) => Object.entries(l).forEach(([k, v]) => pushPair(`Acesso ${i + 1}`, k, v)))
+  payload.historicoClinico.forEach((l, i) => Object.entries(l).forEach(([k, v]) => pushPair(`Evento ${i + 1}`, k, typeof v === 'object' ? JSON.stringify(v) : v)))
   downloadFile('﻿' + lines.join('\n'), filename, 'text/csv;charset=utf-8')
 }

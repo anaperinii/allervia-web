@@ -50,8 +50,8 @@ export function VerifyTokenStep({
         </h1>
         <p className="text-[0.84rem] leading-relaxed max-w-sm" style={{ color: 'var(--ink-soft)' }}>
           Se houver uma conta para{' '}
-          <span className="font-semibold text-[color:var(--ink)]">{email}</span>, enviamos
-          um link de redefinição.
+          <span className="font-semibold text-[color:var(--ink)]">{email || 'seu e-mail'}</span>, a solicitação foi recebida.
+          A disponibilidade do link depende da entrega do e-mail.
           <br />
           Abra o link ou cole o código recebido abaixo.
         </p>
@@ -82,7 +82,7 @@ export function VerifyTokenStep({
       <div className="flex flex-col gap-3">
         <button
           onClick={onSubmit}
-          disabled={isExpired || submitting || token.trim().length === 0}
+          disabled={submitting || token.trim().length === 0}
           className="inline-flex w-full items-center justify-center rounded-lg h-10 text-sm font-semibold transition-[filter] duration-200 hover:brightness-95 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
           style={{ background: 'var(--btn)', color: 'var(--btn-ink)' }}
         >
@@ -90,6 +90,7 @@ export function VerifyTokenStep({
         </button>
         <div className="flex items-center justify-between">
           <button
+            disabled={submitting}
             onClick={onBack}
             className="flex items-center gap-1.5 text-xs font-medium bg-transparent border-none cursor-pointer transition-colors"
             style={{ color: 'var(--ink-soft)' }}
@@ -98,6 +99,7 @@ export function VerifyTokenStep({
             Voltar
           </button>
           <button
+            disabled={submitting}
             onClick={onResend}
             className="text-xs font-medium hover:underline bg-transparent border-none cursor-pointer"
             style={{ color: 'var(--accent)' }}
@@ -119,10 +121,10 @@ export function VerifyTokenStep({
         <FontAwesomeIcon icon={faClock} className="shrink-0" style={{ fontSize: 14, color: 'var(--glass-ink)' }} />
         <p className="text-[0.72rem] leading-relaxed" style={{ color: 'var(--glass-ink)' }}>
           {isExpired ? (
-            <>O código expirou. Solicite um novo para continuar.</>
+            <>O prazo contado nesta tela terminou. O servidor confirma se o código ainda é válido; solicite outro se necessário.</>
           ) : (
             <>
-              O código expira em <span className="font-bold tabular-nums">{formatted}</span>. Verifique também sua pasta de spam caso não encontre o e-mail.
+              Prazo estimado nesta tela: <span className="font-bold tabular-nums">{formatted}</span>; a validade é confirmada pelo servidor. Verifique também sua pasta de spam caso não encontre o e-mail.
             </>
           )}
         </p>

@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { collectPages } from '@/shared/api/pagination'
+import { useBlobPreview } from '@/shared/hooks/useBlobPreview'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { exportClinicalDoses, getClinicalMetrics } from '@/shared/api/clinical.api'
-import type { ClinicalExportRow, TherapyStatus } from '@/shared/api/contracts/clinical'
+import type { TherapyStatus } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { exportClinicalDatasetCsv } from '@/features/patient/exporters'
@@ -26,8 +28,7 @@ import {
 import {
   aggregateActiveByType,
   aggregateByConcentration,
-  aggregatePhasesByDay,
-  aggregateStatusHistory,
+  aggregatePhasePatientsByDay,
   aggregateVolumeMatrix,
   buildComparisonSeries,
   eachDay,
@@ -48,7 +49,6 @@ import {
   faCircleCheck,
   faCircleInfo,
   faDownload,
-  faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons'
 
 const PAGE_SIZE = 100
@@ -117,6 +117,8 @@ export function ExportReportPage() {
   const [consent, setConsent] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
+  const exportController = useRef<AbortController | null>(null)
+  useEffect(() => () => { exportController.current?.abort() }, [account?.user.id, account?.organization?.id])
   const [sections, setSections] = useState<DashboardSectionId[]>(ALL_DASHBOARD_SECTIONS)
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const [calendarOpen, setCalendarOpen] = useState(false)
@@ -222,8 +224,8 @@ export function ExportReportPage() {
         periodDays.days,
         periodDays.previousDays,
       ),
-      statusSeries: aggregateStatusHistory(statusHistoryQuery.data ?? [], 'month', 12),
-      phaseSeries: aggregatePhasesByDay(doses, periodDays.fromDay, periodDays.toDay, timeZone),
+      statusSeries: statusHistoryQuery.data?.buckets ?? [],
+      phaseSeries: aggregatePhasePatientsByDay(activeTherapiesQuery.data ?? [], periodDays.fromDay, periodDays.toDay, timeZone),
       concentrationData: aggregateByConcentration(doses),
       typeData: aggregateActiveByType(activeTherapiesQuery.data ?? []),
       volumeMatrix: aggregateVolumeMatrix(doses),
@@ -239,14 +241,7 @@ export function ExportReportPage() {
     timeZone,
   ])
 
-  const previewUrl = useMemo(() => {
-    if (format !== 'dashboard-pdf' || !reportData) return null
-    return URL.createObjectURL(buildDashboardReportPdf(reportData).output('blob'))
-  }, [format, reportData])
-  useEffect(() => {
-    if (!previewUrl) return
-    return () => URL.revokeObjectURL(previewUrl)
-  }, [previewUrl])
+  const previewUrl = useBlobPreview(reportData, format === 'dashboard-pdf', buildDashboardReportPdf)
 
   function runDashboardExport() {
     const data = reportData
@@ -263,38 +258,27 @@ export function ExportReportPage() {
   }
 
   async function runDatasetExport() {
+    if (exportController.current) return
+    const controller = new AbortController()
+    exportController.current = controller
+    const deadline = setTimeout(() => controller.abort(), 120000)
     let asOf = ''
-    const rows: ClinicalExportRow[] = []
-    let total = 0
     try {
-      for (let page = 1; page <= MAX_PAGES; page++) {
+      const collected = await collectPages(async page => {
         setProgress(`Buscando página ${page}…`)
-        const result = await exportClinicalDoses({
-          ...(asOf ? { asOf } : {}),
-          page,
-          pageSize: PAGE_SIZE,
-          justification: justification.trim().slice(0, 500),
-          ...(status ? { status } : {}),
-        })
-        if (!asOf) asOf = result.asOf
-        rows.push(...result.items)
-        total = result.total
-        if (rows.length >= total) break
-      }
-      if (rows.length < total) {
-        toast.warning({
-          icon: <FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 16 }} />,
-          title: 'Exportação parcial',
-          description: `O conjunto tem ${total} linhas e o limite do navegador é ${MAX_PAGES * PAGE_SIZE}. Exportado parcialmente até a linha ${rows.length}; volumes maiores exigem o job de exportação (pendência declarada).`,
-          position: 'top-right',
-          autoDismissMs: 10000,
-        })
-      }
+        const result = await exportClinicalDoses({ ...(asOf ? { asOf } : {}), page, pageSize: PAGE_SIZE, justification: justification.trim().slice(0, 500), ...(status ? { status } : {}) }, controller.signal)
+        if (asOf && asOf !== result.asOf) throw new Error('O corte da exportação mudou entre páginas. Nenhum arquivo foi gerado.')
+        asOf = result.asOf
+        return result
+      }, { signal: controller.signal, maxPages: MAX_PAGES, getId: row => row.doseId })
+      if (!collected.complete) throw new Error('O conjunto excede o limite do navegador. Nenhum arquivo parcial foi gerado.')
+      controller.signal.throwIfAborted()
+      const rows = collected.items
       if (format === 'csv') {
         exportClinicalDatasetCsv(rows, asOf)
       } else {
         downloadFile(
-          JSON.stringify({ asOf, total: rows.length, rows }, null, 2),
+          JSON.stringify({ asOf, total: rows.length, scope: { kind: 'AUTHORIZED_CLINICAL_DATASET', complete: true, consistency: 'MEMBERSHIP_CUTOFF_CURRENT_VALUES_PER_PAGE' }, rows }, null, 2),
           `allervia_export_${asOf.replace(/[:.]/g, '-')}.json`,
           'application/json',
         )
@@ -308,6 +292,8 @@ export function ExportReportPage() {
     } catch (error) {
       showApiErrorToast(error, { title: 'Não foi possível gerar a exportação' })
     } finally {
+      clearTimeout(deadline)
+      exportController.current = null
       setProgress(null)
     }
   }

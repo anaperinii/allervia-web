@@ -7,19 +7,26 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LoginPage } from '@/features/auth/login-page'
 import { setCsrfToken } from '@/shared/api/client'
+import {
+  accountContext,
+  mfaChallenge,
+  mfaEnrollmentChallenge,
+  sessionEnvelope,
+} from '../fixtures/account'
+import {
+  errorResponse,
+  jsonResponse,
+  type HandlerContext,
+  type RouteDefinition,
+  stubApi,
+} from '../helpers/http'
 import { withSession } from '../helpers/session'
 
-function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  })
-}
 
-async function renderLogin(adopt = vi.fn().mockResolvedValue(undefined)) {
+async function renderLogin(adopt = vi.fn().mockResolvedValue(accountContext())) {
   const root = createRootRoute()
   const login = createRoute({
     getParentRoute: () => root,
@@ -72,18 +79,14 @@ async function fillCredentials() {
   return user
 }
 
-const SESSION_BODY = {
-  authenticated: true,
-  accessExpiresAt: '2026-09-19T12:05:00.000Z',
-  csrfToken: 'csrf-da-sessao',
-  session: {
-    id: 'session-1',
-    createdAt: '2026-09-19T12:00:00.000Z',
-    expiresAt: '2026-09-19T20:00:00.000Z',
-    lastInteractiveAt: '2026-09-19T12:00:00.000Z',
-    mfaVerified: true,
-    reauthenticatedAt: null,
-  },
+
+function csrfRoute(tokens: string[]): RouteDefinition {
+  return {
+    method: 'GET',
+    path: '/auth/csrf',
+    handler: ({ call }: HandlerContext) =>
+      jsonResponse({ csrfToken: tokens[call - 1] ?? tokens.at(-1) }),
+  }
 }
 
 describe('entrada com sessão real', () => {
@@ -91,51 +94,33 @@ describe('entrada com sessão real', () => {
     setCsrfToken(null)
   })
 
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
   it('pede o desafio anti-CSRF antes de enviar as credenciais', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(jsonResponse({ csrfToken: 'csrf-de-pre-sessao' }))
-      .mockResolvedValueOnce(jsonResponse(SESSION_BODY))
-    vi.stubGlobal('fetch', fetchMock)
+    const api = stubApi([
+      csrfRoute(['csrf-de-pre-sessao']),
+      { method: 'POST', path: '/auth/sessions', handler: sessionEnvelope() },
+    ])
 
     const { adopt, router } = await renderLogin()
     await fillCredentials()
 
     await waitFor(() => expect(adopt).toHaveBeenCalledTimes(1))
 
-    const [csrfUrl] = fetchMock.mock.calls[0] as [string]
-    const [loginUrl, loginInit] = fetchMock.mock.calls[1] as [
-      string,
-      RequestInit,
-    ]
-    expect(csrfUrl).toContain('/auth/csrf')
-    expect(loginUrl).toContain('/auth/sessions')
-    expect((loginInit.headers as Record<string, string>)['X-CSRF-Token']).toBe(
-      'csrf-de-pre-sessao',
-    )
+
+    expect(api.requestsFor('GET', '/auth/csrf')).toHaveLength(1)
+    const [login] = api.requestsFor('POST', '/auth/sessions')
+    expect(login.headers['X-CSRF-Token']).toBe('csrf-de-pre-sessao')
+    expect(api.requests.indexOf(login)).toBeGreaterThan(0)
     await waitFor(() =>
       expect(router.state.location.pathname).toBe('/immunotherapies'),
     )
   })
 
   it('exige o segundo fator antes de criar a sessão clínica', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(jsonResponse({ csrfToken: 'csrf-1' }))
-      .mockResolvedValueOnce(
-        jsonResponse({
-          status: 'MFA_REQUIRED',
-          challengeToken: 'desafio-1',
-          expiresAt: '2026-09-19T12:05:00.000Z',
-        }),
-      )
-      .mockResolvedValueOnce(jsonResponse({ csrfToken: 'csrf-2' }))
-      .mockResolvedValueOnce(jsonResponse(SESSION_BODY))
-    vi.stubGlobal('fetch', fetchMock)
+    const api = stubApi([
+      csrfRoute(['csrf-1', 'csrf-2']),
+      { method: 'POST', path: '/auth/sessions', handler: mfaChallenge() },
+      { method: 'POST', path: '/auth/mfa/verify', handler: sessionEnvelope() },
+    ])
 
     const { adopt } = await renderLogin()
     const user = await fillCredentials()
@@ -151,41 +136,25 @@ describe('entrada com sessão real', () => {
     await user.click(screen.getByRole('button', { name: 'Verificar' }))
 
     await waitFor(() => expect(adopt).toHaveBeenCalledTimes(1))
-    const [verifyUrl, verifyInit] = fetchMock.mock.calls[3] as [
-      string,
-      RequestInit,
-    ]
-    expect(verifyUrl).toContain('/auth/mfa/verify')
-    expect(JSON.parse(verifyInit.body as string)).toEqual({
+    const [verify] = api.requestsFor('POST', '/auth/mfa/verify')
+    expect(verify.body).toEqual({
       challengeToken: 'desafio-1',
       code: '123456',
     })
   })
 
   it('mostra os códigos de recuperação uma única vez após o cadastro do fator', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(jsonResponse({ csrfToken: 'csrf-1' }))
-      .mockResolvedValueOnce(
-        jsonResponse({
-          status: 'MFA_ENROLLMENT_REQUIRED',
-          challengeToken: 'desafio-2',
-          expiresAt: '2026-09-19T12:05:00.000Z',
-          enrollment: {
-            credentialId: 'credencial-1',
-            secret: 'JBSWY3DPEHPK3PXP',
-            keyUri: 'otpauth://totp/Allervia:profissional',
-          },
-        }),
-      )
-      .mockResolvedValueOnce(jsonResponse({ csrfToken: 'csrf-2' }))
-      .mockResolvedValueOnce(
-        jsonResponse({
-          ...SESSION_BODY,
+    stubApi([
+      csrfRoute(['csrf-1', 'csrf-2']),
+      { method: 'POST', path: '/auth/sessions', handler: mfaEnrollmentChallenge() },
+      {
+        method: 'POST',
+        path: '/auth/mfa/verify',
+        handler: sessionEnvelope({
           recoveryCodes: ['ABCDE-12345', 'FGHIJ-67890'],
         }),
-      )
-    vi.stubGlobal('fetch', fetchMock)
+      },
+    ])
 
     const { adopt } = await renderLogin()
     const user = await fillCredentials()
@@ -215,20 +184,14 @@ describe('entrada com sessão real', () => {
   })
 
   it('mostra a mensagem do servidor quando as credenciais são recusadas', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(jsonResponse({ csrfToken: 'csrf-1' }))
-      .mockResolvedValueOnce(
-        jsonResponse(
-          {
-            statusCode: 401,
-            code: 'INVALID_CREDENTIALS',
-            message: 'Credenciais inválidas.',
-          },
-          401,
-        ),
-      )
-    vi.stubGlobal('fetch', fetchMock)
+    stubApi([
+      csrfRoute(['csrf-1']),
+      {
+        method: 'POST',
+        path: '/auth/sessions',
+        handler: errorResponse(401, 'INVALID_CREDENTIALS', 'Credenciais inválidas.'),
+      },
+    ])
 
     const { adopt } = await renderLogin()
     await fillCredentials()

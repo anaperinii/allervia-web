@@ -111,6 +111,7 @@ export function SecondFactorStep({
 
         <button
           type="button"
+          disabled={submitting}
           onClick={onBack}
           className="text-[12.5px] font-medium underline underline-offset-2 cursor-pointer bg-transparent border-none"
           style={{ color: 'var(--ink-soft)' }}

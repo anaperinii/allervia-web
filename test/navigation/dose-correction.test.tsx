@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { RetractDoseModal } from '@/features/patient/components/chart/DoseCorrectionModals'
+import { doseDetail } from '../fixtures/clinical'
 import { withSession } from '../helpers/session'
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -11,11 +12,9 @@ function jsonResponse(body: unknown, status = 200): Response {
   })
 }
 
-const DOSE = {
-  id: 'dose-1',
-  revision: 2,
-  therapyRevision: 5,
-}
+
+
+const DOSE = doseDetail({ id: 'dose-1', revision: 2, therapyRevision: 5 })
 
 function stubApi(failFirstRetract: boolean) {
   let retractAttempts = 0

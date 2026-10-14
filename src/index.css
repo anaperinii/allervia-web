@@ -110,8 +110,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-
-  /* Controles nativos no teal da marca, no lugar do azul padrão do sistema. */
   input[type='checkbox'],
   input[type='radio'] {
     accent-color: #257e8c;
@@ -282,6 +280,10 @@
 @keyframes slide-up-fade {
   from { transform: translateY(16px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+@keyframes toast-timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
 }
 
 @keyframes slide-down-fade {

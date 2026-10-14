@@ -3,7 +3,7 @@ function toISODateString(d: Date): string {
 }
 
 export function todayStr(): string {
-  return toISODateString(new Date())
+  return dayInZone(new Date(), 'America/Sao_Paulo')
 }
 
 export function tomorrowStr(): string {
@@ -31,10 +31,10 @@ export function toDateInputValue(value: string | null | undefined): string {
   return isNaN(parsed.getTime()) ? '' : parsed.toISOString().slice(0, 10)
 }
 
-export function calculateAge(birthDateIso: string): number {
-  const birth = new Date(birthDateIso + 'T12:00')
-  if (isNaN(birth.getTime())) return 0
-  const now = new Date()
+export function calculateAge(birthDateIso: string, today = dayInZone(new Date(), 'America/Sao_Paulo')): number {
+  const birth = parseIsoDate(birthDateIso)
+  if (!birth) return 0
+  const now = parseIsoDate(today)!
   let age = now.getFullYear() - birth.getFullYear()
   const monthDiff = now.getMonth() - birth.getMonth()
   if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--
@@ -101,13 +101,35 @@ function zoneOffsetMinutes(instant: Date, timeZone: string): number {
 }
 
 export function toZonedOffsetIso(date: string, time: string, timeZone: string): string {
+  if (!parseIsoDate(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time))
+    throw new Error('Data ou horário inválido.')
   const reference = new Date(`${date}T${time}:00Z`)
-  const firstGuess = zoneOffsetMinutes(reference, timeZone)
-  const offsetMinutes = zoneOffsetMinutes(
-    new Date(reference.getTime() - firstGuess * 60_000),
-    timeZone,
-  )
-  return `${date}T${time}:00${formatOffset(offsetMinutes)}`
+  const offsets = new Set<number>()
+  for (let hours = -36; hours <= 36; hours += 6)
+    offsets.add(zoneOffsetMinutes(new Date(reference.getTime() + hours * 3600000), timeZone))
+  const matches = [...offsets].filter(offset => {
+    const instant = new Date(reference.getTime() - offset * 60000)
+    return dayInZone(instant, timeZone) === date && timeInZone(instant, timeZone) === time
+  })
+  if (matches.length !== 1)
+    throw new Error(matches.length ? 'Horário ambíguo neste fuso. Escolha outro horário.' : 'Horário inexistente neste fuso. Escolha outro horário.')
+  return `${date}T${time}:00${formatOffset(matches[0])}`
+}
+
+export function timeInZone(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-GB', { timeZone, hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }).format(date)
+}
+
+export function tryZonedOffsetIso(date: string, time: string, timeZone: string): string | null {
+  try { return toZonedOffsetIso(date, time, timeZone) } catch { return null }
+}
+
+export function appointmentWindow(date: string, start: string, end: string, timeZone: string) {
+  const endsOn = end < start ? addDaysToDay(date, 1) : date
+  const startsAt = toZonedOffsetIso(date, start, timeZone)
+  const endsAt = toZonedOffsetIso(endsOn, end, timeZone)
+  if (Date.parse(endsAt) <= Date.parse(startsAt)) throw new Error('O fim deve ser posterior ao início.')
+  return { startsAt, endsAt }
 }
 
 export function dayInZone(date: Date, timeZone: string): string {
