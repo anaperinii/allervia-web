@@ -33,10 +33,11 @@ test('resposta perdida após o commit: retry idempotente devolve o resultado ori
   )
   expect(listResponse.ok()).toBe(true)
   const list = (await listResponse.json()) as {
-    items: { id: string; patient: { fullName: string } }[]
+    items: { id: string; inductionStartDate: string; patient: { fullName: string } }[]
   }
   const therapy = list.items.find(
-    (item) => item.patient.fullName === 'Paciente Menor Aurora',
+
+    (item) => item.patient.fullName === 'Paciente Menor Aurora' && new Date(item.inductionStartDate).getTime() < Date.now() - 15 * 60_000,
   )
   expect(therapy).toBeDefined()
 

@@ -1,4 +1,5 @@
-import { useState, type CSSProperties } from 'react'
+import { useRef, useState, type CSSProperties } from 'react'
+import { ApiError, API_ERROR_CODES } from '@/shared/api/contracts/errors'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -8,8 +9,9 @@ import { RecoveryCodesNotice } from '@/features/auth/components/RecoveryCodesNot
 import { loginSchema, type LoginForm } from '@/features/auth/schemas/login'
 import { startSession, verifySecondFactor } from '@/shared/api/auth.api'
 import { isMfaChallenge, type MfaChallenge, type SessionState } from '@/shared/api/contracts/account'
-import { ApiError } from '@/shared/api/contracts/errors'
+import { humanErrorMessage } from '@/shared/api/error-copy'
 import { useSession } from '@/shared/auth/useSession'
+import { destinationAfterLogin } from '@/shared/auth/navigation-policy'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
@@ -25,13 +27,14 @@ const fieldStyle: CSSProperties = {
   borderRadius: 12,
 }
 
-const AFTER_LOGIN_ROUTE = '/immunotherapies'
+
+function requestedReturnTo(): string | null {
+  if (typeof window === 'undefined') return null
+  return new URLSearchParams(window.location.search).get('returnTo')
+}
 
 function describeFailure(error: unknown): string {
-  if (!(error instanceof ApiError)) {
-    return 'Não foi possível entrar. Tente novamente.'
-  }
-  return error.message
+  return humanErrorMessage(error, 'Não foi possível entrar. Tente novamente.')
 }
 
 export function LoginPage() {
@@ -42,6 +45,7 @@ export function LoginPage() {
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null)
   const [pendingSession, setPendingSession] = useState<SessionState | null>(null)
   const [failure, setFailure] = useState<string | null>(null)
+  const verificationInFlight = useRef(false)
   const [verifying, setVerifying] = useState(false)
 
   const {
@@ -55,8 +59,11 @@ export function LoginPage() {
   })
 
   const enterApplication = async (session: SessionState) => {
-    await adopt(session)
-    await navigate({ to: AFTER_LOGIN_ROUTE })
+
+    const account = await adopt(session)
+    await navigate({
+      to: destinationAfterLogin(requestedReturnTo(), account?.capabilities ?? []),
+    })
   }
 
   const onSubmit = handleSubmit(async (values) => {
@@ -76,7 +83,8 @@ export function LoginPage() {
   })
 
   const submitSecondFactor = async (code: string) => {
-    if (!challenge) return
+    if (!challenge || verificationInFlight.current) return
+    verificationInFlight.current = true
     setFailure(null)
     setVerifying(true)
 
@@ -94,8 +102,10 @@ export function LoginPage() {
 
       await enterApplication(envelope.session)
     } catch (error) {
+      if (error instanceof ApiError && error.code === API_ERROR_CODES.mfaChallengeInvalid) setChallenge(null)
       setFailure(describeFailure(error))
     } finally {
+      verificationInFlight.current = false
       setVerifying(false)
     }
   }
@@ -103,6 +113,8 @@ export function LoginPage() {
   const restart = () => {
     setChallenge(null)
     setFailure(null)
+    setRecoveryCodes(null)
+    setPendingSession(null)
   }
 
   if (recoveryCodes && pendingSession) {
@@ -110,7 +122,7 @@ export function LoginPage() {
       <AuthLayout>
         <RecoveryCodesNotice
           codes={recoveryCodes}
-          onContinue={() => void enterApplication(pendingSession)}
+          onContinue={() => { const session = pendingSession; setRecoveryCodes(null); setPendingSession(null); void enterApplication(session).catch(error => setFailure(describeFailure(error))) }}
         />
       </AuthLayout>
     )

@@ -1,12 +1,24 @@
+import { z } from 'zod'
+import { createContractParser } from '@/shared/api/contracts/contract-parser'
+import { parsePatientRecord } from '@/shared/api/contracts/patient-record.schema'
+import type { Schema as GeneratedSchema } from '@/shared/api/generated/helpers'
 import { parseClinicalMetrics } from '@/shared/api/contracts/clinical-metrics.schema'
 import {
   parseAdministerDoseResult,
+  parseAppointmentPage,
   parseClinicalExportPage,
+  parseDoseDetail,
+  parseDoseRecords,
   parseImmunotherapyDetail,
+  parseImmunotherapyPage,
   parseImmunotherapyTypes,
+  parsePatientDetail,
+  parsePatientPage,
   parsePreviewDoseResult,
+  parseSchedulePage,
 } from '@/shared/api/contracts/clinical-workflow.schema'
 import { apiRequest } from '@/shared/api/client'
+import type { Schema } from '@/shared/api/generated/helpers'
 import type {
   AdministerDoseBody,
   AdministerDoseResult,
@@ -42,6 +54,14 @@ import type {
   UpdateScheduledDoseBody,
 } from '@/shared/api/contracts/clinical'
 
+export function getPatientClinicalRecord(patientId: string, signal?: AbortSignal) {
+  return apiRequest<unknown>(`/immunotherapies/record/${patientId}`, { signal }).then(parsePatientRecord)
+}
+
+export function getStatusHistory(query: { from: string; to: string; timeZone: string; granularity: 'week' | 'month' }, signal?: AbortSignal) {
+  return apiRequest<GeneratedSchema<'StatusHistoryResponseDto'>>(`/immunotherapies/status-history${toQueryString(query)}`, { signal }).then(createContractParser<GeneratedSchema<'StatusHistoryResponseDto'>>(z.object({ asOf: z.string().datetime({ offset: true }), timeZone: z.string(), complete: z.literal(true), totalTherapies: z.number().int().nonnegative(), buckets: z.array(z.object({ date: z.string(), label: z.string(), active: z.number().int().nonnegative(), suspended: z.number().int().nonnegative(), completed: z.number().int().nonnegative(), unknown: z.number().int().nonnegative() })) }), 'Série histórica inválida.'))
+}
+
 function toQueryString(params: Record<string, unknown>): string {
   const search = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {
@@ -64,30 +84,26 @@ export function listPatients(
   query: PatientsQuery,
   signal?: AbortSignal,
 ): Promise<PatientPage> {
-  return apiRequest(`/patients${toQueryString({ ...query })}`, { signal })
+  return apiRequest<unknown>(`/patients${toQueryString({ ...query })}`, {
+    signal,
+  }).then(parsePatientPage)
 }
 
 export function getPatient(
   patientId: string,
   signal?: AbortSignal,
 ): Promise<PatientDetail> {
-  return apiRequest(`/patients/${patientId}`, { signal })
+  return apiRequest<unknown>(`/patients/${patientId}`, { signal }).then(
+    parsePatientDetail,
+  )
 }
 
-export interface UpdatePatientBody {
-  fullName?: string
-  phoneNumber?: string
-  weightInKg?: number
-  birthDate?: string
-  cpf?: string
-  responsiblePhysicianId?: string
 
-  guardian?: {
-    fullName: string
-    cpf?: string
-    phoneNumber: string
-  } | null
-}
+
+
+
+
+export type UpdatePatientBody = Schema<'UpdatePatientDto'>
 
 export function updatePatient(
   patientId: string,
@@ -111,9 +127,10 @@ export function listImmunotherapies(
   query: ImmunotherapiesQuery,
   signal?: AbortSignal,
 ): Promise<ImmunotherapyPage> {
-  return apiRequest(`/immunotherapies/list${toQueryString({ ...query })}`, {
-    signal,
-  })
+  return apiRequest<unknown>(
+    `/immunotherapies/list${toQueryString({ ...query })}`,
+    { signal },
+  ).then(parseImmunotherapyPage)
 }
 
 export function listImmunotherapyTypes(
@@ -176,7 +193,7 @@ export interface RegisterImmunotherapyResult {
 export function registerImmunotherapy(
   body: RegisterImmunotherapyBody,
 ): Promise<RegisterImmunotherapyResult> {
-  return apiRequest('/immunotherapies/register', { method: 'POST', body })
+  return apiRequest<unknown>('/immunotherapies/register', { method: 'POST', body }).then(createContractParser<RegisterImmunotherapyResult>(z.object({ patient: z.object({ id: z.string().min(1), fullName: z.string() }), immunotherapy: z.object({ id: z.string().min(1), patientId: z.string().min(1) }), firstDose: z.object({ id: z.string().min(1), scheduledAt: z.string().datetime({ offset: true }) }) }), 'Recibo de cadastro inválido.'))
 }
 
 export function executeTherapyLifecycle(
@@ -267,7 +284,13 @@ export function listAppointments(
   query: AppointmentsQuery,
   signal?: AbortSignal,
 ): Promise<AppointmentPage> {
-  return apiRequest(`/appointments${toQueryString({ ...query })}`, { signal })
+  return apiRequest<unknown>(`/appointments${toQueryString({ ...query })}`, {
+    signal,
+  }).then(parseAppointmentPage)
+}
+
+export function getAppointment(id: string, signal?: AbortSignal): Promise<Appointment> {
+  return apiRequest(`/appointments/${id}`, { signal })
 }
 
 export function createAppointment(body: {
@@ -312,7 +335,9 @@ export function listDoseSchedule(
   query: ScheduleQuery,
   signal?: AbortSignal,
 ): Promise<SchedulePage> {
-  return apiRequest(`/doses${toQueryString({ ...query })}`, { signal })
+  return apiRequest<unknown>(`/doses${toQueryString({ ...query })}`, {
+    signal,
+  }).then(parseSchedulePage)
 }
 
 export function getClinicalMetrics(
@@ -326,14 +351,16 @@ export function listDosesForTherapy(
   immunotherapyId: string,
   signal?: AbortSignal,
 ): Promise<DoseRecord[]> {
-  return apiRequest(`/immunotherapies/${immunotherapyId}/doses`, { signal })
+  return apiRequest<unknown>(`/immunotherapies/${immunotherapyId}/doses`, {
+    signal,
+  }).then(parseDoseRecords)
 }
 
 export function getDose(
   doseId: string,
   signal?: AbortSignal,
 ): Promise<DoseDetail> {
-  return apiRequest(`/doses/${doseId}`, { signal })
+  return apiRequest<unknown>(`/doses/${doseId}`, { signal }).then(parseDoseDetail)
 }
 
 export function previewDose(

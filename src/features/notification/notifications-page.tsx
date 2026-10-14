@@ -1,3 +1,5 @@
+import { useSession } from '@/shared/auth/useSession'
+import { queryKeys } from '@/shared/api/query-keys'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -45,16 +47,20 @@ function toPresentation(item: ServerNotification): Notification {
 }
 
 export function NotificationsPage() {
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+  const userId = account?.user.id ?? ''
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [unreadOnly, setUnreadOnly] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const query = useQuery({
-    queryKey: ['notifications', { page, unreadOnly }],
+    queryKey: queryKeys.notifications(organizationId, userId, { page, unreadOnly }),
     queryFn: ({ signal }) =>
       listNotifications({ page, pageSize: PAGE_SIZE, unreadOnly }, signal),
     refetchInterval: 60_000,
+    enabled: userId !== '',
   })
 
   const items = useMemo(
@@ -66,7 +72,7 @@ export function NotificationsPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    queryClient.invalidateQueries({ queryKey: queryKeys.notificationScope(organizationId, userId) })
 
   const markReadMutation = useMutation({
     mutationFn: (id: string) => markNotificationRead(id),

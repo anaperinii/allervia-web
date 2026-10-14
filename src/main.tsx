@@ -8,6 +8,7 @@ import '@fortawesome/fontawesome-svg-core/styles.css'
 import './index.css'
 import { SessionProvider } from '@/shared/auth/SessionProvider'
 import { createAppQueryClient } from '@/shared/api/query-client'
+import { AppErrorBoundary } from '@/shared/components/errors/AppErrorBoundary'
 
 config.autoAddCss = false
 
@@ -23,10 +24,12 @@ declare module '@tanstack/react-router' {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        <RouterProvider router={router} />
-      </SessionProvider>
-    </QueryClientProvider>
+    <AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <SessionProvider>
+          <RouterProvider router={router} />
+        </SessionProvider>
+      </QueryClientProvider>
+    </AppErrorBoundary>
   </StrictMode>,
 )

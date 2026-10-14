@@ -1,3 +1,4 @@
+import { useUnsavedChangesBlocker } from '@/shared/hooks/useUnsavedChangesBlocker'
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -44,7 +45,7 @@ export function PatientCompletionPage() {
   })
   const administered = useMemo(
     () =>
-      (dosesQuery.data ?? []).filter((dose) => dose.administeredAt !== null),
+      (dosesQuery.data ?? []).filter((dose) => dose.administeredAt !== null && dose.status !== 'ENTERED_IN_ERROR'),
     [dosesQuery.data],
   )
 
@@ -59,6 +60,7 @@ export function PatientCompletionPage() {
   const [confirmed, setConfirmed] = useState(false)
   const idempotencyKeyFor = useIdempotencyKey()
 
+  const blocker = useUnsavedChangesBlocker({ hasUnsavedChanges: !!reason || !!note || !!customText || !!monitoringSchedule || !!warningSigns })
   const mutation = useMutation({
     mutationFn: () => {
       const command = {
@@ -94,6 +96,7 @@ export function PatientCompletionPage() {
           'Recomendações finais persistidas no histórico do tratamento; previsões pendentes arquivadas.',
         autoDismissMs: 8000,
       })
+      blocker.allowNextNavigation()
       navigate({
         to: '/patient/$patientId',
         params: { patientId: therapy!.patient.id },
@@ -101,7 +104,8 @@ export function PatientCompletionPage() {
       })
     },
     meta: { suppressErrorToast: true },
-    onError: (error) => {
+    onError: async (error) => {
+      if (error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION') { setConfirmed(false); await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) }
       showApiErrorToast(
         error,
         error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION'

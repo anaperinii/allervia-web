@@ -19,7 +19,7 @@ const editPatientBaseSchema = z.object({
 
 export const editPatientSchema = editPatientBaseSchema
 
-/** Variante para menores de idade: responsável legal obrigatório. */
+
 export const editMinorPatientSchema = editPatientBaseSchema.superRefine(
   (data, ctx) => {
     const nameResult = nameSchema.safeParse(data.guardianName ?? '')

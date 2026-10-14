@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AuthLayout } from '@/features/auth/components/AuthLayout'
@@ -35,6 +35,9 @@ function describeFailure(error: unknown, fallback: string): string {
 }
 
 export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {}) {
+  const verificationInFlight = useRef(false)
+  const resendInFlight = useRef(false)
+  const [resending, setResending] = useState(false)
   const [step, setStep] = useState<Step>(initialToken ? 'token' : 'request')
   const [submittedEmail, setSubmittedEmail] = useState('')
   const [token, setToken] = useState(initialToken ?? '')
@@ -71,12 +74,14 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
   })
 
   const submitToken = async () => {
+    if (verificationInFlight.current) return
     const value = token.trim()
     if (!value) {
       setTokenError('Informe o código recebido por e-mail')
       return
     }
 
+    verificationInFlight.current = true
     setVerifying(true)
     setTokenError(null)
 
@@ -86,6 +91,7 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
     } catch (error) {
       setTokenError(describeFailure(error, 'Código inválido ou expirado.'))
     } finally {
+      verificationInFlight.current = false
       setVerifying(false)
     }
   }
@@ -96,24 +102,27 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
   }
 
   const handleResend = async () => {
+    if (resendInFlight.current || verificationInFlight.current) return
     if (!submittedEmail) {
       setStep('request')
       return
     }
 
+    resendInFlight.current = true
+    setResending(true)
     try {
       await requestPasswordReset(submittedEmail)
     } catch (error) {
       setTokenError(describeFailure(error, 'Não foi possível reenviar o e-mail.'))
       return
-    }
+    } finally { resendInFlight.current = false; setResending(false) }
 
     setToken('')
     setTokenError(null)
     setResendKey((k) => k + 1)
     toast.success({
       icon: <FontAwesomeIcon icon={faCheck} style={{ fontSize: 14 }} />,
-      title: 'Novo e-mail de redefinição enviado',
+      title: 'Solicitação de redefinição recebida',
       position: 'top-right',
       compact: true,
       autoDismissMs: 3000,
@@ -125,10 +134,14 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
 
     try {
       await confirmPasswordReset({ token: token.trim(), newPassword: data.password })
+      setToken('')
+      resetForm.reset()
       setStep('done')
     } catch (error) {
       const message = describeFailure(error, 'Não foi possível redefinir a senha.')
       if (error instanceof ApiError && (error.statusCode === 404 || error.statusCode === 409)) {
+        resetForm.reset()
+        setToken('')
         setTokenError(message)
         setStep('token')
         return
@@ -141,7 +154,7 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
     <AuthLayout animate={false}>
       <AuthStepTransition stepKey={step}>
         {step === 'request' && (
-          <RequestEmailStep form={emailForm} onSubmit={() => void submitEmail()} />
+          <RequestEmailStep form={emailForm} onSubmit={event => void submitEmail(event)} />
         )}
         {step === 'token' && (
           <VerifyTokenStep
@@ -150,7 +163,7 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
             tokenError={tokenError}
             email={submittedEmail}
             resendKey={resendKey}
-            submitting={verifying}
+            submitting={verifying || resending}
             onSubmit={() => void submitToken()}
             onBack={() => setStep('request')}
             onResend={() => void handleResend()}
@@ -158,7 +171,7 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
         )}
         {step === 'reset' && (
           <>
-            <NewPasswordStep form={resetForm} onSubmit={() => void submitReset()} />
+            <NewPasswordStep form={resetForm} onSubmit={event => void submitReset(event)} />
             {resetError && (
               <span className="text-[0.7rem] text-[color:var(--err)]" role="alert">
                 {resetError}

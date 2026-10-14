@@ -15,11 +15,10 @@ interface ApplicationsCardProps {
   title: string
   caption: string
   series: { date: string; label: string; value: number }[]
-  modalityMix: { subcutaneous: number; sublingual: number; total: number }
   doseMix: { label: string; value: number; pct: number }[]
 }
 
-export function ApplicationsCard({ title, caption, series, modalityMix, doseMix }: ApplicationsCardProps) {
+export function ApplicationsCard({ title, caption, series, doseMix }: ApplicationsCardProps) {
   const { slice, filters, active, stepWeek, canStepWeek } = useSeriesFilters(series, { range: true })
   const windowTotal = slice.reduce((sum, entry) => sum + entry.value, 0)
   const max = Math.max(...slice.map((entry) => entry.value), 1)
@@ -36,9 +35,6 @@ export function ApplicationsCard({ title, caption, series, modalityMix, doseMix 
   const hovered = hover !== null ? slice[hover] : undefined
 
   const total = selectedEntry ? selectedEntry.value : windowTotal
-  const mixTotal = modalityMix.total || 1
-  const subcutaneous = Math.round((total * modalityMix.subcutaneous) / mixTotal)
-  const sublingual = total - subcutaneous
 
   return (
     <Card tone="plain">
@@ -68,8 +64,7 @@ export function ApplicationsCard({ title, caption, series, modalityMix, doseMix 
             <div className="flex items-center gap-2.5 whitespace-nowrap">
               <StatValue value={total.toLocaleString('pt-BR')} className="text-[2.4rem]" />
               {[
-                { label: 'SCIT', value: subcutaneous, color: MODALITY_COLORS.subcutaneous },
-                { label: 'SLIT', value: sublingual, color: MODALITY_COLORS.sublingual },
+                { label: 'SCIT', value: total, color: MODALITY_COLORS.subcutaneous },
               ].map((row) => (
                 <span
                   key={row.label}
@@ -80,7 +75,7 @@ export function ApplicationsCard({ title, caption, series, modalityMix, doseMix 
                     color: SHOWCASE.ink,
                     marginTop: 10,
                   }}
-                  title={row.label === 'SCIT' ? 'Subcutânea' : 'Sublingual'}
+                  title="Subcutânea: via de dose suportada pelo contrato atual"
                 >
                   <span className="font-bold tabular-nums">{row.value.toLocaleString('pt-BR')}</span>
                   {row.label}

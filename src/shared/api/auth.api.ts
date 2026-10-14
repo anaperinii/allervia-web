@@ -10,6 +10,10 @@ import { ApiError } from '@/shared/api/contracts/errors'
 import {
   parseAccountContext,
   parseSessionEnvelope,
+  parseStartSessionResult,
+  parseReauthentication,
+  parseMfaEnrollment,
+  parseRecoveryCodes,
 } from '@/shared/api/contracts/auth.schema'
 import type {
   AccountContext,
@@ -42,10 +46,12 @@ export async function startSession(input: {
   return withAuthLock(async () => {
     await requestPreAuthCsrfToken()
 
-    const result = await apiRequest<StartSessionResult>('/auth/sessions', {
-      method: 'POST',
-      body: input,
-    })
+    const result = parseStartSessionResult(
+      await apiRequest<unknown>('/auth/sessions', {
+        method: 'POST',
+        body: input,
+      }),
+    )
 
     if (!('status' in result)) adoptCredentials(result)
     return result
@@ -59,10 +65,14 @@ export async function verifySecondFactor(input: {
   return withAuthLock(async () => {
     await requestPreAuthCsrfToken()
 
-    const envelope = await apiRequest<SessionEnvelope>('/auth/mfa/verify', {
-      method: 'POST',
-      body: input,
-    })
+
+
+    const envelope = parseSessionEnvelope(
+      await apiRequest<unknown>('/auth/mfa/verify', {
+        method: 'POST',
+        body: input,
+      }),
+    )
 
     adoptCredentials(envelope)
     return envelope
@@ -83,17 +93,32 @@ export function readAccount(signal?: AbortSignal): Promise<AccountContext> {
   return apiRequest<unknown>('/account/me', { signal }).then(parseAccountContext)
 }
 
-export async function endSession(): Promise<void> {
-  const expected = getSessionContext() ?? pendingLogoutContext
-  pendingLogoutContext = expected
-  clearSession(true)
+async function revokeLogoutTarget(expected: string | null): Promise<void> {
   await withAuthLock(async () => {
+    if (getSessionContext() && getSessionContext() !== expected)
+      throw new DOMException('Authentication changed', 'AbortError')
     const protection = await apiRequest<{ csrfToken: string }>('/auth/csrf?scope=session')
+    if (getSessionContext() && getSessionContext() !== expected)
+      throw new DOMException('Authentication changed', 'AbortError')
     setCsrfToken(protection.csrfToken)
     await apiRequest<void>('/auth/logout', { method: 'POST', body: {}, headers: expected ? { 'X-Session-Context': expected } : {} })
     setCsrfToken(null)
     pendingLogoutContext = null
   })
+}
+
+export async function endSession(): Promise<void> {
+  const expected = getSessionContext() ?? pendingLogoutContext
+  pendingLogoutContext = expected
+  clearSession(true)
+  await revokeLogoutTarget(expected)
+}
+
+export async function retryEndSession(): Promise<void> {
+  const expected = pendingLogoutContext
+  if (!expected) return
+  if (getSessionContext()) return
+  await revokeLogoutTarget(expected)
 }
 
 export async function changePassword(input: {
@@ -103,17 +128,13 @@ export async function changePassword(input: {
   await apiRequest<{ message: string }>('/account/me/password', {
     method: 'POST',
     body: input,
-    preserveSessionOn401: true,
   })
   clearSession(true)
 }
 
 export async function endAllSessions(): Promise<void> {
-  try {
-    await apiRequest<void>('/auth/logout-all', { method: 'POST', body: {} })
-  } finally {
-    clearSession(true)
-  }
+  await apiRequest<void>('/auth/logout-all', { method: 'POST', body: {} })
+  clearSession(true)
 }
 
 export function listDevices(signal?: AbortSignal): Promise<DeviceSession[]> {
@@ -132,7 +153,7 @@ export function reauthenticate(input: {
   password: string
   code?: string
 }): Promise<{ reauthenticatedAt: string; maxAgeSeconds: number }> {
-  return apiRequest('/auth/reauthenticate', { method: 'POST', body: input })
+  return apiRequest<unknown>('/auth/reauthenticate', { method: 'POST', body: input }).then(parseReauthentication)
 }
 
 export function listMfaFactors(
@@ -144,18 +165,18 @@ export function listMfaFactors(
 export function enrollMfaFactor(input: {
   label?: string
 }): Promise<{ credentialId: string; secret: string; keyUri: string }> {
-  return apiRequest('/auth/mfa/enroll', { method: 'POST', body: input })
+  return apiRequest<unknown>('/auth/mfa/enroll', { method: 'POST', body: input }).then(parseMfaEnrollment)
 }
 
 export function confirmMfaFactor(input: {
   credentialId: string
   code: string
 }): Promise<{ recoveryCodes: string[] }> {
-  return apiRequest('/auth/mfa/enroll/confirm', { method: 'POST', body: input })
+  return apiRequest<unknown>('/auth/mfa/enroll/confirm', { method: 'POST', body: input }).then(parseRecoveryCodes)
 }
 
 export function regenerateRecoveryCodes(): Promise<{ recoveryCodes: string[] }> {
-  return apiRequest('/auth/mfa/recovery-codes', { method: 'POST', body: {} })
+  return apiRequest<unknown>('/auth/mfa/recovery-codes', { method: 'POST', body: {} }).then(parseRecoveryCodes)
 }
 
 export function revokeMfaFactor(credentialId: string): Promise<void> {

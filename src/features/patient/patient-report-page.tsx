@@ -1,10 +1,12 @@
+import { buildClinicalSummary } from '@/features/patient/adapters/clinical-summary'
+import { useBlobPreview } from '@/shared/hooks/useBlobPreview'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Button, Modal } from '@/shared/components'
-import { getPatient, listDosesForTherapy } from '@/shared/api/clinical.api'
+import { getPatient, getDose, listDosesForTherapy, getPatientClinicalRecord } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
@@ -77,37 +79,54 @@ export function PatientReportPage() {
     enabled: organizationId !== '' && selectedTherapy !== null,
   })
 
-  const patient = useMemo(
-    () => (detail ? buildLegacyPatient(detail, selectedTherapy) : null),
-    [detail, selectedTherapy],
-  )
+  const sourceSummary = useMemo(() => buildClinicalSummary(dosesQuery.data ?? [], null), [dosesQuery.data])
+  const doseDetailQuery = useQuery({
+    queryKey: queryKeys.dose(organizationId, sourceSummary.detailDoseId ?? ''),
+    queryFn: ({ signal }) => getDose(sourceSummary.detailDoseId!, signal),
+    enabled: organizationId !== '' && sourceSummary.detailDoseId !== null,
+  })
+  const recordQuery = useQuery({
+    queryKey: queryKeys.patientRecord(organizationId, patientId ?? ''),
+    queryFn: ({ signal }) => getPatientClinicalRecord(patientId!, signal),
+    enabled: organizationId !== '' && !!patientId,
+  })
+  const observationByDose = useMemo(() => new Map((recordQuery.data?.therapies.find(therapy => therapy.id === selectedTherapy?.id)?.doses ?? []).map(dose => [dose.id, dose])), [recordQuery.data, selectedTherapy?.id])
+  const clinicalSummary = useMemo(() => buildClinicalSummary(dosesQuery.data ?? [], doseDetailQuery.data ?? null), [dosesQuery.data, doseDetailQuery.data])
+  const sourcesReady = recordQuery.isSuccess && !recordQuery.isFetching && dosesQuery.isSuccess && !dosesQuery.isFetching &&
+    (sourceSummary.detailDoseId === null || (doseDetailQuery.isSuccess && !doseDetailQuery.isFetching))
+  const patient = useMemo(() => {
+    if (!detail) return null
+    return {
+      ...buildLegacyPatient(detail, selectedTherapy, doseDetailQuery.data?.immunotherapy.currentPrescription?.resolved.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo'),
+      targetConcentrationVolume: clinicalSummary.targetPresentation ?? 'Indisponível',
+      currentDoseConcentration: clinicalSummary.currentPresentation ?? 'Indisponível',
+      currentInterval: clinicalSummary.intervalDays ?? -1,
+      targetReached: clinicalSummary.targetReached === true,
+    }
+  }, [detail, selectedTherapy, clinicalSummary, doseDetailQuery.data, account?.organization?.timeZone])
 
   const realizedApplications = useMemo(
     () =>
       (dosesQuery.data ?? [])
-        .filter((dose) => dose.administeredAt !== null)
+        .filter((dose) => dose.administeredAt !== null && dose.status !== 'ENTERED_IN_ERROR')
         .sort((a, b) => (b.administeredAt ?? '').localeCompare(a.administeredAt ?? ''))
         .map((dose) =>
           doseToLegacyApplication(dose, detail?.id ?? '', {
-            hasReaction: dose.immediateConduct !== null,
+            timeZone: doseDetailQuery.data?.immunotherapy.currentPrescription?.resolved.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo',
+            hasReaction: [...(observationByDose.get(dose.id)?.observations ?? []), ...(observationByDose.get(dose.id)?.observationAddenda ?? [])].some(observation => observation.reportedSideEffects.length > 0),
           }),
         ),
-    [dosesQuery.data, detail],
+    [dosesQuery.data, detail, observationByDose, doseDetailQuery.data, account?.organization?.timeZone],
   )
-  const reactionsCount = useMemo(
-    () =>
-      (dosesQuery.data ?? []).filter(
-        (dose) => dose.administeredAt !== null && dose.immediateConduct !== null,
-      ).length,
-    [dosesQuery.data],
-  )
+
+  const reactionsCount = recordQuery.isSuccess && realizedApplications.every(application => { const source = observationByDose.get(application.id); return source && source.observations.length + source.observationAddenda.length > 0 }) ? realizedApplications.filter(application => application.sideEffect === 'yes').length : null
 
   const toggleSection = (id: ReportSectionId) => {
     setSelectedSections((previous) => (previous.includes(id) ? previous.filter((sectionId) => sectionId !== id) : [...previous, id]))
   }
 
   const reportData = useMemo<ReportData | null>(() => {
-    if (!patient) return null
+    if (!patient || !selectedTherapy || !sourcesReady) return null
     const masked = anonymized
       ? {
           ...patient,
@@ -118,25 +137,27 @@ export function PatientReportPage() {
       : patient
     return {
       patient: masked,
+      inductionStart: formatInstantDate(selectedTherapy.inductionStartDate),
+      maintenanceStart: selectedTherapy.maintenanceStartDate ? formatInstantDate(selectedTherapy.maintenanceStartDate) : null,
       sections: selectedSections,
-      realizedApplications,
+      realizedApplications: realizedApplications.map(application => {
+        const source = observationByDose.get(application.id)
+        const observations = [...(source?.observations ?? []), ...(source?.observationAddenda ?? [])]
+        return { ...application,
+          sideEffect: source && observations.length ? (observations.some(observation => observation.reportedSideEffects.length > 0) ? 'yes' as const : 'no' as const) : undefined,
+          administrator: (source?.administeredBy as { professional?: { fullName?: string } } | null)?.professional?.fullName ?? 'Indisponível',
+          administratorNote: anonymized ? '[Texto livre ocultado]' : observations.map(observation => [observation.reportedSideEffects.join('; '), observation.administeredMedications.join('; '), observation.notes].filter(Boolean).join(' · ')).join(' | '),
+          medicationNeeded: observations.some(observation => observation.administeredMedications.length > 0) ? 'yes' as const : 'no' as const,
+        }
+      }),
       reactionsCount,
       generatedAt: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
       anonymized,
     }
-  }, [patient, anonymized, selectedSections, realizedApplications, reactionsCount])
+  }, [patient, selectedTherapy, sourcesReady, anonymized, selectedSections, realizedApplications, reactionsCount, observationByDose])
 
-  // Pré-visualização: o mesmo documento do download, servido como blob local.
-  // A barra do visualizador nativo fica oculta (#toolbar=0), então imprimir e
-  // salvar seguem só pelos botões da página.
-  const previewUrl = useMemo(() => {
-    if (fileFormat !== 'pdf' || !reportData) return null
-    return URL.createObjectURL(buildPatientReportPdf(reportData).output('blob'))
-  }, [fileFormat, reportData])
-  useEffect(() => {
-    if (!previewUrl) return
-    return () => URL.revokeObjectURL(previewUrl)
-  }, [previewUrl])
+
+  const previewUrl = useBlobPreview(reportData, fileFormat === 'pdf', buildPatientReportPdf)
 
   if (!patientId) {
     return (
@@ -165,15 +186,19 @@ export function PatientReportPage() {
   }
 
   const handleExport = () => {
-    if (!reportData) return
+    if (!reportData || !consented || !justification.trim()) return
     if (fileFormat === 'csv') exportCsv(reportData)
     else exportPdf(reportData)
   }
 
-  const exportDisabled = !consented || !justification.trim() || dosesQuery.isPending
+  const exportDisabled = !consented || !justification.trim() || !reportData
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
+      {(dosesQuery.isError || doseDetailQuery.isError || recordQuery.isError) && <p role="alert">
+        Não foi possível carregar as doses. Relatório bloqueado.
+        <button type="button" onClick={() => { void dosesQuery.refetch(); void recordQuery.refetch(); if (sourceSummary.detailDoseId) void doseDetailQuery.refetch() }}>Tentar novamente</button>
+      </p>}
       <PageHeader
         breadcrumb={['Prontuário', patient.name]}
         title="Emitir Relatório"
@@ -288,12 +313,12 @@ export function PatientReportPage() {
         </div>
         <p className="text-[0.7rem] text-(--text-muted) text-center leading-relaxed">
           Os dados exportados vêm dos registros persistidos no momento da geração.
-          O registro oficial de exportações do conjunto clínico é feito pelo servidor.
+          Este relatório local não registra um recibo de auditoria do download.
         </p>
         <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-3.5 py-2.5 space-y-1.5">
           <ConfirmRow label="Paciente" value={anonymized ? maskName(patient.name, true) : patient.name} />
           <ConfirmRow label="Formato" value={fileFormat.toUpperCase()} />
-          <ConfirmRow label="Dados anonimizados" value={anonymized ? 'Sim' : 'Não'} accent={anonymized ? 'brand' : 'warning'} />
+          <ConfirmRow label="Identificadores mascarados" value={anonymized ? 'Sim' : 'Não'} accent={anonymized ? 'brand' : 'warning'} />
           <ConfirmRow label="Justificativa" value={justification} truncate />
         </div>
       </Modal>

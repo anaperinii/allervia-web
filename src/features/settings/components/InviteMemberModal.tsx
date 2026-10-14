@@ -1,3 +1,4 @@
+import { emailSchema } from '@/shared/lib/field-schemas'
 import { useState } from 'react'
 import { cn } from '@/shared/lib/cn'
 import { Modal, Button, TextInput, FieldLabel } from '@/shared/components'
@@ -14,7 +15,9 @@ interface InviteMemberModalProps {
   onSubmit: (data: { email: string; fullName: string; role: TeamRole }) => void
 }
 
-export function InviteMemberModal({
+export function InviteMemberModal(props: InviteMemberModalProps) { return props.open ? <InviteMemberForm {...props} /> : null }
+
+function InviteMemberForm({
   open,
   submitting,
   onClose,
@@ -25,13 +28,14 @@ export function InviteMemberModal({
   const [role, setRole] = useState<TeamRole>('PHYSICIAN')
 
   const handleClose = () => {
+    if (submitting) return
     setEmail('')
     setFullName('')
     setRole('PHYSICIAN')
     onClose()
   }
 
-  const canSubmit = email.trim().length > 0 && fullName.trim().length > 0
+  const canSubmit = emailSchema.safeParse(email.trim().toLowerCase()).success && fullName.trim().length > 0
 
   return (
     <Modal
@@ -49,7 +53,7 @@ export function InviteMemberModal({
             variant="solid"
             disabled={!canSubmit || submitting}
             onClick={() =>
-              onSubmit({ email: email.trim(), fullName: fullName.trim(), role })
+              onSubmit({ email: email.trim().toLowerCase(), fullName: fullName.trim(), role })
             }
           >
             Enviar convite

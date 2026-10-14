@@ -1,6 +1,9 @@
+import { getImmunotherapy } from '@/shared/api/clinical.api'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { ClinicalReviewNotice } from '@/shared/components/ClinicalReviewNotice'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, FieldLabel, Modal, Select, TextArea, toast } from '@/shared/components'
+import { Button, FieldLabel, Modal, Select, TextArea, toast, showApiErrorToast } from '@/shared/components'
 import { revisePrescription } from '@/shared/api/clinical.api'
 import { listProtocols } from '@/shared/api/protocols.api'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
@@ -24,7 +27,7 @@ interface RevisePrescriptionModalProps {
 export function RevisePrescriptionModal(props: RevisePrescriptionModalProps) {
   if (!props.open) return null
   return (
-    <ReviseForm key={`${props.therapyId}-${props.therapyRevision}`} {...props} />
+    <ReviseForm key={props.therapyId} {...props} />
   )
 }
 
@@ -45,6 +48,7 @@ function ReviseForm({
   const [rehearsed, setRehearsed] = useState<{ body: string; summary: string } | null>(null)
   const idempotencyKeyFor = useIdempotencyKey()
 
+  const [confirmedRevision, setConfirmedRevision] = useState<number | null>(therapyRevision)
   const protocolsQuery = useQuery({
     queryKey: queryKeys.protocols(organizationId),
     queryFn: ({ signal }) => listProtocols(signal),
@@ -79,7 +83,7 @@ function ReviseForm({
       },
       pendingStepId,
       reason: reason.trim(),
-      expectedRevision: therapyRevision,
+      expectedRevision: confirmedRevision!,
       dryRun,
     }
   }
@@ -93,6 +97,7 @@ function ReviseForm({
   const currentKey = ready ? JSON.stringify(body(true)) : null
   const rehearsedMatches = rehearsed !== null && rehearsed.body === currentKey
 
+  const [reviewRequired, setReviewRequired] = useState(false)
   const mutation = useMutation({
     mutationFn: (dryRun: boolean) => {
       const command = body(dryRun)
@@ -121,7 +126,7 @@ function ReviseForm({
       })
       onClose()
     },
-    onError: () => setRehearsed(null),
+    onError: async (error) => { setRehearsed(null); if (error instanceof ApiError && error.code.startsWith('STALE_')) { setReviewRequired(true); setConfirmedRevision(null); try { const current = await getImmunotherapy(therapyId); setConfirmedRevision(current.revision) } catch { return }; await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) } },
   })
 
   const toggleStep = (stepId: string) => {
@@ -138,6 +143,8 @@ function ReviseForm({
   return (
     <Modal
       open
+      pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
+      dirty={!!reason}
       onClose={onClose}
       title="Revisar prescrição para outra versão"
       size="lg"
@@ -147,7 +154,7 @@ function ReviseForm({
           <Button
             variant="outline"
             tone="brand"
-            disabled={!ready || mutation.isPending}
+            disabled={!ready || mutation.isPending || reviewRequired}
             onClick={() => mutation.mutate(true)}
             leftIcon={<FontAwesomeIcon icon={faFlaskVial} style={{ fontSize: 11 }} />}
           >
@@ -156,7 +163,7 @@ function ReviseForm({
           <Button
             tone="brand"
             variant="solid"
-            disabled={!rehearsedMatches || mutation.isPending}
+            disabled={!rehearsedMatches || mutation.isPending || reviewRequired}
             onClick={() => mutation.mutate(false)}
           >
             Confirmar revisão
@@ -164,6 +171,8 @@ function ReviseForm({
         </>
       }
     >
+      {reviewRequired && confirmedRevision === null && <div role="alert"><p>Não foi possível carregar a revisão atual. Seu rascunho está preservado.</p><button type="button" onClick={async () => { try { const current = await getImmunotherapy(therapyId); setConfirmedRevision(current.revision); await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) } catch (error) { showApiErrorToast(error) } }}>Recarregar registro atual</button></div>}
+      <ClinicalReviewNotice required={reviewRequired && confirmedRevision !== null} onReview={() => { if (confirmedRevision !== null) setReviewRequired(false) }} />
       <FieldLabel label="Nova versão publicada">
         <Select
           value={versionId}

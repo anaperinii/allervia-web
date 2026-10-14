@@ -1,3 +1,6 @@
+import { ClinicalReviewNotice } from '@/shared/components/ClinicalReviewNotice'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { collectPages } from '@/shared/api/pagination'
 import { useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
@@ -9,6 +12,7 @@ import { openWhatsApp, sendReminder } from '@/shared/lib/whatsapp'
 import { Button, FieldLabel, Modal, Select, TextArea, TextInput, toast } from '@/shared/components'
 import {
   createAppointment,
+  getAppointment,
   listPatients,
   listTherapiesForPatient,
   updateAppointment,
@@ -17,7 +21,7 @@ import type { Appointment } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
-import { toOffsetIso, todayStr, addMinutesToTime } from '@/shared/lib/dates'
+import { appointmentWindow, dayInZone, timeInZone, addMinutesToTime } from '@/shared/lib/dates'
 import { formatInstantDate } from '@/features/patient/adapters/clinical-presentation'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -37,7 +41,7 @@ const STATUS_LABELS: Record<Appointment['status'], string> = {
 
 type AppointmentTabId = 'info' | 'manage'
 
-// "Gerenciar" não é uma aba: entra pelo botão Editar no topo do modal.
+
 const APPOINTMENT_TABS: {
   id: AppointmentTabId
   label: string
@@ -77,6 +81,7 @@ function NewAppointmentForm({
 }) {
   const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
+  const timeZone = account?.organization?.timeZone ?? 'America/Sao_Paulo'
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -84,7 +89,7 @@ function NewAppointmentForm({
   const [professionalId, setProfessionalId] = useState(account?.professional?.id ?? '')
   const [doseId, setDoseId] = useState('')
   const [title, setTitle] = useState('')
-  const [date, setDate] = useState(todayStr())
+  const [date, setDate] = useState(dayInZone(new Date(), timeZone))
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
   const [notes, setNotes] = useState('')
@@ -94,14 +99,10 @@ function NewAppointmentForm({
       picker: 'appointment',
       search: search.trim() || undefined,
     }),
-    queryFn: ({ signal }) =>
-      listPatients(
-        { pageSize: 50, isActive: true, search: search.trim() || undefined },
-        signal,
-      ),
+    queryFn: ({ signal }) => collectPages(page => listPatients({ page, pageSize: 100, isActive: true, search: search.trim() || undefined }, signal), { signal, maxPages: 5 }),
     enabled: organizationId !== '',
   })
-  const patientOptions = (patientsQuery.data?.items ?? []).slice(0, 8)
+  const patientOptions = patientsQuery.data?.items ?? []
   const professionals = useProfessionalDirectory()
   const therapiesQuery = useQuery({
     queryKey: [...queryKeys.patient(organizationId, patientId), 'therapies'],
@@ -122,8 +123,7 @@ function NewAppointmentForm({
         professionalId,
         ...(doseId ? { doseId } : {}),
         ...(title.trim() ? { title: title.trim() } : {}),
-        startsAt: toOffsetIso(date, startTime),
-        endsAt: toOffsetIso(date, endTime),
+        ...appointmentWindow(date, startTime, endTime, timeZone),
         ...(notes.trim() ? { notes: notes.trim() } : {}),
       }),
     onSuccess: async () => {
@@ -162,6 +162,9 @@ function NewAppointmentForm({
         </>
       }
     >
+      <p className="text-xs">Fuso do agendamento: {timeZone}. Se o fim for anterior ao início, o término será no dia seguinte.</p>
+      {patientsQuery.isError && <p role="alert">Não foi possível carregar pacientes. <button onClick={() => void patientsQuery.refetch()}>Tentar novamente</button></p>}
+      {patientsQuery.data?.truncated && <p role="status">Lista limitada: {patientsQuery.data.items.length}/{patientsQuery.data.total}. Refine a busca.</p>}
       <FieldLabel label="Paciente" required>
         <div className="relative">
           <FontAwesomeIcon
@@ -287,7 +290,7 @@ interface AppointmentActionModalProps {
 
 export function AppointmentActionModal(props: AppointmentActionModalProps) {
   if (!props.appointment) return null
-  // Remonta a cada compromisso para os campos partirem dos valores atuais.
+
   return <AppointmentActionForm key={props.appointment.id} {...props} />
 }
 
@@ -296,27 +299,31 @@ function AppointmentActionForm({
   organizationId,
   onClose,
 }: AppointmentActionModalProps) {
+  const { account } = useSession()
+  const timeZone = account?.organization?.timeZone ?? 'America/Sao_Paulo'
+  const [reviewRequired, setReviewRequired] = useState(false)
+  const [currentRecord, setCurrentRecord] = useState(appointment)
   const queryClient = useQueryClient()
   const [tab, setTab] = useState<AppointmentTabId>('info')
   const [action, setAction] = useState<'CANCELLED' | 'MISSED' | 'COMPLETED' | ''>('')
   const [statusReason, setStatusReason] = useState('')
-  const [date, setDate] = useState(() => dateInputValue(appointment?.startsAt))
-  const [startTime, setStartTime] = useState(() => timeInputValue(appointment?.startsAt))
-  const [endTime, setEndTime] = useState(() => timeInputValue(appointment?.endsAt))
+  const [date, setDate] = useState(() => dateInputValue(appointment?.startsAt, timeZone))
+  const [startTime, setStartTime] = useState(() => timeInputValue(appointment?.startsAt, timeZone))
+  const [endTime, setEndTime] = useState(() => timeInputValue(appointment?.endsAt, timeZone))
   const [title, setTitle] = useState(appointment?.title ?? '')
   const [notes, setNotes] = useState(appointment?.notes ?? '')
 
   const mutation = useMutation({
     mutationFn: () =>
       updateAppointment(appointment!.id, {
-        expectedRevision: appointment!.revision,
+        expectedRevision: currentRecord!.revision,
         ...(action ? { status: action as 'CANCELLED' | 'MISSED' | 'COMPLETED' } : {}),
         ...(statusReason.trim() ? { statusReason: statusReason.trim() } : {}),
-        startsAt: toOffsetIso(date, startTime),
-        endsAt: toOffsetIso(date, endTime),
+        ...appointmentWindow(date, startTime, endTime, timeZone),
         title: title.trim(),
         notes: notes.trim(),
       }),
+    onError: async (error) => { if (error instanceof ApiError && error.code === 'STALE_APPOINTMENT_REVISION') { setReviewRequired(true); setCurrentRecord(null); try { setCurrentRecord(await getAppointment(appointment!.id)) } catch { return }; await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) } },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       toast.success({
@@ -333,14 +340,14 @@ function AppointmentActionForm({
   })
 
   if (!appointment) return null
-  const isOpen = appointment.status === 'SCHEDULED'
+  const isOpen = (currentRecord ?? appointment).status === 'SCHEDULED'
   const needsReason = action === 'CANCELLED' || action === 'MISSED'
   const canSubmit =
     !!date &&
     !!startTime &&
     !!endTime &&
     (!needsReason || statusReason.trim().length > 0) &&
-    !mutation.isPending
+    !mutation.isPending && !reviewRequired && currentRecord?.status === 'SCHEDULED'
 
   const initials = appointment.patient.fullName
     .split(' ')
@@ -352,6 +359,8 @@ function AppointmentActionForm({
   return (
     <Modal
       open
+      pending={mutation.isPending}
+      dirty={tab === 'manage'}
       onClose={onClose}
       ariaLabel="Detalhes do compromisso"
       size="md"
@@ -432,8 +441,8 @@ function AppointmentActionForm({
               sendReminder(
                 appointment.patient.phoneNumber,
                 appointment.patient.fullName.split(' ')[0],
-                formatInstantDate(appointment.startsAt),
-                timeInputValue(appointment.startsAt),
+                formatInstantDate(appointment.startsAt, timeZone),
+                timeInputValue(appointment.startsAt, timeZone),
               )
             }
             className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-transparent bg-emerald-500 px-3 py-1.5 text-[0.7rem] font-semibold text-white transition-colors hover:bg-emerald-600"
@@ -450,19 +459,23 @@ function AppointmentActionForm({
         </>
       }
     >
+      {reviewRequired && !currentRecord && <div role="alert"><p>Não foi possível carregar o registro atual. Seu rascunho está preservado.</p><button type="button" onClick={async () => { try { setCurrentRecord(await getAppointment(appointment.id)) } catch { toast.danger({ icon: null, title: 'Falha ao recarregar compromisso', description: 'Tente novamente antes de confirmar.' }) } }}>Recarregar registro atual</button></div>}
+      <ClinicalReviewNotice required={reviewRequired && currentRecord !== null} onReview={() => { if (currentRecord) setReviewRequired(false) }} />
+      <p className="text-xs">Fuso do agendamento: {timeZone}</p>
+      {reviewRequired && currentRecord && <p role="status">Registro atual: revisão {currentRecord.revision}, {STATUS_LABELS[currentRecord.status]}, início {formatInstantDate(currentRecord.startsAt, timeZone)} às {timeInputValue(currentRecord.startsAt, timeZone)}, término {formatInstantDate(currentRecord.endsAt, timeZone)} às {timeInputValue(currentRecord.endsAt, timeZone)}. Seu formulário continua com a intenção anterior.</p>}
       {tab === 'info' && (
         <>
-          <Field label="Data">{formatInstantDate(appointment.startsAt)}</Field>
+          <Field label="Data">{formatInstantDate(appointment.startsAt, timeZone)}</Field>
 
           <div className="flex items-end gap-2">
             <div className="min-w-0 flex-1">
-              <Field label="Início">{timeInputValue(appointment.startsAt)}</Field>
+              <Field label="Início">{timeInputValue(appointment.startsAt, timeZone)}</Field>
             </div>
             <div className="flex h-9 shrink-0 items-center text-(--text-muted)">
               <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
             </div>
             <div className="min-w-0 flex-1">
-              <Field label="Fim">{timeInputValue(appointment.endsAt)}</Field>
+              <Field label="Fim">{timeInputValue(appointment.endsAt, timeZone)}</Field>
             </div>
           </div>
 
@@ -484,7 +497,7 @@ function AppointmentActionForm({
           </div>
 
           <Field label="Previsão vinculada">
-            {appointment.dose ? formatInstantDate(appointment.dose.scheduledAt) : 'Nenhuma'}
+            {appointment.dose ? formatInstantDate(appointment.dose.scheduledAt, timeZone) : 'Nenhuma'}
           </Field>
           <Field label="Observações">{appointment.notes ?? '—'}</Field>
           {appointment.statusReason && (
@@ -558,15 +571,15 @@ function AppointmentActionForm({
   )
 }
 
-function dateInputValue(iso?: string): string {
-  if (!iso) return todayStr()
+function dateInputValue(iso?: string, timeZone = 'America/Sao_Paulo'): string {
+  if (!iso) return dayInZone(new Date(), timeZone)
   const date = new Date(iso)
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  return dayInZone(date, timeZone)
 }
 
-function timeInputValue(iso?: string): string {
+function timeInputValue(iso?: string, timeZone = 'America/Sao_Paulo'): string {
   if (!iso) return ''
   const date = new Date(iso)
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+  return timeInZone(date, timeZone)
 }
 

@@ -93,6 +93,7 @@ function stubApi(metricsOverride?: Record<string, unknown>) {
     const url = String(input)
     const method = init?.method ?? 'GET'
 
+    if (url.includes('/immunotherapies/status-history')) return Promise.resolve(jsonResponse({ asOf: new Date().toISOString(), complete: true, totalTherapies: 0, timeZone: 'America/Sao_Paulo', buckets: [] }))
     if (url.includes('/doses/metrics')) {
       return Promise.resolve(
         jsonResponse({

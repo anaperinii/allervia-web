@@ -26,6 +26,7 @@ export function acceptSession(id: string, csrf: string): void {
   csrfToken = csrf
 }
 export function getSessionContext(): string | null { return sessionContext }
+export function getAuthGeneration(): number { return generation }
 export function clearSession(broadcast = false): void {
   generation++
   sessionContext = null
@@ -66,15 +67,20 @@ export interface RequestOptions {
   body?: unknown
   signal?: AbortSignal
   headers?: Record<string, string>
-  preserveSessionOn401?: boolean
+
+  timeoutMs?: number
 }
 
-const SESSION_TERMINATING_CODES = new Set<string>([
-  'SESSION_MISSING',
-  'SESSION_CONTEXT_CHANGED',
-  API_ERROR_CODES.sessionExpired,
-  API_ERROR_CODES.sessionRevoked,
-])
+
+export const DEFAULT_REQUEST_TIMEOUT_MS = 30_000
+
+export const EXPORT_COLLECTION_TIMEOUT_MS = 120_000
+
+const LOCAL_CREDENTIAL_REJECTIONS: Record<string, ReadonlySet<string>> = {
+  '/auth/reauthenticate': new Set(['INVALID_CREDENTIALS', 'MFA_CODE_INVALID']),
+  '/account/me/password': new Set(['INVALID_CREDENTIALS']),
+  '/auth/mfa/enroll/confirm': new Set(['MFA_CODE_INVALID']),
+}
 
 function buildUrl(path: string): string {
   if (!path.startsWith('/') || path.startsWith('//'))
@@ -115,7 +121,37 @@ async function parseEnvelope(response: Response): Promise<ApiErrorEnvelope> {
   }
 }
 
-async function send(path: string, options: RequestOptions): Promise<Response> {
+
+function withDeadline(
+  external: AbortSignal | undefined,
+  timeoutMs: number,
+): { signal: AbortSignal; dispose: () => void; timedOut: () => boolean } {
+  const controller = new AbortController()
+  let expired = false
+  const timer = setTimeout(() => {
+    expired = true
+    controller.abort()
+  }, timeoutMs)
+  const onExternalAbort = () => controller.abort()
+  if (external) {
+    if (external.aborted) controller.abort()
+    else external.addEventListener('abort', onExternalAbort, { once: true })
+  }
+  return {
+    signal: controller.signal,
+    timedOut: () => expired,
+    dispose: () => {
+      clearTimeout(timer)
+      external?.removeEventListener('abort', onExternalAbort)
+    },
+  }
+}
+
+async function send(
+  path: string,
+  options: RequestOptions,
+  signal: AbortSignal,
+): Promise<Response> {
   const headers = { ...options.headers }
   const mutating = options.method && options.method !== 'GET'
   if (options.body !== undefined || mutating) headers['Content-Type'] = 'application/json'
@@ -129,7 +165,7 @@ async function send(path: string, options: RequestOptions): Promise<Response> {
       method: options.method ?? 'GET',
       headers,
       credentials: options.anonymous ? 'omit' : 'include',
-      signal: options.signal,
+      signal,
       body:
         options.body === undefined ? (mutating ? '{}' : undefined) : JSON.stringify(options.body),
     })
@@ -157,23 +193,62 @@ export async function apiRequest<T>(
   options: RequestOptions = {},
 ): Promise<T> {
   const started = generation
-  const response = await send(path, options)
-  if (!options.anonymous && started !== generation)
-    throw new DOMException('Authentication changed', 'AbortError')
-  if (!response.ok) {
-    const error = new ApiError(await parseEnvelope(response))
-    if (
-      error.isUnauthenticated &&
-      !options.anonymous &&
-      (!options.preserveSessionOn401 ||
-        SESSION_TERMINATING_CODES.has(error.code))
-    ) {
-      clearSession()
-      onUnauthenticated?.(error)
+  const deadline = withDeadline(
+    options.signal,
+    options.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS,
+  )
+  try {
+    const response = await send(path, options, deadline.signal)
+    if (!options.anonymous && started !== generation)
+      throw new DOMException('Authentication changed', 'AbortError')
+    if (!response.ok) {
+      const error = new ApiError(await parseEnvelope(response))
+      if (!options.anonymous && started !== generation)
+        throw new DOMException('Authentication changed', 'AbortError')
+      if (
+        error.isUnauthenticated &&
+        !options.anonymous &&
+        !LOCAL_CREDENTIAL_REJECTIONS[path]?.has(error.code)
+      ) {
+        clearSession()
+        onUnauthenticated?.(error)
+      }
+      throw error
     }
-    throw error
+    if (response.status === 204) return undefined as T
+
+    const text = await response.text()
+
+    if (!options.anonymous && started !== generation)
+      throw new DOMException('Authentication changed', 'AbortError')
+    if (text.length === 0) return undefined as T
+    try {
+      return JSON.parse(text) as T
+    } catch {
+
+      throw new ApiError({
+        statusCode: 502,
+        code: API_ERROR_CODES.invalidApiResponse,
+        message: 'O servidor respondeu em um formato que não pôde ser lido.',
+      })
+    }
+  } catch (cause) {
+    if (
+      deadline.timedOut() &&
+      cause instanceof DOMException &&
+      cause.name === 'AbortError' &&
+      !options.signal?.aborted
+    ) {
+
+      throw new ApiError({
+        statusCode: 0,
+        code: API_ERROR_CODES.indeterminate,
+        message:
+          'O servidor não respondeu no tempo limite. O resultado desta operação é desconhecido.',
+      })
+    }
+    throw cause
+  } finally {
+    deadline.dispose()
   }
-  if (response.status === 204) return undefined as T
-  const text = await response.text()
-  return (text ? JSON.parse(text) : undefined) as T
 }

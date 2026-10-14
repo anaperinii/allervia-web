@@ -34,8 +34,8 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
           </tr>
         ) : (
           items.map((item) => {
-            // Fallback pela data de manutenção: sustenta respostas de um
-            // servidor anterior ao campo currentPhase.
+
+
             const phase =
               PHASE_VIEW[
                 item.currentPhase ??

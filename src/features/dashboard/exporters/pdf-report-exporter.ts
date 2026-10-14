@@ -33,7 +33,7 @@ export const ALL_DASHBOARD_SECTIONS = DASHBOARD_SECTIONS.map((section) => sectio
 export interface DashboardReportData {
   generatedAt: string
   periodLabel: string
-  /** Seções incluídas; ausente = todas. */
+
   sections?: DashboardSectionId[]
   metrics: ClinicalMetrics
   comparisonSeries: ComparisonEntry[]
@@ -66,7 +66,7 @@ interface LineSeries {
   points: number[]
 }
 
-/** Monta o documento sem gravá-lo — usado pela pré-visualização e pelo download. */
+
 export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageW = doc.internal.pageSize.getWidth()
@@ -125,7 +125,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     y += 5
   }
 
-  /** Eixo Y com 4 divisões, séries como polilinhas, rótulos do eixo X decimados. */
+
   const drawLineChart = (series: LineSeries[], xLabels: string[], chartH: number) => {
     ensureSpace(chartH + 12)
     const axisW = 10
@@ -168,7 +168,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     y += plotH + 8
   }
 
-  /** Barras verticais empilhadas (indução + manutenção) por dia. */
+
   const drawStackedBars = (series: PhaseDayEntry[], chartH: number) => {
     ensureSpace(chartH + 12)
     const axisW = 10
@@ -214,7 +214,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     y += plotH + 8
   }
 
-  /** Barras horizontais com rótulo e valor, iguais às do painel. */
+
   const drawHBarList = (entries: CountEntry[], unit: string) => {
     const max = Math.max(1, ...entries.map((entry) => entry.count))
     const labelW = 38
@@ -243,7 +243,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     y += 3
   }
 
-  /** Matriz volume × concentração com rampa sequencial (claro = menos, escuro = mais). */
+
   const drawHeatmap = (matrix: VolumeConcentrationMatrix) => {
     const labelW = 30
     const cellW = Math.min(22, (contentW - labelW) / Math.max(matrix.volumes.length, 1))
@@ -290,7 +290,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     y += 6
   }
 
-  // Cabeçalho
+
   doc.setFillColor(108, 158, 165)
   doc.rect(0, 0, pageW, 2, 'F')
   doc.setFontSize(16)
@@ -309,7 +309,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
   const includes = (section: DashboardSectionId) =>
     (data.sections ?? ALL_DASHBOARD_SECTIONS).includes(section)
 
-  // Indicadores
+
   if (includes('indicators')) {
     addSectionTitle('Indicadores do Período')
     const adherencePct =
@@ -345,7 +345,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     y += 3
   }
 
-  // Comparativo de aplicações
+
   if (includes('comparison')) {
     addSectionTitle('Comparativo de Aplicações', 'Aplicações por dia vs período anterior')
     if (data.comparisonSeries.length === 0) {
@@ -366,7 +366,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     }
   }
 
-  // Status das imunoterapias
+
   if (includes('status')) {
     addSectionTitle(
       'Status de Imunoterapias',
@@ -392,7 +392,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     }
   }
 
-  // Distribuição de fases
+
   if (includes('phases')) {
     addSectionTitle(
       'Distribuição de Fases',
@@ -409,7 +409,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     }
   }
 
-  // Concentrações
+
   if (includes('concentrations')) {
     addSectionTitle(
       'Ciclos de Tratamento por Concentração',
@@ -422,7 +422,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     }
   }
 
-  // Tipos
+
   if (includes('types')) {
     addSectionTitle(
       'Imunoterapias Ativas por Tipo',
@@ -435,7 +435,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     }
   }
 
-  // Heatmap volume × concentração
+
   if (includes('matrix')) {
     addSectionTitle('Volume vs Concentração', 'Matriz de valores administrados no período')
     if (data.volumeMatrix.total === 0) {
@@ -445,7 +445,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     }
   }
 
-  // Rodapé
+
   const totalPages = doc.getNumberOfPages()
   for (let page = 1; page <= totalPages; page++) {
     doc.setPage(page)

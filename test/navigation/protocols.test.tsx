@@ -7,7 +7,7 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { ProtocolsPage } from '@/features/protocols/protocols-page'
 import {
   ProtocolEditorPage,
@@ -15,119 +15,50 @@ import {
 } from '@/features/protocols/protocol-editor-page'
 import { validateDraft } from '@/features/protocols/protocol-draft'
 import type { ProtocolDefinitionDraft } from '@/shared/api/contracts/protocols'
+import { automationSettings } from '../fixtures/settings'
+import {
+  protocolDefinition,
+  protocolVersion,
+  treatmentProtocol,
+} from '../fixtures/protocols'
+import { errorResponse, stubApi, type RouteDefinition } from '../helpers/http'
 import { buildAccountContext, withSession } from '../helpers/session'
 
-function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  })
-}
-
-const DRAFT_DEFINITION = {
-  schemaVersion: 1,
-  engineVersion: '1',
-  route: 'SUBCUTANEOUS',
-  volumeUnit: 'mL',
-  concentrationUnit: 'DILUTION_DENOMINATOR',
-  steps: [
-    {
-      id: 'inicio',
-      label: 'Início',
-      phase: 'BUILD_UP',
-      concentration: '1000',
-      volume: '0.1',
-      intervalDays: 7,
-      nextStepId: null,
-    },
-  ],
-}
-
-const CATALOG = [
-  {
-    id: 'protocol-1',
-    name: 'SCIT ácaros',
-    route: 'SUBCUTANEOUS',
-    available: true,
-    createdAt: '2026-09-01T12:00:00.000Z',
-    versions: [
-      {
-        id: 'version-2',
-        protocolId: 'protocol-1',
-        number: 2,
-        status: 'DRAFT',
-        definition: DRAFT_DEFINITION,
-        revision: 3,
-        createdAt: '2026-09-10T12:00:00.000Z',
-        publishedAt: null,
-      },
-      {
-        id: 'version-1',
-        protocolId: 'protocol-1',
-        number: 1,
-        status: 'PUBLISHED',
-        definition: DRAFT_DEFINITION,
-        revision: 1,
-        createdAt: '2026-09-01T12:00:00.000Z',
-        publishedAt: '2026-09-02T12:00:00.000Z',
-      },
-    ],
-  },
-]
-
-const AUTOMATION = {
-  enabled: true,
-  timeZone: 'America/Sao_Paulo',
-  defaults: [
-    {
-      organizationId: 'organization-1',
-      route: 'SUBCUTANEOUS',
-      versionId: 'version-1',
-    },
-  ],
-}
+const DRAFT_DEFINITION = protocolDefinition()
+const CATALOG = [treatmentProtocol()]
+const DRAFT_VERSION = CATALOG[0].versions[0]
 
 function stubProtocolApi(options: { conflictOnEdit?: boolean } = {}) {
-  const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
-    const url = String(input)
-    const method = init?.method ?? 'GET'
-
-    if (url.endsWith('/treatment-protocols') && method === 'GET') {
-      return Promise.resolve(jsonResponse(CATALOG))
-    }
-    if (url.includes('/treatment-protocols/automation') && method === 'GET') {
-      return Promise.resolve(jsonResponse(AUTOMATION))
-    }
-    if (url.includes('/versions/version-2') && method === 'PATCH') {
-      if (options.conflictOnEdit) {
-        return Promise.resolve(
-          jsonResponse(
-            {
-              statusCode: 409,
-              code: 'STALE_PROTOCOL_REVISION',
-              message: 'STALE_PROTOCOL_REVISION',
-            },
-            409,
-          ),
-        )
+  const editRoute: RouteDefinition = options.conflictOnEdit
+    ? {
+        method: 'PATCH',
+        path: '/treatment-protocols/versions/version-2',
+        handler: errorResponse(
+          409,
+          'STALE_PROTOCOL_REVISION',
+          'STALE_PROTOCOL_REVISION',
+        ),
       }
-      return Promise.resolve(jsonResponse(CATALOG[0].versions[0]))
-    }
-    if (url.includes('/versions/version-2') && method === 'GET') {
-      return Promise.resolve(
-        jsonResponse({ ...CATALOG[0].versions[0], revision: 4 }),
-      )
-    }
-    if (url.includes('/publish') && method === 'POST') {
-      return Promise.resolve(
-        jsonResponse({ ...CATALOG[0].versions[0], status: 'PUBLISHED' }),
-      )
-    }
-    return Promise.resolve(jsonResponse({}))
-  })
+    : {
+        method: 'PATCH',
+        path: '/treatment-protocols/versions/version-2',
+        handler: DRAFT_VERSION,
+      }
 
-  vi.stubGlobal('fetch', fetchMock)
-  return fetchMock
+  return stubApi([
+    editRoute,
+    { path: '/treatment-protocols', handler: CATALOG },
+    { path: '/treatment-protocols/automation', handler: automationSettings() },
+    {
+      path: '/treatment-protocols/versions/version-2',
+      handler: protocolVersion({ revision: 4 }),
+    },
+    {
+      method: 'POST',
+      path: '/treatment-protocols/versions/version-2/publish',
+      handler: protocolVersion({ status: 'PUBLISHED' }),
+    },
+  ])
 }
 
 const PHYSICIAN = buildAccountContext()
@@ -184,10 +115,6 @@ async function renderProtocols(account = PHYSICIAN) {
 }
 
 describe('catálogo de protocolos', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
   it('mostra versões, situação e a padrão para novas prescrições', async () => {
     stubProtocolApi()
     await renderProtocols()
@@ -212,7 +139,7 @@ describe('catálogo de protocolos', () => {
   })
 
   it('publica com confirmação explicando o efeito', async () => {
-    const fetchMock = stubProtocolApi()
+    const api = stubProtocolApi()
     const user = userEvent.setup()
     await renderProtocols()
 
@@ -225,13 +152,11 @@ describe('catálogo de protocolos', () => {
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     await waitFor(() => {
-      const publishCall = fetchMock.mock.calls.find(([url]) =>
-        String(url).includes('/versions/version-2/publish'),
+      const [publish] = api.requestsFor(
+        'POST',
+        '/treatment-protocols/versions/version-2/publish',
       )
-      expect(publishCall).toBeDefined()
-      expect(
-        JSON.parse((publishCall![1] as RequestInit).body as string),
-      ).toEqual({ expectedRevision: 3 })
+      expect(publish?.body).toEqual({ expectedRevision: 3 })
     })
   })
 

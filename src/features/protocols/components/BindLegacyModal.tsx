@@ -1,3 +1,6 @@
+import { getImmunotherapy } from '@/shared/api/clinical.api'
+import { ClinicalReviewNotice } from '@/shared/components/ClinicalReviewNotice'
+import { queryKeys } from '@/shared/api/query-keys'
 import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, FieldLabel, Modal, Select, showApiErrorToast, toast } from '@/shared/components'
@@ -44,7 +47,7 @@ interface BindLegacyModalProps {
 
 export function BindLegacyModal(props: BindLegacyModalProps) {
   if (!props.row) return null
-  return <BindLegacyForm key={`${props.row.therapyId}-${props.row.revision}`} {...props} />
+  return <BindLegacyForm key={props.row.therapyId} {...props} />
 }
 
 function BindLegacyForm({
@@ -87,16 +90,18 @@ function BindLegacyForm({
       targetStepId,
     }
   }
+  const [confirmedRevision, setConfirmedRevision] = useState<number | null>(therapy.revision)
   const currentBody = prescription()
-  const currentKey = currentBody ? JSON.stringify(currentBody) : null
+  const currentKey = currentBody ? JSON.stringify({ prescription: currentBody, expectedRevision: confirmedRevision!, pendingDoses: therapy.pendingDoses }) : null
   const rehearsedMatches = rehearsed !== null && rehearsed.body === currentKey
 
+  const [reviewRequired, setReviewRequired] = useState(false)
   const bindMutation = useMutation({
     mutationFn: (dryRun: boolean) =>
       bindLegacyTherapy(therapy.therapyId, {
         versionId,
         prescription: currentBody!,
-        expectedRevision: therapy.revision,
+        expectedRevision: confirmedRevision!,
         dryRun,
       }),
     onSuccess: async (result, dryRun) => {
@@ -121,7 +126,8 @@ function BindLegacyForm({
       onBound()
     },
     meta: { suppressErrorToast: true },
-    onError: (error) => {
+    onError: async (error) => {
+      if (error instanceof ApiError && error.code.startsWith('STALE_')) { setReviewRequired(true); setConfirmedRevision(null); try { const current = await getImmunotherapy(therapy.therapyId); setConfirmedRevision(current.revision) } catch { return }; await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) }
       setRehearsed(null)
       if (error instanceof ApiError && error.code && BIND_ERROR_EXPLANATIONS[error.code]) {
         showApiErrorToast(error, {
@@ -129,7 +135,7 @@ function BindLegacyForm({
         })
         if (error.code === 'STALE_CLINICAL_REVISION' || error.code === 'PRESCRIPTION_ALREADY_BOUND') {
           void queryClient.invalidateQueries({
-            queryKey: ['clinical', organizationId, 'protocols', 'migration'],
+            queryKey: queryKeys.migrationInventory(organizationId),
           })
         }
         return
@@ -151,6 +157,8 @@ function BindLegacyForm({
   return (
     <Modal
       open
+      pending={bindMutation.isPending}
+      dirty={!!versionId}
       onClose={onClose}
       title={`Vincular tratamento de ${therapy.patient.fullName}`}
       size="lg"
@@ -160,7 +168,7 @@ function BindLegacyForm({
           <Button
             variant="outline"
             tone="brand"
-            disabled={!currentBody || bindMutation.isPending}
+            disabled={!currentBody || bindMutation.isPending || reviewRequired}
             onClick={() => bindMutation.mutate(true)}
             leftIcon={<FontAwesomeIcon icon={faFlaskVial} style={{ fontSize: 11 }} />}
           >
@@ -169,7 +177,7 @@ function BindLegacyForm({
           <Button
             tone="brand"
             variant="solid"
-            disabled={!rehearsedMatches || bindMutation.isPending}
+            disabled={!rehearsedMatches || bindMutation.isPending || reviewRequired}
             onClick={() => bindMutation.mutate(false)}
           >
             Vincular tratamento
@@ -177,6 +185,8 @@ function BindLegacyForm({
         </>
       }
     >
+      {reviewRequired && confirmedRevision === null && <div role="alert"><p>Não foi possível carregar a revisão atual. Seu rascunho está preservado.</p><button type="button" onClick={async () => { try { const current = await getImmunotherapy(therapy.therapyId); setConfirmedRevision(current.revision); await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) } catch (error) { showApiErrorToast(error) } }}>Recarregar registro atual</button></div>}
+      <ClinicalReviewNotice required={reviewRequired && confirmedRevision !== null} onReview={() => { if (confirmedRevision !== null) setReviewRequired(false) }} />
       <div className="bg-gray-50 border border-(--border-custom) rounded-lg p-3 space-y-1.5">
         <div className="text-[0.55rem] font-bold text-(--text-muted) uppercase tracking-wider mb-1">
           Registro legado (imutável)

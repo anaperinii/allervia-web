@@ -1,3 +1,4 @@
+import { collectPages } from '@/shared/api/pagination'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { StepHeading, TextInput } from '@/shared/components'
@@ -52,20 +53,12 @@ export function SelectPatientStep({
       picker: 'evolution',
       search: search.trim() || undefined,
     }),
-    queryFn: ({ signal }) =>
-      listImmunotherapies(
-        {
-          pageSize: 50,
-          status: 'IN_PROGRESS',
-          search: search.trim() || undefined,
-        },
-        signal,
-      ),
+    queryFn: ({ signal }) => collectPages(page => listImmunotherapies({ page, pageSize: 100, status: 'IN_PROGRESS', search: search.trim() || undefined }, signal), { signal, maxPages: 5 }),
     enabled: organizationId !== '' && !preselectedLocked,
   })
 
   const filtered = useMemo(
-    () => (therapiesQuery.data?.items ?? []).slice(0, 8),
+    () => (therapiesQuery.data?.items ?? []),
     [therapiesQuery.data],
   )
 
@@ -110,6 +103,7 @@ export function SelectPatientStep({
 
   return (
     <div className="space-y-5">
+      {therapiesQuery.data?.truncated && <p role="status">Lista limitada: {therapiesQuery.data.items.length}/{therapiesQuery.data.total}. Refine a busca.</p>}
       <StepHeading description="Escolha a imunoterapia a evoluir e confira a última aplicação realizada e a previsão pendente gravada no servidor." />
       <div className="relative">
         <label htmlFor={inputId} className="sr-only">Buscar paciente</label>

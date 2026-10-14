@@ -52,7 +52,7 @@ export function ProtocolLabPage() {
     protocolsQuery.data?.find((protocol) => protocol.id === version?.protocolId)
       ?.name ?? 'Protocolo'
 
-  // A trilha inteira aparece de uma vez: não há cursor nem etapa "atual".
+
   const visited = useMemo(
     () => new Set(steps.map((step) => step.id)),
     [steps],

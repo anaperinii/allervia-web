@@ -1,3 +1,4 @@
+import { useUnsavedChangesBlocker } from '@/shared/hooks/useUnsavedChangesBlocker'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
@@ -95,6 +96,20 @@ export function ProtocolEditorPage({
       : null,
   )
   const [conflict, setConflict] = useState(false)
+  const [conflictLoadError, setConflictLoadError] = useState(false)
+  const [serverPublished, setServerPublished] = useState(false)
+  const [initialDraft, setInitialDraft] = useState<string | null>(null)
+  const currentDraft = editor ? JSON.stringify({ name: editor.name, draft: editor.draft }) : null
+  if (initialDraft === null && currentDraft !== null) setInitialDraft(currentDraft)
+  const blocker = useUnsavedChangesBlocker({ hasUnsavedChanges: initialDraft !== null && initialDraft !== currentDraft })
+  const refreshConflict = async () => {
+    setConflictLoadError(false)
+    try {
+      const fresh = await readVersion(versionId!)
+      setServerPublished(fresh.status !== 'DRAFT')
+      setEditor(current => current ? { ...current, serverDraft: fresh.definition, serverRevision: fresh.revision } : current)
+    } catch { setConflictLoadError(true) }
+  }
 
   if (!editor && mode === 'new-version') {
     const protocol = protocolsQuery.data?.find((item) => item.id === protocolId)
@@ -139,6 +154,7 @@ export function ProtocolEditorPage({
           queryKey: queryKeys.protocolVersion(organizationId, versionId),
         })
       }
+      blocker.allowNextNavigation()
       leave()
     },
     onError: async (error) => {
@@ -147,17 +163,8 @@ export function ProtocolEditorPage({
         error.code === PROTOCOL_ERROR_CODES.staleRevision &&
         versionId
       ) {
-        const fresh = await readVersion(versionId)
-        setEditor((current) =>
-          current
-            ? {
-                ...current,
-                serverDraft: fresh.definition,
-                serverRevision: fresh.revision,
-              }
-            : current,
-        )
         setConflict(true)
+        await refreshConflict()
         return
       }
     },
@@ -214,6 +221,8 @@ export function ProtocolEditorPage({
               </FieldLabel>
             )}
 
+            {conflictLoadError && <p role="alert">Não foi possível carregar a revisão atual. Seu rascunho foi preservado. <button onClick={() => void refreshConflict()}>Tentar carregar revisão atual</button></p>}
+            {serverPublished && <p role="alert">Esta versão foi publicada ou retirada e não pode ser sobrescrita.</p>}
             {conflict && (
               <div
                 role="alert"
@@ -232,6 +241,7 @@ export function ProtocolEditorPage({
                   <Button
                     variant="outline"
                     size="sm"
+                    disabled={editor.serverRevision === undefined || serverPublished}
                     onClick={() => {
                       setEditor({
                         ...editor,
@@ -250,6 +260,7 @@ export function ProtocolEditorPage({
                     tone="brand"
                     variant="solid"
                     size="sm"
+                    disabled={editor.serverRevision === undefined || serverPublished}
                     onClick={() => {
                       setEditor({
                         ...editor,
@@ -269,7 +280,7 @@ export function ProtocolEditorPage({
 
             <ProtocolEditor
               draft={editor.draft}
-              readOnly={!canManage}
+              readOnly={!canManage || serverPublished || (mode === 'edit-draft' && versionQuery.data?.status !== 'DRAFT')}
               onChange={(draft) => setEditor({ ...editor, draft })}
             />
 
@@ -291,7 +302,7 @@ export function ProtocolEditorPage({
                 disabled={
                   !canManage ||
                   saveMutation.isPending ||
-                  conflict ||
+                  conflict || serverPublished || (mode === 'edit-draft' && versionQuery.data?.status !== 'DRAFT') ||
                   draftProblems.length > 0 ||
                   (mode === 'create' && editor.name.trim().length === 0)
                 }

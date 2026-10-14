@@ -27,8 +27,10 @@ import { cn } from '@/shared/lib/cn'
 import { CircleButton, SHOWCASE } from '@/shared/components/showcase'
 import { useSidebarStore } from '@/shared/layout/useSidebarStore'
 import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/shared/api/query-keys'
 import { listNotifications } from '@/shared/api/notifications.api'
-import { hasPermission, useUserStore, type Permission } from '@/shared/stores/useUserStore'
+import { useUserStore, type Permission } from '@/shared/stores/useUserStore'
+import { canAccess, defaultDestination } from '@/shared/auth/navigation-policy'
 import { useSession } from '@/shared/auth/useSession'
 
 const RAIL_ACTIVE_SOLID = 'linear-gradient(150deg, #257E8C, #12333a)'
@@ -83,13 +85,14 @@ interface SettingsLink {
   requires?: Permission
 }
 
+
 const SETTINGS_LINKS: SettingsLink[] = [
   { icon: faUser, path: '/profile', label: 'Perfil' },
   { icon: faShield, path: '/security', label: 'Segurança' },
-  { icon: faFlask, path: '/protocols', label: 'Protocolos', requires: 'adjust_protocol' },
-  { icon: faSliders, path: '/advanced-settings', label: 'Avançado', requires: 'advanced_settings' },
-  { icon: faUsers, path: '/teams', label: 'Equipes', requires: 'manage_team' },
-  { icon: faCreditCard, path: '/plans', label: 'Planos', requires: 'manage_team' },
+  { icon: faFlask, path: '/protocols', label: 'Protocolos' },
+  { icon: faSliders, path: '/advanced-settings', label: 'Avançado' },
+  { icon: faUsers, path: '/teams', label: 'Equipes' },
+  { icon: faCreditCard, path: '/plans', label: 'Planos' },
   { icon: faCircleQuestion, path: '/help', label: 'Ajuda' },
   { icon: faCircleInfo, path: '/about', label: 'Sobre' },
 ]
@@ -213,9 +216,10 @@ function RailLink({
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
+  const { account } = useSession()
   const path = location.pathname
   const unreadQuery = useQuery({
-    queryKey: ['notifications', 'unread-badge'],
+    queryKey: queryKeys.notifications(account?.organization?.id ?? '', account?.user.id ?? '', { badge: true }),
     queryFn: ({ signal }) =>
       listNotifications({ page: 1, pageSize: 1, unreadOnly: true }, signal),
     refetchInterval: 60_000,
@@ -230,8 +234,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const toggleSidebar = useSidebarStore((s) => s.toggle)
 
   const capabilities = useUserStore((s) => s.capabilities)
-  const visibleSettingsLinks = SETTINGS_LINKS.filter(
-    (link) => !link.requires || hasPermission(capabilities, link.requires),
+
+  const visibleRail = RAIL.filter((item) => canAccess(capabilities, item.path))
+  const visibleSettingsLinks = SETTINGS_LINKS.filter((link) =>
+    canAccess(capabilities, link.path),
   )
   const settingsActive =
     path === SETTINGS_ITEM.path || visibleSettingsLinks.some((link) => path === link.path)
@@ -253,7 +259,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       >
         <div className={cn('flex items-center', collapsed ? 'flex-col gap-3' : 'justify-between gap-2')}>
-          <Link to="/immunotherapies" aria-label="Allervia" className="flex items-center gap-3 no-underline">
+          <Link
+            to={defaultDestination(capabilities)}
+            aria-label="Allervia"
+            className="flex items-center gap-3 no-underline"
+          >
             <img src={allerviaMark} alt="" className="h-7 w-7 shrink-0 object-contain" />
             {!collapsed && (
               <AllerviaWordmark className="text-lg font-semibold" style={{ color: SHOWCASE.ink }} />
@@ -283,7 +293,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             collapsed ? 'items-center overflow-visible' : 'w-full overflow-visible',
           )}
         >
-          {RAIL.map((item) => (
+          {visibleRail.map((item) => (
             <span key={item.path} data-rail-item="" className={cn('block', collapsed ? '' : 'w-full')}>
               <RailLink
                 item={item}

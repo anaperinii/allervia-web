@@ -116,7 +116,7 @@ function stubApi() {
               patientId: 'patient-9',
               prescription: { id: 'prescription-9', versionId: 'version-1' },
             },
-            firstDose: { id: 'dose-9' },
+            firstDose: { id: 'dose-9', scheduledAt: '2026-10-13T08:00:00-03:00' },
           },
           201,
         ),
@@ -189,16 +189,6 @@ async function fillPatientStep(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: 'Continuar' }))
 }
 
-async function linkExistingPatient(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByPlaceholderText('Nome completo'), 'Paula')
-  await user.click(await screen.findByRole('option', { name: /paula andrade/i }))
-
-  await waitFor(() =>
-    expect(controlByLabel(/^cpf$/i)).toHaveValue(VALID_CPF_MASKED),
-  )
-  await user.click(screen.getByRole('button', { name: 'Continuar' }))
-}
-
 async function fillPrescriptionStep(user: ReturnType<typeof userEvent.setup>) {
   await user.click(controlByLabel(/^tipo$/i))
   await user.click(await screen.findByRole('option', { name: 'Ácaros' }))
@@ -224,13 +214,13 @@ function registerBody(fetchMock: ReturnType<typeof vi.fn>) {
   return JSON.parse((call[1] as RequestInit).body as string)
 }
 
-describe('wizard de prescrição', () => {
+describe('prescription wizard', () => {
   afterEach(() => {
     cleanup()
     vi.unstubAllGlobals()
   })
 
-  it('prescreve paciente novo com versão explícita, etapas e idempotência', async () => {
+  it('registers a new patient with explicit version, steps and idempotency', async () => {
     const fetchMock = stubApi()
     const user = userEvent.setup()
     await renderWizard()
@@ -263,7 +253,7 @@ describe('wizard de prescrição', () => {
       expect(body.patientId).toBeUndefined()
       expect(body.patient.fullName).toBe('Paciente Novo')
       expect(body.patient.phoneNumber).toBe('62999998888')
-      expect(body.patient.cpf).toBe(VALID_CPF_MASKED)
+      expect(body.patient.cpf).toBe(VALID_CPF_MASKED.replace(/\D/g, ''))
       expect(body.patient.responsiblePhysicianId).toBe('professional-1')
       expect(body.targetConcentration).toBeUndefined()
       expect(body.targetVolume).toBeUndefined()
@@ -274,12 +264,19 @@ describe('wizard de prescrição', () => {
     ).toBeInTheDocument()
   })
 
-  it('prescreve para paciente existente enviando patientId sem dados de cadastro', async () => {
+  it('registers an existing patient without editing the patient record', async () => {
     const fetchMock = stubApi()
     const user = userEvent.setup()
     await renderWizard()
 
-    await linkExistingPatient(user)
+    await user.type(screen.getByPlaceholderText('Nome completo'), 'Paula')
+    await user.click(await screen.findByRole('option', { name: /paula andrade/i }))
+    await waitFor(() => expect(controlByLabel(/^cpf$/i)).toHaveValue(VALID_CPF_MASKED))
+    expect(controlByLabel(/^cpf$/i)).toHaveAttribute('readonly')
+    expect(screen.getByPlaceholderText('(00) 00000-0000')).toHaveAttribute('readonly')
+    expect(controlByLabel(/data de nascimento/i)).toHaveAttribute('readonly')
+    expect(screen.getByPlaceholderText('Ex: 70.5')).toHaveAttribute('readonly')
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
 
     await fillPrescriptionStep(user)
     await user.click(await screen.findByRole('button', { name: /salvar prescrição/i }))
@@ -287,6 +284,7 @@ describe('wizard de prescrição', () => {
     await waitFor(() => {
       const body = registerBody(fetchMock)
       expect(body).not.toBeNull()
+      expect(fetchMock.mock.calls.some(([, options]) => (options as RequestInit | undefined)?.method === 'PATCH')).toBe(false)
       expect(body.patientId).toBe('patient-7')
       expect(body.patient).toBeUndefined()
       expect(body.idempotencyKey).toEqual(expect.any(String))
@@ -297,7 +295,7 @@ describe('wizard de prescrição', () => {
     ).toBeInTheDocument()
   })
 
-  it('falha do servidor não gera sucesso local e preserva o formulário', async () => {
+  it('preserves the form without local success after a server rejection', async () => {
     const fetchMock = stubApi()
     fetchMock.mockImplementation((input: RequestInfo | URL) => {
       const url = String(input)
@@ -341,4 +339,14 @@ describe('wizard de prescrição', () => {
     expect(router.state.location.pathname).toBe('/add-immunotherapy')
     expect(screen.getByText('SCIT ácaros — v1')).toBeInTheDocument()
   })
+  it('does not skip patient validation when clicking the review breadcrumb', async () => {
+    const fetchMock = stubApi()
+    const user = userEvent.setup()
+    await renderWizard()
+    await user.click(screen.getByRole('button', { name: /revisão/i }))
+    expect(screen.getByPlaceholderText('Nome completo')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /salvar prescrição/i })).not.toBeInTheDocument()
+    expect(registerBody(fetchMock)).toBeNull()
+  })
+
 })

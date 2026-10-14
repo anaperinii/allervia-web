@@ -1,3 +1,5 @@
+import { collectPages } from '@/shared/api/pagination'
+import { Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { Controller, type UseFormReturn } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
@@ -41,12 +43,12 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
   const patientsQuery = useQuery({
     queryKey: queryKeys.patients(organizationId, { picker: true, search: term }),
     queryFn: ({ signal }) =>
-      listPatients({ pageSize: 50, isActive: true, search: term }, signal),
+      collectPages(page => listPatients({ page, pageSize: 100, isActive: true, search: term }, signal), { signal, maxPages: 5 }),
     enabled:
       organizationId !== '' && !isExisting && term.length >= MIN_SEARCH_LENGTH,
   })
 
-  // A listagem só devolve o CPF mascarado; o detalhe traz o número completo.
+
   const patientDetailQuery = useQuery({
     queryKey: queryKeys.patient(organizationId, patientId),
     queryFn: ({ signal }) => getPatient(patientId, signal),
@@ -66,12 +68,9 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
     setValue('guardianPhone', formatPhone(detailGuardian?.phoneNumber ?? ''))
   }, [patientDetailQuery.data, detailGuardian, setValue])
 
-  // Cadastro antigo pode não ter CPF; nesse caso o campo fica editável para o
-  // prescritor completar — o valor é gravado no cadastro ao salvar.
-  const cpfLocked =
-    isExisting && (patientDetailQuery.isPending || Boolean(detailCpf))
+  const cpfLocked = isExisting
 
-  const suggestions = isExisting ? [] : (patientsQuery.data?.items ?? []).slice(0, 8)
+  const suggestions = isExisting ? [] : (patientsQuery.data?.items ?? [])
   const isOpen = showSuggestions && suggestions.length > 0
 
   const suggestionsKey = suggestions.map((patient) => patient.id).join(',')
@@ -143,7 +142,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
 
   const nameField = register('name', {
     onChange: () => {
-      // Editar o nome desfaz o vínculo: volta a ser um cadastro novo.
+
       if (isExisting) {
         setValue('patientId', '')
         setValue('cpf', '')
@@ -168,12 +167,17 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
 
   return (
     <div className="space-y-5">
+      {patientsQuery.data?.truncated && <p role="status">Lista limitada: {patientsQuery.data.items.length}/{patientsQuery.data.total}. Refine a busca.</p>}
       <StepHeading description="Digite o nome do paciente: se ele já estiver cadastrado, selecione-o na lista para reaproveitar os dados pessoais. Caso contrário, preencha os campos para criar o cadastro. O tratamento é vinculado ao prescritor autenticado." />
 
+      {isExisting && patientDetailQuery.isError && <p role="alert">
+        Não foi possível carregar o cadastro. <button type="button" onClick={() => void patientDetailQuery.refetch()}>Tentar novamente</button>
+      </p>}
       <div className="grid grid-cols-2 gap-4">
         <FieldLabel label="Nome do Paciente" error={errors.name?.message}>
           <div className="relative">
             <TextInput
+              readOnly={isExisting}
               placeholder="Nome completo"
               invalid={!!errors.name}
               autoComplete="off"
@@ -264,6 +268,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
             name="phone"
             render={({ field }) => (
               <TextInput
+              readOnly={isExisting}
                 placeholder="(00) 00000-0000"
                 invalid={!!errors.phone}
                 value={field.value}
@@ -277,6 +282,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
         <div className="grid grid-cols-[1fr_5rem] gap-2">
           <FieldLabel label="Data de Nascimento" error={errors.birthDate?.message}>
             <TextInput
+              readOnly={isExisting}
               type="date"
               invalid={!!errors.birthDate}
               {...register('birthDate')}
@@ -300,6 +306,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
               name="weight"
               render={({ field }) => (
                 <TextInput
+              readOnly={isExisting}
                   placeholder="Ex: 70.5"
                   invalid={!!errors.weight}
                   className="pr-10"
@@ -327,6 +334,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
             <div className="grid grid-cols-2 gap-4">
               <FieldLabel label="Nome do Responsável" error={errors.guardianName?.message}>
                 <TextInput
+              readOnly={isExisting}
                   placeholder="Nome completo"
                   invalid={!!errors.guardianName}
                   {...register('guardianName')}
@@ -338,6 +346,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
                   name="guardianCpf"
                   render={({ field }) => (
                     <TextInput
+              readOnly={isExisting}
                       placeholder="000.000.000-00"
                       invalid={!!errors.guardianCpf}
                       value={field.value}
@@ -353,6 +362,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
                   name="guardianPhone"
                   render={({ field }) => (
                     <TextInput
+              readOnly={isExisting}
                       placeholder="(00) 00000-0000"
                       invalid={!!errors.guardianPhone}
                       value={field.value}
@@ -368,9 +378,10 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
 
         {isExisting && (
           <p className="col-span-2 text-[0.65rem] leading-relaxed text-(--text-muted)">
-            Paciente já cadastrado: o tratamento não duplica o cadastro. Ajustes em
-            CPF, telefone, nascimento e peso atualizam o cadastro do paciente ao
-            salvar.
+            Cadastro vinculado somente para leitura. A prescrição não altera os dados pessoais.
+            {' '}<Link to="/patient/$patientId" params={{ patientId }}>
+              Editar cadastro no prontuário antes de prescrever
+            </Link>
           </p>
         )}
       </div>

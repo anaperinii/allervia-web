@@ -119,7 +119,7 @@ describe('segurança: alterar senha', () => {
   it('mantém o formulário e exibe o erro quando a senha atual é recusada', async () => {
     stubApi({
       passwordResponse: jsonResponse(
-        { code: 'UNAUTHENTICATED', message: 'Senha atual incorreta.' },
+        { code: 'INVALID_CREDENTIALS', message: 'Senha atual incorreta.' },
         401,
       ),
     })

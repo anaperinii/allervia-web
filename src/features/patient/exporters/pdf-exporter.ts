@@ -7,10 +7,10 @@ import {
 import { derivePatientDates } from '@/features/patient/stores/usePatientStore'
 import type { ReportData } from './types'
 
-/** Monta o documento sem gravá-lo — usado pela pré-visualização e pelo download. */
+
 export function buildPatientReportPdf(data: ReportData): jsPDF {
   const { patient, realizedApplications, sections, anonymized, reactionsCount } = data
-  const { inductionStart } = derivePatientDates(realizedApplications, patient.id)
+  const inductionStart = data.inductionStart !== undefined ? data.inductionStart : derivePatientDates(realizedApplications, patient.id).inductionStart
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
@@ -102,7 +102,7 @@ export function buildPatientReportPdf(data: ReportData): jsPDF {
     addKV('Início Indução', inductionStart ?? '-')
     addKV('Meta', patient.targetConcentrationVolume)
     addKV('Dose Atual', patient.currentDoseConcentration)
-    addKV('Intervalo', `${patient.currentInterval} dias`)
+    addKV('Intervalo', patient.currentInterval > 0 ? `${patient.currentInterval} dias` : 'Indisponível')
     y += 3
   }
 
@@ -127,7 +127,7 @@ export function buildPatientReportPdf(data: ReportData): jsPDF {
       doc.text(application.date, margin + 2, y + 4)
       doc.text(application.dose, margin + 35, y + 4)
       doc.text(`${application.cycle.days} dias`, margin + 100, y + 4)
-      doc.text(application.sideEffect === 'yes' ? 'Sim' : 'Não', margin + 140, y + 4)
+      doc.text(application.sideEffect === 'yes' ? 'Sim' : application.sideEffect === 'no' ? 'Não' : 'Indisponível', margin + 140, y + 4)
       doc.setDrawColor(240, 240, 240)
       doc.line(margin, y + 6, pageW - margin, y + 6)
       y += 6
@@ -136,8 +136,13 @@ export function buildPatientReportPdf(data: ReportData): jsPDF {
   }
 
   if (sections.includes('reactions')) {
-    addSectionTitle(`Reações Adversas (${reactionsCount})`)
-    if (reactionsCount === 0) {
+    addSectionTitle(`Reações Adversas (${reactionsCount ?? 'indisponível'})`)
+    if (reactionsCount === null) {
+      ensureSpace(12)
+      doc.setFontSize(9)
+      doc.text('Observacoes de reacoes indisponiveis nesta fonte. Consulte o prontuario.', margin, y)
+      y += 12
+    } else if (reactionsCount === 0) {
       ensureSpace(6)
       doc.setFontSize(9)
       doc.setFont('helvetica', 'italic')
@@ -163,6 +168,7 @@ export function buildPatientReportPdf(data: ReportData): jsPDF {
           doc.setFont('helvetica', 'normal')
           doc.text(application.medicationNeeded === 'yes' ? 'Com medicação' : 'Sem medicação', margin + 3, y + 8)
           y += 12
+          if (application.administratorNote) { const lines = doc.splitTextToSize(application.administratorNote, pageW - margin * 2); ensureSpace(lines.length * 4 + 4); doc.text(lines, margin + 3, y); y += lines.length * 4 + 4 }
         })
     }
     y += 3
@@ -170,13 +176,13 @@ export function buildPatientReportPdf(data: ReportData): jsPDF {
 
   if (sections.includes('adjustments')) {
     const adjustments = patient.protocolAdjustments ?? []
-    addSectionTitle(`Ajustes de Protocolo (${adjustments.length})`)
+    addSectionTitle(`Ajustes de Protocolo (${patient.protocolAdjustments ? adjustments.length : 'indisponível'})`)
     if (adjustments.length === 0) {
       ensureSpace(6)
       doc.setFontSize(9)
       doc.setFont('helvetica', 'italic')
       doc.setTextColor(100, 116, 139)
-      doc.text('Nenhum ajuste de protocolo registrado.', margin, y)
+      doc.text(patient.protocolAdjustments ? 'Nenhum ajuste de protocolo registrado.' : 'Historico de ajustes indisponivel nesta fonte; consulte o prontuario.', margin, y)
       y += 6
     } else {
       adjustments.forEach((adj) => {
@@ -201,13 +207,13 @@ export function buildPatientReportPdf(data: ReportData): jsPDF {
 
   if (sections.includes('inactivations')) {
     const inactivations = patient.inactivations ?? []
-    addSectionTitle(`Histórico de Inativações (${inactivations.length})`)
+    addSectionTitle(`Histórico de Inativações (${patient.inactivations ? inactivations.length : 'indisponível'})`)
     if (inactivations.length === 0) {
       ensureSpace(6)
       doc.setFontSize(9)
       doc.setFont('helvetica', 'italic')
       doc.setTextColor(100, 116, 139)
-      doc.text('Nenhuma inativação registrada.', margin, y)
+      doc.text(patient.inactivations ? 'Nenhuma inativação registrada.' : 'Historico de inativacoes indisponivel nesta fonte; consulte o prontuario.', margin, y)
       y += 6
     } else {
       inactivations.forEach((inact) => {
@@ -255,7 +261,7 @@ export function buildPatientReportPdf(data: ReportData): jsPDF {
     const boxes: [string, string][] = [
       [String(realizedApplications.length), 'Aplicações'],
       [patient.currentDoseConcentration.split(' - ')[0], 'Concentração atual'],
-      [`${patient.currentInterval}d`, 'Intervalo'],
+      [patient.currentInterval > 0 ? `${patient.currentInterval}d` : '—', 'Intervalo'],
     ]
     boxes.forEach(([v, l], i) => {
       const x = margin + i * (boxW + 4)

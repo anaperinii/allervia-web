@@ -17,7 +17,7 @@ export interface DemoCredential {
 
 const credentialsPath = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../../allervia-backend/scripts/.demo-credentials.local.json',
+  process.env.PLAYWRIGHT_CREDENTIALS_FILE ?? '../../allervia-backend/scripts/.demo-credentials.local.json',
 )
 
 export function credential(email: string): DemoCredential {

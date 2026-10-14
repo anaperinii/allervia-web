@@ -52,6 +52,11 @@ export type BindLegacyResult =
   | Schema<'BindLegacyResultDto'>
   | Schema<'BindLegacyDryRunResultDto'>
 
+export const ORGANIZATION_ERROR_CODES = {
+
+  staleRevision: 'STALE_ORGANIZATION_REVISION',
+} as const
+
 export const PROTOCOL_ERROR_CODES = {
   staleRevision: 'STALE_PROTOCOL_REVISION',
   publishedImmutable: 'PUBLISHED_VERSION_IMMUTABLE',

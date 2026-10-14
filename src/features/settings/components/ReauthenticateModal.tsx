@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { getAuthGeneration } from '@/shared/api/client'
+import { humanErrorMessage } from '@/shared/api/error-copy'
 import { Button, FieldLabel, Modal, PasswordInput, TextInput } from '@/shared/components'
 import { reauthenticate } from '@/shared/api/auth.api'
-import { ApiError } from '@/shared/api/contracts/errors'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
@@ -13,18 +14,25 @@ interface ReauthenticateModalProps {
   onSuccess: () => void
 }
 
-export function ReauthenticateModal({
+function ReauthenticateForm({
   open,
   requireCode,
   onClose,
   onSuccess,
 }: ReauthenticateModalProps) {
+  const mounted = useRef(true)
+  const inFlight = useRef(false)
+  const completed = useRef(false)
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   const [password, setPassword] = useState('')
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const submit = async () => {
+    if (inFlight.current || completed.current) return
+    const identity = getAuthGeneration()
+    inFlight.current = true
     setError(null)
     setSubmitting(true)
     try {
@@ -32,15 +40,17 @@ export function ReauthenticateModal({
         password,
         ...(requireCode ? { code: code.trim() } : {}),
       })
+      if (!mounted.current || identity !== getAuthGeneration()) return
+      completed.current = true
+      setPassword('')
+      setCode('')
       onSuccess()
-    } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : 'Não foi possível confirmar sua identidade. Tente novamente.',
-      )
+    } catch (error) {
+      if (mounted.current && identity === getAuthGeneration())
+        setError(humanErrorMessage(error, 'Não foi possível confirmar sua identidade. Tente novamente.'))
     } finally {
-      setSubmitting(false)
+      inFlight.current = false
+      if (mounted.current) setSubmitting(false)
     }
   }
 
@@ -50,6 +60,7 @@ export function ReauthenticateModal({
   return (
     <Modal
       open={open}
+      pending={submitting}
       onClose={onClose}
       size="sm"
       title="Confirme sua identidade"
@@ -99,4 +110,8 @@ export function ReauthenticateModal({
       )}
     </Modal>
   )
+}
+
+export function ReauthenticateModal(props: ReauthenticateModalProps) {
+  return props.open ? <ReauthenticateForm {...props} /> : null
 }

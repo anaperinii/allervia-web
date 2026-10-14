@@ -7,19 +7,14 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { NotificationsPage } from '@/features/notification/notifications-page'
+import { notification, notificationPage } from '../fixtures/settings'
+import { stubApi } from '../helpers/http'
 import { withSession } from '../helpers/session'
 
-function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  })
-}
-
 const SERVER_NOTIFICATIONS = [
-  {
+  notification({
     id: 'notification-1',
     kind: 'PHYSICIAN_REVIEW_REQUESTED',
     title: 'Avaliação médica solicitada',
@@ -28,8 +23,8 @@ const SERVER_NOTIFICATIONS = [
     entityId: 'therapy-1',
     readAt: null,
     createdAt: '2026-09-21T18:00:00.000Z',
-  },
-  {
+  }),
+  notification({
     id: 'notification-2',
     kind: 'TREATMENT_SUSPENDED',
     title: 'Tratamento suspenso',
@@ -38,36 +33,25 @@ const SERVER_NOTIFICATIONS = [
     entityId: 'therapy-2',
     readAt: '2026-09-21T19:00:00.000Z',
     createdAt: '2026-09-20T18:00:00.000Z',
-  },
+  }),
 ]
 
-function stubApi() {
-  const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
-    const url = String(input)
-    const method = init?.method ?? 'GET'
-    if (url.includes('/notifications/notification-1/read') && method === 'PATCH') {
-      return Promise.resolve(
-        jsonResponse({ ...SERVER_NOTIFICATIONS[0], readAt: '2026-09-21T20:00:00.000Z' }),
-      )
-    }
-    if (url.includes('/notifications/read-all') && method === 'POST') {
-      return Promise.resolve(jsonResponse({ marked: 1 }))
-    }
-    if (url.includes('/notifications')) {
-      return Promise.resolve(
-        jsonResponse({
-          items: SERVER_NOTIFICATIONS,
-          page: 1,
-          pageSize: 25,
-          total: 2,
-          unread: 1,
-        }),
-      )
-    }
-    return Promise.resolve(jsonResponse({}))
-  })
-  vi.stubGlobal('fetch', fetchMock)
-  return fetchMock
+function stubNotificationsApi() {
+  return stubApi([
+    {
+      method: 'PATCH',
+      path: '/notifications/notification-1/read',
+      handler: notification({
+        ...SERVER_NOTIFICATIONS[0],
+        readAt: '2026-09-21T20:00:00.000Z',
+      }),
+    },
+    { method: 'POST', path: '/notifications/read-all', handler: { marked: 1 } },
+    {
+      path: '/notifications',
+      handler: notificationPage(SERVER_NOTIFICATIONS, { pageSize: 25 }),
+    },
+  ])
 }
 
 async function renderPage() {
@@ -86,12 +70,8 @@ async function renderPage() {
 }
 
 describe('notificações internas persistidas', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
   it('lista as notificações do servidor com contagem de não lidas', async () => {
-    stubApi()
+    stubNotificationsApi()
     await renderPage()
 
     expect(await screen.findByText('Avaliação médica solicitada')).toBeInTheDocument()
@@ -101,7 +81,7 @@ describe('notificações internas persistidas', () => {
   })
 
   it('marca todas como lidas pelo comando do servidor', async () => {
-    const fetchMock = stubApi()
+    const api = stubNotificationsApi()
     const user = userEvent.setup()
     await renderPage()
 
@@ -109,12 +89,7 @@ describe('notificações internas persistidas', () => {
     await user.click(screen.getByRole('button', { name: /marcar todas como lidas/i }))
 
     await waitFor(() => {
-      const call = fetchMock.mock.calls.find(
-        ([url, init]) =>
-          String(url).includes('/notifications/read-all') &&
-          (init as RequestInit | undefined)?.method === 'POST',
-      )
-      expect(call).toBeDefined()
+      expect(api.requestsFor('POST', '/notifications/read-all')).toHaveLength(1)
     })
   })
 })

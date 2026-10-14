@@ -11,14 +11,14 @@ import {
 import {
   getPatient,
   registerImmunotherapy,
-  updatePatient,
-  type UpdatePatientBody,
 } from '@/shared/api/clinical.api'
+import { ApiError } from '@/shared/api/contracts/errors'
+import { RegistrationIntent } from '@/shared/api/registration-intent'
 import { listProtocols } from '@/shared/api/protocols.api'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
-import { toDateInputValue, tomorrowStr } from '@/shared/lib/dates'
+import { toZonedOffsetIso, tomorrowStr } from '@/shared/lib/dates'
 import { useUnsavedChangesBlocker } from '@/shared/hooks/useUnsavedChangesBlocker'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -37,10 +37,6 @@ const STEPS: WizardStep[] = [
   { label: 'Revisão', icon: faClipboardCheck, description: 'Confira os valores exatos e o fuso. Salvar grava paciente, tratamento e primeira previsão em uma única transação.' },
 ]
 
-function toStartInstant(dateStr: string): string {
-  return new Date(`${dateStr}T08:00:00`).toISOString()
-}
-
 export function AddImmunotherapyPage() {
   const navigate = useNavigate()
   const canAdd = useHasPermission('add_immunotherapy')
@@ -55,7 +51,7 @@ export function AddImmunotherapyPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [showCancelModal, setShowCancelModal] = useState(false)
 
-  const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
+  const idempotencyKeyRef = useRef(new RegistrationIntent())
 
   const form = useForm<AddImmunotherapyForm>({
     resolver: zodResolver(addImmunotherapySchema),
@@ -98,46 +94,12 @@ export function AddImmunotherapyPage() {
       const guardianBody = isMinor
         ? {
             fullName: data.guardianName.trim(),
-            cpf: data.guardianCpf,
+            ...(data.guardianCpf.trim() ? { cpf: data.guardianCpf.replace(/\D/g, '') } : {}),
             phoneNumber: data.guardianPhone.replace(/\D/g, ''),
           }
         : undefined
 
-      const current = patientDetailQuery.data
-      if (data.patientId && current) {
-        const changes: UpdatePatientBody = {}
-        const phoneNumber = data.phone.replace(/\D/g, '')
-        const weightInKg = Number(data.weight.replace(',', '.'))
-        const cpf = data.cpf.replace(/\D/g, '')
-        if (cpf !== (current.cpf ?? '').replace(/\D/g, '')) {
-          changes.cpf = data.cpf
-        }
-        if (phoneNumber !== current.phoneNumber.replace(/\D/g, '')) {
-          changes.phoneNumber = phoneNumber
-        }
-        if (data.birthDate !== toDateInputValue(current.birthDate)) {
-          changes.birthDate = data.birthDate
-        }
-        if (weightInKg !== current.weightInKg) {
-          changes.weightInKg = weightInKg
-        }
-        if (guardianBody) {
-          const existing = current.guardian
-          const changed =
-            !existing ||
-            existing.fullName !== guardianBody.fullName ||
-            (existing.cpf ?? '').replace(/\D/g, '') !==
-              guardianBody.cpf.replace(/\D/g, '') ||
-            existing.phoneNumber.replace(/\D/g, '') !== guardianBody.phoneNumber
-          if (changed) changes.guardian = guardianBody
-        }
-        if (Object.keys(changes).length > 0) {
-          await updatePatient(data.patientId, changes)
-        }
-      }
-
-      return registerImmunotherapy({
-        idempotencyKey: idempotencyKeyRef.current,
+      const body = {
         ...(data.patientId
           ? { patientId: data.patientId }
           : {
@@ -146,20 +108,27 @@ export function AddImmunotherapyPage() {
                 birthDate: data.birthDate,
                 weightInKg: Number(data.weight.replace(',', '.')),
                 phoneNumber: data.phone.replace(/\D/g, ''),
-                cpf: data.cpf,
+                ...(data.cpf.trim() ? { cpf: data.cpf.replace(/\D/g, '') } : {}),
                 responsiblePhysicianId: account?.professional?.id ?? '',
                 ...(guardianBody ? { guardian: guardianBody } : {}),
               },
             }),
         immunoType: data.type.trim(),
-        administrationRoute: 'SUBCUTANEOUS',
+        administrationRoute: 'SUBCUTANEOUS' as const,
         extract: data.extract.trim(),
-        inductionStartDate: toStartInstant(data.startDate),
+        inductionStartDate: toZonedOffsetIso(data.startDate, '08:00', account?.organization?.timeZone ?? 'America/Sao_Paulo'),
         protocolVersionId: data.protocolVersionId,
         stepIds: data.stepIds,
         startingStepId: data.startingStepId,
         targetStepId: data.targetStepId,
-      })
+      }
+      const idempotencyKey = idempotencyKeyRef.current.prepare(body)
+      try {
+        return await registerImmunotherapy({ ...body, idempotencyKey })
+      } catch (error) {
+        idempotencyKeyRef.current.failed(error instanceof ApiError && error.statusCode >= 400 && error.statusCode < 500)
+        throw error
+      }
     },
     onSuccess: async (result) => {
       await queryClient.invalidateQueries({
@@ -188,14 +157,24 @@ export function AddImmunotherapyPage() {
     },
   })
 
-  const advanceStep = async () => {
-    const fields = step === 1 ? STEP_1_FIELDS : STEP_2_FIELDS
-    const isValid = await trigger([...fields])
-    if (isValid) setStep((s) => (s + 1) as 1 | 2 | 3)
+  const selectStep = async (target: 1 | 2 | 3) => {
+    if (registerMutation.isPending) return
+    if (target <= step) { setStep(target); return }
+    if (values.patientId && (!patientDetailQuery.isSuccess || patientDetailQuery.isFetching)) return
+    for (let current = step; current < target; current++) {
+      const fields = current === 1 ? STEP_1_FIELDS : STEP_2_FIELDS
+      if (!(await trigger([...fields], { shouldFocus: true }))) {
+        setStep(current as 1 | 2)
+        return
+      }
+    }
+    setStep(target)
   }
+  const advanceStep = () => selectStep((step + 1) as 2 | 3)
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (registerMutation.isPending) return
     if (step < 3) {
       void advanceStep()
     } else {
@@ -206,7 +185,7 @@ export function AddImmunotherapyPage() {
   const { isDirty } = form.formState
   const exitBlocker = useUnsavedChangesBlocker({
     hasUnsavedChanges:
-      isDirty && !registerMutation.isPending && !registerMutation.isSuccess,
+      isDirty && !registerMutation.isSuccess,
   })
 
   return (
@@ -221,7 +200,7 @@ export function AddImmunotherapyPage() {
           steps={STEPS}
           current={step - 1}
           ariaLabel="Etapas do cadastro"
-          onSelect={(i) => setStep((i + 1) as 1 | 2 | 3)}
+          onSelect={(i) => { void selectStep((i + 1) as 1 | 2 | 3) }}
         />
       </div>
 

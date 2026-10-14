@@ -84,10 +84,10 @@ interface NextDosePreviewProps {
   previewError: string | null
 }
 
-/**
- * Resumo do que o servidor gravará junto da confirmação. Mora na barra de ações
- * do formulário, ao lado dos botões, e não no corpo da revisão.
- */
+
+
+
+
 export function NextDosePreview({
   preview,
   previewPending,
@@ -179,8 +179,8 @@ function ReviewCard({ title, items }: ReviewCardProps) {
         />
         <div className="text-[0.8rem] font-bold text-(--text)">{title}</div>
       </div>
-      {/* As linhas da grade saem das próprias células: sobra na última linha
-          fica com o fundo do card, sem o bloco escuro do contêiner. */}
+      {
+                                                                       }
       <div className="grid grid-cols-3 rounded-lg overflow-hidden border border-(--border-custom)">
         {items.map((item, index) => (
           <div

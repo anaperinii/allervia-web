@@ -13,7 +13,7 @@ import { faChevronDown, faChevronUp, faCircleInfo, faClockRotateLeft, faTriangle
 
 interface PatientInfoSidebarProps {
   patient: Patient
-  /** Meta da prescrição: última etapa permitida da versão fixada. */
+
   targetValues: string | null
   therapyStatus: TherapyStatus | null
   evolutionTherapyId: string | null

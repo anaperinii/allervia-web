@@ -11,7 +11,8 @@ export interface SessionValue {
   error: ApiError | null
   refresh: () => Promise<void>
   signOut: () => Promise<void>
-  adopt: (session: SessionState) => Promise<void>
+
+  adopt: (session: SessionState) => Promise<AccountContext | null>
 }
 
 export const SessionContext = createContext<SessionValue | null>(null)
