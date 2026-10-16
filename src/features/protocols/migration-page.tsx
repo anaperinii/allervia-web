@@ -12,6 +12,7 @@ import {
   readMigrationInventory,
 } from '@/shared/api/protocols.api'
 import { ApiError } from '@/shared/api/contracts/errors'
+import { humanErrorMessage } from '@/shared/api/error-copy'
 import type { MigrationReportRow } from '@/shared/api/contracts/protocols'
 import { formatInstantDate } from '@/features/patient/adapters/clinical-presentation'
 import { BindLegacyModal } from '@/features/protocols/components/BindLegacyModal'
@@ -70,6 +71,9 @@ export function MigrationPage() {
       await queryClient.invalidateQueries({
         queryKey: queryKeys.protocols(organizationId),
       })
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.migrationInventory(organizationId),
+      })
       toast.success({
         icon: <FontAwesomeIcon icon={faFileMedical} style={{ fontSize: 16 }} />,
         title: 'Rascunho técnico disponível',
@@ -93,7 +97,7 @@ export function MigrationPage() {
       toast.warning({
         icon: <FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 16 }} />,
         title: 'Não foi possível gerar o rascunho',
-        description: error instanceof ApiError ? error.message : 'Tente novamente.',
+        description: humanErrorMessage(error, 'Tente novamente.'),
       })
     },
   })

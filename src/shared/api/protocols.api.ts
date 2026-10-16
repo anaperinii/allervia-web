@@ -1,4 +1,5 @@
 import { apiRequest } from '@/shared/api/client'
+import { parseProtocolVersion } from '@/shared/api/contracts/protocols.schema'
 import type {
   AutomationSettings,
   BindLegacyResult,
@@ -6,6 +7,7 @@ import type {
   ProtocolDefinitionDraft,
   ProtocolVersion,
   ResolvedPrescriptionInput,
+  SimulateProtocolBody,
   SimulationResult,
   TreatmentProtocol,
 } from '@/shared/api/contracts/protocols'
@@ -20,7 +22,9 @@ export function readVersion(
   versionId: string,
   signal?: AbortSignal,
 ): Promise<ProtocolVersion> {
-  return apiRequest(`/treatment-protocols/versions/${versionId}`, { signal })
+  return apiRequest<unknown>(`/treatment-protocols/versions/${versionId}`, {
+    signal,
+  }).then(parseProtocolVersion)
 }
 
 export function createProtocol(body: {
@@ -86,11 +90,7 @@ export function setDefaultVersion(versionId: string, expectedRevision: number) {
 
 export function simulateVersion(
   versionId: string,
-  body: {
-    prescription: Record<string, unknown>
-    administered: Record<string, unknown>
-    stepId?: string
-  },
+  body: SimulateProtocolBody,
 ): Promise<SimulationResult> {
   return apiRequest(`/treatment-protocols/versions/${versionId}/simulate`, {
     method: 'POST',
@@ -104,9 +104,7 @@ export function readMigrationInventory(
   return apiRequest('/treatment-protocols/migration/inventory', { signal })
 }
 
-export function createOriginDraft(): Promise<
-  TreatmentProtocol & { versions: ProtocolVersion[] }
-> {
+export function createOriginDraft(): Promise<TreatmentProtocol> {
   return apiRequest('/treatment-protocols/migration/origin-draft', {
     method: 'POST',
     body: {},
@@ -137,7 +135,8 @@ export function readAutomation(
 export function updateAutomation(body: {
   enabled: boolean
   timeZone: string
-}): Promise<{ enabled: boolean; timeZone: string }> {
+  expectedRevision?: number
+}): Promise<{ enabled: boolean; timeZone: string; revision: number }> {
   return apiRequest('/treatment-protocols/automation', {
     method: 'PATCH',
     body,

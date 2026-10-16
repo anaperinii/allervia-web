@@ -88,11 +88,12 @@ const DOSE_DETAIL = {
   migrationRequired: false,
 }
 
-function stubApi() {
+function stubApi(metricsOverride?: Record<string, unknown>) {
   const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input)
     const method = init?.method ?? 'GET'
 
+    if (url.includes('/immunotherapies/status-history')) return Promise.resolve(jsonResponse({ asOf: new Date().toISOString(), complete: true, totalTherapies: 0, timeZone: 'America/Sao_Paulo', buckets: [] }))
     if (url.includes('/doses/metrics')) {
       return Promise.resolve(
         jsonResponse({
@@ -108,6 +109,7 @@ function stubApi() {
           scheduled: { pending: 2, overdue: 1 },
           adherence: { numerator: 3, denominator: 4, ratio: 0.75 },
           therapies: { inProgress: 5, suspended: 1, completed: 2, buildUp: 3, maintenance: 2 },
+          ...metricsOverride,
         }),
       )
     }
@@ -271,9 +273,7 @@ describe('agenda alimentada por doses persistidas', () => {
     await renderAt('/appointments', AppointmentsPage)
 
     await user.click(await screen.findByText('Paula Andrade'))
-    await user.click(
-      await screen.findByRole('button', { name: /reagendar previsão/i }),
-    )
+    await user.click(await screen.findByRole('button', { name: /^editar$/i }))
 
     expect(await screen.findByText('Editar previsão pendente')).toBeInTheDocument()
     const reasonLabel = screen.getByText(/motivo clínico/i, { selector: 'label' })
@@ -304,13 +304,12 @@ describe('agenda alimentada por doses persistidas', () => {
 
     await screen.findByText('Paula Andrade')
     await user.click(screen.getByRole('button', { name: /novo agendamento/i }))
-    expect(await screen.findByText('Novo agendamento')).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Novo agendamento' }),
+    ).toBeInTheDocument()
 
-    const patientLabel = screen.getByText(/^paciente$/i, { selector: 'label' })
-    await user.selectOptions(
-      patientLabel.parentElement!.querySelector('select')!,
-      'patient-1',
-    )
+    await user.type(screen.getByPlaceholderText(/buscar paciente/i), 'Paula')
+    await user.click(await screen.findByRole('option', { name: /paula andrade/i }))
     const dateLabel = screen.getByText(/^data$/i, { selector: 'label' })
     const dateInput = dateLabel.parentElement!.querySelector('input')!
     await user.clear(dateInput)
@@ -341,12 +340,18 @@ describe('dashboard com indicadores oficiais', () => {
     vi.unstubAllGlobals()
   })
 
-  it('mostra adesão real com denominadores e marca séries sem base como indisponíveis', async () => {
+  it('mostra adesão real com numerador e denominador', async () => {
     stubApi()
     await renderAt('/dashboard', DashboardPage)
 
     expect(await screen.findByText('75%')).toBeInTheDocument()
-    expect(screen.getByText(/3 de 4 aplicações no dia previsto/)).toBeInTheDocument()
-    expect(screen.getAllByText(/indicador indisponível/i).length).toBeGreaterThanOrEqual(5)
+    expect(screen.getByText(/3 de 4 aplicações/)).toBeInTheDocument()
   })
+  it('não apresenta percentual de adesão quando não há denominador', async () => {
+    stubApi({ adherence: { numerator: 0, denominator: 0, ratio: null } })
+    await renderAt('/dashboard', DashboardPage)
+    expect(await screen.findByText(/sem aplicações/i)).toBeInTheDocument()
+    expect(screen.queryByText('0%')).not.toBeInTheDocument()
+  })
+
 })

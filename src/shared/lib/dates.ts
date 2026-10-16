@@ -3,7 +3,7 @@ function toISODateString(d: Date): string {
 }
 
 export function todayStr(): string {
-  return toISODateString(new Date())
+  return dayInZone(new Date(), 'America/Sao_Paulo')
 }
 
 export function tomorrowStr(): string {
@@ -22,10 +22,6 @@ export function isoToPtDate(iso: string): string {
   return `${day}/${month}/${year}`
 }
 
-/**
- * Normaliza uma data civil da API — que pode vir como instante ISO em UTC —
- * para o `YYYY-MM-DD` exigido por `<input type="date">`.
- */
 export function toDateInputValue(value: string | null | undefined): string {
   if (!value) return ''
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
@@ -35,10 +31,10 @@ export function toDateInputValue(value: string | null | undefined): string {
   return isNaN(parsed.getTime()) ? '' : parsed.toISOString().slice(0, 10)
 }
 
-export function calculateAge(birthDateIso: string): number {
-  const birth = new Date(birthDateIso + 'T12:00')
-  if (isNaN(birth.getTime())) return 0
-  const now = new Date()
+export function calculateAge(birthDateIso: string, today = dayInZone(new Date(), 'America/Sao_Paulo')): number {
+  const birth = parseIsoDate(birthDateIso)
+  if (!birth) return 0
+  const now = parseIsoDate(today)!
   let age = now.getFullYear() - birth.getFullYear()
   const monthDiff = now.getMonth() - birth.getMonth()
   if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--
@@ -70,11 +66,84 @@ export function parseIsoDate(value: string): Date | null {
 export function toOffsetIso(date: string, time: string): string {
   const local = new Date(`${date}T${time}:00`)
   const offsetMinutes = -local.getTimezoneOffset()
+  return `${date}T${time}:00${formatOffset(offsetMinutes)}`
+}
+
+function formatOffset(offsetMinutes: number): string {
   const sign = offsetMinutes >= 0 ? '+' : '-'
   const abs = Math.abs(offsetMinutes)
   const hours = String(Math.floor(abs / 60)).padStart(2, '0')
   const minutes = String(abs % 60).padStart(2, '0')
-  return `${date}T${time}:00${sign}${hours}:${minutes}`
+  return `${sign}${hours}:${minutes}`
+}
+
+function zoneOffsetMinutes(instant: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(instant)
+  const read = (type: string) => Number(parts.find((part) => part.type === type)?.value)
+  const asUtc = Date.UTC(
+    read('year'),
+    read('month') - 1,
+    read('day'),
+    read('hour'),
+    read('minute'),
+    read('second'),
+  )
+  return Math.round((asUtc - instant.getTime()) / 60_000)
+}
+
+export function toZonedOffsetIso(date: string, time: string, timeZone: string): string {
+  if (!parseIsoDate(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time))
+    throw new Error('Data ou horário inválido.')
+  const reference = new Date(`${date}T${time}:00Z`)
+  const offsets = new Set<number>()
+  for (let hours = -36; hours <= 36; hours += 6)
+    offsets.add(zoneOffsetMinutes(new Date(reference.getTime() + hours * 3600000), timeZone))
+  const matches = [...offsets].filter(offset => {
+    const instant = new Date(reference.getTime() - offset * 60000)
+    return dayInZone(instant, timeZone) === date && timeInZone(instant, timeZone) === time
+  })
+  if (matches.length !== 1)
+    throw new Error(matches.length ? 'Horário ambíguo neste fuso. Escolha outro horário.' : 'Horário inexistente neste fuso. Escolha outro horário.')
+  return `${date}T${time}:00${formatOffset(matches[0])}`
+}
+
+export function timeInZone(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-GB', { timeZone, hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }).format(date)
+}
+
+export function tryZonedOffsetIso(date: string, time: string, timeZone: string): string | null {
+  try { return toZonedOffsetIso(date, time, timeZone) } catch { return null }
+}
+
+export function appointmentWindow(date: string, start: string, end: string, timeZone: string) {
+  const endsOn = end < start ? addDaysToDay(date, 1) : date
+  const startsAt = toZonedOffsetIso(date, start, timeZone)
+  const endsAt = toZonedOffsetIso(endsOn, end, timeZone)
+  if (Date.parse(endsAt) <= Date.parse(startsAt)) throw new Error('O fim deve ser posterior ao início.')
+  return { startsAt, endsAt }
+}
+
+export function dayInZone(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}
+
+export function addDaysToDay(day: string, amount: number): string {
+  const [year, month, date] = day.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, date + amount)).toISOString().slice(0, 10)
 }
 
 export function addMinutesToTime(time: string, minutes: number): string {

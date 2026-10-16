@@ -1,110 +1,42 @@
-import type { AdministrationRoute } from '@/shared/api/contracts/clinical'
+import type { Schema } from '@/shared/api/generated/helpers'
 
-export type ProtocolVersionStatus = 'DRAFT' | 'PUBLISHED' | 'RETIRED'
-export type ProtocolPhase = 'BUILD_UP' | 'MAINTENANCE'
+export type ProtocolVersionStatus = Schema<'ProtocolVersionDto'>['status']
+export type ProtocolPhase = Schema<'ProtocolStepResponseDto'>['phase']
 
-export interface ProtocolStep {
-  id: string
-  label: string
-  phase: ProtocolPhase
-  concentration: string
-  volume: string
-  intervalDays: number
-  nextStepId: string | null
-}
+export type ProtocolStep = Schema<'ProtocolStepResponseDto'>
 
-export interface ProtocolDefinitionDraft {
-  schemaVersion: 1
-  engineVersion: '1'
-  route: 'SUBCUTANEOUS'
-  volumeUnit: 'mL'
-  concentrationUnit: 'DILUTION_DENOMINATOR'
-  steps: ProtocolStep[]
-}
+export type ProtocolDefinitionDraft = Schema<'ProtocolDefinitionDto'>
 
-export interface ProtocolVersion {
-  id: string
-  protocolId: string
-  number: number
-  status: ProtocolVersionStatus
-  definition: ProtocolDefinitionDraft & Record<string, unknown>
-  revision: number
-  createdAt: string
-  publishedAt: string | null
-}
+export type ProtocolVersion = Schema<'ProtocolVersionDto'>
 
-export interface TreatmentProtocol {
-  id: string
-  name: string
-  route: AdministrationRoute
-  available: boolean
-  createdAt: string
-  versions: ProtocolVersion[]
-}
+export type TreatmentProtocol = Schema<'TreatmentProtocolDto'>
 
-export interface AutomationSettings {
-  enabled: boolean
-  timeZone: string
-  defaults: Array<{
-    organizationId: string
-    route: AdministrationRoute
-    versionId: string
-  }>
-}
+export type AutomationSettings = Schema<'AutomationSettingsViewDto'>
 
 export type SimulationResult =
-  | {
-      kind: 'RECOMMENDED'
-      protocolVersionId: string
-      fromStepId: string
-      stepId: string
-      label: string
-      phase: ProtocolPhase
-      values: {
-        concentration: string
-        volume: string
-        intervalDays: number
-      }
-    }
-  | { kind: 'END_OF_SEQUENCE'; protocolVersionId: string; fromStepId: string }
-  | { kind: 'UNRESOLVED'; code: string }
+  | Schema<'SimulationRecommendedDto'>
+  | Schema<'SimulationEndOfSequenceDto'>
+  | Schema<'SimulationUnresolvedDto'>
 
-export interface ResolvedPrescriptionInput {
-  protocolId: string
-  protocolVersionId: string
-  route: 'SUBCUTANEOUS'
-  stepIds: string[]
-  startingStepId: string
-  targetStepId: string
-}
+export type ResolvedPrescriptionInput = Schema<'ResolvedPrescriptionInputDto'>
+
+export type SimulateProtocolBody = Schema<'SimulateProtocolDto'>
 
 export interface MigrationReportRow {
   therapyId: string
   revision: number
   prescriptionId: string | null
-  patient: { id: string; fullName: string; isActive: boolean }
+  patient: Schema<'MigrationPatientRefDto'>
   immunoType: string
   extract: string
-  status: 'IN_PROGRESS' | 'SUSPENDED' | 'COMPLETED'
+  status: Schema<'MigrationTherapyReportDto'>['status']
   administrationRoute: string
   inductionStartDate: string
   target: { concentration: string; volume: string | null }
-  pendingDoses: {
-    id: string
-    scheduledAt: string
-    concentration: string
-    volume: string
-    intervalDays: number
-  }[]
+  pendingDoses: Schema<'MigrationPendingDoseDto'>[]
   pendingDoseIds: string[]
   issues: string[]
-  decimals: {
-    doseId: string
-    storedVolumeText: string
-    decimalText: string
-    exactCandidate: boolean
-    historicalRecordUnchanged: boolean
-  }[]
+  decimals: Schema<'MigrationDecimalDto'>[]
 }
 
 export interface MigrationInventory {
@@ -117,15 +49,13 @@ export interface MigrationInventory {
 }
 
 export type BindLegacyResult =
-  | { alreadyBound: true; prescriptionId: string }
-  | { alreadyBound: false; prescriptionId: string }
-  | {
-      dryRun: true
-      therapyId: string
-      doseId: string
-      stepId: string
-      historicalDosesUnchanged: true
-    }
+  | Schema<'BindLegacyResultDto'>
+  | Schema<'BindLegacyDryRunResultDto'>
+
+export const ORGANIZATION_ERROR_CODES = {
+
+  staleRevision: 'STALE_ORGANIZATION_REVISION',
+} as const
 
 export const PROTOCOL_ERROR_CODES = {
   staleRevision: 'STALE_PROTOCOL_REVISION',

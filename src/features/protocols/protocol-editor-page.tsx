@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useUnsavedChangesBlocker } from '@/shared/hooks/useUnsavedChangesBlocker'
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
@@ -95,42 +96,42 @@ export function ProtocolEditorPage({
       : null,
   )
   const [conflict, setConflict] = useState(false)
+  const [conflictLoadError, setConflictLoadError] = useState(false)
+  const [serverPublished, setServerPublished] = useState(false)
+  const [initialDraft, setInitialDraft] = useState<string | null>(null)
+  const currentDraft = editor ? JSON.stringify({ name: editor.name, draft: editor.draft }) : null
+  if (initialDraft === null && currentDraft !== null) setInitialDraft(currentDraft)
+  const blocker = useUnsavedChangesBlocker({ hasUnsavedChanges: initialDraft !== null && initialDraft !== currentDraft })
+  const refreshConflict = async () => {
+    setConflictLoadError(false)
+    try {
+      const fresh = await readVersion(versionId!)
+      setServerPublished(fresh.status !== 'DRAFT')
+      setEditor(current => current ? { ...current, serverDraft: fresh.definition, serverRevision: fresh.revision } : current)
+    } catch { setConflictLoadError(true) }
+  }
 
-  useEffect(() => {
-    if (editor || mode === 'create') return
-    if (mode === 'new-version') {
-      const protocol = protocolsQuery.data?.find(
-        (item) => item.id === protocolId,
-      )
-      if (!protocol) return
+  if (!editor && mode === 'new-version') {
+    const protocol = protocolsQuery.data?.find((item) => item.id === protocolId)
+    if (protocol) {
       const latest = protocol.versions[0]
       setEditor({
         expectedRevision: 0,
         name: protocol.name,
         draft: latest
-          ? (JSON.parse(
-              JSON.stringify({
-                ...EMPTY_DRAFT,
-                steps: latest.definition.steps,
-              }),
-            ) as ProtocolDefinitionDraft)
-          : EMPTY_DRAFT,
+          ? structuredClone({ ...EMPTY_DRAFT, steps: latest.definition.steps })
+          : structuredClone(EMPTY_DRAFT),
       })
-      return
     }
+  } else if (!editor && mode === 'edit-draft' && versionQuery.data && protocolsQuery.data) {
     const version = versionQuery.data
-    if (!version) return
-    const protocol = protocolsQuery.data?.find(
-      (item) => item.id === version.protocolId,
-    )
+    const protocol = protocolsQuery.data.find((item) => item.id === version.protocolId)
     setEditor({
       expectedRevision: version.revision,
       name: protocol?.name ?? '',
-      draft: JSON.parse(
-        JSON.stringify({ ...EMPTY_DRAFT, steps: version.definition.steps }),
-      ) as ProtocolDefinitionDraft,
+      draft: structuredClone({ ...EMPTY_DRAFT, steps: version.definition.steps }),
     })
-  }, [editor, mode, protocolId, protocolsQuery.data, versionQuery.data])
+  }
 
   const leave = () => void navigate({ to: '/protocols' })
 
@@ -148,6 +149,12 @@ export function ProtocolEditorPage({
       await queryClient.invalidateQueries({
         queryKey: queryKeys.protocols(organizationId),
       })
+      if (versionId) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.protocolVersion(organizationId, versionId),
+        })
+      }
+      blocker.allowNextNavigation()
       leave()
     },
     onError: async (error) => {
@@ -156,17 +163,8 @@ export function ProtocolEditorPage({
         error.code === PROTOCOL_ERROR_CODES.staleRevision &&
         versionId
       ) {
-        const fresh = await readVersion(versionId)
-        setEditor((current) =>
-          current
-            ? {
-                ...current,
-                serverDraft: fresh.definition,
-                serverRevision: fresh.revision,
-              }
-            : current,
-        )
         setConflict(true)
+        await refreshConflict()
         return
       }
     },
@@ -223,6 +221,8 @@ export function ProtocolEditorPage({
               </FieldLabel>
             )}
 
+            {conflictLoadError && <p role="alert">Não foi possível carregar a revisão atual. Seu rascunho foi preservado. <button onClick={() => void refreshConflict()}>Tentar carregar revisão atual</button></p>}
+            {serverPublished && <p role="alert">Esta versão foi publicada ou retirada e não pode ser sobrescrita.</p>}
             {conflict && (
               <div
                 role="alert"
@@ -241,6 +241,7 @@ export function ProtocolEditorPage({
                   <Button
                     variant="outline"
                     size="sm"
+                    disabled={editor.serverRevision === undefined || serverPublished}
                     onClick={() => {
                       setEditor({
                         ...editor,
@@ -259,6 +260,7 @@ export function ProtocolEditorPage({
                     tone="brand"
                     variant="solid"
                     size="sm"
+                    disabled={editor.serverRevision === undefined || serverPublished}
                     onClick={() => {
                       setEditor({
                         ...editor,
@@ -278,7 +280,7 @@ export function ProtocolEditorPage({
 
             <ProtocolEditor
               draft={editor.draft}
-              readOnly={!canManage}
+              readOnly={!canManage || serverPublished || (mode === 'edit-draft' && versionQuery.data?.status !== 'DRAFT')}
               onChange={(draft) => setEditor({ ...editor, draft })}
             />
 
@@ -300,7 +302,7 @@ export function ProtocolEditorPage({
                 disabled={
                   !canManage ||
                   saveMutation.isPending ||
-                  conflict ||
+                  conflict || serverPublished || (mode === 'edit-draft' && versionQuery.data?.status !== 'DRAFT') ||
                   draftProblems.length > 0 ||
                   (mode === 'create' && editor.name.trim().length === 0)
                 }

@@ -4,6 +4,7 @@ export interface ApiErrorEnvelope {
   message: string
   fieldErrors?: Record<string, string[]>
   requestId?: string
+  retryAfterSeconds?: number
 }
 
 export const API_ERROR_CODES = {
@@ -20,12 +21,15 @@ export const API_ERROR_CODES = {
   mfaCodeInvalid: 'MFA_CODE_INVALID',
   mfaUnavailable: 'MFA_UNAVAILABLE',
   reauthenticationRequired: 'REAUTHENTICATION_REQUIRED',
+  passwordSameAsCurrent: 'PASSWORD_SAME_AS_CURRENT',
   validationError: 'VALIDATION_ERROR',
   notFound: 'NOT_FOUND',
   forbidden: 'FORBIDDEN',
   endpointRetired: 'ENDPOINT_RETIRED',
   network: 'NETWORK_UNAVAILABLE',
   indeterminate: 'RESULT_INDETERMINATE',
+  invalidApiResponse: 'INVALID_API_RESPONSE',
+  rateLimited: 'RATE_LIMITED',
 } as const
 
 export class ApiError extends Error {
@@ -33,6 +37,7 @@ export class ApiError extends Error {
   readonly code: string
   readonly fieldErrors?: Record<string, string[]>
   readonly requestId?: string
+  readonly retryAfterSeconds?: number
 
   constructor(envelope: ApiErrorEnvelope) {
     super(envelope.message)
@@ -41,6 +46,7 @@ export class ApiError extends Error {
     this.code = envelope.code
     this.fieldErrors = envelope.fieldErrors
     this.requestId = envelope.requestId
+    this.retryAfterSeconds = envelope.retryAfterSeconds
   }
 
   get isUnauthenticated(): boolean {

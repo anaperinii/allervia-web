@@ -109,6 +109,10 @@ interface ToastProps {
   autoDismissMs?: number
   position?: ToastPosition
   compact?: boolean
+
+  repeats?: number
+
+  stacked?: boolean
 }
 
 export function Toast({
@@ -121,6 +125,8 @@ export function Toast({
   autoDismissMs = 6000,
   position = 'top-right',
   compact = false,
+  repeats = 1,
+  stacked = false,
 }: ToastProps) {
   const onCloseRef = useRef(onClose)
   useEffect(() => {
@@ -142,7 +148,7 @@ export function Toast({
     <div
       role={urgent ? 'alert' : 'status'}
       aria-live={urgent ? 'assertive' : 'polite'}
-      className={cn('fixed z-50', POSITION_CLASS[position])}
+      className={cn(!stacked && 'fixed z-50', !stacked && POSITION_CLASS[position])}
       style={{ animation: 'slide-up-fade 0.3s ease-out' }}
     >
       {compact ? (
@@ -179,13 +185,33 @@ export function Toast({
             {icon}
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold" style={{ color: '#0f172a' }}>{title}</p>
+            <p className="text-sm font-semibold" style={{ color: '#0f172a' }}>
+              {title}
+              {repeats > 1 && (
+                <span
+                  className="ml-2 rounded-full border px-1.5 py-px text-[0.6rem] font-semibold"
+                  style={{ borderColor: accent.border, color: accent.icon }}
+                >
+                  {repeats}×
+                </span>
+              )}
+            </p>
             {description && <p className="text-xs mt-1" style={{ color: '#475569' }}>{description}</p>}
           </div>
+          {autoDismissMs > 0 && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left"
+              style={{
+                background: accent.icon,
+                animation: `toast-timer ${autoDismissMs}ms linear forwards`,
+              }}
+            />
+          )}
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fechar"
+            aria-label={`Fechar aviso: ${title}`}
             className="h-6 w-6 flex items-center justify-center rounded-md transition-all shrink-0 hover:bg-slate-900/5"
             style={{ color: '#94a3b8' }}
           >

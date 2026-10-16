@@ -1,3 +1,4 @@
+import { useUnsavedChangesBlocker } from '@/shared/hooks/useUnsavedChangesBlocker'
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -16,6 +17,7 @@ import {
   THERAPY_STATUS_LABELS,
 } from '@/features/patient/adapters/clinical-presentation'
 import { cn } from '@/shared/lib/cn'
+import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
@@ -43,7 +45,7 @@ export function PatientCompletionPage() {
   })
   const administered = useMemo(
     () =>
-      (dosesQuery.data ?? []).filter((dose) => dose.administeredAt !== null),
+      (dosesQuery.data ?? []).filter((dose) => dose.administeredAt !== null && dose.status !== 'ENTERED_IN_ERROR'),
     [dosesQuery.data],
   )
 
@@ -56,11 +58,13 @@ export function PatientCompletionPage() {
   const [note, setNote] = useState('')
   const [reason, setReason] = useState('')
   const [confirmed, setConfirmed] = useState(false)
+  const idempotencyKeyFor = useIdempotencyKey()
 
+  const blocker = useUnsavedChangesBlocker({ hasUnsavedChanges: !!reason || !!note || !!customText || !!monitoringSchedule || !!warningSigns })
   const mutation = useMutation({
-    mutationFn: () =>
-      executeTherapyLifecycle(therapy!.id, {
-        action: 'COMPLETE',
+    mutationFn: () => {
+      const command = {
+        action: 'COMPLETE' as const,
         expectedRevision: therapy!.revision,
         reason: reason.trim(),
         recommendations: {
@@ -77,7 +81,12 @@ export function PatientCompletionPage() {
           ...(warningSigns.trim() ? { warningSigns: warningSigns.trim() } : {}),
           ...(note.trim() ? { note: note.trim() } : {}),
         },
-      }),
+      }
+      return executeTherapyLifecycle(therapy!.id, {
+        ...command,
+        idempotencyKey: idempotencyKeyFor([therapy!.id, command]),
+      })
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       toast.success({
@@ -87,6 +96,7 @@ export function PatientCompletionPage() {
           'Recomendações finais persistidas no histórico do tratamento; previsões pendentes arquivadas.',
         autoDismissMs: 8000,
       })
+      blocker.allowNextNavigation()
       navigate({
         to: '/patient/$patientId',
         params: { patientId: therapy!.patient.id },
@@ -94,7 +104,8 @@ export function PatientCompletionPage() {
       })
     },
     meta: { suppressErrorToast: true },
-    onError: (error) => {
+    onError: async (error) => {
+      if (error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION') { setConfirmed(false); await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) }
       showApiErrorToast(
         error,
         error instanceof ApiError && error.code === 'STALE_CLINICAL_REVISION'

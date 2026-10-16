@@ -1,46 +1,18 @@
-export type UserType = 'PROFESSIONAL' | 'PATIENT'
+import type { Schema } from '@/shared/api/generated/helpers'
 
-export type BackendRole =
-  | 'ADMINISTRATOR'
-  | 'RECEPTIONIST'
-  | 'PHYSICIAN'
-  | 'NURSE'
+export type UserType = Schema<'AccountUserDto'>['type']
 
-export type Profession =
-  | 'PHYSICIAN'
-  | 'NURSE'
-  | 'NURSING_TECHNICIAN'
-  | 'RECEPTIONIST'
+export type BackendRole = Schema<'AccountContextDto'>['roles'][number]
 
-export interface AccountUser {
-  id: string
-  email: string
-  type: UserType
-  isActive: boolean
-  createdAt: string
-}
+export type Profession = Schema<'AccountProfessionalDto'>['profession']
 
-export interface AccountProfessional {
-  id: string
-  fullName: string
-  phoneNumber: string
-  profession: Profession
-  councilNumber: string | null
-  councilUf: string | null
-}
+export type AccountUser = Schema<'AccountUserDto'>
 
-export interface AccountOrganization {
-  id: string
-  name: string
-  timeZone: string
-  automationEnabled: boolean
-}
+export type AccountProfessional = Schema<'AccountProfessionalDto'>
 
-export interface AccountSecurity {
-  mfaEnabled: boolean
-  mfaRequired: boolean
-  sessionBased: boolean
-}
+export type AccountOrganization = Schema<'AccountOrganizationDto'>
+
+export type AccountSecurity = Schema<'AccountSecurityDto'>
 
 export interface AccountContext {
   user: AccountUser
@@ -51,34 +23,13 @@ export interface AccountContext {
   security: AccountSecurity
 }
 
-export interface SessionState {
-  id: string
-  createdAt: string
-  expiresAt: string
-  lastInteractiveAt: string
-  mfaVerified: boolean
-  reauthenticatedAt: string | null
-}
+export type SessionState = Schema<'SessionStateDto'>
 
-export interface SessionEnvelope {
+export type SessionEnvelope = Schema<'MfaVerifiedSessionDto'>
 
-
-  authenticated: true
-  csrfToken: string
-  session: SessionState
-  recoveryCodes?: string[]
-}
-
-export interface MfaChallenge {
-  status: 'MFA_REQUIRED' | 'MFA_ENROLLMENT_REQUIRED'
-  challengeToken: string
-  expiresAt: string
-  enrollment?: {
-    credentialId: string
-    secret: string
-    keyUri: string
-  }
-}
+export type MfaChallenge =
+  | Schema<'MfaChallengeDto'>
+  | Schema<'MfaEnrollmentChallengeDto'>
 
 export type StartSessionResult = SessionEnvelope | MfaChallenge
 
@@ -88,17 +39,6 @@ export function isMfaChallenge(
   return 'status' in result
 }
 
-export interface DeviceSession {
-  id: string
-  createdAt: string
-  lastInteractiveAt: string
-  expiresAt: string
-  userAgent: string | null
-  current: boolean
-}
+export type DeviceSession = Schema<'DeviceSessionDto'>
 
-export interface MfaFactor {
-  id: string
-  label: string
-  confirmed: boolean
-}
+export type MfaFactor = Schema<'MfaFactorDto'>

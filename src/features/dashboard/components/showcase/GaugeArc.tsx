@@ -12,19 +12,19 @@ const SEMICIRCLE = Math.PI * RADIUS
 const ARC_GRADIENT_ID = 'gauge-arc-gradient'
 
 interface GaugeArcProps {
-  /** Fração preenchida, 0–1. */
+
   ratio: number
-  /** Valor em destaque no centro do arco. */
+
   value: string
-  /** Legenda curta acima do valor. */
+
   caption?: string
-  /** Rótulo discreto abaixo do valor. */
+
   footnote?: string
   ariaLabel: string
   children?: ReactNode
 }
 
-/** Arco semicircular de progresso — magnitude única, leitura imediata. */
+
 export function GaugeArc({ ratio, value, caption, footnote, ariaLabel, children }: GaugeArcProps) {
   const clamped = Math.max(0, Math.min(ratio, 1))
 
@@ -39,8 +39,8 @@ export function GaugeArc({ ratio, value, caption, footnote, ariaLabel, children 
           aria-label={ariaLabel}
         >
           <defs>
-            {/* Degradê acompanha o arco da esquerda para a direita: tom claro no
-                início do preenchimento, tom cheio da marca no fim. */}
+            {
+                                                                      }
             <linearGradient id={ARC_GRADIENT_ID} x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor={SHOWCASE.accentSoft} />
               <stop offset="55%" stopColor={SHOWCASE.accent} />
@@ -86,7 +86,7 @@ export function GaugeArc({ ratio, value, caption, footnote, ariaLabel, children 
   )
 }
 
-/** Tag com valor e rótulo — mesma linguagem das tags SCIT/SLIT. */
+
 export function GaugeLegendItem({ color, label, value }: { color: string; label: string; value: string }) {
   return (
     <span

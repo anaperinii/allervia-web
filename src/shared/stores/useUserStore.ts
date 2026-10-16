@@ -40,6 +40,8 @@ export type Permission =
   | 'manage_team'
   | 'advanced_settings'
   | 'view_protocols'
+  | 'view_clinical'
+  | 'view_appointments'
   | 'view_dashboard'
   | 'view_audit'
   | 'view_calendar_connections'
@@ -59,6 +61,8 @@ export const PERMISSION_CAPABILITIES: Record<Permission, string> = {
   manage_team: 'professionals:manage',
   advanced_settings: 'protocols:manage',
   view_protocols: 'protocols:read',
+  view_clinical: 'immunotherapies:read',
+  view_appointments: 'appointments:read',
   view_dashboard: 'immunotherapies:read',
   view_audit: 'auditLogs:read',
   view_calendar_connections: 'calendarConnections:read',

@@ -44,7 +44,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export function ApplicationDetailsModal(props: ApplicationDetailsModalProps) {
-  // Remonta a cada agendamento para a aba voltar ao início.
+
   return <DetailsModal key={props.application?.id ?? 'empty'} {...props} />
 }
 
@@ -63,7 +63,7 @@ function DetailsModal({
     .join('')
     .toUpperCase()
 
-  // Aplicação realizada abre o prontuário; previsão pendente abre a edição.
+
   const action = !application
     ? null
     : application.status === 'completed'

@@ -96,7 +96,7 @@ describe('cadastro por convite', () => {
     await user.click(screen.getByRole('button', { name: /completar meu cadastro/i }))
 
     await user.type(screen.getByPlaceholderText('Seu nome completo'), 'Jaqueline Oliveira')
-    await user.type(screen.getByPlaceholderText('Mín. 8 caracteres'), 'Senha!Forte#2026')
+    await user.type(screen.getByPlaceholderText('8 a 20 caracteres'), 'Senha!Forte#2026')
     await user.type(screen.getByPlaceholderText('Repita a senha'), 'Senha!Forte#2026')
     await user.selectOptions(screen.getByRole('combobox'), 'NURSE')
     await user.type(screen.getByPlaceholderText('(00) 00000-0000'), '62994315582')

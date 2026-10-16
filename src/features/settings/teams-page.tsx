@@ -17,6 +17,7 @@ import { ApiError } from '@/shared/api/contracts/errors'
 import type { Invite, TeamMember } from '@/shared/api/contracts/team'
 import {
   cancelInvite,
+  resendInvite,
   createInvite,
   listInvites,
   listTeamMembers,
@@ -41,6 +42,8 @@ export function TeamsPage() {
   const organizationId = account?.organization?.id ?? ''
   const queryClient = useQueryClient()
 
+  const [deliveryNotice, setDeliveryNotice] = useState('')
+  const [invitePage, setInvitePage] = useState(1)
   const [tab, setTab] = useState<'members' | 'invites'>('members')
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [search, setSearch] = useState('')
@@ -60,7 +63,7 @@ export function TeamsPage() {
     isActive: statusFilter === 'all' ? undefined : statusFilter === 'active',
   }
 
-  const inviteFilters = { page: 1, pageSize: 50, includeExpired: true }
+  const inviteFilters = { page: invitePage, pageSize: 50, includeExpired: true }
 
   const membersQuery = useQuery({
     queryKey: queryKeys.team(organizationId, memberFilters),
@@ -94,7 +97,8 @@ export function TeamsPage() {
         fullName: input.fullName,
         userRole: input.role,
       }),
-    onSuccess: async () => {
+    onSuccess: async (result) => {
+      setDeliveryNotice(result.emailDelivered === true ? 'Convite registrado e e-mail enviado ao servidor SMTP.' : 'Convite registrado; envio do e-mail não confirmado. Use reenviar convite.')
       setShowInviteModal(false)
       await refreshAll()
     },
@@ -106,15 +110,11 @@ export function TeamsPage() {
   })
 
   const resendMutation = useMutation({
-    mutationFn: async (invite: Invite) => {
-      if (invite.status === 'ACTIVE') await cancelInvite(invite.id)
-      await createInvite({
-        email: invite.email,
-        fullName: invite.fullName,
-        userRole: invite.role,
-      })
+    mutationFn: (invite: Invite) => resendInvite(invite.id),
+    onSuccess: async (result) => {
+      setDeliveryNotice(`${result.reissued ? 'Convite reemitido.' : 'Convite reenviado.'} ${result.emailDelivered === true ? 'E-mail enviado ao servidor SMTP.' : 'Envio do e-mail não confirmado.'}`)
+      await refreshAll()
     },
-    onSuccess: refreshAll,
   })
 
   const members = membersQuery.data?.items ?? []
@@ -128,10 +128,11 @@ export function TeamsPage() {
   }
 
   const handleConfirm = () => {
-    if (!confirmState) return
+    if (!confirmState || accessMutation.isPending || cancelMutation.isPending || resendMutation.isPending) return
 
     switch (confirmState.type) {
       case 'deactivate':
+        if (confirmState.id === account?.professional?.id) { setDeliveryNotice('Não é permitido desativar o próprio acesso.'); return }
         accessMutation.mutate({ professionalId: confirmState.id, isActive: false })
         break
       case 'activate':
@@ -219,6 +220,8 @@ export function TeamsPage() {
         </Button>
       </div>
 
+      {deliveryNotice && <p role="status" className="mb-3">{deliveryNotice}</p>}
+      {tab === 'invites' && (invitesQuery.data?.total ?? 0) > 50 && <div><Button disabled={invitePage === 1} onClick={() => setInvitePage(page => page - 1)}>Anterior</Button><span>Página {invitePage}</span><Button disabled={invitePage * 50 >= (invitesQuery.data?.total ?? 0)} onClick={() => setInvitePage(page => page + 1)}>Próxima</Button></div>}
       {loadFailure && (
         <div
           role="alert"

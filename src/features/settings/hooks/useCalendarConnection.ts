@@ -6,7 +6,6 @@ import {
 } from '@/shared/api/integrations.api'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useHasPermission } from '@/shared/stores/useUserStore'
-import type { CalendarConnectionDetails } from '@/shared/api/contracts/integrations'
 
 export function useCalendarConnection() {
   const canManage = useHasPermission('manage_calendar_connection')
@@ -35,9 +34,7 @@ export function useCalendarConnection() {
     },
   })
 
-  const connection = query.data?.connected
-    ? (query.data as CalendarConnectionDetails)
-    : null
+  const connection = query.data?.connected ? query.data : null
 
   return {
     canManage,

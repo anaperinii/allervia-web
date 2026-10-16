@@ -64,19 +64,41 @@ function exportRow(id: string, patientName: string) {
   }
 }
 
-function stubApi() {
+const SERVER_AS_OF = '2026-01-31T23:59:00.000Z'
+
+function stubApi(totalRows = 2) {
   const fetchMock = vi.fn((input: RequestInfo | URL) => {
     const url = String(input)
+    if (url.includes('/doses/metrics')) {
+      return Promise.resolve(
+        jsonResponse({
+          from: '2026-01-01T00:00:00-03:00',
+          to: '2026-01-31T23:59:00-03:00',
+          timeZone: 'America/Sao_Paulo',
+          applications: {
+            total: 4,
+            onSchedule: 3,
+            offSchedule: 1,
+            byDay: [{ day: '2026-01-15', count: 4 }],
+          },
+          scheduled: { pending: 2, overdue: 1 },
+          adherence: { numerator: 3, denominator: 4, ratio: 0.75 },
+          therapies: { inProgress: 5, suspended: 1, completed: 2, buildUp: 3, maintenance: 2 },
+        }),
+      )
+    }
     if (url.includes('/immunotherapies/export')) {
       const parsed = new URL(url, 'http://localhost')
       const page = Number(parsed.searchParams.get('page') ?? '1')
-      const asOf = parsed.searchParams.get('asOf')!
+      const asOf = parsed.searchParams.get('asOf') ?? SERVER_AS_OF
       const items =
         page === 1
           ? [exportRow('dose-1', 'Paula Andrade'), exportRow('dose-2', '=HACK(A1)')]
-          : []
+          : page === 2 && totalRows > 2
+            ? [exportRow('dose-3', 'Rafael Nunes'), exportRow('dose-4', 'Bruno Lima')]
+            : []
       return Promise.resolve(
-        jsonResponse({ items, page, pageSize: 100, total: 2, asOf }),
+        jsonResponse({ items, page, pageSize: 100, total: totalRows, asOf }),
       )
     }
     return Promise.resolve(jsonResponse({}))
@@ -116,6 +138,8 @@ describe('exportação do conjunto clínico', () => {
     const user = userEvent.setup()
     await renderPage()
 
+    const formatLabel = screen.getByText(/^formato$/i, { selector: 'label' })
+    await user.selectOptions(formatLabel.parentElement!.querySelector('select')!, 'csv')
     const justLabel = screen.getByText(/justificativa/i, { selector: 'label' })
     await user.type(justLabel.parentElement!.querySelector('textarea')!, 'Auditoria interna trimestral.')
     await user.click(screen.getByRole('checkbox'))
@@ -128,7 +152,7 @@ describe('exportação do conjunto clínico', () => {
       String(url).includes('/immunotherapies/export'),
     )!
     const parsed = new URL(String(call[0]), 'http://localhost')
-    expect(parsed.searchParams.get('asOf')).toMatch(/Z$/)
+    expect(parsed.searchParams.get('asOf')).toBeNull()
     expect(parsed.searchParams.get('pageSize')).toBe('100')
 
     const [content, filename, mime] = downloadFileMock.mock.calls[0] as [string, string, string]
@@ -141,9 +165,41 @@ describe('exportação do conjunto clínico', () => {
     expect(content).toContain('America/Sao_Paulo')
   })
 
+  it('repete o corte temporal do servidor nas páginas seguintes', async () => {
+    const fetchMock = stubApi(4)
+    const user = userEvent.setup()
+    await renderPage()
+
+    const formatLabel = screen.getByText(/^formato$/i, { selector: 'label' })
+    await user.selectOptions(formatLabel.parentElement!.querySelector('select')!, 'csv')
+    const justLabel = screen.getByText(/justificativa/i, { selector: 'label' })
+    await user.type(justLabel.parentElement!.querySelector('textarea')!, 'Auditoria interna trimestral.')
+    await user.click(screen.getByRole('checkbox'))
+    await user.click(screen.getByRole('button', { name: /exportar csv/i }))
+    await user.click(await screen.findByRole('button', { name: /confirmar e exportar/i }))
+
+    await waitFor(() => expect(downloadFileMock).toHaveBeenCalledTimes(1))
+
+    const exportCalls = fetchMock.mock.calls
+      .map(([url]) => new URL(String(url), 'http://localhost'))
+      .filter((url) => url.pathname.includes('/immunotherapies/export'))
+
+    expect(exportCalls).toHaveLength(2)
+    expect(exportCalls[0].searchParams.get('asOf')).toBeNull()
+    expect(exportCalls[1].searchParams.get('asOf')).toBe(SERVER_AS_OF)
+    expect(exportCalls[1].searchParams.get('asOf')).toMatch(/Z$/)
+    expect(exportCalls[1].searchParams.get('page')).toBe('2')
+
+    const [content] = downloadFileMock.mock.calls[0] as [string]
+    expect(content).toContain('"Rafael Nunes"')
+  })
+
   it('não exporta sem justificativa e consentimento', async () => {
     stubApi()
+    const user = userEvent.setup()
     await renderPage()
+    const formatLabel = screen.getByText(/^formato$/i, { selector: 'label' })
+    await user.selectOptions(formatLabel.parentElement!.querySelector('select')!, 'csv')
     const button = screen.getByRole('button', { name: /exportar csv/i })
     expect(button).toBeDisabled()
     expect(downloadFileMock).not.toHaveBeenCalled()

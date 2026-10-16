@@ -1,3 +1,4 @@
+import { ClinicalReviewNotice } from '@/shared/components/ClinicalReviewNotice'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, TextInput, toast } from '@/shared/components'
@@ -8,7 +9,8 @@ import {
 } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
-import { toOffsetIso, todayStr } from '@/shared/lib/dates'
+import { toZonedOffsetIso, todayStr } from '@/shared/lib/dates'
+import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
@@ -26,9 +28,12 @@ interface CorrectionModalProps {
   onClose: () => void
 }
 
-export function RetractDoseModal({ doseId, organizationId, onClose }: CorrectionModalProps) {
+export function RetractDoseModal(props: CorrectionModalProps) { return props.doseId ? <RetractDoseForm key={props.doseId} {...props} /> : null }
+
+function RetractDoseForm({ doseId, organizationId, onClose }: CorrectionModalProps) {
   const queryClient = useQueryClient()
   const [reason, setReason] = useState('')
+  const idempotencyKeyFor = useIdempotencyKey()
 
   const doseQuery = useQuery({
     queryKey: queryKeys.dose(organizationId, doseId ?? ''),
@@ -37,13 +42,19 @@ export function RetractDoseModal({ doseId, organizationId, onClose }: Correction
   })
   const dose = doseQuery.data ?? null
 
+  const [reviewRequired, setReviewRequired] = useState(false)
   const mutation = useMutation({
-    mutationFn: () =>
-      retractDose(doseId!, {
+    mutationFn: () => {
+      const command = {
         reason: reason.trim(),
         expectedRevision: dose!.revision,
         expectedTherapyRevision: dose!.therapyRevision,
-      }),
+      }
+      return retractDose(doseId!, {
+        ...command,
+        idempotencyKey: idempotencyKeyFor([doseId, command]),
+      })
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       toast.success({
@@ -56,7 +67,8 @@ export function RetractDoseModal({ doseId, organizationId, onClose }: Correction
       onClose()
     },
     meta: { suppressErrorToast: true },
-    onError: (error) => {
+    onError: async (error) => {
+      if (error instanceof ApiError && error.code.startsWith('STALE_')) { setReviewRequired(true); await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) }
       showApiErrorToast(
         error,
         error instanceof ApiError &&
@@ -74,6 +86,8 @@ export function RetractDoseModal({ doseId, organizationId, onClose }: Correction
   return (
     <Modal
       open={doseId !== null}
+      pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
+      dirty={!!reason}
       onClose={onClose}
       title="Registrar aplicação em erro"
       footer={
@@ -82,7 +96,7 @@ export function RetractDoseModal({ doseId, organizationId, onClose }: Correction
           <Button
             tone="danger"
             variant="solid"
-            disabled={reason.trim().length < 10 || !dose || mutation.isPending}
+            disabled={reason.trim().length < 10 || !dose || mutation.isPending || reviewRequired}
             onClick={() => mutation.mutate()}
           >
             Registrar em erro
@@ -90,6 +104,7 @@ export function RetractDoseModal({ doseId, organizationId, onClose }: Correction
         </>
       }
     >
+      <ClinicalReviewNotice required={reviewRequired} onReview={() => setReviewRequired(false)} />
       <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
         <FontAwesomeIcon icon={faCircleInfo} className="text-amber-700 shrink-0 mt-0.5" style={{ fontSize: 14 }} />
         <p className="text-[0.65rem] text-amber-800 leading-relaxed">
@@ -114,7 +129,9 @@ export function RetractDoseModal({ doseId, organizationId, onClose }: Correction
   )
 }
 
-export function LateObservationModal({ doseId, organizationId, onClose }: CorrectionModalProps) {
+export function LateObservationModal(props: CorrectionModalProps) { return props.doseId ? <LateObservationForm key={props.doseId} {...props} /> : null }
+
+function LateObservationForm({ doseId, organizationId, onClose }: CorrectionModalProps) {
   const queryClient = useQueryClient()
   const [effects, setEffects] = useState('')
   const [medications, setMedications] = useState('')
@@ -123,6 +140,7 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
   const [time, setTime] = useState('12:00')
   const [conduct, setConduct] = useState('')
   const [conductJustification, setConductJustification] = useState('')
+  const idempotencyKeyFor = useIdempotencyKey()
 
   const doseQuery = useQuery({
     queryKey: queryKeys.dose(organizationId, doseId ?? ''),
@@ -131,13 +149,14 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
   })
   const dose = doseQuery.data ?? null
 
+  const [reviewRequired, setReviewRequired] = useState(false)
   const mutation = useMutation({
-    mutationFn: () =>
-      addLateObservation(doseId!, {
+    mutationFn: () => {
+      const command = {
         reportedSideEffects: toList(effects),
         administeredMedications: toList(medications),
         ...(notes.trim() ? { notes: notes.trim() } : {}),
-        observedAt: toOffsetIso(date, time),
+        observedAt: toZonedOffsetIso(date, time, dose?.immunotherapy.currentPrescription?.resolved.timeZone ?? 'America/Sao_Paulo'),
         ...(conduct
           ? {
               conduct: {
@@ -147,7 +166,12 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
             }
           : {}),
         expectedTherapyRevision: dose!.therapyRevision,
-      }),
+      }
+      return addLateObservation(doseId!, {
+        ...command,
+        idempotencyKey: idempotencyKeyFor([doseId, command]),
+      })
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
       toast.success({
@@ -159,7 +183,8 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
       onClose()
     },
     meta: { suppressErrorToast: true },
-    onError: (error) => {
+    onError: async (error) => {
+      if (error instanceof ApiError && error.code.startsWith('STALE_')) { setReviewRequired(true); await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) }
       showApiErrorToast(
         error,
         error instanceof ApiError && error.code === 'CONDUCT_REQUIRES_PHYSICIAN'
@@ -177,11 +202,13 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
     !!dose &&
     (toList(effects).length > 0 || toList(medications).length > 0 || notes.trim().length > 0) &&
     (!conduct || conduct === 'MAINTAIN' || conductJustification.trim().length > 0) &&
-    !mutation.isPending
+    !mutation.isPending && !reviewRequired
 
   return (
     <Modal
       open={doseId !== null}
+      pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
+      dirty={!!effects || !!medications || !!notes || !!conduct}
       onClose={onClose}
       title="Observação pós-aplicação tardia"
       size="lg"
@@ -194,6 +221,7 @@ export function LateObservationModal({ doseId, organizationId, onClose }: Correc
         </>
       }
     >
+      <ClinicalReviewNotice required={reviewRequired} onReview={() => setReviewRequired(false)} />
       <div className="grid grid-cols-2 gap-3">
         <FieldLabel label="Efeitos relatados" hint="(separe por vírgula)">
           <TextInput value={effects} onChange={(e) => setEffects(e.target.value)} placeholder="Ex: urticária, prurido" />

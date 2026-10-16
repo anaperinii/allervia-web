@@ -15,9 +15,9 @@ import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 interface ReportClinicalPreviewProps {
   patient: Patient
   realizedApplications: Application[]
-  /** Início da indução do servidor; o prontuário mostra o mesmo valor. */
+
   inductionStart: string | null
-  reactionsCount: number
+  reactionsCount: number | null
   selectedSections: ReportSectionId[]
   fileFormat: ReportFileFormat
   anonymized: boolean
@@ -50,7 +50,7 @@ export function ReportClinicalPreview({
             {anonymized && (
               <div className="flex items-center gap-1 text-brand font-semibold mt-0.5 justify-end">
                 <FontAwesomeIcon icon={faEyeSlash} style={{ fontSize: 10 }} />
-                Dados anonimizados
+                Identificadores mascarados
               </div>
             )}
           </div>
@@ -85,7 +85,7 @@ export function ReportClinicalPreview({
                   ['Início Indução', inductionStart ?? '-'],
                   ['Meta', patient.targetConcentrationVolume],
                   ['Dose Atual', patient.currentDoseConcentration],
-                  ['Intervalo Atual', `${patient.currentInterval} dias`],
+                  ['Intervalo Atual', patient.currentInterval > 0 ? `${patient.currentInterval} dias` : 'Indisponível'],
                 ]} />
               </Section>
             )}
@@ -109,7 +109,7 @@ export function ReportClinicalPreview({
                         <td className="py-1.5 text-[0.65rem] text-(--text)">{app.cycle.days}d</td>
                         <td className="py-1.5 text-[0.65rem]">
                           <span className={cn('font-medium', app.sideEffect === 'yes' ? 'text-amber-600' : 'text-green-600')}>
-                            {app.sideEffect === 'yes' ? 'Sim' : 'Não'}
+                            {app.sideEffect === 'yes' ? 'Sim' : app.sideEffect === 'no' ? 'Não' : 'Indisponível'}
                           </span>
                         </td>
                       </tr>
@@ -123,8 +123,8 @@ export function ReportClinicalPreview({
             )}
 
             {selectedSections.includes('reactions') && (
-              <Section title={`Reações Adversas (${reactionsCount})`}>
-                {reactionsCount === 0 ? (
+              <Section title={`Reações Adversas (${reactionsCount ?? 'indisponível'})`}>
+                {reactionsCount === null ? <p className="text-[0.7rem]">Observações de reações não estão disponíveis nesta fonte. Consulte os detalhes das doses no prontuário.</p> : reactionsCount === 0 ? (
                   <p className="text-[0.7rem] text-(--text-muted)">Nenhuma reação adversa registrada.</p>
                 ) : (
                   <div className="space-y-2">
@@ -145,9 +145,9 @@ export function ReportClinicalPreview({
             )}
 
             {selectedSections.includes('adjustments') && (
-              <Section title={`Ajustes de Protocolo (${patient.protocolAdjustments?.length ?? 0})`}>
+              <Section title={`Ajustes de Protocolo (${patient.protocolAdjustments?.length ?? 'indisponível'})`}>
                 {!patient.protocolAdjustments?.length ? (
-                  <p className="text-[0.7rem] text-(--text-muted)">Nenhum ajuste registrado.</p>
+                  <p className="text-[0.7rem] text-(--text-muted)">{patient.protocolAdjustments ? 'Nenhum ajuste registrado.' : 'Histórico de ajustes indisponível nesta fonte; consulte o prontuário.'}</p>
                 ) : (
                   <div className="space-y-2">
                     {patient.protocolAdjustments.map((adj) => (
@@ -171,9 +171,9 @@ export function ReportClinicalPreview({
             )}
 
             {selectedSections.includes('inactivations') && (
-              <Section title={`Histórico de Inativações (${patient.inactivations?.length ?? 0})`}>
+              <Section title={`Histórico de Inativações (${patient.inactivations?.length ?? 'indisponível'})`}>
                 {!patient.inactivations?.length ? (
-                  <p className="text-[0.7rem] text-(--text-muted)">Nenhuma inativação registrada.</p>
+                  <p className="text-[0.7rem] text-(--text-muted)">{patient.inactivations ? 'Nenhuma inativação registrada.' : 'Histórico de inativações indisponível nesta fonte; consulte o prontuário.'}</p>
                 ) : (
                   <div className="space-y-2">
                     {patient.inactivations.map((inact) => (
@@ -198,7 +198,7 @@ export function ReportClinicalPreview({
                 <div className="grid grid-cols-3 gap-3">
                   <StatBox value={String(realizedApplications.length)} label="Aplicações" />
                   <StatBox value={patient.currentDoseConcentration.split(' - ')[0]} label="Concentração atual" />
-                  <StatBox value={`${patient.currentInterval}d`} label="Intervalo" />
+                  <StatBox value={patient.currentInterval > 0 ? `${patient.currentInterval}d` : '—'} label="Intervalo" />
                 </div>
               </Section>
             )}

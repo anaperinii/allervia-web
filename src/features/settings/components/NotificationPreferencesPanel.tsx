@@ -1,3 +1,5 @@
+import { useSession } from '@/shared/auth/useSession'
+import { queryKeys } from '@/shared/api/query-keys'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   getNotificationPreferences,
@@ -18,22 +20,27 @@ const KIND_LABELS: Record<ServerNotificationKind, { label: string; desc: string 
 }
 
 export function NotificationPreferencesPanel() {
+  const { account } = useSession()
+  const organizationId = account?.organization?.id ?? ''
+  const userId = account?.user.id ?? ''
   const queryClient = useQueryClient()
   const query = useQuery({
-    queryKey: ['notifications', 'preferences'],
+    queryKey: queryKeys.notificationPreferences(organizationId, userId),
+    enabled: userId !== '',
     queryFn: ({ signal }) => getNotificationPreferences(signal),
   })
   const mutation = useMutation({
     mutationFn: ({ kind, enabled }: { kind: ServerNotificationKind; enabled: boolean }) =>
       setNotificationPreference(kind, enabled),
     onSuccess: (preferences) => {
-      queryClient.setQueryData(['notifications', 'preferences'], preferences)
+      queryClient.setQueryData(queryKeys.notificationPreferences(organizationId, userId), preferences)
     },
   })
 
   if (query.isPending)
     return <p className="text-[0.65rem] text-(--text-muted)">Carregando preferências…</p>
 
+  if (query.isError) return <div role="alert">Não foi possível carregar as preferências. <button onClick={() => void query.refetch()}>Tentar novamente</button></div>
   return (
     <div className="space-y-3">
       {(query.data ?? []).map((preference, index) => {
@@ -48,6 +55,7 @@ export function NotificationPreferencesPanel() {
               </div>
               <Switch
                 checked={preference.enabled}
+                disabled={mutation.isPending || query.isFetching}
                 onChange={(enabled) =>
                   mutation.mutate({ kind: preference.kind, enabled })
                 }

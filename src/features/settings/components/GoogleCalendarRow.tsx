@@ -1,15 +1,16 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCalendar } from '@fortawesome/free-solid-svg-icons'
 import { Button } from '@/shared/components'
+import { GoogleCalendarLogo } from '@/features/settings/components/GoogleCalendarLogo'
 import { MediaRow } from '@/features/settings/components/MediaRow'
 import { useCalendarConnection } from '@/features/settings/hooks/useCalendarConnection'
 import { ApiError } from '@/shared/api/contracts/errors'
 
-function StatusBadge({ tone, label }: { tone: 'ok' | 'warn'; label: string }) {
+export function StatusBadge({ tone, label }: { tone: 'ok' | 'warn' | 'danger'; label: string }) {
   const palette =
     tone === 'ok'
-      ? 'text-teal-700 bg-teal-50 border-teal-200'
-      : 'text-amber-700 bg-amber-50 border-amber-200'
+      ? 'text-green-700 bg-green-50 border-green-200'
+      : tone === 'danger'
+        ? 'text-rose-700 bg-rose-50 border-rose-200'
+        : 'text-amber-700 bg-amber-50 border-amber-200'
   return (
     <span
       className={`text-[0.6rem] font-semibold ${palette} border px-2 py-0.5 rounded-full shrink-0`}
@@ -46,10 +47,18 @@ export function GoogleCalendarRow() {
   if (!canManage) {
     return (
       <MediaRow
-        icon={<FontAwesomeIcon icon={faCalendar} style={{ fontSize: 14 }} />}
-        title="Google Agenda"
+        leading={
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0 bg-brand-50">
+            <GoogleCalendarLogo size={18} />
+          </div>
+        }
+        title={
+          <span className="flex items-center gap-2">
+            Google Agenda
+            <StatusBadge tone="warn" label="Sem permissão" />
+          </span>
+        }
         description="Apenas profissionais com agenda própria podem conectar uma conta Google."
-        trailing={<StatusBadge tone="warn" label="Sem permissão" />}
       />
     )
   }
@@ -66,40 +75,55 @@ export function GoogleCalendarRow() {
       ? `Conectado como ${connection?.googleAccountEmail}. Última sincronização: ${formatMoment(connection?.lastIncrementalSyncAt ?? null)}.`
       : 'Conecte sua conta Google para que os compromissos da sua agenda apareçam no Google Agenda.'
 
+  const statusBadge = isLoading ? (
+    <StatusBadge tone="warn" label="Carregando…" />
+  ) : unavailable ? (
+    <StatusBadge tone="warn" label="Indisponível" />
+  ) : isBroken ? (
+    <StatusBadge tone="warn" label="Reconexão necessária" />
+  ) : isConnected ? (
+    (connection?.pendingJobs ?? 0) > 0 ? (
+      <StatusBadge tone="warn" label="Sincronização pendente" />
+    ) : (
+      <StatusBadge tone="ok" label="Conectado" />
+    )
+  ) : (
+    <StatusBadge tone="danger" label="Desconectado" />
+  )
+
   return (
     <div>
       <MediaRow
-        icon={<FontAwesomeIcon icon={faCalendar} style={{ fontSize: 14 }} />}
-        title="Google Agenda"
+        leading={
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0 bg-brand-50">
+            <GoogleCalendarLogo size={18} />
+          </div>
+        }
+        title={
+          <span className="flex items-center gap-2">
+            Google Agenda
+            {statusBadge}
+          </span>
+        }
         description={unavailable ? 'Integração indisponível: credenciais do Google não configuradas no servidor.' : description}
         trailing={
-          isLoading ? (
-            <StatusBadge tone="warn" label="Carregando…" />
-          ) : unavailable ? (
-            <StatusBadge tone="warn" label="Indisponível" />
-          ) : isBroken ? (
-            <div className="flex items-center gap-2 shrink-0">
-              <StatusBadge tone="warn" label="Reconexão necessária" />
-              <Button
-                tone="brand"
-                variant="solid"
-                disabled={connect.isPending}
-                onClick={() => connect.mutate()}
-              >
-                Reconectar
-              </Button>
-            </div>
+          isLoading || unavailable ? null : isBroken ? (
+            <Button
+              tone="brand"
+              variant="solid"
+              disabled={connect.isPending}
+              onClick={() => connect.mutate()}
+            >
+              Reconectar
+            </Button>
           ) : isConnected ? (
-            <div className="flex items-center gap-2 shrink-0">
-              <StatusBadge tone="ok" label="Conectado" />
-              <Button
-                variant="outline"
-                disabled={disconnect.isPending}
-                onClick={() => disconnect.mutate(false)}
-              >
-                Desconectar
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              disabled={disconnect.isPending}
+              onClick={() => disconnect.mutate(false)}
+            >
+              Desconectar
+            </Button>
           ) : (
             <Button
               tone="brand"

@@ -17,7 +17,7 @@ function includesSection(data: DashboardReportData, section: DashboardSectionId)
   return (data.sections ?? ALL_DASHBOARD_SECTIONS).includes(section)
 }
 
-/** CSV com os valores do painel (sem gráficos), em seções nomeadas. */
+
 export function exportDashboardReportCsv(data: DashboardReportData): void {
   const lines: string[] = []
   lines.push(csvLine([`Relatório do Painel de Métricas — período: ${data.periodLabel}`]))
@@ -38,11 +38,11 @@ export function exportDashboardReportCsv(data: DashboardReportData): void {
     lines.push('')
   }
 
-  if (includesSection(data, 'comparison')) {
-    lines.push(csvLine(['Comparativo de aplicações por dia (vs período anterior)']))
-    lines.push(csvLine(['data', 'aplicacoesAtual', 'aplicacoesPeriodoAnterior']))
-    for (const entry of data.comparisonSeries) {
-      lines.push(csvLine([entry.date, entry.current, entry.previous]))
+  if (includesSection(data, 'applications')) {
+    lines.push(csvLine(['Aplicações registradas por dia']))
+    lines.push(csvLine(['data', 'aplicacoes']))
+    for (const entry of data.applicationSeries) {
+      lines.push(csvLine([entry.date, entry.value]))
     }
     lines.push('')
   }
@@ -95,7 +95,7 @@ export function exportDashboardReportCsv(data: DashboardReportData): void {
   downloadFile('﻿' + lines.join('\n'), filename, 'text/csv;charset=utf-8')
 }
 
-/** JSON estruturado com os valores do painel (sem gráficos). */
+
 export function exportDashboardReportJson(data: DashboardReportData): void {
   const payload = {
     generatedAt: data.generatedAt,
@@ -112,11 +112,10 @@ export function exportDashboardReportJson(data: DashboardReportData): void {
         scheduled: data.metrics.scheduled,
       },
     }),
-    ...(includesSection(data, 'comparison') && {
-      applicationsByDayComparison: data.comparisonSeries.map((entry) => ({
+    ...(includesSection(data, 'applications') && {
+      applicationsByDay: data.applicationSeries.map((entry) => ({
         date: entry.date,
-        current: entry.current,
-        previous: entry.previous,
+        value: entry.value,
       })),
     }),
     ...(includesSection(data, 'status') && {

@@ -1,5 +1,5 @@
 import { cn } from '@/shared/lib/cn'
-import { useEffect, useId, useRef, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
@@ -36,20 +36,34 @@ interface ModalProps {
   tone?: Tone
   headerSlot?: ReactNode
   headerStyle?: CSSProperties
-  /** Substitui o botão de fechar no canto do cabeçalho. */
+
   headerAction?: ReactNode
   ariaLabel?: string
+  dirty?: boolean
+  pending?: boolean
 }
 
-export function Modal({ open, onClose, title, size = 'md', children, footer, icon, tone = 'brand', headerSlot, headerStyle, headerAction, ariaLabel }: ModalProps) {
+export function Modal({ open, onClose, title, size = 'md', children, footer, icon, tone = 'brand', headerSlot, headerStyle, headerAction, ariaLabel, dirty = false, pending = false }: ModalProps) {
+  const [discardPrompt, setDiscardPrompt] = useState(false)
+  const requestClose = () => {
+    if (pending) return
+    if (dirty) setDiscardPrompt(true)
+    else onClose()
+  }
+  useEffect(() => {
+    if (!open || !dirty) return
+    const preventUnload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = '' }
+    window.addEventListener('beforeunload', preventUnload)
+    return () => window.removeEventListener('beforeunload', preventUnload)
+  }, [open, dirty])
   const dialogRef = useRef<HTMLDivElement>(null)
   const previouslyFocused = useRef<HTMLElement | null>(null)
-  const onCloseRef = useRef(onClose)
+  const onCloseRef = useRef(requestClose)
   const titleId = useId()
 
   useEffect(() => {
-    onCloseRef.current = onClose
-  }, [onClose])
+    onCloseRef.current = requestClose
+  })
 
   useEffect(() => {
     if (!open) return
@@ -100,7 +114,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 animate-in fade-in-0 duration-200"
-      onClick={onClose}
+      onClick={requestClose}
     >
       <div
         ref={dialogRef}
@@ -112,7 +126,15 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
           SIZE_CLASS[size]
         )}
         onClick={(e) => e.stopPropagation()}
+        onClickCapture={event => {
+          const button = (event.target as HTMLElement).closest('button')
+          if (button && /^(Voltar|Cancelar|Fechar)$/.test(button.textContent?.trim() ?? '') && (dirty || pending)) {
+            event.preventDefault(); event.stopPropagation(); requestClose()
+          }
+        }}
       >
+        {discardPrompt && <div role="alert" className="p-4"><p>Descartar os dados não salvos?</p><button onClick={() => setDiscardPrompt(false)}>Continuar editando</button><button onClick={() => { setDiscardPrompt(false); onClose() }}>Descartar e sair</button></div>}
+        {pending && <p role="status" className="p-2">Operação em andamento. Aguarde a confirmação; não reenvie o comando.</p>}
         {hasHeader && (
           <div
             className="flex items-center justify-between px-5 py-3.5 border-b border-(--border-custom) shrink-0"
@@ -133,7 +155,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
             {headerAction ?? (
               <button
                 type="button"
-                onClick={onClose}
+                onClick={requestClose}
                 className="text-(--text-muted) hover:text-(--text) transition-colors cursor-pointer"
                 aria-label="Fechar"
               >
@@ -143,7 +165,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
           </div>
         )}
 
-        <div className="px-5 py-4 space-y-3.5 flex-1 overflow-y-auto">{children}</div>
+        <div className="px-5 py-4 flex-1 overflow-y-auto"><fieldset disabled={pending} className="contents space-y-3.5">{children}</fieldset></div>
 
         {footer && (
           <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2 shrink-0">

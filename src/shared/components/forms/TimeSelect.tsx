@@ -23,7 +23,6 @@ function splitTime(value: string): { hour: string; minute: string } {
   return { hour, minute }
 }
 
-/** Aceita "9", "930", "9:3", "09:30" e devolve o que já for um horário válido. */
 function normalizeTyped(raw: string): string | null {
   const digits = raw.replace(/\D/g, '').slice(0, 4)
   if (digits.length < 3) return null
@@ -33,6 +32,11 @@ function normalizeTyped(raw: string): string | null {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
 }
 
+function normalizeWhileTyping(raw: string): string | null {
+  const digits = raw.replace(/\D/g, '')
+  return digits.length >= 4 ? normalizeTyped(raw) : null
+}
+
 interface WheelColumnProps {
   label: string
   options: string[]
@@ -40,7 +44,6 @@ interface WheelColumnProps {
   onSelect: (option: string) => void
 }
 
-/** Coluna em roda: o item central fica nítido e os das pontas recuam. */
 function WheelColumn({ label, options, selected, onSelect }: WheelColumnProps) {
   const listRef = useRef<HTMLDivElement>(null)
   const [center, setCenter] = useState(() => Math.max(0, options.indexOf(selected)))
@@ -48,7 +51,6 @@ function WheelColumn({ label, options, selected, onSelect }: WheelColumnProps) {
   useEffect(() => {
     const index = options.indexOf(selected)
     if (index < 0) return
-    setCenter(index)
     listRef.current?.scrollTo({ top: index * ITEM_HEIGHT })
   }, [selected, options])
 
@@ -109,12 +111,17 @@ export function TimeSelect({
 }: TimeSelectProps) {
   const [open, setOpen] = useState(false)
   const [typed, setTyped] = useState(value)
+  const [observedValue, setObservedValue] = useState(value)
   const containerRef = useRef<HTMLDivElement>(null)
   const { hour, minute } = splitTime(value)
+  const now = new Date()
+  const highlightHour = hour || String(now.getHours()).padStart(2, '0')
+  const highlightMinute = minute || String(now.getMinutes()).padStart(2, '0')
 
-  useEffect(() => {
+  if (observedValue !== value) {
+    setObservedValue(value)
     setTyped(value)
-  }, [value])
+  }
 
   useEffect(() => {
     if (!open) return
@@ -146,12 +153,14 @@ export function TimeSelect({
         onFocus={() => setOpen(true)}
         onChange={(e) => {
           setTyped(e.target.value)
-          const normalized = normalizeTyped(e.target.value)
+          const normalized = normalizeWhileTyping(e.target.value)
           if (normalized) onChange(normalized)
         }}
         onBlur={() => {
           const normalized = normalizeTyped(typed)
           setTyped(normalized ?? value)
+          if (normalized) onChange(normalized)
+          onBlur?.()
         }}
         className={cn(
           'h-9 w-full rounded-lg border bg-white pl-3 pr-9 text-xs tabular-nums transition-all',
@@ -179,14 +188,14 @@ export function TimeSelect({
             <WheelColumn
               label="Hora"
               options={HOURS}
-              selected={hour}
-              onSelect={(option) => onChange(`${option}:${minute || '00'}`)}
+              selected={highlightHour}
+              onSelect={(option) => onChange(`${option}:${minute || highlightMinute}`)}
             />
             <WheelColumn
               label="Minuto"
               options={MINUTES}
-              selected={minute}
-              onSelect={(option) => onChange(`${hour || '00'}:${option}`)}
+              selected={highlightMinute}
+              onSelect={(option) => onChange(`${hour || highlightHour}:${option}`)}
             />
           </div>
 

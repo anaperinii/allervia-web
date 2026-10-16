@@ -1,16 +1,33 @@
+import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
-const MODALITY_TONE = {
-  subcutaneous: { bg: '#B7E06A', text: '#4E6E23' },
-  sublingual: { bg: '#74C3B9', text: '#1E5A52' },
-} as const
+export const FALLBACK_EVENT_COLORS: Record<string, string> = {
+  subcutaneous: '#B7E06A',
+  sublingual: '#74C3B9',
+  missed: '#EF4444',
+}
 
-export function modalityStyle(application: Application) {
-  const modality =
-    MODALITY_TONE[application.modality === 'sublingual' ? 'sublingual' : 'subcutaneous']
-  return {
-    surface: `${modality.bg}33`,
-    border: `${modality.bg}99`,
-    ink: modality.text,
+export interface EventTone {
+  surface: string
+  border: string
+  ink: string
+}
+
+export function useModalityStyle(): (application: Application) => EventTone {
+  const eventColors = useSettingsStore((s) => s.eventColors)
+  return (application) => {
+    const id =
+      application.status === 'missed'
+        ? 'missed'
+        : application.modality === 'sublingual'
+          ? 'sublingual'
+          : 'subcutaneous'
+    const color =
+      eventColors.find((entry) => entry.id === id)?.color ?? FALLBACK_EVENT_COLORS[id]
+    return {
+      surface: `${color}33`,
+      border: `${color}99`,
+      ink: `color-mix(in srgb, ${color} 70%, #1F2937)`,
+    }
   }
 }

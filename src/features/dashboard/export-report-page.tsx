@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { collectPages } from '@/shared/api/pagination'
+import { useBlobPreview } from '@/shared/hooks/useBlobPreview'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useHasPermission } from '@/shared/stores/useUserStore'
-import { exportClinicalDoses, getClinicalMetrics } from '@/shared/api/clinical.api'
-import type { ClinicalExportRow, TherapyStatus } from '@/shared/api/contracts/clinical'
+import { exportClinicalDoses, getClinicalMetrics, listImmunotherapyTypes } from '@/shared/api/clinical.api'
+import type { TherapyStatus } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { exportClinicalDatasetCsv } from '@/features/patient/exporters'
@@ -26,18 +28,16 @@ import {
 import {
   aggregateActiveByType,
   aggregateByConcentration,
-  aggregatePhasesByDay,
-  aggregateStatusHistory,
+  aggregatePhasePatientsByDay,
   aggregateVolumeMatrix,
-  buildComparisonSeries,
+  buildApplicationSeries,
   eachDay,
   useActiveTherapies,
   useDoseWindow,
-  usePreviousMetrics,
   useStatusHistory,
 } from '@/features/dashboard/hooks/useDashboardAggregates'
 import { downloadFile } from '@/shared/lib/file-download'
-import { toOffsetIso } from '@/shared/lib/dates'
+import { addDaysToDay, dayInZone, toZonedOffsetIso } from '@/shared/lib/dates'
 import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, toast } from '@/shared/components'
 import { CircleButton, PageHeader, Pill } from '@/shared/components/showcase'
 import type { DateRange } from 'react-day-picker'
@@ -48,7 +48,6 @@ import {
   faCircleCheck,
   faCircleInfo,
   faDownload,
-  faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons'
 
 const PAGE_SIZE = 100
@@ -69,15 +68,18 @@ const FORMAT_FILE_LABELS: Record<ExportFormat, string> = {
   'dashboard-json': 'JSON',
 }
 
+const SERVER_DATASET_DESCRIPTION =
+  'O arquivo lista o conjunto clínico por consulta paginada com corte de pertença em asOf: linhas criadas até o corte entram com os valores atuais, com consistência por página, previsto e realizado separados e fuso da prescrição em cada linha. Exportação auditada no servidor.'
+
 const FORMAT_DESCRIPTIONS: Record<ExportFormat, string> = {
-  csv: 'O arquivo descreve o conjunto clínico persistido no instante da geração (corte temporal explícito), com previsto e realizado separados, versão fixada e fuso da prescrição em cada linha.',
-  json: 'O arquivo descreve o conjunto clínico persistido no instante da geração (corte temporal explícito), com previsto e realizado separados, versão fixada e fuso da prescrição em cada linha.',
+  csv: SERVER_DATASET_DESCRIPTION,
+  json: SERVER_DATASET_DESCRIPTION,
   'dashboard-pdf':
-    'O PDF reproduz os gráficos do painel no período e nas seções escolhidos abaixo, pronto para impressão.',
+    'O PDF reproduz os gráficos do painel no período e nas seções escolhidos abaixo, pronto para impressão. É montado no navegador a partir das consultas do painel e não gera registro de auditoria de exportação.',
   'dashboard-csv':
-    'O CSV contém os valores do painel (indicadores e séries dos gráficos) em seções tabulares, sem gráficos e sem a listagem de pacientes.',
+    'O CSV contém os valores do painel (indicadores e séries dos gráficos) em seções tabulares, sem gráficos e sem a listagem de pacientes. É montado no navegador e não gera registro de auditoria de exportação.',
   'dashboard-json':
-    'O JSON contém os valores do painel (indicadores e séries dos gráficos) em estrutura legível por máquina, sem gráficos e sem a listagem de pacientes.',
+    'O JSON contém os valores do painel (indicadores e séries dos gráficos) em estrutura legível por máquina, sem gráficos e sem a listagem de pacientes. É montado no navegador e não gera registro de auditoria de exportação.',
 }
 
 const STATUS_OPTIONS: { value: '' | TherapyStatus; label: string }[] = [
@@ -98,12 +100,15 @@ function dayLabel(day: string): string {
 export function ExportReportPage() {
   const navigate = useNavigate()
   const canViewDashboard = useHasPermission('view_dashboard')
+  const { account, status: sessionStatus } = useSession()
   useEffect(() => {
-    if (!canViewDashboard) navigate({ to: '/immunotherapies' })
-  }, [canViewDashboard, navigate])
+    if (sessionStatus === 'authenticated' && !canViewDashboard)
+      void navigate({ to: '/immunotherapies' })
+  }, [canViewDashboard, navigate, sessionStatus])
 
-  const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
+  const timeZone =
+    account?.organization?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
 
   const [format, setFormat] = useState<ExportFormat>('dashboard-pdf')
   const [status, setStatus] = useState<'' | TherapyStatus>('')
@@ -111,6 +116,8 @@ export function ExportReportPage() {
   const [consent, setConsent] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
+  const exportController = useRef<AbortController | null>(null)
+  useEffect(() => () => { exportController.current?.abort() }, [account?.user.id, account?.organization?.id])
   const [sections, setSections] = useState<DashboardSectionId[]>(ALL_DASHBOARD_SECTIONS)
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const [calendarOpen, setCalendarOpen] = useState(false)
@@ -125,67 +132,50 @@ export function ExportReportPage() {
     )
   }
 
-  // Recorte temporal escolhido; sem seleção, o padrão do painel (últimos 30 dias).
   const periodDays = useMemo(() => {
-    const DAY_MS = 24 * 60 * 60 * 1000
-    const toDate = dateRange?.to ?? dateRange?.from ?? new Date()
-    const fromDate = dateRange?.from ?? new Date(toDate.getTime() - 29 * DAY_MS)
-    const fromDay = dayInput(fromDate)
-    const toDay = dayInput(toDate)
-    const days = eachDay(fromDay, toDay)
-    const previousTo = new Date(fromDate.getTime() - DAY_MS)
-    const previousFrom = new Date(previousTo.getTime() - (days.length - 1) * DAY_MS)
-    return {
-      fromDay,
-      toDay,
-      days,
-      previousFromDay: dayInput(previousFrom),
-      previousToDay: dayInput(previousTo),
-      previousDays: eachDay(dayInput(previousFrom), dayInput(previousTo)),
-    }
-  }, [dateRange])
+    const selectedTo = dateRange?.to ?? dateRange?.from
+    const toDay = selectedTo ? dayInput(selectedTo) : dayInZone(new Date(), timeZone)
+    const fromDay = dateRange?.from ? dayInput(dateRange.from) : addDaysToDay(toDay, -29)
+    return { fromDay, toDay, days: eachDay(fromDay, toDay) }
+  }, [dateRange, timeZone])
 
   const period = useMemo(
     () => ({
-      from: toOffsetIso(periodDays.fromDay, '00:00'),
-      to: toOffsetIso(periodDays.toDay, '23:59'),
+      from: toZonedOffsetIso(periodDays.fromDay, '00:00', timeZone),
+      to: toZonedOffsetIso(periodDays.toDay, '23:59', timeZone),
     }),
-    [periodDays],
-  )
-  const previousPeriod = useMemo(
-    () => ({
-      from: toOffsetIso(periodDays.previousFromDay, '00:00'),
-      to: toOffsetIso(periodDays.previousToDay, '23:59'),
-    }),
-    [periodDays],
+    [periodDays, timeZone],
   )
 
-  // Agregados do painel só são buscados quando um formato do painel está selecionado.
   const dashboardOrganizationId = isDashboardFormat ? organizationId : ''
   const metricsQuery = useQuery({
     queryKey: queryKeys.clinicalMetrics(organizationId, period),
     queryFn: ({ signal }) => getClinicalMetrics(period, signal),
     enabled: dashboardOrganizationId !== '',
   })
-  const previousMetricsQuery = usePreviousMetrics(dashboardOrganizationId, previousPeriod)
   const doseWindowQuery = useDoseWindow(dashboardOrganizationId, period)
   const activeTherapiesQuery = useActiveTherapies(dashboardOrganizationId)
   const statusHistoryQuery = useStatusHistory(dashboardOrganizationId)
+  const typesQuery = useQuery({
+    queryKey: queryKeys.immunotherapyTypes(dashboardOrganizationId),
+    queryFn: ({ signal }) => listImmunotherapyTypes(signal),
+    enabled: dashboardOrganizationId !== '',
+  })
 
   const dashboardLoading =
     isDashboardFormat &&
     (metricsQuery.isPending ||
-      previousMetricsQuery.isPending ||
       doseWindowQuery.isPending ||
       activeTherapiesQuery.isPending ||
-      statusHistoryQuery.isPending)
+      statusHistoryQuery.isPending ||
+      typesQuery.isPending)
   const dashboardError =
     isDashboardFormat &&
     (metricsQuery.isError ||
-      previousMetricsQuery.isError ||
       doseWindowQuery.isError ||
       activeTherapiesQuery.isError ||
-      statusHistoryQuery.isError)
+      statusHistoryQuery.isError ||
+      typesQuery.isError)
 
   const exportDisabled =
     !consent ||
@@ -196,47 +186,42 @@ export function ExportReportPage() {
 
   const reportData = useMemo<DashboardReportData | null>(() => {
     const metrics = metricsQuery.data
-    const previousMetrics = previousMetricsQuery.data
-    if (!metrics || !previousMetrics) return null
+    if (!metrics) return null
     const doses = doseWindowQuery.data ?? []
+    const generatedAtLabel = new Date()
+      .toLocaleString('pt-BR', {
+        timeZone,
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+      .replace(',', '')
     return {
-      generatedAt: new Date().toLocaleString('pt-BR'),
+      generatedAt: `${generatedAtLabel} (${timeZone})`,
       periodLabel: `${dayLabel(periodDays.fromDay)} a ${dayLabel(periodDays.toDay)} (${periodDays.days.length} dias)`,
       sections,
       metrics,
-      comparisonSeries: buildComparisonSeries(
-        metrics,
-        previousMetrics,
-        periodDays.days,
-        periodDays.previousDays,
-      ),
-      statusSeries: aggregateStatusHistory(statusHistoryQuery.data ?? [], 'month', 12),
-      phaseSeries: aggregatePhasesByDay(doses, periodDays.fromDay, periodDays.toDay),
+      applicationSeries: buildApplicationSeries(metrics, periodDays.fromDay, periodDays.toDay),
+      statusSeries: statusHistoryQuery.data?.buckets ?? [],
+      phaseSeries: aggregatePhasePatientsByDay(activeTherapiesQuery.data ?? [], periodDays.fromDay, periodDays.toDay, timeZone),
       concentrationData: aggregateByConcentration(doses),
-      typeData: aggregateActiveByType(activeTherapiesQuery.data ?? []),
+      typeData: aggregateActiveByType(activeTherapiesQuery.data ?? [], typesQuery.data ?? []),
       volumeMatrix: aggregateVolumeMatrix(doses),
     }
   }, [
     metricsQuery.data,
-    previousMetricsQuery.data,
     doseWindowQuery.data,
     activeTherapiesQuery.data,
     statusHistoryQuery.data,
+    typesQuery.data,
     periodDays,
     sections,
+    timeZone,
   ])
 
-  // Pré-visualização: o mesmo documento do download, servido como blob local.
-  // A barra do visualizador nativo fica oculta (#toolbar=0), então imprimir e
-  // salvar seguem só pelos botões da página.
-  const previewUrl = useMemo(() => {
-    if (format !== 'dashboard-pdf' || !reportData) return null
-    return URL.createObjectURL(buildDashboardReportPdf(reportData).output('blob'))
-  }, [format, reportData])
-  useEffect(() => {
-    if (!previewUrl) return
-    return () => URL.revokeObjectURL(previewUrl)
-  }, [previewUrl])
+  const previewUrl = useBlobPreview(reportData, format === 'dashboard-pdf', buildDashboardReportPdf)
 
   function runDashboardExport() {
     const data = reportData
@@ -253,36 +238,27 @@ export function ExportReportPage() {
   }
 
   async function runDatasetExport() {
-    const asOf = new Date().toISOString()
-    const rows: ClinicalExportRow[] = []
-    let total = 0
+    if (exportController.current) return
+    const controller = new AbortController()
+    exportController.current = controller
+    const deadline = setTimeout(() => controller.abort(), 120000)
+    let asOf = ''
     try {
-      for (let page = 1; page <= MAX_PAGES; page++) {
+      const collected = await collectPages(async page => {
         setProgress(`Buscando página ${page}…`)
-        const result = await exportClinicalDoses({
-          asOf,
-          page,
-          pageSize: PAGE_SIZE,
-          ...(status ? { status } : {}),
-        })
-        rows.push(...result.items)
-        total = result.total
-        if (rows.length >= total) break
-      }
-      if (rows.length < total) {
-        toast.warning({
-          icon: <FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 16 }} />,
-          title: 'Exportação parcial',
-          description: `O conjunto tem ${total} linhas e o limite do navegador é ${MAX_PAGES * PAGE_SIZE}. Exportado parcialmente até a linha ${rows.length}; volumes maiores exigem o job de exportação (pendência declarada).`,
-          position: 'top-right',
-          autoDismissMs: 10000,
-        })
-      }
+        const result = await exportClinicalDoses({ ...(asOf ? { asOf } : {}), page, pageSize: PAGE_SIZE, justification: justification.trim().slice(0, 500), ...(status ? { status } : {}) }, controller.signal)
+        if (asOf && asOf !== result.asOf) throw new Error('O corte da exportação mudou entre páginas. Nenhum arquivo foi gerado.')
+        asOf = result.asOf
+        return result
+      }, { signal: controller.signal, maxPages: MAX_PAGES, getId: row => row.doseId })
+      if (!collected.complete) throw new Error('O conjunto excede o limite do navegador. Nenhum arquivo parcial foi gerado.')
+      controller.signal.throwIfAborted()
+      const rows = collected.items
       if (format === 'csv') {
         exportClinicalDatasetCsv(rows, asOf)
       } else {
         downloadFile(
-          JSON.stringify({ asOf, total: rows.length, rows }, null, 2),
+          JSON.stringify({ asOf, total: rows.length, scope: { kind: 'AUTHORIZED_CLINICAL_DATASET', complete: true, consistency: 'MEMBERSHIP_CUTOFF_CURRENT_VALUES_PER_PAGE' }, rows }, null, 2),
           `allervia_export_${asOf.replace(/[:.]/g, '-')}.json`,
           'application/json',
         )
@@ -296,6 +272,8 @@ export function ExportReportPage() {
     } catch (error) {
       showApiErrorToast(error, { title: 'Não foi possível gerar a exportação' })
     } finally {
+      clearTimeout(deadline)
+      exportController.current = null
       setProgress(null)
     }
   }
@@ -338,8 +316,9 @@ export function ExportReportPage() {
         <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
           <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
           <p className="text-[0.68rem] text-brand-dark leading-relaxed">
-            {FORMAT_DESCRIPTIONS[format]} Cada geração fica registrada na auditoria
-            do servidor com autor, filtros e corte.
+            {FORMAT_DESCRIPTIONS[format]}
+            {!isDashboardFormat &&
+              ' Cada geração fica registrada na auditoria do servidor com autor, justificativa, filtros e corte.'}
           </p>
         </div>
 
@@ -423,6 +402,7 @@ export function ExportReportPage() {
           <FieldLabel label="Justificativa" required>
             <TextArea
               rows={2}
+              maxLength={500}
               placeholder="Motivo desta exportação (LGPD)"
               value={justification}
               onChange={(e) => setJustification(e.target.value)}
@@ -501,8 +481,10 @@ export function ExportReportPage() {
         }
       >
         <p className="text-[0.7rem] text-(--text-muted) leading-relaxed">
-          A geração define o corte temporal e registra a solicitação na auditoria do
-          servidor com autor e filtros. Formato: {FORMAT_FILE_LABELS[format]}
+          {isDashboardFormat
+            ? 'O relatório é montado no navegador com os dados do painel; não gera registro de auditoria de exportação. '
+            : 'A geração define o corte temporal e registra a solicitação na auditoria do servidor com autor, justificativa e filtros. '}
+          Formato: {FORMAT_FILE_LABELS[format]}
           {!isDashboardFormat && status
             ? ` · Filtro: ${STATUS_OPTIONS.find((o) => o.value === status)?.label}`
             : ''}

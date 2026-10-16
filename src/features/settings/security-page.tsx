@@ -1,13 +1,26 @@
 import { useState } from 'react'
+import { useReauthenticatedAction } from '@/shared/auth/useReauthenticatedAction'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
-import { Button, FieldLabel, Modal, showApiErrorToast, TextInput, toast } from '@/shared/components'
+import {
+  Button,
+  FieldLabel,
+  isPasswordValid,
+  Modal,
+  PasswordInput,
+  PasswordRequirements,
+  showApiErrorToast,
+  toast,
+} from '@/shared/components'
 import { MediaRow } from '@/features/settings/components/MediaRow'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { EnrollMfaFactorModal } from '@/features/settings/components/EnrollMfaFactorModal'
 import { ReauthenticateModal } from '@/features/settings/components/ReauthenticateModal'
 import { RecoveryCodesModal } from '@/features/settings/components/RecoveryCodesModal'
 import {
+  changePassword,
+  enrollMfaFactor,
+  endAllSessions,
   listDevices,
   listMfaFactors,
   regenerateRecoveryCodes,
@@ -15,14 +28,13 @@ import {
   revokeMfaFactor,
 } from '@/shared/api/auth.api'
 import { ApiError, API_ERROR_CODES } from '@/shared/api/contracts/errors'
+import { humanErrorMessage } from '@/shared/api/error-copy'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faCheck,
-  faChevronRight,
-  faEye,
   faFileArrowDown,
   faLock,
   faMobileScreen,
@@ -31,7 +43,24 @@ import {
   faShieldHalved,
   faTrashCan,
   faUserXmark,
+  faChevronRight,
 } from '@fortawesome/free-solid-svg-icons'
+
+
+interface PasswordFormErrors {
+  current?: string
+  newPassword?: string
+  confirm?: string
+  general?: string
+}
+
+function UnavailableBadge() {
+  return (
+    <span className="text-[0.6rem] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
+      Indisponível
+    </span>
+  )
+}
 
 function describeUserAgent(userAgent: string | null): string {
   if (!userAgent) return 'Dispositivo desconhecido'
@@ -74,15 +103,17 @@ export function SecurityPage() {
   const mfaEnabled = account?.security.mfaEnabled ?? false
 
   const [showEnrollModal, setShowEnrollModal] = useState(false)
+  const [initialEnrollment, setInitialEnrollment] = useState<Awaited<ReturnType<typeof enrollMfaFactor>> | null>(null)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [showExportModal, setShowExportModal] = useState(false)
+  const [showLogoutAllModal, setShowLogoutAllModal] = useState(false)
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordErrors, setPasswordErrors] = useState<PasswordFormErrors>({})
   const [revokeFactorTarget, setRevokeFactorTarget] = useState<string | null>(null)
   const [revokeSessionTarget, setRevokeSessionTarget] = useState<string | null>(null)
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null)
-  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null)
+  const sensitive = useReauthenticatedAction()
 
   const factorsQuery = useQuery({
     queryKey: queryKeys.mfaFactors(),
@@ -102,19 +133,13 @@ export function SecurityPage() {
     ])
   }
 
-  const runSensitive = async (action: () => Promise<void>) => {
-    try {
-      await action()
-    } catch (error) {
-      if (
-        error instanceof ApiError &&
-        error.code === API_ERROR_CODES.reauthenticationRequired
-      ) {
-        setPendingAction(() => action)
-        return
-      }
-      showApiErrorToast(error)
-    }
+  const runSensitive = sensitive.run
+
+  const closeEnrollment = () => { setShowEnrollModal(false); setInitialEnrollment(null) }
+  const startEnrollment = async () => {
+    const result = await enrollMfaFactor({})
+    setInitialEnrollment(result)
+    setShowEnrollModal(true)
   }
 
   const revokeFactor = async (credentialId: string) => {
@@ -134,6 +159,89 @@ export function SecurityPage() {
     const result = await regenerateRecoveryCodes()
     setRecoveryCodes(result.recoveryCodes)
     await queryClient.invalidateQueries({ queryKey: queryKeys.mfaFactors() })
+  }
+
+  const changePasswordMutation = useMutation({
+    mutationFn: changePassword,
+    meta: { suppressErrorToast: true },
+  })
+  const logoutAllMutation = useMutation({ mutationFn: endAllSessions })
+
+  const closePasswordModal = () => {
+    setShowPasswordModal(false)
+    setOldPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setPasswordErrors({})
+  }
+
+  const submitPasswordChange = async () => {
+    const errors: PasswordFormErrors = {}
+    if (!oldPassword) errors.current = 'Informe sua senha atual.'
+    if (!isPasswordValid(newPassword)) {
+      errors.newPassword = 'A nova senha não atende aos requisitos.'
+    } else if (newPassword === oldPassword) {
+      errors.newPassword = 'A nova senha deve ser diferente da senha atual.'
+    }
+    if (newPassword !== confirmPassword) {
+      errors.confirm = 'As senhas não coincidem.'
+    }
+    setPasswordErrors(errors)
+    if (Object.keys(errors).length > 0) return
+
+    try {
+      await changePasswordMutation.mutateAsync({
+        currentPassword: oldPassword,
+        newPassword,
+      })
+      closePasswordModal()
+      toast.success({
+        icon: <FontAwesomeIcon icon={faCheck} style={{ fontSize: 14 }} />,
+        title: 'Senha alterada com sucesso',
+        description: 'Entre novamente com a nova senha.',
+        position: 'top-right',
+        compact: true,
+        autoDismissMs: 4000,
+      })
+      await refresh()
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.code === API_ERROR_CODES.reauthenticationRequired
+      ) {
+        throw error
+      }
+      if (error instanceof ApiError) {
+        const isSameAsCurrent = error.code === API_ERROR_CODES.passwordSameAsCurrent
+        setPasswordErrors({
+          current: error.fieldErrors?.currentPassword?.join(' '),
+          newPassword: error.fieldErrors?.newPassword?.join(' ') ?? (isSameAsCurrent ? error.message : undefined),
+          general: error.fieldErrors || isSameAsCurrent
+            ? undefined
+            : humanErrorMessage(error, 'Não foi possível alterar a senha.'),
+        })
+      } else {
+        setPasswordErrors({ general: 'Não foi possível alterar a senha.' })
+      }
+    }
+  }
+
+  const confirmLogoutAll = async () => {
+    try {
+      await logoutAllMutation.mutateAsync()
+      setShowLogoutAllModal(false)
+      toast.success({
+        icon: <FontAwesomeIcon icon={faCheck} style={{ fontSize: 14 }} />,
+        title: 'Todas as sessões foram encerradas',
+        description: 'Entre novamente para continuar.',
+        position: 'top-right',
+        compact: true,
+        autoDismissMs: 4000,
+      })
+      await refresh()
+    } catch {
+      return
+    }
   }
 
   const revokeSessionMutation = useMutation({
@@ -194,7 +302,8 @@ export function SecurityPage() {
                     variant="outline"
                     size="sm"
                     leftIcon={<FontAwesomeIcon icon={faPlus} style={{ fontSize: 10 }} />}
-                    onClick={() => setShowEnrollModal(true)}
+                    disabled={sensitive.busy || sensitive.pending}
+                    onClick={() => void runSensitive(startEnrollment)}
                   >
                     Adicionar fator
                   </Button>
@@ -206,6 +315,7 @@ export function SecurityPage() {
               <div className="text-[0.65rem] text-(--text-muted)">Carregando fatores…</div>
             )}
 
+            {factorsQuery.isError && <p role="alert">Não foi possível carregar os fatores de autenticação. <button type="button" onClick={() => { void factorsQuery.refetch() }}>Recarregar fatores</button></p>}
             {factors.map((factor) => (
               <div key={factor.id}>
                 <div className="border-t border-(--border-custom)" />
@@ -235,11 +345,12 @@ export function SecurityPage() {
                 <MediaRow
                   icon={<FontAwesomeIcon icon={faShieldHalved} style={{ fontSize: 14 }} />}
                   title="Códigos de recuperação"
-                  description={`${recoveryCodesRemaining} código${recoveryCodesRemaining === 1 ? '' : 's'} disponível${recoveryCodesRemaining === 1 ? '' : 'eis'}`}
+                  description={factorsQuery.isSuccess ? `${recoveryCodesRemaining} código${recoveryCodesRemaining === 1 ? '' : 's'} disponível${recoveryCodesRemaining === 1 ? '' : 'eis'}` : 'Contagem de códigos indisponível'}
                   trailing={
                     <Button
                       variant="outline"
                       size="sm"
+                      disabled={sensitive.busy || sensitive.pending || !factorsQuery.isSuccess}
                       onClick={() => void runSensitive(regenerateCodes)}
                     >
                       Gerar novos
@@ -254,14 +365,26 @@ export function SecurityPage() {
         <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
           <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center justify-between">
             <h2 className="text-xs font-bold text-(--text)">Sessões ativas</h2>
-            <span className="text-[0.6rem] text-(--text-muted) bg-gray-100 px-2 py-0.5 rounded-full">
-              {devices.length} dispositivo{devices.length === 1 ? '' : 's'}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[0.6rem] text-(--text-muted) bg-gray-100 px-2 py-0.5 rounded-full">
+                {devicesQuery.isSuccess ? `${devices.length} dispositivo${devices.length === 1 ? '' : 's'}` : 'Contagem indisponível'}
+              </span>
+              <Button
+                tone="danger"
+                variant="outline"
+                size="sm"
+                leftIcon={<FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 10 }} />}
+                onClick={() => setShowLogoutAllModal(true)}
+              >
+                Encerrar todas
+              </Button>
+            </div>
           </div>
           <div className="divide-y divide-(--border-custom)">
             {devicesQuery.isLoading && (
               <div className="px-4 py-3 text-[0.65rem] text-(--text-muted)">Carregando sessões…</div>
             )}
+            {devicesQuery.isError && <p role="alert">Não foi possível carregar as sessões. <button type="button" onClick={() => { void devicesQuery.refetch() }}>Recarregar sessões</button></p>}
             {devices.map((device) => (
               <div key={device.id} className="px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -300,32 +423,17 @@ export function SecurityPage() {
           </div>
           <div className="p-4 space-y-3">
             <MediaRow
-              icon={<FontAwesomeIcon icon={faEye} style={{ fontSize: 14 }} />}
-              title="Visibilidade do perfil"
-              description="Controle quem pode ver seus dados na equipe"
-              trailing={<span className="text-[0.65rem] font-medium text-brand bg-brand-50 px-2 py-0.5 rounded-full">Equipe</span>}
-            />
-            <div className="border-t border-(--border-custom)" />
-            <MediaRow
               icon={<FontAwesomeIcon icon={faFileArrowDown} style={{ fontSize: 14 }} />}
               title="Exportar meus dados"
-              description="Solicite uma cópia de todos os seus dados pessoais"
-              trailing={
-                <Button variant="outline" size="sm" rightIcon={<FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />} onClick={() => setShowExportModal(true)}>
-                  Solicitar
-                </Button>
-              }
+              description="A exportação de dados pessoais (LGPD) ainda não possui operação no servidor"
+              trailing={<UnavailableBadge />}
             />
             <div className="border-t border-(--border-custom)" />
             <MediaRow
               icon={<FontAwesomeIcon icon={faUserXmark} style={{ fontSize: 14 }} />}
               title="Anonimização de pacientes"
-              description="Gerencie solicitações de anonimização de dados de pacientes (Art. 18 LGPD)"
-              trailing={
-                <Button variant="outline" size="sm" rightIcon={<FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 12 }} />}>
-                  Gerenciar
-                </Button>
-              }
+              description="O fluxo auditado de anonimização (Art. 18 LGPD) ainda não possui operação no servidor"
+              trailing={<UnavailableBadge />}
             />
           </div>
         </section>
@@ -333,72 +441,125 @@ export function SecurityPage() {
 
       <Modal
         open={showPasswordModal}
-        onClose={() => setShowPasswordModal(false)}
+        pending={changePasswordMutation.isPending || sensitive.busy || sensitive.pending}
+        onClose={closePasswordModal}
         title="Alterar senha"
         size="sm"
         footer={
           <>
-            <Button variant="outline" onClick={() => setShowPasswordModal(false)}>Cancelar</Button>
-            <Button tone="brand" variant="solid" onClick={() => setShowPasswordModal(false)}>Alterar senha</Button>
+            <Button
+              variant="outline"
+              disabled={changePasswordMutation.isPending}
+              onClick={closePasswordModal}
+            >
+              Cancelar
+            </Button>
+            <Button
+              tone="brand"
+              variant="solid"
+              disabled={changePasswordMutation.isPending}
+              onClick={() => void runSensitive(submitPasswordChange)}
+            >
+              {changePasswordMutation.isPending ? 'Alterando…' : 'Alterar senha'}
+            </Button>
           </>
         }
       >
-        <FieldLabel label="Senha atual">
-          <TextInput type="password" placeholder="Insira aqui" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} />
+        <FieldLabel label="Senha atual" error={passwordErrors.current}>
+          <PasswordInput
+            placeholder="Insira aqui"
+            autoComplete="current-password"
+            invalid={!!passwordErrors.current}
+            value={oldPassword}
+            onChange={(e) => setOldPassword(e.target.value)}
+          />
         </FieldLabel>
-        <FieldLabel label="Nova senha">
-          <TextInput type="password" placeholder="Insira aqui" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+        <FieldLabel label="Nova senha" error={passwordErrors.newPassword}>
+          <PasswordInput
+            placeholder="Insira aqui"
+            autoComplete="new-password"
+            invalid={!!passwordErrors.newPassword}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
         </FieldLabel>
-        <FieldLabel label="Confirmar nova senha">
-          <TextInput type="password" placeholder="Insira aqui" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+        <FieldLabel label="Confirmar nova senha" error={passwordErrors.confirm}>
+          <PasswordInput
+            placeholder="Insira aqui"
+            autoComplete="new-password"
+            invalid={!!passwordErrors.confirm}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
         </FieldLabel>
+        <PasswordRequirements password={newPassword} />
+        {passwordErrors.general && (
+          <p className="text-xs text-red-500" role="alert">
+            {passwordErrors.general}
+          </p>
+        )}
+        <p className="text-[0.65rem] text-(--text-muted)">
+          Por segurança, todas as suas sessões são encerradas após a troca e
+          será preciso entrar novamente.
+        </p>
       </Modal>
 
       <Modal
-        open={showExportModal}
-        onClose={() => setShowExportModal(false)}
+        open={showLogoutAllModal}
+        pending={logoutAllMutation.isPending}
+        onClose={() => setShowLogoutAllModal(false)}
         size="sm"
-        title="Exportar dados"
-        icon={<FontAwesomeIcon icon={faFileArrowDown} style={{ fontSize: 16 }} />}
+        title="Encerrar todas as sessões"
+        icon={<FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 16 }} />}
+        tone="danger"
         footer={
           <>
-            <Button variant="outline" onClick={() => setShowExportModal(false)}>Cancelar</Button>
-            <Button tone="brand" variant="solid" onClick={() => setShowExportModal(false)}>Solicitar exportação</Button>
+            <Button
+              variant="outline"
+              disabled={logoutAllMutation.isPending}
+              onClick={() => setShowLogoutAllModal(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              tone="danger"
+              variant="solid"
+              disabled={logoutAllMutation.isPending}
+              onClick={() => void confirmLogoutAll()}
+            >
+              {logoutAllMutation.isPending ? 'Encerrando…' : 'Encerrar todas'}
+            </Button>
           </>
         }
       >
         <p className="text-xs text-(--text-muted)">
-          Uma cópia dos seus dados pessoais será preparada e enviada para seu e-mail em até 48 horas, conforme previsto pela LGPD.
+          Todas as sessões serão encerradas, incluindo esta. Você precisará
+          fazer login novamente em todos os dispositivos.
         </p>
       </Modal>
 
-      {showEnrollModal && (
+      {showEnrollModal && initialEnrollment && (
         <EnrollMfaFactorModal
           open
-          onClose={() => setShowEnrollModal(false)}
+          initialEnrollment={initialEnrollment}
+          runSensitive={runSensitive}
+          reauthenticationPending={sensitive.pending}
+          onClose={closeEnrollment}
           onCompleted={() => void invalidateMfaState()}
         />
       )}
 
       <RecoveryCodesModal codes={recoveryCodes} onClose={() => setRecoveryCodes(null)} />
 
-      {pendingAction && (
-      <ReauthenticateModal
-        open
-        requireCode={mfaEnabled}
-        onClose={() => setPendingAction(null)}
-        onSuccess={() => {
-          const action = pendingAction
-          setPendingAction(null)
-          if (action) {
-            void action().catch((error: unknown) => showApiErrorToast(error))
-          }
-        }}
-      />
+      {sensitive.pending && (
+        <ReauthenticateModal open requireCode={mfaEnabled}
+          onClose={() => { sensitive.cancel(); closePasswordModal(); closeEnrollment(); setRevokeFactorTarget(null) }}
+          onSuccess={() => { void sensitive.resume() }} />
       )}
 
       <Modal
         open={!!revokeFactorTarget}
+        pending={sensitive.busy || sensitive.pending}
         onClose={() => setRevokeFactorTarget(null)}
         size="sm"
         title="Remover fator de autenticação"
@@ -428,6 +589,7 @@ export function SecurityPage() {
 
       <Modal
         open={!!revokeSessionTarget}
+        pending={revokeSessionMutation.isPending}
         onClose={() => setRevokeSessionTarget(null)}
         size="sm"
         title="Encerrar sessão"

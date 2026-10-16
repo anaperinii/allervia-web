@@ -1,4 +1,4 @@
-export { PASSWORD_RULES } from '@/shared/lib/password-rules'
+export { PASSWORD_RULES, isPasswordValid } from '@/shared/lib/password-rules'
 export { Button } from './forms/Button'
 export type { ButtonSize,ButtonTone,ButtonVariant } from './forms/Button'
 export { FieldLabel,Select,TextArea,TextInput } from './forms/FormField'
@@ -15,6 +15,18 @@ export { ToggleCard } from './forms/ToggleCard'
 export { VerificationCodeInput } from './forms/VerificationCodeInput'
 
 export { QrCodeImage } from './QrCodeImage'
+
+export { AppErrorBoundary } from './errors/AppErrorBoundary'
+export { ErrorFallback } from './errors/ErrorFallback'
+export {
+  chunkReloadAlreadyUsed,
+  clearChunkReloadGuard,
+  reloadForChunkFailureOnce,
+} from './errors/chunk-reload'
+export { NotFoundFallback } from './errors/NotFoundFallback'
+export { RouteErrorFallback } from './errors/RouteErrorFallback'
+export { classifyError, technicalReference } from './errors/error-kind'
+export type { AppErrorKind } from './errors/error-kind'
 
 export { CancelWizardModal } from './modals/CancelWizardModal'
 export { ConfirmDiscardModal } from './modals/ConfirmDiscardModal'

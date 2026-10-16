@@ -3,7 +3,7 @@ import { PageHeader } from '@/shared/components/showcase'
 
 interface SettingsLayoutProps {
   subtitle?: ReactNode
-  /** Páginas entre "Configurações" e a atual, na ordem em que aparecem. */
+
   parents?: string[]
   headerActions?: ReactNode
   children: ReactNode

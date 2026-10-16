@@ -1,4 +1,4 @@
-// Gerado por `npm run errors:export` no allervia-backend. Não edite à mão.
+
 
 export interface ErrorCatalogEntry {
   code: string

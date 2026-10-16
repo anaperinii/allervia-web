@@ -1,13 +1,12 @@
-import { exportLgpd, type LgpdFileFormat } from '@/features/patient/exporters'
+import { exportPatientRecord } from '@/features/patient/exporters/patient-record-exporter'
+import { type LgpdFileFormat } from '@/features/patient/exporters'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
-import { doseToLegacyApplication } from '@/features/patient/adapters/clinical-presentation'
-import { getClinicalHistory, listDosesForTherapy } from '@/shared/api/clinical.api'
+import { getPatientClinicalRecord, listDosesForTherapy } from '@/shared/api/clinical.api'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { Button, ConfirmDiscardModal, Modal, SegmentedControl, TextArea } from '@/shared/components'
 import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import { cn } from '@/shared/lib/cn'
-import { useCurrentUser } from '@/shared/stores/useUserStore'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
@@ -29,11 +28,10 @@ interface PortabilityModalProps {
 }
 
 export function PortabilityModal(props: PortabilityModalProps) {
-  return props.open ? <PortabilityModalForm key={props.patient.id} {...props} /> : null
+  return props.open ? <PortabilityModalForm key={`${props.patient.id}:${props.therapyId}`} {...props} /> : null
 }
 
 function PortabilityModalForm({ open, patient, therapyId, onClose }: PortabilityModalProps) {
-  const currentUser = useCurrentUser()
   const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
 
@@ -43,14 +41,12 @@ function PortabilityModalForm({ open, patient, therapyId, onClose }: Portability
     enabled: organizationId !== '' && therapyId !== null,
   })
   const historyQuery = useQuery({
-    queryKey: [
-      ...queryKeys.immunotherapy(organizationId, therapyId ?? ''),
-      'history',
-    ],
-    queryFn: ({ signal }) => getClinicalHistory(therapyId!, signal),
+    queryKey: queryKeys.patientRecord(organizationId, patient.id),
+    queryFn: ({ signal }) => getPatientClinicalRecord(patient.id, signal),
     enabled: organizationId !== '' && therapyId !== null,
   })
 
+  const [recordScope, setRecordScope] = useState<'selected' | 'patient'>('patient')
   const [lgpdFormat, setLgpdFormat] = useState<LgpdFileFormat>('json')
   const [justification, setJustification] = useState('')
   const [consented, setConsented] = useState(false)
@@ -63,24 +59,15 @@ function PortabilityModalForm({ open, patient, therapyId, onClose }: Portability
     onClose,
   })
 
-  const patientApplications = useMemo(
-    () =>
-      (dosesQuery.data ?? []).map((dose) =>
-        doseToLegacyApplication(dose, patient.id, {
-          hasReaction: dose.immediateConduct !== null,
-        }),
-      ),
-    [dosesQuery.data, patient.id],
-  )
   const clinicalHistory = useMemo(
-    () => historyQuery.data?.entries ?? [],
+    () => historyQuery.data?.history ?? [],
     [historyQuery.data],
   )
 
   const dataItems = [
     { label: 'Dados cadastrais', count: 1 },
-    { label: 'Dados da imunoterapia', count: therapyId ? 1 : 0 },
-    { label: 'Doses (previstas e realizadas)', count: patientApplications.length },
+    { label: 'Tratamentos acessíveis', count: recordScope === 'patient' ? historyQuery.data?.therapies.length ?? 0 : 1 },
+    { label: 'Doses (previstas e realizadas)', count: historyQuery.data?.therapies.filter(therapy => recordScope === 'patient' || therapy.id === therapyId).reduce((total, therapy) => total + therapy.doses.length, 0) ?? 0 },
     { label: 'Trilha clínica do tratamento', count: clinicalHistory.length },
   ]
 
@@ -88,20 +75,12 @@ function PortabilityModalForm({ open, patient, therapyId, onClose }: Portability
     !consented ||
     !justification.trim() ||
     dosesQuery.isPending ||
-    historyQuery.isPending
+    historyQuery.isPending || dosesQuery.isError || historyQuery.isError ||
+    dosesQuery.isFetching || historyQuery.isFetching || !therapyId
 
   const handleExport = () => {
-    exportLgpd(
-      {
-        patient,
-        applications: patientApplications,
-        accessLogs: clinicalHistory,
-        exportedAt: new Date().toISOString(),
-        exportedBy: `${currentUser.name} (${currentUser.registration})`,
-        justification: justification.trim(),
-      },
-      lgpdFormat,
-    )
+    if (exportDisabled) return
+    exportPatientRecord(historyQuery.data!, lgpdFormat, justification.trim(), recordScope === 'selected' ? therapyId : null)
     onClose()
   }
 
@@ -110,7 +89,7 @@ function PortabilityModalForm({ open, patient, therapyId, onClose }: Portability
     <Modal
       open={open}
       onClose={requestClose}
-      title="Portabilidade LGPD"
+      title="Exportar prontuário clínico"
       size="lg"
       footer={
         <Button
@@ -127,10 +106,15 @@ function PortabilityModalForm({ open, patient, therapyId, onClose }: Portability
       <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
         <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
         <p className="text-[0.65rem] text-brand-dark leading-relaxed">
-          Exportação estruturada de todos os dados em atendimento ao <span className="font-bold">Art. 18, V da LGPD</span> (Direito à portabilidade). A ação será registrada no log de auditoria.
+          Prontuário clínico no seu escopo autorizado: cadastro, tratamentos, prescrições, doses, observações, adendos, compromissos e trilha clínica. Não inclui dados de conta, notificações ou solicitações de suporte e não comprova auditoria do download.
         </p>
       </div>
 
+      {(dosesQuery.isError || historyQuery.isError) && <p role="alert">
+        Não foi possível carregar todas as fontes. Exportação bloqueada.
+        <button type="button" onClick={() => { void dosesQuery.refetch(); void historyQuery.refetch() }}>Tentar novamente</button>
+      </p>}
+      <div><label htmlFor="record-scope">Escopo</label><select id="record-scope" value={recordScope} onChange={event => setRecordScope(event.target.value as 'selected' | 'patient')}><option value="patient">Todos os tratamentos acessíveis do paciente</option><option value="selected">Tratamento selecionado</option></select></div>
       <div>
         <span className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Formato</span>
         <SegmentedControl

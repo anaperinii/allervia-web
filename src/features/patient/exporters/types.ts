@@ -1,4 +1,4 @@
-import type { ClinicalHistoryEntry } from '@/shared/api/contracts/clinical'
+import type { ClinicalHistoryEntry, DoseRecord } from '@/shared/api/contracts/clinical'
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
 
 export type ReportFileFormat = 'pdf' | 'csv'
@@ -14,15 +14,19 @@ export type ReportSectionId =
   | 'inactivations'
 
 export interface ReportData {
+  inductionStart?: string | null
+  maintenanceStart?: string | null
   patient: Patient
   sections: ReportSectionId[]
   realizedApplications: Application[]
-  reactionsCount: number
+  reactionsCount: number | null
   generatedAt: string
   anonymized: boolean
 }
 
 export interface LgpdExportData {
+  doses?: DoseRecord[]
+  therapyId?: string
   patient: Patient
   applications: Application[]
   accessLogs: ClinicalHistoryEntry[]

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Modal, showApiErrorToast, Switch } from '@/shared/components'
 import {
   ROLE_BADGES,
@@ -19,7 +19,7 @@ const ALL_ROLES = Object.keys(ROLE_BADGES) as TeamRole[]
 interface ManageRolesModalProps {
   member: TeamMember | null
   organizationId: string
-  /** Profissional da sessão: remover o próprio papel de Administrador merece aviso. */
+
   currentProfessionalId?: string
   onClose: () => void
   onSaved: () => Promise<void>
@@ -33,6 +33,10 @@ export function ManageRolesModal({
   onSaved,
 }: ManageRolesModalProps) {
   const open = member !== null
+  const [busy, setBusy] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const [previousMember, setPreviousMember] = useState(member?.professionalId)
+  if (previousMember !== member?.professionalId) { setPreviousMember(member?.professionalId); setBusy(false); setDirty(false) }
 
   const grantsQuery = useQuery({
     queryKey: queryKeys.memberRoles(organizationId, member?.professionalId ?? ''),
@@ -43,6 +47,8 @@ export function ManageRolesModal({
   return (
     <Modal
       open={open}
+      pending={busy}
+      dirty={dirty}
       onClose={onClose}
       size="sm"
       title="Gerenciar papéis"
@@ -66,6 +72,9 @@ export function ManageRolesModal({
           isSelf={member.professionalId === currentProfessionalId}
           onClose={onClose}
           onSaved={onSaved}
+          onBusyChange={setBusy}
+          onDirtyChange={setDirty}
+          readUnavailable={grantsQuery.isError || grantsQuery.isFetching}
         />
       )}
     </Modal>
@@ -78,13 +87,20 @@ function RolesForm({
   isSelf,
   onClose,
   onSaved,
+  onBusyChange,
+  onDirtyChange,
+  readUnavailable,
 }: {
   member: TeamMember
   grants: ProfessionalRoleGrant[]
   isSelf: boolean
   onClose: () => void
   onSaved: () => Promise<void>
+  onBusyChange: (busy: boolean) => void
+  onDirtyChange: (dirty: boolean) => void
+  readUnavailable: boolean
 }) {
+  const queryClient = useQueryClient()
   const active = grants.filter((grant) => grant.revokedAt === null)
   const grantIdByRole = new Map(active.map((grant) => [grant.role, grant.id]))
 
@@ -99,28 +115,41 @@ function RolesForm({
     (role) => !selected.has(role) && grantIdByRole.has(role),
   )
   const dirty = toGrant.length > 0 || toRevoke.length > 0
+  useEffect(() => { onDirtyChange(dirty) }, [dirty, onDirtyChange])
   const removesOwnAdmin = isSelf && toRevoke.includes('ADMINISTRATOR')
 
+  const [completedChanges, setCompletedChanges] = useState<string[]>([])
+  const [partialFailure, setPartialFailure] = useState(false)
   const saveMutation = useMutation({
+    onMutate: () => onBusyChange(true),
+    onSettled: () => onBusyChange(false),
     mutationFn: async () => {
-      // Concede antes de revogar: se algo falhar no meio, o membro não fica
-      // momentaneamente sem papel algum.
+      setCompletedChanges([])
+      setPartialFailure(false)
+
       for (const role of toGrant) {
         await grantRole({ professionalId: member.professionalId, name: role })
+        setCompletedChanges(changes => [...changes, `Concedido: ${ROLE_BADGES[role].label}`])
       }
       for (const role of toRevoke) {
         await revokeRole(grantIdByRole.get(role)!)
+        setCompletedChanges(changes => [...changes, `Revogado: ${ROLE_BADGES[role].label}`])
       }
     },
     onSuccess: async () => {
       await onSaved()
+      if (isSelf) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.account() })
+      }
       onClose()
     },
     meta: { suppressErrorToast: true },
-    onError: (error) =>
-      showApiErrorToast(error, {
-        title: 'Papéis salvos parcialmente',
-      }),
+    onError: async (error) => {
+      setPartialFailure(true)
+      await onSaved()
+      if (isSelf) await queryClient.invalidateQueries({ queryKey: queryKeys.account() })
+      showApiErrorToast(error, { title: 'Não foi possível concluir a alteração de papéis' })
+    },
   })
 
   const toggle = (role: TeamRole, checked: boolean) => {
@@ -134,6 +163,7 @@ function RolesForm({
 
   return (
     <div className="flex flex-col gap-3">
+      {partialFailure && <p role="alert">A operação não foi concluída. Alterações confirmadas: {completedChanges.length ? completedChanges.join('; ') : 'nenhuma'}. Atualização dos papéis solicitada; revise a seleção e aguarde uma leitura bem-sucedida antes de salvar novamente.</p>}
       <p className="text-xs text-(--text-muted)">
         Papéis de{' '}
         <span className="font-semibold text-(--text)">{member.fullName}</span>.
@@ -182,7 +212,7 @@ function RolesForm({
           tone="brand"
           variant="solid"
           size="sm"
-          disabled={!dirty || saveMutation.isPending}
+          disabled={!dirty || saveMutation.isPending || readUnavailable}
           onClick={() => saveMutation.mutate()}
         >
           {saveMutation.isPending ? 'Salvando…' : 'Salvar papéis'}

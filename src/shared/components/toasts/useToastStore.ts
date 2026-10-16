@@ -11,29 +11,66 @@ export interface ToastItem {
   autoDismissMs?: number
   position?: ToastPosition
   compact?: boolean
+
+  dedupeKey?: string
+
+  repeats: number
 }
 
-export type ToastInput = Omit<ToastItem, 'id'>
+export type ToastInput = Omit<ToastItem, 'id' | 'repeats'>
 
 interface ToastState {
   toasts: ToastItem[]
   push: (toast: ToastInput) => string
   dismiss: (id: string) => void
+  dismissAll: () => void
 }
+
+
+function keyOf(toast: ToastInput): string {
+  if (toast.dedupeKey) return toast.dedupeKey
+  const description =
+    typeof toast.description === 'string' ? toast.description : ''
+  return `${toast.variant}|${toast.title}|${description}`
+}
+
+let sequence = 0
 
 export const useToastStore = create<ToastState>((set) => ({
   toasts: [],
   push: (toast) => {
-    const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    set((state) => ({ toasts: [...state.toasts, { id, ...toast }] }))
+    const key = keyOf(toast)
+    let id = ''
+    set((state) => {
+      const existing = state.toasts.find((item) => keyOf(item) === key)
+      if (existing) {
+        id = existing.id
+        return {
+          toasts: state.toasts.map((item) =>
+            item.id === existing.id
+              ? { ...item, ...toast, repeats: item.repeats + 1 }
+              : item,
+          ),
+        }
+      }
+      sequence += 1
+      id = `toast-${sequence}`
+      return { toasts: [...state.toasts, { id, repeats: 1, ...toast }] }
+    })
     return id
   },
-  dismiss: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+  dismiss: (id) =>
+    set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+  dismissAll: () => set({ toasts: [] }),
 }))
 
 export const toast = {
-  success: (input: Omit<ToastInput, 'variant'>) => useToastStore.getState().push({ variant: 'success', ...input }),
-  warning: (input: Omit<ToastInput, 'variant'>) => useToastStore.getState().push({ variant: 'warning', ...input }),
-  info: (input: Omit<ToastInput, 'variant'>) => useToastStore.getState().push({ variant: 'info', ...input }),
-  danger: (input: Omit<ToastInput, 'variant'>) => useToastStore.getState().push({ variant: 'danger', ...input }),
+  success: (input: Omit<ToastInput, 'variant'>) =>
+    useToastStore.getState().push({ variant: 'success', ...input }),
+  warning: (input: Omit<ToastInput, 'variant'>) =>
+    useToastStore.getState().push({ variant: 'warning', ...input }),
+  info: (input: Omit<ToastInput, 'variant'>) =>
+    useToastStore.getState().push({ variant: 'info', ...input }),
+  danger: (input: Omit<ToastInput, 'variant'>) =>
+    useToastStore.getState().push({ variant: 'danger', ...input }),
 }

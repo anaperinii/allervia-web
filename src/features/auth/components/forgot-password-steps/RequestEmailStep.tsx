@@ -19,8 +19,8 @@ export function RequestEmailStep({ form, onSubmit }: RequestEmailStepProps) {
       <div className="flex flex-col items-center text-center gap-1.5">
         <h1 className="font-semibold text-[1.75rem] tracking-tight text-[color:var(--ink)]">Redefinição de senha</h1>
         <p className="text-[0.84rem] leading-relaxed max-w-sm" style={{ color: 'var(--ink-soft)' }}>
-          Informe o e-mail associado à sua conta. Enviaremos um código de verificação para
-          confirmar sua identidade.
+          Informe o e-mail associado à sua conta. Enviaremos um link de redefinição para a sua
+          caixa de entrada.
         </p>
       </div>
 
@@ -43,7 +43,7 @@ export function RequestEmailStep({ form, onSubmit }: RequestEmailStepProps) {
           color: 'var(--btn-ink)',
         }}
       >
-        Enviar código de verificação
+        Enviar link de redefinição
       </button>
 
       <Link

@@ -16,9 +16,8 @@ import { formatInstantDate } from '@/features/patient/adapters/clinical-presenta
 import type { DoseObservationAddendum } from '@/shared/api/contracts/clinical'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
-function localTime(iso: string): string {
-  const date = new Date(iso)
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+function localTime(iso: string, timeZone = 'America/Sao_Paulo'): string {
+  return new Intl.DateTimeFormat('en-GB', { timeZone, hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
 }
 
 const CONDUCT_LABELS: Record<string, string> = {
@@ -44,7 +43,7 @@ interface ApplicationDetailModalProps {
 }
 
 export function ApplicationDetailModal(props: ApplicationDetailModalProps) {
-  // Remonta a cada aplicação para a aba voltar ao início.
+
   return <DetailModal key={props.application?.id ?? 'empty'} {...props} />
 }
 
@@ -58,8 +57,8 @@ function DetailModal({
   const [tab, setTab] = useState<TabId>('pre')
   const completed = application?.status === 'completed'
 
-  // As observações tardias só existem no detalhe da dose; a listagem que
-  // alimenta `application` não as carrega.
+
+
   const doseQuery = useQuery({
     queryKey: queryKeys.dose(organizationId, application?.id ?? ''),
     queryFn: ({ signal }) => getDose(application!.id, signal),
@@ -68,14 +67,14 @@ function DetailModal({
   const dose = doseQuery.data ?? null
   const addenda = dose?.observationAddenda ?? []
 
-  // O adapter da listagem não resolve executor nem relato; o detalhe da dose sim.
+
   const professionals = useProfessionalDirectory()
   const performer =
     professionals.members.find(
       (member) => member.professionalId === dose?.administeredById,
     )?.fullName ?? application?.administrator ?? null
   const endTime = dose?.administrationEndedAt
-    ? localTime(dose.administrationEndedAt)
+    ? localTime(dose.administrationEndedAt, application?.timeZone ?? dose.immunotherapy.currentPrescription?.resolved.timeZone)
     : application?.endTime || null
 
   const tabs = TABS.filter((item) => item.id !== 'addenda' || addenda.length > 0)

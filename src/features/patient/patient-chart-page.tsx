@@ -19,6 +19,7 @@ import {
   updatePatient,
 } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
+import { humanErrorMessage } from '@/shared/api/error-copy'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { useAuditStore } from '@/shared/stores/useAuditStore'
@@ -106,8 +107,8 @@ export function PatientChartPage() {
   })
   const pendingDose = pendingDoseQuery.data ?? null
 
-  // Sem previsão pendente, a meta ainda é legível pelo detalhe da última dose
-  // administrada: as etapas permitidas vêm da mesma versão fixada.
+
+
   const fallbackDoseId = pendingRecord === null ? (lastAdministered?.id ?? null) : null
   const fallbackDoseQuery = useQuery({
     queryKey: queryKeys.dose(organizationId, fallbackDoseId ?? ''),
@@ -150,7 +151,7 @@ export function PatientChartPage() {
         queryKey: queryKeys.patient(organizationId, patientId),
       })
       await queryClient.invalidateQueries({
-        queryKey: ['clinical', organizationId, 'patients'],
+        queryKey: queryKeys.clinical(organizationId),
       })
     },
   })
@@ -165,8 +166,8 @@ export function PatientChartPage() {
 
   useEffect(() => {
     if (!patientDetail) return
-    setSelectedPatient(buildLegacyPatient(patientDetail, selectedTherapy))
-  }, [patientDetail, selectedTherapy, setSelectedPatient])
+    setSelectedPatient(buildLegacyPatient(patientDetail, selectedTherapy, dosesQuery.data?.find(record => record.id === selectedTherapy?.nextDose?.id)?.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo'))
+  }, [patientDetail, selectedTherapy, setSelectedPatient, dosesQuery.data, account?.organization?.timeZone])
 
   const currentUser = useCurrentUser()
   const logAccess = useAuditStore((s) => s.logAccess)
@@ -208,20 +209,20 @@ export function PatientChartPage() {
   const [showAdjustToast, setShowAdjustToast] = useState(false)
 
   const patientApplications = useMemo(
-    () => doseRecords.map((record) => doseToLegacyApplication(record, patientId)),
-    [doseRecords, patientId],
+    () => doseRecords.map((record) => doseToLegacyApplication(record, patientId, { hasReaction: false, timeZone: account?.organization?.timeZone ?? 'America/Sao_Paulo' })),
+    [doseRecords, patientId, account?.organization?.timeZone],
   )
 
-  // Antes da primeira aplicação não há dose administrada: o intervalo vigente
-  // é o planejado para a dose agendada.
+
+
   const currentIntervalDays =
     lastAdministered?.administeredValues?.intervalDays ??
     pendingRecord?.plannedValues?.intervalDays ??
     null
   const currentInterval =
     currentIntervalDays !== null ? `${currentIntervalDays} dias` : '-'
-  // Vigente = o que será aplicado a seguir (planejado da dose agendada);
-  // sem agendamento, vale a última administrada.
+
+
   const currentDoseValues =
     pendingRecord?.plannedValues ?? lastAdministered?.administeredValues ?? null
   const currentDose = currentDoseValues
@@ -231,7 +232,7 @@ export function PatientChartPage() {
     pendingRecord?.plannedValues && lastAdministered?.administeredValues
       ? formatStepPresentation(lastAdministered.administeredValues)
       : null
-  // A meta da prescrição é a última etapa permitida da versão fixada.
+
   const allowedSteps =
     pendingDose?.allowedValues ?? fallbackDoseQuery.data?.allowedValues ?? []
   const targetStep = allowedSteps.at(-1) ?? null
@@ -306,12 +307,42 @@ export function PatientChartPage() {
     )
   }
 
+
+
+
+  if (patientDetail && therapyParam && !selectedTherapy) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+        <span className="text-xs text-(--text-muted)" role="alert">
+          Tratamento não encontrado para {patientDetail.fullName}. Ele pode ter sido
+          arquivado ou pertencer a outro paciente.
+        </span>
+        <button
+          type="button"
+          onClick={() =>
+            navigate({
+              to: '/patient/$patientId',
+              params: { patientId },
+              search: {},
+            })
+          }
+          className="text-xs font-semibold text-brand underline cursor-pointer bg-transparent border-none"
+        >
+          Ver os tratamentos deste paciente
+        </button>
+      </div>
+    )
+  }
+
   if (patientQuery.error || !patientDetail || !selectedPatient) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2">
         <span className="text-xs text-(--text-muted)" role="alert">
           {patientQuery.error instanceof ApiError
-            ? patientQuery.error.message
+            ? humanErrorMessage(
+                patientQuery.error,
+                'Não foi possível carregar o prontuário.',
+              )
             : 'Não foi possível carregar o prontuário.'}
         </span>
         <button

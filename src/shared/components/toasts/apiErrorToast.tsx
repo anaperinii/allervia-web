@@ -9,6 +9,10 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { ApiError, API_ERROR_CODES } from '@/shared/api/contracts/errors'
+import {
+  apiTechnicalReference,
+  humanErrorMessage,
+} from '@/shared/api/error-copy'
 import { toast } from './useToastStore'
 import type { ToastVariant } from './Toast'
 
@@ -61,6 +65,7 @@ function fieldErrorSummary(error: ApiError): string | undefined {
   return entries.length > 0 ? entries.join(' ') : undefined
 }
 
+
 export interface ApiErrorToastOverride {
   title?: string
   description?: string
@@ -81,17 +86,24 @@ export function showApiErrorToast(
   }
 
   const { title, variant, icon } = presentation(error)
+  const waitHint =
+    error.statusCode === 429 && error.retryAfterSeconds
+      ? ` Aguarde cerca de ${error.retryAfterSeconds}s e tente novamente; o que você preencheu continua na tela.`
+      : ''
   const description =
-    override.description ?? fieldErrorSummary(error) ?? error.message
+    (override.description ??
+      fieldErrorSummary(error) ??
+      humanErrorMessage(error, FALLBACK_MESSAGE)) + waitHint
+  const reference = apiTechnicalReference(error)
 
   return toast[variant]({
     icon: <FontAwesomeIcon icon={icon} style={{ fontSize: 16 }} />,
     title: override.title ?? title,
-    description: error.requestId ? (
+    description: reference ? (
       <>
         {description}
         <span className="mt-1 block text-[10px] opacity-60">
-          Referência: {error.requestId}
+          Referência: {reference}
         </span>
       </>
     ) : (
@@ -99,5 +111,7 @@ export function showApiErrorToast(
     ),
     position: 'top-right',
     autoDismissMs: 8000,
+
+    dedupeKey: `api|${error.code}|${error.statusCode}|${override.title ?? ''}`,
   })
 }

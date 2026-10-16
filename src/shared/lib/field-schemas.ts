@@ -1,4 +1,11 @@
 import { z } from 'zod'
+import {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MAX_BYTES,
+  passwordCharacterLength,
+  passwordByteLength,
+} from './password-rules'
 
 export const emailSchema = z
   .string()
@@ -8,11 +15,13 @@ export const emailSchema = z
 export const passwordSchema = z
   .string()
   .min(1, 'Senha é obrigatória')
-  .min(8, 'Mínimo de 8 caracteres')
-  .regex(
-    /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/,
-    'Deve conter maiúscula, minúscula, número e caractere especial',
-  )
+  .refine(password => passwordCharacterLength(password) >= PASSWORD_MIN_LENGTH, `Mínimo de ${PASSWORD_MIN_LENGTH} caracteres`)
+  .refine(password => passwordCharacterLength(password) <= PASSWORD_MAX_LENGTH, `Máximo de ${PASSWORD_MAX_LENGTH} caracteres`)
+  .refine(password => /[A-Z]/.test(password), 'Inclua uma letra maiúscula')
+  .refine(password => /[a-z]/.test(password), 'Inclua uma letra minúscula')
+  .refine(password => /\d/.test(password), 'Inclua um número')
+  .refine(password => /[^A-Za-z0-9]/.test(password), 'Inclua um caractere especial')
+  .refine(password => passwordByteLength(password) <= PASSWORD_MAX_BYTES, `A senha deve ter no máximo ${PASSWORD_MAX_BYTES} bytes UTF-8`)
 
 function isValidCPF(cpf: string): boolean {
   const digits = cpf.replace(/\D/g, '')

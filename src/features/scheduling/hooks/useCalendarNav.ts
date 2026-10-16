@@ -1,3 +1,4 @@
+import { dayInZone } from '@/shared/lib/dates'
 import { useMemo, useState } from 'react'
 import {
   format,
@@ -15,10 +16,11 @@ import { ptBR } from 'date-fns/locale'
 
 export type CalendarViewMode = 'week' | 'month'
 
-export function useCalendarNav() {
+export function useCalendarNav(timeZone = 'America/Sao_Paulo') {
+  const civilToday = () => new Date(dayInZone(new Date(), timeZone) + 'T12:00:00')
   const [viewMode, setViewMode] = useState<CalendarViewMode>('week')
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState(civilToday)
+  const [selectedDate, setSelectedDate] = useState(civilToday)
 
   const weekDays = useMemo(() => {
     if (viewMode !== 'week') return []
@@ -44,19 +46,26 @@ export function useCalendarNav() {
   const goToNext = () =>
     setCurrentDate(viewMode === 'week' ? addWeeks(currentDate, 1) : addMonths(currentDate, 1))
   const goToToday = () => {
-    setCurrentDate(new Date())
-    setSelectedDate(new Date())
+    setCurrentDate(civilToday())
+    setSelectedDate(civilToday())
   }
 
   const setMonth = (month: number) => {
     const next = new Date(currentDate)
+    const day = next.getDate()
+    next.setDate(1)
     next.setMonth(month)
+    next.setDate(Math.min(day, new Date(next.getFullYear(), month + 1, 0).getDate()))
     setCurrentDate(next)
   }
 
   const setYear = (year: number) => {
     const next = new Date(currentDate)
+    const day = next.getDate()
+    const month = next.getMonth()
+    next.setDate(1)
     next.setFullYear(year)
+    next.setDate(Math.min(day, new Date(year, month + 1, 0).getDate()))
     setCurrentDate(next)
   }
 

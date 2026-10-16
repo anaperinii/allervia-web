@@ -1,6 +1,7 @@
-﻿import { useMemo, useState } from 'react'
+import { collectPages } from '@/shared/api/pagination'
+import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
@@ -17,7 +18,7 @@ import {
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
-import { toOffsetIso } from '@/shared/lib/dates'
+import { toZonedOffsetIso, dayInZone, timeInZone } from '@/shared/lib/dates'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import { useCalendarNav } from '@/features/scheduling/hooks/useCalendarNav'
 import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolbar'
@@ -25,6 +26,7 @@ import { WeekView } from '@/features/scheduling/components/WeekView'
 import { MonthView } from '@/features/scheduling/components/MonthView'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
 import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
+import { GoogleCalendarStatusBadge } from '@/features/scheduling/components/GoogleCalendarStatusBadge'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
@@ -59,18 +61,7 @@ async function fetchSchedule(
   query: { from: string; to: string; search?: string },
   signal?: AbortSignal,
 ): Promise<{ items: ScheduleDoseItem[]; total: number }> {
-  const items: ScheduleDoseItem[] = []
-  let total = 0
-  for (let page = 1; page <= SCHEDULE_MAX_PAGES; page++) {
-    const result = await listDoseSchedule(
-      { ...query, page, pageSize: SCHEDULE_PAGE_SIZE },
-      signal,
-    )
-    items.push(...result.items)
-    total = result.total
-    if (items.length >= total) break
-  }
-  return { items, total }
+  return collectPages((page) => listDoseSchedule({ ...query, page, pageSize: SCHEDULE_PAGE_SIZE }, signal), { signal, maxPages: SCHEDULE_MAX_PAGES })
 }
 
 export function AppointmentsPage() {
@@ -79,7 +70,7 @@ export function AppointmentsPage() {
   const canNewAppointment = useHasPermission('new_appointment')
   const canReschedule = useHasPermission('edit_scheduled_dose')
   const navigate = useNavigate()
-  const calendar = useCalendarNav()
+  const calendar = useCalendarNav(account?.organization?.timeZone ?? 'America/Sao_Paulo')
 
   const [showNewModal, setShowNewModal] = useState(false)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
@@ -93,13 +84,12 @@ export function AppointmentsPage() {
   const range = useMemo(() => {
     if (visibleDays.length === 0) return null
     return {
-      from: toOffsetIso(dayInput(visibleDays[0]), '00:00'),
-      to: toOffsetIso(dayInput(visibleDays[visibleDays.length - 1]), '23:59'),
+      from: toZonedOffsetIso(dayInput(visibleDays[0]), '00:00', account?.organization?.timeZone ?? 'America/Sao_Paulo'),
+      to: toZonedOffsetIso(dayInput(visibleDays[visibleDays.length - 1]), '23:59', account?.organization?.timeZone ?? 'America/Sao_Paulo'),
     }
-  }, [visibleDays])
+  }, [visibleDays, account?.organization?.timeZone])
 
-  // A busca alimenta a chave da query: sem o atraso, cada tecla dispararia um
-  // novo ciclo de paginação no servidor.
+
   const search = useDebouncedValue(patientSearch.trim())
   const scheduleQuery = useQuery({
     queryKey: queryKeys.schedule(organizationId, {
@@ -109,7 +99,7 @@ export function AppointmentsPage() {
     queryFn: ({ signal }) =>
       fetchSchedule({ ...range!, search: search || undefined }, signal),
     enabled: organizationId !== '' && range !== null,
-    placeholderData: keepPreviousData,
+    placeholderData: (previous, query) => query?.queryKey[1] === organizationId ? previous : undefined,
   })
 
   const scheduleItems = useMemo(
@@ -121,17 +111,16 @@ export function AppointmentsPage() {
     !scheduleQuery.isPlaceholderData &&
     scheduleQuery.data.items.length < scheduleQuery.data.total
 
-  // `listAppointments` não filtra por nome — a busca é aplicada no cliente logo
-  // abaixo, então a chave fica fora dela e o período é reaproveitado do cache.
+
   const appointmentsQuery = useQuery({
     queryKey: queryKeys.schedule(organizationId, {
       appointments: true,
       ...range,
     }),
     queryFn: ({ signal }) =>
-      listAppointments({ ...range!, pageSize: 100 }, signal),
+      collectPages((page) => listAppointments({ ...range!, page, pageSize: 100 }, signal), { signal, maxPages: 5 }),
     enabled: organizationId !== '' && range !== null,
-    placeholderData: keepPreviousData,
+    placeholderData: (previous, query) => query?.queryKey[1] === organizationId ? previous : undefined,
   })
   const appointmentItems = useMemo(() => {
     const items = appointmentsQuery.data?.items ?? []
@@ -160,12 +149,12 @@ export function AppointmentsPage() {
         (item) =>
           !(item.status === 'SCHEDULED' && linkedDoseIds.has(item.id)),
       )
-      .map(scheduleItemToApplication)
+      .map(item => scheduleItemToApplication(item, account?.organization?.timeZone ?? 'America/Sao_Paulo'))
     const appointmentApplications = appointmentItems
       .filter((item) => item.status !== 'CANCELLED')
-      .map((item) => appointmentToApplication(item))
+      .map((item) => appointmentToApplication(item, account?.organization?.timeZone ?? 'America/Sao_Paulo'))
     return [...doseApplications, ...appointmentApplications]
-  }, [scheduleItems, appointmentItems, linkedDoseIds])
+  }, [scheduleItems, appointmentItems, linkedDoseIds, account?.organization?.timeZone])
 
   const applicationsByDate = useMemo(() => {
     const map = new Map<string, Application[]>()
@@ -196,6 +185,7 @@ export function AppointmentsPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
+      <GoogleCalendarStatusBadge />
       <PageHeader
         title="Agendamentos"
         actions={
@@ -255,6 +245,12 @@ export function AppointmentsPage() {
             : 'Não foi possível carregar a agenda.'}
         </p>
       )}
+      {appointmentsQuery.isError && <p role="alert" className="px-2 pb-2 text-red-700">
+        Não foi possível carregar os compromissos. <button onClick={() => void appointmentsQuery.refetch()}>Tentar novamente</button>
+      </p>}
+      {appointmentsQuery.data?.truncated && <p role="alert" className="px-2 pb-2 text-amber-700">
+        Exibindo {appointmentsQuery.data.items.length} de {appointmentsQuery.data.total} compromissos. Reduza o período.
+      </p>}
       {truncated && (
         <p role="alert" className="px-2 pb-2 text-[0.72rem] text-amber-700">
           Exibindo {scheduleQuery.data!.items.length} de {scheduleQuery.data!.total} doses do
@@ -377,21 +373,21 @@ export function AppointmentsPage() {
   )
 }
 
-function localTime(iso: string): string {
-  const date = new Date(iso)
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+function localTime(iso: string, timeZone = 'America/Sao_Paulo'): string {
+  return timeInZone(new Date(iso), timeZone)
 }
 
 const MONTHS_UPPER = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO']
 
-function appointmentToApplication(item: Appointment): Application {
+function appointmentToApplication(item: Appointment, timeZone: string): Application {
   const starts = new Date(item.startsAt)
+  const day = dayInZone(starts, timeZone)
   return {
     id: item.id,
     patientId: item.patientId,
-    date: `${String(starts.getDate()).padStart(2, '0')}/${String(starts.getMonth() + 1).padStart(2, '0')}/${starts.getFullYear()}`,
-    startTime: localTime(item.startsAt),
-    endTime: localTime(item.endsAt),
+    date: `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`,
+    startTime: localTime(item.startsAt, timeZone),
+    endTime: localTime(item.endsAt, timeZone),
     status:
       item.status === 'MISSED'
         ? 'missed'
@@ -400,8 +396,8 @@ function appointmentToApplication(item: Appointment): Application {
           : 'scheduled',
     dose: item.title ?? (item.dose ? 'Aplicação prevista' : 'Compromisso'),
     cycle: { number: 1, days: 0 },
-    month: MONTHS_UPPER[starts.getMonth()],
-    year: starts.getFullYear(),
+    month: MONTHS_UPPER[Number(day.slice(5, 7)) - 1],
+    year: Number(day.slice(0, 4)),
     patientName: item.patient.fullName,
     patientPhone: item.patient.phoneNumber,
     modality: 'subcutaneous',

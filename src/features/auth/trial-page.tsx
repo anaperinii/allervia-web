@@ -365,10 +365,6 @@ export function TrialPage() {
             Recebemos sua solicitação de demonstração e nossa equipe entrará em contato em breve
             para agendar um horário pelos dados de contato informados.
           </p>
-          <div className="bg-gray-50 border border-(--border-custom) rounded-lg px-4 py-3">
-            <p className="text-[0.65rem] text-(--text-muted) font-medium mb-1">Protocolo da solicitação</p>
-            <p className="text-sm font-semibold text-brand break-all">{receipt?.id}</p>
-          </div>
           <Button tone="brand" variant="solid" prominent fullWidth size="lg" to="/">
             Voltar para a página inicial
           </Button>

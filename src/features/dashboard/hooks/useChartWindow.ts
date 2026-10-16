@@ -99,8 +99,8 @@ export function useSeriesFilters<T extends SeriesEntry>(series: T[], options?: {
       return true
     })
 
-    // Semana/mês/ano já delimitam a fatia — cortar por quantidade de dias por
-    // cima descartaria parte do recorte que a pessoa acabou de escolher.
+
+
     const narrowed = week !== 'all' || month !== 'all' || year !== 'all'
     if (narrowed) return filtered
     return filtered.slice(-(withRange ? Number(size) : 7))
