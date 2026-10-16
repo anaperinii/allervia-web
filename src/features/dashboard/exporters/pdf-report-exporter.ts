@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf'
 import { format } from 'date-fns'
 import type {
-  ComparisonEntry,
+  ApplicationDayEntry,
   CountEntry,
   PhaseDayEntry,
   StatusBucketEntry,
@@ -11,7 +11,7 @@ import type { ClinicalMetrics } from '@/shared/api/contracts/clinical'
 
 export type DashboardSectionId =
   | 'indicators'
-  | 'comparison'
+  | 'applications'
   | 'status'
   | 'phases'
   | 'concentrations'
@@ -20,7 +20,7 @@ export type DashboardSectionId =
 
 export const DASHBOARD_SECTIONS: { id: DashboardSectionId; label: string }[] = [
   { id: 'indicators', label: 'Indicadores do período' },
-  { id: 'comparison', label: 'Comparativo de aplicações' },
+  { id: 'applications', label: 'Aplicações registradas' },
   { id: 'status', label: 'Status de imunoterapias' },
   { id: 'phases', label: 'Distribuição de fases' },
   { id: 'concentrations', label: 'Ciclos por concentração' },
@@ -36,7 +36,7 @@ export interface DashboardReportData {
 
   sections?: DashboardSectionId[]
   metrics: ClinicalMetrics
-  comparisonSeries: ComparisonEntry[]
+  applicationSeries: ApplicationDayEntry[]
   statusSeries: StatusBucketEntry[]
   phaseSeries: PhaseDayEntry[]
   concentrationData: CountEntry[]
@@ -52,7 +52,6 @@ const SURFACE: [number, number, number] = [245, 250, 250]
 
 const PHASE_COLORS = { buildUp: '#6E9A2B', maintenance: '#0C86C9' }
 const STATUS_COLORS = { active: '#14B8A6', suspended: '#0891B2', completed: '#0F766E' }
-const COMPARISON_COLORS = { current: '#257E8C', previous: '#9AB4B9' }
 const SEQUENTIAL_RAMP = ['#CCE9E4', '#A6D9D1', '#74C3B9', '#4FA99E', '#37877D']
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -346,21 +345,14 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
   }
 
 
-  if (includes('comparison')) {
-    addSectionTitle('Comparativo de Aplicações', 'Aplicações por dia vs período anterior')
-    if (data.comparisonSeries.length === 0) {
-      addEmptyState('Sem dados de comparação no período.')
+  if (includes('applications')) {
+    addSectionTitle('Aplicações Registradas', 'Aplicações por dia no período selecionado')
+    if (data.applicationSeries.every((entry) => entry.value === 0)) {
+      addEmptyState('Sem aplicações registradas no período.')
     } else {
-      addLegend([
-        { label: 'Atual', color: COMPARISON_COLORS.current },
-        { label: 'Anterior', color: COMPARISON_COLORS.previous },
-      ])
       drawLineChart(
-        [
-          { label: 'Anterior', color: COMPARISON_COLORS.previous, points: data.comparisonSeries.map((entry) => entry.previous) },
-          { label: 'Atual', color: COMPARISON_COLORS.current, points: data.comparisonSeries.map((entry) => entry.current) },
-        ],
-        data.comparisonSeries.map((entry) => entry.label),
+        [{ label: 'Aplicações', color: '#257E8C', points: data.applicationSeries.map((entry) => entry.value) }],
+        data.applicationSeries.map((entry) => entry.label),
         34,
       )
     }

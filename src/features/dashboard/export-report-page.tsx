@@ -30,11 +30,10 @@ import {
   aggregateByConcentration,
   aggregatePhasePatientsByDay,
   aggregateVolumeMatrix,
-  buildComparisonSeries,
+  buildApplicationSeries,
   eachDay,
   useActiveTherapies,
   useDoseWindow,
-  usePreviousMetrics,
   useStatusHistory,
 } from '@/features/dashboard/hooks/useDashboardAggregates'
 import { downloadFile } from '@/shared/lib/file-download'
@@ -137,30 +136,13 @@ export function ExportReportPage() {
     const selectedTo = dateRange?.to ?? dateRange?.from
     const toDay = selectedTo ? dayInput(selectedTo) : dayInZone(new Date(), timeZone)
     const fromDay = dateRange?.from ? dayInput(dateRange.from) : addDaysToDay(toDay, -29)
-    const days = eachDay(fromDay, toDay)
-    const previousToDay = addDaysToDay(fromDay, -1)
-    const previousFromDay = addDaysToDay(previousToDay, -(days.length - 1))
-    return {
-      fromDay,
-      toDay,
-      days,
-      previousFromDay,
-      previousToDay,
-      previousDays: eachDay(previousFromDay, previousToDay),
-    }
+    return { fromDay, toDay, days: eachDay(fromDay, toDay) }
   }, [dateRange, timeZone])
 
   const period = useMemo(
     () => ({
       from: toZonedOffsetIso(periodDays.fromDay, '00:00', timeZone),
       to: toZonedOffsetIso(periodDays.toDay, '23:59', timeZone),
-    }),
-    [periodDays, timeZone],
-  )
-  const previousPeriod = useMemo(
-    () => ({
-      from: toZonedOffsetIso(periodDays.previousFromDay, '00:00', timeZone),
-      to: toZonedOffsetIso(periodDays.previousToDay, '23:59', timeZone),
     }),
     [periodDays, timeZone],
   )
@@ -171,7 +153,6 @@ export function ExportReportPage() {
     queryFn: ({ signal }) => getClinicalMetrics(period, signal),
     enabled: dashboardOrganizationId !== '',
   })
-  const previousMetricsQuery = usePreviousMetrics(dashboardOrganizationId, previousPeriod)
   const doseWindowQuery = useDoseWindow(dashboardOrganizationId, period)
   const activeTherapiesQuery = useActiveTherapies(dashboardOrganizationId)
   const statusHistoryQuery = useStatusHistory(dashboardOrganizationId)
@@ -179,14 +160,12 @@ export function ExportReportPage() {
   const dashboardLoading =
     isDashboardFormat &&
     (metricsQuery.isPending ||
-      previousMetricsQuery.isPending ||
       doseWindowQuery.isPending ||
       activeTherapiesQuery.isPending ||
       statusHistoryQuery.isPending)
   const dashboardError =
     isDashboardFormat &&
     (metricsQuery.isError ||
-      previousMetricsQuery.isError ||
       doseWindowQuery.isError ||
       activeTherapiesQuery.isError ||
       statusHistoryQuery.isError)
@@ -200,8 +179,7 @@ export function ExportReportPage() {
 
   const reportData = useMemo<DashboardReportData | null>(() => {
     const metrics = metricsQuery.data
-    const previousMetrics = previousMetricsQuery.data
-    if (!metrics || !previousMetrics) return null
+    if (!metrics) return null
     const doses = doseWindowQuery.data ?? []
     const generatedAtLabel = new Date()
       .toLocaleString('pt-BR', {
@@ -218,12 +196,7 @@ export function ExportReportPage() {
       periodLabel: `${dayLabel(periodDays.fromDay)} a ${dayLabel(periodDays.toDay)} (${periodDays.days.length} dias)`,
       sections,
       metrics,
-      comparisonSeries: buildComparisonSeries(
-        metrics,
-        previousMetrics,
-        periodDays.days,
-        periodDays.previousDays,
-      ),
+      applicationSeries: buildApplicationSeries(metrics, periodDays.fromDay, periodDays.toDay),
       statusSeries: statusHistoryQuery.data?.buckets ?? [],
       phaseSeries: aggregatePhasePatientsByDay(activeTherapiesQuery.data ?? [], periodDays.fromDay, periodDays.toDay, timeZone),
       concentrationData: aggregateByConcentration(doses),
@@ -232,7 +205,6 @@ export function ExportReportPage() {
     }
   }, [
     metricsQuery.data,
-    previousMetricsQuery.data,
     doseWindowQuery.data,
     activeTherapiesQuery.data,
     statusHistoryQuery.data,

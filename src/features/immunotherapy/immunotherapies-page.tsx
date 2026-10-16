@@ -168,6 +168,7 @@ export function ImmunotherapiesPage() {
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
+          totalItems={total}
           onPageChange={setCurrentPage}
         />
       </div>

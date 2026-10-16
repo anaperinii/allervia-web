@@ -21,6 +21,7 @@ import {
   aggregateByConcentration,
   aggregatePhasePatientsByDay,
   aggregateVolumeMatrix,
+  buildApplicationSeries,
   eachDay,
   filterMatrixByConcentration,
   useActiveTherapies,
@@ -278,14 +279,14 @@ export function DashboardPage() {
   ]
 
   const applicationSeries = useMemo(() => {
-    const counts = new Map(
-      (metrics?.applications.byDay ?? []).map((entry) => [entry.day, entry.count]),
-    )
-    return eachDay(periodDays.fromDay, periodDays.toDay).map((day) => ({
-      date: day,
-      label: `${day.slice(8, 10)}/${day.slice(5, 7)}`,
-      value: counts.get(day) ?? 0,
-    }))
+    if (!metrics) {
+      return eachDay(periodDays.fromDay, periodDays.toDay).map((day) => ({
+        date: day,
+        label: `${day.slice(8, 10)}/${day.slice(5, 7)}`,
+        value: 0,
+      }))
+    }
+    return buildApplicationSeries(metrics, periodDays.fromDay, periodDays.toDay)
   }, [metrics, periodDays])
 
   const adherencePct =

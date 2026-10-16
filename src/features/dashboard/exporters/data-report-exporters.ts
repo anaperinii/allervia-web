@@ -38,11 +38,11 @@ export function exportDashboardReportCsv(data: DashboardReportData): void {
     lines.push('')
   }
 
-  if (includesSection(data, 'comparison')) {
-    lines.push(csvLine(['Comparativo de aplicações por dia (vs período anterior)']))
-    lines.push(csvLine(['data', 'aplicacoesAtual', 'aplicacoesPeriodoAnterior']))
-    for (const entry of data.comparisonSeries) {
-      lines.push(csvLine([entry.date, entry.current, entry.previous]))
+  if (includesSection(data, 'applications')) {
+    lines.push(csvLine(['Aplicações registradas por dia']))
+    lines.push(csvLine(['data', 'aplicacoes']))
+    for (const entry of data.applicationSeries) {
+      lines.push(csvLine([entry.date, entry.value]))
     }
     lines.push('')
   }
@@ -112,11 +112,10 @@ export function exportDashboardReportJson(data: DashboardReportData): void {
         scheduled: data.metrics.scheduled,
       },
     }),
-    ...(includesSection(data, 'comparison') && {
-      applicationsByDayComparison: data.comparisonSeries.map((entry) => ({
+    ...(includesSection(data, 'applications') && {
+      applicationsByDay: data.applicationSeries.map((entry) => ({
         date: entry.date,
-        current: entry.current,
-        previous: entry.previous,
+        value: entry.value,
       })),
     }),
     ...(includesSection(data, 'status') && {

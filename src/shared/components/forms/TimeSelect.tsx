@@ -114,6 +114,9 @@ export function TimeSelect({
   const [observedValue, setObservedValue] = useState(value)
   const containerRef = useRef<HTMLDivElement>(null)
   const { hour, minute } = splitTime(value)
+  const now = new Date()
+  const highlightHour = hour || String(now.getHours()).padStart(2, '0')
+  const highlightMinute = minute || String(now.getMinutes()).padStart(2, '0')
 
   if (observedValue !== value) {
     setObservedValue(value)
@@ -185,14 +188,14 @@ export function TimeSelect({
             <WheelColumn
               label="Hora"
               options={HOURS}
-              selected={hour}
-              onSelect={(option) => onChange(`${option}:${minute || '00'}`)}
+              selected={highlightHour}
+              onSelect={(option) => onChange(`${option}:${minute || highlightMinute}`)}
             />
             <WheelColumn
               label="Minuto"
               options={MINUTES}
-              selected={minute}
-              onSelect={(option) => onChange(`${hour || '00'}:${option}`)}
+              selected={highlightMinute}
+              onSelect={(option) => onChange(`${hour || highlightHour}:${option}`)}
             />
           </div>
 

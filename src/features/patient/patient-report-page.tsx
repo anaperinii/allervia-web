@@ -247,7 +247,7 @@ export function PatientReportPage() {
           realizedApplicationsCount={realizedApplications.length}
           reactionsCount={reactionsCount}
           intervalDays={realizedApplications[0]?.cycle.days ?? 0}
-          patientStatus={patient.status}
+          patientStatus={selectedTherapy?.status === 'IN_PROGRESS' ? 'active' : 'inactive'}
         />
 
         {fileFormat === 'pdf' ? (

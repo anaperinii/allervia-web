@@ -1,7 +1,6 @@
 import { collectPages } from '@/shared/api/pagination'
 import { useQuery } from '@tanstack/react-query'
 import {
-  getClinicalMetrics,
   getStatusHistory,
   listDoseSchedule,
   listImmunotherapies,
@@ -79,20 +78,6 @@ export function useStatusHistory(organizationId: string, granularity: StatusGran
   return useQuery({
     queryKey: queryKeys.statusHistory(organizationId, filters),
     queryFn: ({ signal }) => getStatusHistory(filters, signal),
-    enabled: organizationId !== '',
-  })
-}
-
-export function usePreviousMetrics(
-  organizationId: string,
-  period: { from: string; to: string },
-) {
-  return useQuery({
-    queryKey: queryKeys.clinicalMetrics(organizationId, {
-      ...period,
-      scope: 'previous-period',
-    }),
-    queryFn: ({ signal }) => getClinicalMetrics(period, signal),
     enabled: organizationId !== '',
   })
 }
@@ -255,6 +240,25 @@ export interface PhaseDayEntry {
   label: string
   buildUp: number
   maintenance: number
+}
+
+export interface ApplicationDayEntry {
+  date: string
+  label: string
+  value: number
+}
+
+export function buildApplicationSeries(
+  metrics: ClinicalMetrics,
+  fromDay: string,
+  toDay: string,
+): ApplicationDayEntry[] {
+  const counts = new Map(metrics.applications.byDay.map((entry) => [entry.day, entry.count]))
+  return eachDay(fromDay, toDay).map((day) => ({
+    date: day,
+    label: dayLabel(day),
+    value: counts.get(day) ?? 0,
+  }))
 }
 
 export function eachDay(fromDay: string, toDay: string): string[] {
@@ -430,31 +434,4 @@ export function aggregateStatusHistory(
     }
     return entry
   })
-}
-
-export interface ComparisonEntry {
-  date: string
-  label: string
-  previous: number
-  current: number
-}
-
-export function buildComparisonSeries(
-  current: ClinicalMetrics,
-  previous: ClinicalMetrics,
-  currentDays: string[],
-  previousDays: string[],
-): ComparisonEntry[] {
-  const currentByDay = new Map(
-    current.applications.byDay.map((entry) => [entry.day, entry.count]),
-  )
-  const previousByDay = new Map(
-    previous.applications.byDay.map((entry) => [entry.day, entry.count]),
-  )
-  return currentDays.map((day, index) => ({
-    date: day,
-    label: dayLabel(day),
-    current: currentByDay.get(day) ?? 0,
-    previous: previousByDay.get(previousDays[index] ?? '') ?? 0,
-  }))
 }
