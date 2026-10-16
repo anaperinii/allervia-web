@@ -8,8 +8,8 @@ export interface EventColor {
 }
 
 const DEFAULT_EVENT_COLORS: EventColor[] = [
-  { id: 'subcutaneous', label: 'Subcutânea', color: '#14B8A6' },
-  { id: 'sublingual', label: 'Sublingual', color: '#8B5CF6' },
+  { id: 'subcutaneous', label: 'Subcutânea', color: '#B7E06A' },
+  { id: 'sublingual', label: 'Sublingual', color: '#74C3B9' },
   { id: 'missed', label: 'Ausente', color: '#EF4444' },
 ]
 

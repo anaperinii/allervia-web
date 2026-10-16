@@ -165,7 +165,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
           </div>
         )}
 
-        <div className="px-5 py-4 space-y-3.5 flex-1 overflow-y-auto"><fieldset disabled={pending} className="contents">{children}</fieldset></div>
+        <div className="px-5 py-4 flex-1 overflow-y-auto"><fieldset disabled={pending} className="contents space-y-3.5">{children}</fieldset></div>
 
         {footer && (
           <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2 shrink-0">

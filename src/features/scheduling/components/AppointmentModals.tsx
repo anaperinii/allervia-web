@@ -162,7 +162,6 @@ function NewAppointmentForm({
         </>
       }
     >
-      <p className="text-xs">Fuso do agendamento: {timeZone}. Se o fim for anterior ao início, o término será no dia seguinte.</p>
       {patientsQuery.isError && <p role="alert">Não foi possível carregar pacientes. <button onClick={() => void patientsQuery.refetch()}>Tentar novamente</button></p>}
       {patientsQuery.data?.truncated && <p role="status">Lista limitada: {patientsQuery.data.items.length}/{patientsQuery.data.total}. Refine a busca.</p>}
       <FieldLabel label="Paciente" required>

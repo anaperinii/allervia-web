@@ -26,6 +26,7 @@ import { WeekView } from '@/features/scheduling/components/WeekView'
 import { MonthView } from '@/features/scheduling/components/MonthView'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
 import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
+import { GoogleCalendarStatusBadge } from '@/features/scheduling/components/GoogleCalendarStatusBadge'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
@@ -184,6 +185,7 @@ export function AppointmentsPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
+      <GoogleCalendarStatusBadge />
       <PageHeader
         title="Agendamentos"
         actions={
@@ -249,7 +251,6 @@ export function AppointmentsPage() {
       {appointmentsQuery.data?.truncated && <p role="alert" className="px-2 pb-2 text-amber-700">
         Exibindo {appointmentsQuery.data.items.length} de {appointmentsQuery.data.total} compromissos. Reduza o período.
       </p>}
-      {(scheduleQuery.isFetching || appointmentsQuery.isFetching) && <p role="status">Atualizando agenda…</p>}
       {truncated && (
         <p role="alert" className="px-2 pb-2 text-[0.72rem] text-amber-700">
           Exibindo {scheduleQuery.data!.items.length} de {scheduleQuery.data!.total} doses do
