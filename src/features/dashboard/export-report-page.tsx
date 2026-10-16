@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useHasPermission } from '@/shared/stores/useUserStore'
-import { exportClinicalDoses, getClinicalMetrics } from '@/shared/api/clinical.api'
+import { exportClinicalDoses, getClinicalMetrics, listImmunotherapyTypes } from '@/shared/api/clinical.api'
 import type { TherapyStatus } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
@@ -156,19 +156,26 @@ export function ExportReportPage() {
   const doseWindowQuery = useDoseWindow(dashboardOrganizationId, period)
   const activeTherapiesQuery = useActiveTherapies(dashboardOrganizationId)
   const statusHistoryQuery = useStatusHistory(dashboardOrganizationId)
+  const typesQuery = useQuery({
+    queryKey: queryKeys.immunotherapyTypes(dashboardOrganizationId),
+    queryFn: ({ signal }) => listImmunotherapyTypes(signal),
+    enabled: dashboardOrganizationId !== '',
+  })
 
   const dashboardLoading =
     isDashboardFormat &&
     (metricsQuery.isPending ||
       doseWindowQuery.isPending ||
       activeTherapiesQuery.isPending ||
-      statusHistoryQuery.isPending)
+      statusHistoryQuery.isPending ||
+      typesQuery.isPending)
   const dashboardError =
     isDashboardFormat &&
     (metricsQuery.isError ||
       doseWindowQuery.isError ||
       activeTherapiesQuery.isError ||
-      statusHistoryQuery.isError)
+      statusHistoryQuery.isError ||
+      typesQuery.isError)
 
   const exportDisabled =
     !consent ||
@@ -200,7 +207,7 @@ export function ExportReportPage() {
       statusSeries: statusHistoryQuery.data?.buckets ?? [],
       phaseSeries: aggregatePhasePatientsByDay(activeTherapiesQuery.data ?? [], periodDays.fromDay, periodDays.toDay, timeZone),
       concentrationData: aggregateByConcentration(doses),
-      typeData: aggregateActiveByType(activeTherapiesQuery.data ?? []),
+      typeData: aggregateActiveByType(activeTherapiesQuery.data ?? [], typesQuery.data ?? []),
       volumeMatrix: aggregateVolumeMatrix(doses),
     }
   }, [
@@ -208,6 +215,7 @@ export function ExportReportPage() {
     doseWindowQuery.data,
     activeTherapiesQuery.data,
     statusHistoryQuery.data,
+    typesQuery.data,
     periodDays,
     sections,
     timeZone,

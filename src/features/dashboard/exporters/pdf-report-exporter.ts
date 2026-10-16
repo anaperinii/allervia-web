@@ -322,6 +322,8 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
       [String(data.metrics.therapies.buildUp), 'Em indução'],
       [String(data.metrics.therapies.maintenance), 'Em manutenção'],
       [adherencePct, 'Adesão no período'],
+      [String(data.metrics.scheduled.pending), 'Previstas pendentes'],
+      [String(data.metrics.scheduled.overdue), 'Vencidas'],
     ]
     const boxW = (contentW - 8) / 3
     const boxH = 16
