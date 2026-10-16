@@ -15,17 +15,26 @@ import { stubApi, errorResponse, emptyResponse, jsonResponse } from '../helpers/
 
 describe('FE-14 authentication safeguards', () => {
   it.each([
-    ['a'.repeat(71), true], ['a'.repeat(72), true], ['a'.repeat(73), false],
-    ['é'.repeat(35) + 'a', true], ['é'.repeat(36), true], ['é'.repeat(36) + 'a', false],
-    ['😀'.repeat(17) + 'abc', true], ['😀'.repeat(18), true], ['😀'.repeat(18) + 'a', false],
-  ])('enforces the UTF-8 byte boundary for %s', (password, accepted) => {
-    expect(passwordSchema.safeParse(password).success).toBe(accepted)
+    ['a'.repeat(71), 71], ['a'.repeat(72), 72], ['a'.repeat(73), 73],
+    ['é'.repeat(35) + 'a', 71], ['é'.repeat(36), 72], ['é'.repeat(36) + 'a', 73],
+  ])('counts UTF-8 bytes, not characters, for %s', (password, bytes) => {
+    expect(passwordByteLength(password)).toBe(bytes)
     expect(passwordByteLength(password)).toBe(new TextEncoder().encode(password).length)
   })
-  it('accepts eight simple characters but does not apply creation rules to an existing login', () => {
-    expect(passwordSchema.safeParse('abcdefgh').success).toBe(true)
-    expect(passwordSchema.safeParse('😀😀😀😀').success).toBe(false)
+  it('accepts a password meeting every creation rule but does not apply creation rules to an existing login', () => {
+    expect(passwordSchema.safeParse('Abcdefg1!').success).toBe(true)
+    expect(passwordSchema.safeParse('abcdefgh').success).toBe(false)
     expect(loginSchema.safeParse({ email: 'reader@example.test', password: 'old' }).success).toBe(true)
+  })
+  it.each([
+    ['abcdefg1!', 'missing uppercase letter'],
+    ['ABCDEFG1!', 'missing lowercase letter'],
+    ['Abcdefgh!', 'missing digit'],
+    ['Abcdefg1', 'missing special character'],
+    ['Ab1!', 'below the 8-character minimum'],
+    ['Abcdefghijklmnopqrst1!', 'above the 20-character maximum'],
+  ])('rejects a password %s (%s)', (password) => {
+    expect(passwordSchema.safeParse(password).success).toBe(false)
   })
   it.each(['INVALID_CREDENTIALS', 'MFA_CODE_INVALID'])('keeps the session for a local reauthentication rejection: %s', async code => {
     acceptSession('current', 'csrf')

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AuthLayout } from '@/features/auth/components/AuthLayout'
@@ -10,7 +10,8 @@ import {
   type ForgotPasswordResetForm,
 } from '@/features/auth/schemas/forgot-password'
 import { RequestEmailStep } from '@/features/auth/components/forgot-password-steps/RequestEmailStep'
-import { VerifyTokenStep } from '@/features/auth/components/forgot-password-steps/VerifyTokenStep'
+import { LinkSentStep } from '@/features/auth/components/forgot-password-steps/LinkSentStep'
+import { InvalidLinkStep } from '@/features/auth/components/forgot-password-steps/InvalidLinkStep'
 import { NewPasswordStep } from '@/features/auth/components/forgot-password-steps/NewPasswordStep'
 import { DoneStep } from '@/features/auth/components/forgot-password-steps/DoneStep'
 import { toast } from '@/shared/components'
@@ -22,9 +23,9 @@ import {
 import { ApiError } from '@/shared/api/contracts/errors'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faCircleNotch } from '@fortawesome/free-solid-svg-icons'
 
-type Step = 'request' | 'token' | 'reset' | 'done'
+type Step = 'request' | 'sent' | 'verifying' | 'invalid' | 'reset' | 'done'
 
 interface ForgotPasswordPageProps {
   initialToken?: string
@@ -38,12 +39,12 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
   const verificationInFlight = useRef(false)
   const resendInFlight = useRef(false)
   const [resending, setResending] = useState(false)
-  const [step, setStep] = useState<Step>(initialToken ? 'token' : 'request')
+  const [step, setStep] = useState<Step>(initialToken ? 'verifying' : 'request')
   const [submittedEmail, setSubmittedEmail] = useState('')
-  const [token, setToken] = useState(initialToken ?? '')
-  const [tokenError, setTokenError] = useState<string | null>(null)
+  const [token, setToken] = useState('')
+  const [resendError, setResendError] = useState<string | null>(null)
+  const [invalidLinkMessage, setInvalidLinkMessage] = useState('')
   const [resendKey, setResendKey] = useState(0)
-  const [verifying, setVerifying] = useState(false)
   const [resetError, setResetError] = useState<string | null>(null)
 
   const emailForm = useForm<ForgotPasswordEmailForm>({
@@ -58,6 +59,28 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
     defaultValues: { password: '', confirmPassword: '' },
   })
 
+  useEffect(() => {
+    if (!initialToken || verificationInFlight.current) return
+    verificationInFlight.current = true
+
+    verifyPasswordResetToken(initialToken)
+      .then(() => {
+        setToken(initialToken)
+        setStep('reset')
+      })
+      .catch((error: unknown) => {
+        setInvalidLinkMessage(
+          describeFailure(error, 'Esse link de redefinição é inválido ou já expirou.'),
+        )
+        setStep('invalid')
+      })
+      .finally(() => {
+        verificationInFlight.current = false
+      })
+    // Runs once for the token carried by the magic link that opened this page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const submitEmail = emailForm.handleSubmit(async (data) => {
     setSubmittedEmail(data.email)
 
@@ -70,39 +93,11 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
       return
     }
 
-    setStep('token')
+    setStep('sent')
   })
 
-  const submitToken = async () => {
-    if (verificationInFlight.current) return
-    const value = token.trim()
-    if (!value) {
-      setTokenError('Informe o código recebido por e-mail')
-      return
-    }
-
-    verificationInFlight.current = true
-    setVerifying(true)
-    setTokenError(null)
-
-    try {
-      await verifyPasswordResetToken(value)
-      setStep('reset')
-    } catch (error) {
-      setTokenError(describeFailure(error, 'Código inválido ou expirado.'))
-    } finally {
-      verificationInFlight.current = false
-      setVerifying(false)
-    }
-  }
-
-  const handleTokenChange = (value: string) => {
-    setToken(value)
-    if (tokenError) setTokenError(null)
-  }
-
   const handleResend = async () => {
-    if (resendInFlight.current || verificationInFlight.current) return
+    if (resendInFlight.current) return
     if (!submittedEmail) {
       setStep('request')
       return
@@ -113,12 +108,14 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
     try {
       await requestPasswordReset(submittedEmail)
     } catch (error) {
-      setTokenError(describeFailure(error, 'Não foi possível reenviar o e-mail.'))
+      setResendError(describeFailure(error, 'Não foi possível reenviar o e-mail.'))
       return
-    } finally { resendInFlight.current = false; setResending(false) }
+    } finally {
+      resendInFlight.current = false
+      setResending(false)
+    }
 
-    setToken('')
-    setTokenError(null)
+    setResendError(null)
     setResendKey((k) => k + 1)
     toast.success({
       icon: <FontAwesomeIcon icon={faCheck} style={{ fontSize: 14 }} />,
@@ -133,7 +130,7 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
     setResetError(null)
 
     try {
-      await confirmPasswordReset({ token: token.trim(), newPassword: data.password })
+      await confirmPasswordReset({ token, newPassword: data.password })
       setToken('')
       resetForm.reset()
       setStep('done')
@@ -142,8 +139,8 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
       if (error instanceof ApiError && (error.statusCode === 404 || error.statusCode === 409)) {
         resetForm.reset()
         setToken('')
-        setTokenError(message)
-        setStep('token')
+        setInvalidLinkMessage(message)
+        setStep('invalid')
         return
       }
       setResetError(message)
@@ -156,17 +153,29 @@ export function ForgotPasswordPage({ initialToken }: ForgotPasswordPageProps = {
         {step === 'request' && (
           <RequestEmailStep form={emailForm} onSubmit={event => void submitEmail(event)} />
         )}
-        {step === 'token' && (
-          <VerifyTokenStep
-            token={token}
-            onTokenChange={handleTokenChange}
-            tokenError={tokenError}
+        {step === 'sent' && (
+          <LinkSentStep
             email={submittedEmail}
             resendKey={resendKey}
-            submitting={verifying || resending}
-            onSubmit={() => void submitToken()}
+            submitting={resending}
+            resendError={resendError}
             onBack={() => setStep('request')}
             onResend={() => void handleResend()}
+          />
+        )}
+        {step === 'verifying' && (
+          <div className="flex flex-col items-center text-center gap-3 py-6">
+            <FontAwesomeIcon icon={faCircleNotch} spin style={{ fontSize: 22, color: 'var(--accent)' }} />
+            <p className="text-[0.84rem] leading-relaxed max-w-sm" style={{ color: 'var(--ink-soft)' }}>
+              Verificando o link de redefinição...
+            </p>
+          </div>
+        )}
+        {step === 'invalid' && (
+          <InvalidLinkStep
+            message={invalidLinkMessage}
+            submitting={resending}
+            onRequestNew={() => void handleResend()}
           />
         )}
         {step === 'reset' && (

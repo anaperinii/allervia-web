@@ -21,6 +21,7 @@ export const API_ERROR_CODES = {
   mfaCodeInvalid: 'MFA_CODE_INVALID',
   mfaUnavailable: 'MFA_UNAVAILABLE',
   reauthenticationRequired: 'REAUTHENTICATION_REQUIRED',
+  passwordSameAsCurrent: 'PASSWORD_SAME_AS_CURRENT',
   validationError: 'VALIDATION_ERROR',
   notFound: 'NOT_FOUND',
   forbidden: 'FORBIDDEN',

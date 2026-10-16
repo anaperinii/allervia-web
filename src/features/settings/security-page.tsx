@@ -5,8 +5,8 @@ import { cn } from '@/shared/lib/cn'
 import {
   Button,
   FieldLabel,
+  isPasswordValid,
   Modal,
-  PASSWORD_RULES,
   PasswordInput,
   PasswordRequirements,
   showApiErrorToast,
@@ -178,9 +178,10 @@ export function SecurityPage() {
   const submitPasswordChange = async () => {
     const errors: PasswordFormErrors = {}
     if (!oldPassword) errors.current = 'Informe sua senha atual.'
-    if (!PASSWORD_RULES.every((rule) => rule.test(newPassword))) {
+    if (!isPasswordValid(newPassword)) {
       errors.newPassword = 'A nova senha não atende aos requisitos.'
-
+    } else if (newPassword === oldPassword) {
+      errors.newPassword = 'A nova senha deve ser diferente da senha atual.'
     }
     if (newPassword !== confirmPassword) {
       errors.confirm = 'As senhas não coincidem.'
@@ -211,10 +212,11 @@ export function SecurityPage() {
         throw error
       }
       if (error instanceof ApiError) {
+        const isSameAsCurrent = error.code === API_ERROR_CODES.passwordSameAsCurrent
         setPasswordErrors({
           current: error.fieldErrors?.currentPassword?.join(' '),
-          newPassword: error.fieldErrors?.newPassword?.join(' '),
-          general: error.fieldErrors
+          newPassword: error.fieldErrors?.newPassword?.join(' ') ?? (isSameAsCurrent ? error.message : undefined),
+          general: error.fieldErrors || isSameAsCurrent
             ? undefined
             : humanErrorMessage(error, 'Não foi possível alterar a senha.'),
         })

@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -25,6 +31,9 @@ dist-ssr
 
 # Project docs (kept local)
 docs/
+
+# Raw execution evidence (hashed in docs/review/frontend/execucao-frontend/manifesto.json)
+artifacts/
 
 # Root-level markdown (except README)
 /*.md

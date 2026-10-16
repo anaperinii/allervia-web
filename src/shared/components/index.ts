@@ -1,4 +1,4 @@
-export { PASSWORD_RULES } from '@/shared/lib/password-rules'
+export { PASSWORD_RULES, isPasswordValid } from '@/shared/lib/password-rules'
 export { Button } from './forms/Button'
 export type { ButtonSize,ButtonTone,ButtonVariant } from './forms/Button'
 export { FieldLabel,Select,TextArea,TextInput } from './forms/FormField'

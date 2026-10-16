@@ -23,7 +23,7 @@ export function NewPasswordStep({ form, onSubmit }: NewPasswordStepProps) {
       <div className="flex flex-col gap-4">
         <FieldLabel label="Nova senha" error={errors.password?.message}>
           <PasswordInput
-            placeholder="Mínimo 8 caracteres"
+            placeholder="8 a 20 caracteres"
             invalid={!!errors.password}
             {...form.register('password')}
           />

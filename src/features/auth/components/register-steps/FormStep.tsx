@@ -49,7 +49,7 @@ export function FormStep({ form, maskedEmail, submitting, error, onSubmit }: For
         <div className="grid grid-cols-2 gap-2.5">
           <FieldLabel label="Senha" error={errors.password?.message}>
             <PasswordInput
-              placeholder="Mín. 8 caracteres"
+              placeholder="8 a 20 caracteres"
               invalid={!!errors.password}
               iconSize={14}
               {...form.register('password')}
