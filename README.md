@@ -2,7 +2,7 @@
 
 **Camada de visualização e interação do Sistema de Gestão de Tratamentos Imunoterápicos Alérgicos.**
 
-<img src="assets/readme-header.png" alt="Allervia · Interface Clínica - Camada de visualização e interação do Sistema de Gestão de Tratamentos Imunoterápicos Alérgicos" width="100%" />
+<img src="assets/readme-header.png" alt="Allervia · Interface Clínica: Camada de visualização e interação do Sistema de Gestão de Tratamentos Imunoterápicos Alérgicos" width="100%" />
 
 > **Escopo deste repositório:** aqui vive exclusivamente a interface clínica do Allervia, a aplicação web em React operada pelos profissionais da clínica. O **back-end** (API, persistência, autenticação e regras de servidor) não faz parte deste repositório e será mantido em base própria; enquanto não existe integração, a interface opera sobre dados semeados em memória.
 
@@ -23,6 +23,7 @@ Plataforma de gestão clínica dedicada a consultórios de alergologia que condu
 - [Arquitetura](#arquitetura)
 - [Começando](#começando)
 - [Scripts](#scripts)
+- [CI/CD](#cicd)
 - [Features principais](#features-principais)
 - [Controle de acesso](#controle-de-acesso-rbac)
 - [Protocolo SCIT](#protocolo-scit)
@@ -134,12 +135,27 @@ npm run preview
 
 ## Scripts
 
-| Script            | Descrição                                 |
-| ----------------- | ----------------------------------------- |
-| `npm run dev`     | Dev server com HMR                        |
-| `npm run build`   | Type-check (`tsc -b`) + build de produção |
-| `npm run preview` | Servidor local da build de produção       |
-| `npm run lint`    | ESLint em toda a base                     |
+| Script                | Descrição                                      |
+| --------------------- | ------------------------------------------------ |
+| `npm run dev`         | Dev server com HMR                                |
+| `npm run build`       | Type-check (`tsc -b`) + build de produção         |
+| `npm run preview`     | Servidor local da build de produção               |
+| `npm run lint`        | ESLint em toda a base                             |
+| `npm test`            | Testes unitários (Vitest)                         |
+| `npm run test:watch`  | Testes unitários em modo watch                    |
+| `npm run test:typecheck` | Type-check dedicado da suíte de testes         |
+| `npm run test:contract` | Testes de contrato HTTP contra o back-end       |
+| `npm run e2e`         | Testes end-to-end (Playwright)                    |
+| `npm run contract:types` | Gera tipos a partir do contrato da API         |
+| `npm run contract:check` | Verifica se os tipos gerados estão atualizados |
+
+---
+
+## CI/CD
+
+O workflow `Frontend CI` (`.github/workflows/ci.yml`) roda em todo pull request e push para `main`/`homolog`: instala dependências, lint, type-check de testes, testes unitários e build de produção, usando a versão de Node fixada em `.node-version`.
+
+A imagem de produção é construída via `Dockerfile` (build multi-stage: Node para gerar o build Vite, Nginx para servir os estáticos), com a configuração de Nginx em `infra/nginx.validation.conf`. A variável `VITE_API_BASE_URL` define o endpoint do back-end consumido em runtime.
 
 ---
 
