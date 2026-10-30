@@ -6,11 +6,11 @@ import { RequireSession } from '@/shared/auth/RequireSession'
 import { Outlet, useLocation } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
-const publicRoutes = ['/', '/login', '/register', '/trial', '/forgot-password']
+const publicRoutes = ['/', '/login', '/register', '/trial', '/forgot-password', '/confirm-email-change']
 const authRoutes = ['/login', '/register', '/forgot-password', '/trial']
-const noHeaderRoutes: string[] = ['/login', '/register', '/forgot-password', '/trial']
+const noHeaderRoutes: string[] = ['/login', '/register', '/forgot-password', '/trial', '/confirm-email-change']
 const heroRoutes = ['/', '/trial', '/login', '/register', '/forgot-password']
-const noTransitionRoutes = ['/forgot-password', '/register']
+const noTransitionRoutes = ['/forgot-password', '/register', '/confirm-email-change']
 
 function PageTransition({ children }: { children: React.ReactNode }) {
   const [visible, setVisible] = useState(false)

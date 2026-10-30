@@ -2,6 +2,7 @@ import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
 import { PROFESSION_LABELS, ROLE_BADGES } from '@/features/settings/constants/team-roles'
 import { Button, FieldLabel, Modal, ReadOnlyField, TextInput } from '@/shared/components'
+import { RequestOwnEmailChangeModal } from '@/features/settings/components/RequestOwnEmailChangeModal'
 import { queryKeys } from '@/shared/api/query-keys'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { readOwnProfile, updateOwnProfile } from '@/shared/api/team.api'
@@ -20,6 +21,7 @@ export function ProfilePage() {
 
   const [editing, setEditing] = useState(false)
   const [showSaveModal, setShowSaveModal] = useState(false)
+  const [showChangeEmailModal, setShowChangeEmailModal] = useState(false)
 
   const profileQuery = useQuery({
     queryKey: queryKeys.professionalProfile(),
@@ -207,7 +209,17 @@ export function ProfilePage() {
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
                 <FieldLabel label="E-mail">
-                  <ReadOnlyField>{account?.user.email ?? ''}</ReadOnlyField>
+                  <div className="flex items-center gap-2">
+                    <ReadOnlyField>{account?.user.email ?? ''}</ReadOnlyField>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      onClick={() => setShowChangeEmailModal(true)}
+                    >
+                      Alterar
+                    </Button>
+                  </div>
                 </FieldLabel>
                 <FieldLabel label="Profissão">
                   <ReadOnlyField>{PROFESSION_LABELS[profile.profession]}</ReadOnlyField>
@@ -257,6 +269,11 @@ export function ProfilePage() {
           As alterações do seu cadastro profissional serão salvas no servidor.
         </p>
       </Modal>
+
+      <RequestOwnEmailChangeModal
+        open={showChangeEmailModal}
+        onClose={() => setShowChangeEmailModal(false)}
+      />
     </SettingsLayout>
   )
 }

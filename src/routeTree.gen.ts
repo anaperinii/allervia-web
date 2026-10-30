@@ -9,158 +9,39 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TrialRouteImport } from './routes/trial'
-import { Route as ToastLabRouteImport } from './routes/toast-lab'
-import { Route as TeamsRouteImport } from './routes/teams'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SecurityRouteImport } from './routes/security'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as ProtocolsRouteImport } from './routes/protocols'
-import { Route as ProtocolLabRouteImport } from './routes/protocol-lab'
-import { Route as ProtocolEditorRouteImport } from './routes/protocol-editor'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as PlansRouteImport } from './routes/plans'
-import { Route as PatientReportRouteImport } from './routes/patient-report'
-import { Route as PatientEvolutionRouteImport } from './routes/patient-evolution'
-import { Route as PatientCompletionRouteImport } from './routes/patient-completion'
-import { Route as NotificationsRouteImport } from './routes/notifications'
-import { Route as MigrationRouteImport } from './routes/migration'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ImmunotherapiesRouteImport } from './routes/immunotherapies'
-import { Route as HelpRouteImport } from './routes/help'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as ExportReportRouteImport } from './routes/export-report'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as AppointmentsRouteImport } from './routes/appointments'
-import { Route as AdvancedSettingsRouteImport } from './routes/advanced-settings'
-import { Route as AddImmunotherapyRouteImport } from './routes/add-immunotherapy'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AddImmunotherapyRouteImport } from './routes/add-immunotherapy'
+import { Route as AdvancedSettingsRouteImport } from './routes/advanced-settings'
+import { Route as AppointmentsRouteImport } from './routes/appointments'
+import { Route as ConfirmEmailChangeRouteImport } from './routes/confirm-email-change'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ExportReportRouteImport } from './routes/export-report'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as ImmunotherapiesRouteImport } from './routes/immunotherapies'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as MigrationRouteImport } from './routes/migration'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as PatientCompletionRouteImport } from './routes/patient-completion'
+import { Route as PatientEvolutionRouteImport } from './routes/patient-evolution'
+import { Route as PatientReportRouteImport } from './routes/patient-report'
+import { Route as PlansRouteImport } from './routes/plans'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ProtocolEditorRouteImport } from './routes/protocol-editor'
+import { Route as ProtocolLabRouteImport } from './routes/protocol-lab'
+import { Route as ProtocolsRouteImport } from './routes/protocols'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as SecurityRouteImport } from './routes/security'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TeamsRouteImport } from './routes/teams'
+import { Route as ToastLabRouteImport } from './routes/toast-lab'
+import { Route as TrialRouteImport } from './routes/trial'
 import { Route as PatientPatientIdRouteImport } from './routes/patient.$patientId'
 
-const TrialRoute = TrialRouteImport.update({
-  id: '/trial',
-  path: '/trial',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ToastLabRoute = ToastLabRouteImport.update({
-  id: '/toast-lab',
-  path: '/toast-lab',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TeamsRoute = TeamsRouteImport.update({
-  id: '/teams',
-  path: '/teams',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SecurityRoute = SecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProtocolsRoute = ProtocolsRouteImport.update({
-  id: '/protocols',
-  path: '/protocols',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProtocolLabRoute = ProtocolLabRouteImport.update({
-  id: '/protocol-lab',
-  path: '/protocol-lab',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProtocolEditorRoute = ProtocolEditorRouteImport.update({
-  id: '/protocol-editor',
-  path: '/protocol-editor',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlansRoute = PlansRouteImport.update({
-  id: '/plans',
-  path: '/plans',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PatientReportRoute = PatientReportRouteImport.update({
-  id: '/patient-report',
-  path: '/patient-report',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PatientEvolutionRoute = PatientEvolutionRouteImport.update({
-  id: '/patient-evolution',
-  path: '/patient-evolution',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PatientCompletionRoute = PatientCompletionRouteImport.update({
-  id: '/patient-completion',
-  path: '/patient-completion',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotificationsRoute = NotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MigrationRoute = MigrationRouteImport.update({
-  id: '/migration',
-  path: '/migration',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ImmunotherapiesRoute = ImmunotherapiesRouteImport.update({
-  id: '/immunotherapies',
-  path: '/immunotherapies',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HelpRoute = HelpRouteImport.update({
-  id: '/help',
-  path: '/help',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExportReportRoute = ExportReportRouteImport.update({
-  id: '/export-report',
-  path: '/export-report',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppointmentsRoute = AppointmentsRouteImport.update({
-  id: '/appointments',
-  path: '/appointments',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdvancedSettingsRoute = AdvancedSettingsRouteImport.update({
-  id: '/advanced-settings',
-  path: '/advanced-settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AddImmunotherapyRoute = AddImmunotherapyRouteImport.update({
-  id: '/add-immunotherapy',
-  path: '/add-immunotherapy',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -168,9 +49,134 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AddImmunotherapyRoute = AddImmunotherapyRouteImport.update({
+  id: '/add-immunotherapy',
+  path: '/add-immunotherapy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdvancedSettingsRoute = AdvancedSettingsRouteImport.update({
+  id: '/advanced-settings',
+  path: '/advanced-settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppointmentsRoute = AppointmentsRouteImport.update({
+  id: '/appointments',
+  path: '/appointments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmEmailChangeRoute = ConfirmEmailChangeRouteImport.update({
+  id: '/confirm-email-change',
+  path: '/confirm-email-change',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExportReportRoute = ExportReportRouteImport.update({
+  id: '/export-report',
+  path: '/export-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImmunotherapiesRoute = ImmunotherapiesRouteImport.update({
+  id: '/immunotherapies',
+  path: '/immunotherapies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MigrationRoute = MigrationRouteImport.update({
+  id: '/migration',
+  path: '/migration',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PatientCompletionRoute = PatientCompletionRouteImport.update({
+  id: '/patient-completion',
+  path: '/patient-completion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PatientEvolutionRoute = PatientEvolutionRouteImport.update({
+  id: '/patient-evolution',
+  path: '/patient-evolution',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PatientReportRoute = PatientReportRouteImport.update({
+  id: '/patient-report',
+  path: '/patient-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlansRoute = PlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtocolEditorRoute = ProtocolEditorRouteImport.update({
+  id: '/protocol-editor',
+  path: '/protocol-editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtocolLabRoute = ProtocolLabRouteImport.update({
+  id: '/protocol-lab',
+  path: '/protocol-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtocolsRoute = ProtocolsRouteImport.update({
+  id: '/protocols',
+  path: '/protocols',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecurityRoute = SecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamsRoute = TeamsRouteImport.update({
+  id: '/teams',
+  path: '/teams',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToastLabRoute = ToastLabRouteImport.update({
+  id: '/toast-lab',
+  path: '/toast-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrialRoute = TrialRouteImport.update({
+  id: '/trial',
+  path: '/trial',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PatientPatientIdRoute = PatientPatientIdRouteImport.update({
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/add-immunotherapy': typeof AddImmunotherapyRoute
   '/advanced-settings': typeof AdvancedSettingsRoute
   '/appointments': typeof AppointmentsRoute
+  '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/dashboard': typeof DashboardRoute
   '/export-report': typeof ExportReportRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByTo {
   '/add-immunotherapy': typeof AddImmunotherapyRoute
   '/advanced-settings': typeof AdvancedSettingsRoute
   '/appointments': typeof AppointmentsRoute
+  '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/dashboard': typeof DashboardRoute
   '/export-report': typeof ExportReportRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -246,6 +254,7 @@ export interface FileRoutesById {
   '/add-immunotherapy': typeof AddImmunotherapyRoute
   '/advanced-settings': typeof AdvancedSettingsRoute
   '/appointments': typeof AppointmentsRoute
+  '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/dashboard': typeof DashboardRoute
   '/export-report': typeof ExportReportRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/add-immunotherapy'
     | '/advanced-settings'
     | '/appointments'
+    | '/confirm-email-change'
     | '/dashboard'
     | '/export-report'
     | '/forgot-password'
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/add-immunotherapy'
     | '/advanced-settings'
     | '/appointments'
+    | '/confirm-email-change'
     | '/dashboard'
     | '/export-report'
     | '/forgot-password'
@@ -338,6 +349,7 @@ export interface FileRouteTypes {
     | '/add-immunotherapy'
     | '/advanced-settings'
     | '/appointments'
+    | '/confirm-email-change'
     | '/dashboard'
     | '/export-report'
     | '/forgot-password'
@@ -369,6 +381,7 @@ export interface RootRouteChildren {
   AddImmunotherapyRoute: typeof AddImmunotherapyRoute
   AdvancedSettingsRoute: typeof AdvancedSettingsRoute
   AppointmentsRoute: typeof AppointmentsRoute
+  ConfirmEmailChangeRoute: typeof ConfirmEmailChangeRoute
   DashboardRoute: typeof DashboardRoute
   ExportReportRoute: typeof ExportReportRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -396,179 +409,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/trial': {
-      id: '/trial'
-      path: '/trial'
-      fullPath: '/trial'
-      preLoaderRoute: typeof TrialRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/toast-lab': {
-      id: '/toast-lab'
-      path: '/toast-lab'
-      fullPath: '/toast-lab'
-      preLoaderRoute: typeof ToastLabRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/teams': {
-      id: '/teams'
-      path: '/teams'
-      fullPath: '/teams'
-      preLoaderRoute: typeof TeamsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/security': {
-      id: '/security'
-      path: '/security'
-      fullPath: '/security'
-      preLoaderRoute: typeof SecurityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/protocols': {
-      id: '/protocols'
-      path: '/protocols'
-      fullPath: '/protocols'
-      preLoaderRoute: typeof ProtocolsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/protocol-lab': {
-      id: '/protocol-lab'
-      path: '/protocol-lab'
-      fullPath: '/protocol-lab'
-      preLoaderRoute: typeof ProtocolLabRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/protocol-editor': {
-      id: '/protocol-editor'
-      path: '/protocol-editor'
-      fullPath: '/protocol-editor'
-      preLoaderRoute: typeof ProtocolEditorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/plans': {
-      id: '/plans'
-      path: '/plans'
-      fullPath: '/plans'
-      preLoaderRoute: typeof PlansRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/patient-report': {
-      id: '/patient-report'
-      path: '/patient-report'
-      fullPath: '/patient-report'
-      preLoaderRoute: typeof PatientReportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/patient-evolution': {
-      id: '/patient-evolution'
-      path: '/patient-evolution'
-      fullPath: '/patient-evolution'
-      preLoaderRoute: typeof PatientEvolutionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/patient-completion': {
-      id: '/patient-completion'
-      path: '/patient-completion'
-      fullPath: '/patient-completion'
-      preLoaderRoute: typeof PatientCompletionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notifications': {
-      id: '/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof NotificationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/migration': {
-      id: '/migration'
-      path: '/migration'
-      fullPath: '/migration'
-      preLoaderRoute: typeof MigrationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/immunotherapies': {
-      id: '/immunotherapies'
-      path: '/immunotherapies'
-      fullPath: '/immunotherapies'
-      preLoaderRoute: typeof ImmunotherapiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/help': {
-      id: '/help'
-      path: '/help'
-      fullPath: '/help'
-      preLoaderRoute: typeof HelpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/export-report': {
-      id: '/export-report'
-      path: '/export-report'
-      fullPath: '/export-report'
-      preLoaderRoute: typeof ExportReportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/appointments': {
-      id: '/appointments'
-      path: '/appointments'
-      fullPath: '/appointments'
-      preLoaderRoute: typeof AppointmentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/advanced-settings': {
-      id: '/advanced-settings'
-      path: '/advanced-settings'
-      fullPath: '/advanced-settings'
-      preLoaderRoute: typeof AdvancedSettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/add-immunotherapy': {
-      id: '/add-immunotherapy'
-      path: '/add-immunotherapy'
-      fullPath: '/add-immunotherapy'
-      preLoaderRoute: typeof AddImmunotherapyRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -578,11 +423,186 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/add-immunotherapy': {
+      id: '/add-immunotherapy'
+      path: '/add-immunotherapy'
+      fullPath: '/add-immunotherapy'
+      preLoaderRoute: typeof AddImmunotherapyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/advanced-settings': {
+      id: '/advanced-settings'
+      path: '/advanced-settings'
+      fullPath: '/advanced-settings'
+      preLoaderRoute: typeof AdvancedSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/appointments': {
+      id: '/appointments'
+      path: '/appointments'
+      fullPath: '/appointments'
+      preLoaderRoute: typeof AppointmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirm-email-change': {
+      id: '/confirm-email-change'
+      path: '/confirm-email-change'
+      fullPath: '/confirm-email-change'
+      preLoaderRoute: typeof ConfirmEmailChangeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/export-report': {
+      id: '/export-report'
+      path: '/export-report'
+      fullPath: '/export-report'
+      preLoaderRoute: typeof ExportReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/immunotherapies': {
+      id: '/immunotherapies'
+      path: '/immunotherapies'
+      fullPath: '/immunotherapies'
+      preLoaderRoute: typeof ImmunotherapiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/migration': {
+      id: '/migration'
+      path: '/migration'
+      fullPath: '/migration'
+      preLoaderRoute: typeof MigrationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patient-completion': {
+      id: '/patient-completion'
+      path: '/patient-completion'
+      fullPath: '/patient-completion'
+      preLoaderRoute: typeof PatientCompletionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patient-evolution': {
+      id: '/patient-evolution'
+      path: '/patient-evolution'
+      fullPath: '/patient-evolution'
+      preLoaderRoute: typeof PatientEvolutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patient-report': {
+      id: '/patient-report'
+      path: '/patient-report'
+      fullPath: '/patient-report'
+      preLoaderRoute: typeof PatientReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans': {
+      id: '/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/protocol-editor': {
+      id: '/protocol-editor'
+      path: '/protocol-editor'
+      fullPath: '/protocol-editor'
+      preLoaderRoute: typeof ProtocolEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/protocol-lab': {
+      id: '/protocol-lab'
+      path: '/protocol-lab'
+      fullPath: '/protocol-lab'
+      preLoaderRoute: typeof ProtocolLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/protocols': {
+      id: '/protocols'
+      path: '/protocols'
+      fullPath: '/protocols'
+      preLoaderRoute: typeof ProtocolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/security': {
+      id: '/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teams': {
+      id: '/teams'
+      path: '/teams'
+      fullPath: '/teams'
+      preLoaderRoute: typeof TeamsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/toast-lab': {
+      id: '/toast-lab'
+      path: '/toast-lab'
+      fullPath: '/toast-lab'
+      preLoaderRoute: typeof ToastLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trial': {
+      id: '/trial'
+      path: '/trial'
+      fullPath: '/trial'
+      preLoaderRoute: typeof TrialRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/patient/$patientId': {
@@ -601,6 +621,7 @@ const rootRouteChildren: RootRouteChildren = {
   AddImmunotherapyRoute: AddImmunotherapyRoute,
   AdvancedSettingsRoute: AdvancedSettingsRoute,
   AppointmentsRoute: AppointmentsRoute,
+  ConfirmEmailChangeRoute: ConfirmEmailChangeRoute,
   DashboardRoute: DashboardRoute,
   ExportReportRoute: ExportReportRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
