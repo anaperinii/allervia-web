@@ -28,9 +28,11 @@ export function acceptSession(id: string, csrf: string): void {
 export function getSessionContext(): string | null { return sessionContext }
 export function getAuthGeneration(): number { return generation }
 export function clearSession(broadcast = false): void {
-  generation++
-  sessionContext = null
-  csrfToken = null
+  if (sessionContext !== null) {
+    generation++
+    sessionContext = null
+    csrfToken = null
+  }
   if (broadcast) channel?.postMessage({ type: 'logout' })
 }
 export function setUnauthenticatedHandler(
