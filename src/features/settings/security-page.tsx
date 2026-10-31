@@ -267,8 +267,8 @@ export function SecurityPage() {
   return (
     <SettingsLayout subtitle="Segurança e Privacidade">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-        <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
-          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
+        <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
             <h2 className="text-xs font-bold text-(--text)">Autenticação</h2>
           </div>
           <div className="p-4 space-y-3">
@@ -362,8 +362,8 @@ export function SecurityPage() {
           </div>
         </section>
 
-        <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
-          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center justify-between">
+        <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9] flex items-center justify-between">
             <h2 className="text-xs font-bold text-(--text)">Sessões ativas</h2>
             <div className="flex items-center gap-2">
               <span className="text-[0.6rem] text-(--text-muted) bg-gray-100 px-2 py-0.5 rounded-full">
@@ -417,8 +417,8 @@ export function SecurityPage() {
           </div>
         </section>
 
-        <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
-          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
+        <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
             <h2 className="text-xs font-bold text-(--text)">Privacidade e LGPD</h2>
           </div>
           <div className="p-4 space-y-3">
