@@ -17,6 +17,19 @@ const KIND_LABELS: Record<ServerNotificationKind, { label: string; desc: string 
     label: 'Tratamento suspenso',
     desc: 'Quando um tratamento sob sua responsabilidade é suspenso por outro profissional',
   },
+  EMAIL_CHANGE_REQUEST_PENDING: {
+    label: 'Troca de e-mail aguardando aprovação',
+    desc: 'Quando alguém pede alteração do e-mail de acesso e falta a decisão da administração',
+  },
+  EMAIL_CHANGE_REQUEST_DECIDED: {
+    label: 'Pedido de troca de e-mail decidido',
+    desc: 'Quando um pedido de troca de e-mail de acesso é aprovado ou recusado',
+  },
+}
+
+const FALLBACK_KIND_LABEL = {
+  label: 'Notificação do sistema',
+  desc: 'Aviso enviado pela plataforma',
 }
 
 export function NotificationPreferencesPanel() {
@@ -44,7 +57,7 @@ export function NotificationPreferencesPanel() {
   return (
     <div className="space-y-3">
       {(query.data ?? []).map((preference, index) => {
-        const display = KIND_LABELS[preference.kind]
+        const display = KIND_LABELS[preference.kind] ?? FALLBACK_KIND_LABEL
         return (
           <div key={preference.kind}>
             {index > 0 && <div className="border-t border-(--border-custom) mb-3" />}

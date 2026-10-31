@@ -44,7 +44,7 @@ export function requestOwnEmailChange(
 export function listEmailChangeRequests(
   query: EmailChangeRequestQuery,
   signal?: AbortSignal,
-): Promise<Page<EmailChangeRequestDto>> {
+): Promise<Page<EmailChangeRequestDto> & { pending: number }> {
   return apiRequest(
     `/professionals/email-change-requests${toQueryString({ ...query })}`,
     { signal },

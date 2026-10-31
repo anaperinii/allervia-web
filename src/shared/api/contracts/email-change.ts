@@ -1,6 +1,12 @@
 export type EmailChangeChannel = 'email' | 'whatsapp'
 
-export type EmailChangeStatus = 'PENDING' | 'DISPATCHED' | 'REJECTED'
+export type EmailChangeStatus =
+  | 'PENDING'
+  | 'DISPATCHED'
+  | 'CONFIRMED'
+  | 'REJECTED'
+  | 'SUPERSEDED'
+  | 'EXPIRED'
 
 export interface EmailChangeRequestDto {
   id: string
@@ -11,5 +17,6 @@ export interface EmailChangeRequestDto {
   status: EmailChangeStatus
   expiresAt: string
   requestedAt: string
+  decidedAt?: string | null
   whatsappUrl?: string
 }
