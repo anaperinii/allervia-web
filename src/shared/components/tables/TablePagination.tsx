@@ -7,10 +7,11 @@ interface TablePaginationProps {
   currentPage: number
   totalPages: number
   totalItems?: number
+  visibleItems?: number
   onPageChange: (page: number) => void
 }
 
-export function TablePagination({ currentPage, totalPages, totalItems, onPageChange }: TablePaginationProps) {
+export function TablePagination({ currentPage, totalPages, totalItems, visibleItems, onPageChange }: TablePaginationProps) {
   const controls = [
     { icon: faAnglesLeft, label: 'Primeira página', action: () => onPageChange(1), disabled: currentPage === 1 },
     { icon: faChevronLeft, label: 'Página anterior', action: () => onPageChange(currentPage - 1), disabled: currentPage === 1 },
@@ -24,7 +25,8 @@ export function TablePagination({ currentPage, totalPages, totalItems, onPageCha
         <div className="flex items-center gap-1.5">
           {totalItems !== undefined && (
             <span className="text-xs text-(--text-muted)">
-              {totalItems} {totalItems === 1 ? 'registro' : 'registros'} no total
+              {visibleItems !== undefined ? `${visibleItems} de ${totalItems}` : totalItems}{' '}
+              {totalItems === 1 ? 'registro' : 'registros'} no total
             </span>
           )}
         </div>

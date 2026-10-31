@@ -3,7 +3,7 @@ import { Link, type LinkProps } from '@tanstack/react-router'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
 export type ButtonTone = 'brand' | 'danger' | 'warning' | 'success' | 'neutral'
-export type ButtonVariant = 'solid' | 'outline' | 'ghost'
+export type ButtonVariant = 'solid' | 'outline' | 'outline-white' | 'ghost'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 export type ButtonLegacyVariant = 'primary' | 'outline' | 'ghost' | 'danger' | 'warning' | 'success'
 
@@ -53,26 +53,31 @@ const STYLES: Record<ButtonTone, Record<ButtonVariant, string>> = {
   brand: {
     solid: 'bg-[#12333a] text-white hover:bg-[#0c2429]',
     outline: 'border border-[#257E8C]/40 bg-[#257E8C]/6 text-[#1d6772] hover:border-[#257E8C]/70 hover:bg-[#257E8C]/12',
+    'outline-white': 'border border-[#257E8C]/40 bg-white text-[#1d6772] hover:border-[#257E8C]/70 hover:bg-[#257E8C]/6',
     ghost: 'text-[#12333a] hover:bg-[#12333a]/8',
   },
   danger: {
     solid: 'bg-[#A41517] text-white hover:bg-[#8a1114]',
     outline: 'border border-[#A41517]/40 bg-[#A41517]/6 text-[#A41517] hover:border-[#A41517]/70 hover:bg-[#A41517]/12',
+    'outline-white': 'border border-[#A41517]/40 bg-white text-[#A41517] hover:border-[#A41517]/70 hover:bg-[#A41517]/6',
     ghost: 'text-[#A41517] hover:bg-[#A41517]/10',
   },
   warning: {
     solid: 'bg-[#B4780A] text-white hover:bg-[#97640a]',
     outline: `${OUTLINE_BASE} text-[#8a5c08] hover:border-[#B4780A]/45`,
+    'outline-white': 'border border-[#B4780A]/40 bg-white text-[#8a5c08] hover:border-[#B4780A]/70 hover:bg-[#B4780A]/6',
     ghost: 'text-[#8a5c08] hover:bg-[#B4780A]/10',
   },
   success: {
     solid: 'bg-[#257E8C] text-white hover:bg-[#1d6772]',
     outline: `${OUTLINE_BASE} text-[#1d6772] hover:border-[#257E8C]/45`,
+    'outline-white': 'border border-[#257E8C]/40 bg-white text-[#1d6772] hover:border-[#257E8C]/70 hover:bg-[#257E8C]/6',
     ghost: 'text-[#1d6772] hover:bg-[#257E8C]/10',
   },
   neutral: {
     solid: 'bg-[#4A6469] text-white hover:bg-[#3a5155]',
     outline: `${OUTLINE_BASE} text-[#4A6469] hover:border-[#4A6469]/35`,
+    'outline-white': `${OUTLINE_BASE} text-[#4A6469] hover:border-[#4A6469]/35 hover:bg-[#4A6469]/5`,
     ghost: 'text-[#4A6469] hover:bg-[#4A6469]/10',
   },
 }
