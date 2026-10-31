@@ -130,6 +130,9 @@ function ChangeAccessEmailForm({
       <FieldLabel label="Novo e-mail de acesso">
         <TextInput
           type="email"
+          name="email"
+          autoComplete="email"
+          maxLength={254}
           placeholder="novo@clinica.com"
           value={newEmail}
           onChange={(e) => setNewEmail(e.target.value)}

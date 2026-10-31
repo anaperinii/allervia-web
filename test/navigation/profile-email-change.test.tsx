@@ -69,7 +69,7 @@ it('exige reautenticação antes de enviar o pedido de troca de e-mail do própr
   await user.click(screen.getByRole('button', { name: 'Alterar' }))
   await screen.findByRole('heading', { name: 'Alterar e-mail de acesso' })
   await user.type(screen.getByPlaceholderText('novo@clinica.com'), 'karina.nova@clinica.com.br')
-  await user.click(screen.getByRole('button', { name: 'Enviar pedido' }))
+  await user.click(screen.getByRole('button', { name: 'Enviar pedido de troca' }))
 
   await screen.findByRole('heading', { name: 'Confirme sua identidade' })
   await user.type(screen.getByPlaceholderText('Insira aqui'), 'senha-correta')

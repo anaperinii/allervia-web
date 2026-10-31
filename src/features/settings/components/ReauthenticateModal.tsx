@@ -14,12 +14,14 @@ interface ReauthenticateModalProps {
   onSuccess: () => void
 }
 
-function ReauthenticateForm({
-  open,
-  requireCode,
-  onClose,
-  onSuccess,
-}: ReauthenticateModalProps) {
+interface UseReauthenticateFormOptions {
+  requireCode: boolean
+  onSuccess: () => void
+}
+
+export type ReauthenticateForm = ReturnType<typeof useReauthenticateForm>
+
+export function useReauthenticateForm({ requireCode, onSuccess }: UseReauthenticateFormOptions) {
   const mounted = useRef(true)
   const inFlight = useRef(false)
   const completed = useRef(false)
@@ -28,6 +30,13 @@ function ReauthenticateForm({
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  const reset = () => {
+    completed.current = false
+    setPassword('')
+    setCode('')
+    setError(null)
+  }
 
   const submit = async () => {
     if (inFlight.current || completed.current) return
@@ -57,30 +66,20 @@ function ReauthenticateForm({
   const incomplete =
     password.length === 0 || (requireCode && code.trim().length === 0)
 
+  return { password, setPassword, code, setCode, error, submitting, incomplete, submit, reset }
+}
+
+export const reauthenticateIcon = <FontAwesomeIcon icon={faLock} style={{ fontSize: 16 }} />
+
+export function ReauthenticateFields({
+  form,
+  requireCode,
+}: {
+  form: ReauthenticateForm
+  requireCode: boolean
+}) {
   return (
-    <Modal
-      open={open}
-      pending={submitting}
-      onClose={onClose}
-      size="sm"
-      title="Confirme sua identidade"
-      icon={<FontAwesomeIcon icon={faLock} style={{ fontSize: 16 }} />}
-      footer={
-        <>
-          <Button variant="outline" onClick={onClose} disabled={submitting}>
-            Cancelar
-          </Button>
-          <Button
-            tone="brand"
-            variant="solid"
-            onClick={() => void submit()}
-            disabled={submitting || incomplete}
-          >
-            Confirmar
-          </Button>
-        </>
-      }
-    >
+    <>
       <p className="text-xs text-(--text-muted)">
         Esta ação é sensível e exige que você confirme sua identidade novamente.
       </p>
@@ -88,8 +87,8 @@ function ReauthenticateForm({
         <PasswordInput
           placeholder="Insira aqui"
           autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={form.password}
+          onChange={(e) => form.setPassword(e.target.value)}
         />
       </FieldLabel>
       {requireCode && (
@@ -98,20 +97,57 @@ function ReauthenticateForm({
             placeholder="000000"
             autoComplete="one-time-code"
             maxLength={32}
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
+            value={form.code}
+            onChange={(e) => form.setCode(e.target.value)}
           />
         </FieldLabel>
       )}
-      {error && (
+      {form.error && (
         <p className="text-xs text-red-500" role="alert">
-          {error}
+          {form.error}
         </p>
       )}
+    </>
+  )
+}
+
+function ReauthenticateFormModal({
+  open,
+  requireCode,
+  onClose,
+  onSuccess,
+}: ReauthenticateModalProps) {
+  const form = useReauthenticateForm({ requireCode, onSuccess })
+
+  return (
+    <Modal
+      open={open}
+      pending={form.submitting}
+      onClose={onClose}
+      size="sm"
+      title="Confirme sua identidade"
+      icon={reauthenticateIcon}
+      footer={
+        <>
+          <Button variant="outline" onClick={onClose} disabled={form.submitting}>
+            Cancelar
+          </Button>
+          <Button
+            tone="brand"
+            variant="solid"
+            onClick={() => void form.submit()}
+            disabled={form.submitting || form.incomplete}
+          >
+            Confirmar
+          </Button>
+        </>
+      }
+    >
+      <ReauthenticateFields form={form} requireCode={requireCode} />
     </Modal>
   )
 }
 
 export function ReauthenticateModal(props: ReauthenticateModalProps) {
-  return props.open ? <ReauthenticateForm {...props} /> : null
+  return props.open ? <ReauthenticateFormModal {...props} /> : null
 }
