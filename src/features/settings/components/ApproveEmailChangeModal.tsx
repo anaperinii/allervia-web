@@ -52,7 +52,7 @@ function ApproveEmailChangeForm({
       } else {
         toast.success({
           icon: <FontAwesomeIcon icon={faCheck} style={{ fontSize: 14 }} />,
-          title: 'Confirmação enviada para o e-mail atual',
+          title: 'Link de confirmação enviado para o novo e-mail',
           position: 'top-right',
           compact: true,
           autoDismissMs: 3000,
@@ -101,7 +101,7 @@ function ApproveEmailChangeForm({
       size="sm"
       title="Aprovar troca de e-mail"
       icon={<FontAwesomeIcon icon={faUserCheck} style={{ fontSize: 16 }} />}
-      tone="success"
+      tone="brand"
       footer={
         <>
           <Button variant="outline" onClick={handleClose} disabled={submitting}>Cancelar</Button>
@@ -112,8 +112,37 @@ function ApproveEmailChangeForm({
       }
     >
       <p className="text-xs text-(--text-muted)">
-        {request.professionalName}: {request.currentEmail} → {request.newEmail}
+        Você está aprovando a troca do e-mail de acesso de{' '}
+        <span className="font-semibold text-(--text)">{request.professionalName}</span>.
       </p>
+
+      <div className="rounded-lg border border-(--border-custom) bg-gray-50/60 divide-y divide-(--border-custom)">
+        <div className="flex items-baseline gap-3 px-3 py-2">
+          <span className="text-[0.68rem] font-semibold uppercase tracking-wide text-(--text-muted) w-24 shrink-0">
+            E-mail atual
+          </span>
+          <span className="text-xs text-(--text-muted) break-all">
+            {request.currentEmail}
+          </span>
+        </div>
+        <div className="flex items-baseline gap-3 px-3 py-2">
+          <span className="text-[0.68rem] font-semibold uppercase tracking-wide text-(--text-muted) w-24 shrink-0">
+            Novo e-mail
+          </span>
+          <span className="text-xs font-semibold text-(--text) break-all">
+            {request.newEmail}
+          </span>
+        </div>
+      </div>
+
+      <p className="text-xs text-(--text-muted) leading-relaxed">
+        {channel === 'email'
+          ? 'Ao aprovar, enviamos um link de confirmação para o novo e-mail.'
+          : 'Ao aprovar, geramos um link de confirmação para você enviar pelo WhatsApp.'}{' '}
+        A troca só acontece depois que o profissional abrir esse link, que expira em 60 minutos e
+        vale uma única vez.
+      </p>
+
       <div>
         <label className="text-xs font-semibold text-(--text-muted) mb-1.5 block">
           Canal de confirmação

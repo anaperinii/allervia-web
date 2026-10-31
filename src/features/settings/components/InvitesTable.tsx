@@ -42,7 +42,7 @@ export function InvitesTable({ invites, onResend, onCancel }: InvitesTableProps)
   return (
     <table className="w-full">
       <thead>
-        <tr className="border-b border-(--border-custom) bg-gray-50/80">
+        <tr className="border-b border-(--border-custom) bg-[#F7F9F9]">
           <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Convidado</th>
           <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Papel</th>
           <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Enviado em</th>

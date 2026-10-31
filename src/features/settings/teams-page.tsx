@@ -144,6 +144,7 @@ export function TeamsPage() {
   const totalMembers = membersQuery.data?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(totalMembers / itemsPerPage))
   const totalRequests = emailChangeRequestsQuery.data?.total ?? 0
+  const pendingRequests = emailChangeRequestsQuery.data?.pending ?? 0
   const totalRequestPages = Math.max(1, Math.ceil(totalRequests / itemsPerPage))
 
   const applyFilter = (apply: () => void) => {
@@ -208,7 +209,7 @@ export function TeamsPage() {
 
   return (
     <SettingsLayout subtitle="Equipes e Convites">
-      <div className="flex h-full min-h-0 flex-col">
+      <div className="flex h-full min-h-0 flex-col pl-1.5">
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-45">
           <label htmlFor="team-search" className="sr-only">Pesquisar usuário</label>
@@ -273,14 +274,16 @@ export function TeamsPage() {
             onClick={() => setTab('members')}
             className={cn(
               'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors cursor-pointer',
-              tab === 'members' ? 'bg-gray-50/80 text-slate-800 z-10' : 'bg-white/55 text-slate-400 hover:bg-white/75 hover:text-slate-600',
+              tab === 'members'
+                ? 'bg-white text-[#12333a] z-10 shadow-[0_-3px_10px_-3px_rgba(18,51,58,0.10),-5px_0_10px_-5px_rgba(18,51,58,0.10),5px_0_10px_-5px_rgba(18,51,58,0.10)]'
+                : 'bg-[#F7F9F9] text-[#8CA1A6] hover:bg-white/70 hover:text-[#4A6469]',
             )}
           >
             {tab === 'members' && (
               <span
                 aria-hidden="true"
                 className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3"
-                style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)' }}
+                style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, #FFFFFF 12.5px)' }}
               />
             )}
             Membros <span className="text-[0.65rem] font-normal opacity-60">({totalMembers})</span>
@@ -291,7 +294,9 @@ export function TeamsPage() {
             onClick={() => setTab('invites')}
             className={cn(
               'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer',
-              tab === 'invites' ? 'bg-gray-50/80 text-slate-800 z-10' : 'bg-white/55 text-slate-400 hover:bg-white/75 hover:text-slate-600',
+              tab === 'invites'
+                ? 'bg-white text-[#12333a] z-10 shadow-[0_-3px_10px_-3px_rgba(18,51,58,0.10),-5px_0_10px_-5px_rgba(18,51,58,0.10),5px_0_10px_-5px_rgba(18,51,58,0.10)]'
+                : 'bg-[#F7F9F9] text-[#8CA1A6] hover:bg-white/70 hover:text-[#4A6469]',
             )}
           >
             {tab === 'invites' && (
@@ -299,12 +304,12 @@ export function TeamsPage() {
                 <span
                   aria-hidden="true"
                   className="pointer-events-none absolute -left-3 bottom-0 h-3 w-3"
-                  style={{ background: 'radial-gradient(circle at 0% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)' }}
+                  style={{ background: 'radial-gradient(circle at 0% 0%, transparent 11.5px, #FFFFFF 12.5px)' }}
                 />
                 <span
                   aria-hidden="true"
                   className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3"
-                  style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)' }}
+                  style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, #FFFFFF 12.5px)' }}
                 />
               </>
             )}
@@ -316,7 +321,9 @@ export function TeamsPage() {
             onClick={() => setTab('requests')}
             className={cn(
               'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer',
-              tab === 'requests' ? 'bg-gray-50/80 text-slate-800 z-10' : 'bg-white/55 text-slate-400 hover:bg-white/75 hover:text-slate-600',
+              tab === 'requests'
+                ? 'bg-white text-[#12333a] z-10 shadow-[0_-3px_10px_-3px_rgba(18,51,58,0.10),-5px_0_10px_-5px_rgba(18,51,58,0.10),5px_0_10px_-5px_rgba(18,51,58,0.10)]'
+                : 'bg-[#F7F9F9] text-[#8CA1A6] hover:bg-white/70 hover:text-[#4A6469]',
             )}
           >
             {tab === 'requests' && (
@@ -324,22 +331,30 @@ export function TeamsPage() {
                 <span
                   aria-hidden="true"
                   className="pointer-events-none absolute -left-3 bottom-0 h-3 w-3"
-                  style={{ background: 'radial-gradient(circle at 0% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)' }}
+                  style={{ background: 'radial-gradient(circle at 0% 0%, transparent 11.5px, #FFFFFF 12.5px)' }}
                 />
                 <span
                   aria-hidden="true"
                   className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3"
-                  style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)' }}
+                  style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, #FFFFFF 12.5px)' }}
                 />
               </>
             )}
             Pedidos de e-mail <span className="text-[0.65rem] font-normal opacity-60">({totalRequests})</span>
+            {pendingRequests > 0 && (
+              <span
+                className="inline-flex items-center rounded-md border border-amber-300/40 bg-amber-100/40 px-2 py-0.5 text-[0.6rem] font-medium text-amber-700/80"
+                title={`${pendingRequests} aguardando aprovação`}
+              >
+                {pendingRequests} pendente{pendingRequests === 1 ? '' : 's'}
+              </span>
+            )}
           </button>
         </div>
       </div>
 
       {tab === 'members' ? (
-        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-[#F6F8F8]">
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-white border border-[#DDE6E6]">
           <div className="flex-1 overflow-auto">
             {membersQuery.isPending ? (
               <div className="py-12 text-center text-xs text-(--text-muted)">
@@ -386,7 +401,7 @@ export function TeamsPage() {
           />
         </div>
       ) : tab === 'invites' ? (
-        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-[#F6F8F8]">
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-white border border-[#DDE6E6]">
           <div className="flex-1 overflow-auto">
             {invitesQuery.isPending ? (
               <div className="py-12 text-center text-xs text-(--text-muted)">
@@ -414,7 +429,7 @@ export function TeamsPage() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-[#F6F8F8]">
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-white border border-[#DDE6E6]">
           <div className="flex-1 overflow-auto">
             {emailChangeRequestsQuery.isPending ? (
               <div className="py-12 text-center text-xs text-(--text-muted)">
