@@ -14,6 +14,7 @@ interface MembersTableProps {
   onDeactivate: (member: TeamMember) => void
   onActivate: (member: TeamMember) => void
   onManageRoles: (member: TeamMember) => void
+  onChangeEmail: (member: TeamMember) => void
 }
 
 const monthYear = new Intl.DateTimeFormat('pt-BR', {
@@ -30,6 +31,7 @@ export function MembersTable({
   onDeactivate,
   onActivate,
   onManageRoles,
+  onChangeEmail,
 }: MembersTableProps) {
   if (members.length === 0) {
     return (
@@ -42,7 +44,7 @@ export function MembersTable({
   return (
     <table className="w-full">
       <thead>
-        <tr className="border-b border-(--border-custom) bg-gray-50/80">
+        <tr className="border-b border-(--border-custom) bg-[#F7F9F9]">
           <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Membro</th>
           <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Papéis</th>
           <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Profissão</th>
@@ -118,6 +120,7 @@ export function MembersTable({
                 onDeactivate={() => onDeactivate(member)}
                 onActivate={() => onActivate(member)}
                 onManageRoles={() => onManageRoles(member)}
+                onChangeEmail={() => onChangeEmail(member)}
               />
             </td>
           </tr>

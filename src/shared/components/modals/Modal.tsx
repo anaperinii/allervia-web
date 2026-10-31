@@ -134,7 +134,6 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
         }}
       >
         {discardPrompt && <div role="alert" className="p-4"><p>Descartar os dados não salvos?</p><button onClick={() => setDiscardPrompt(false)}>Continuar editando</button><button onClick={() => { setDiscardPrompt(false); onClose() }}>Descartar e sair</button></div>}
-        {pending && <p role="status" className="p-2">Operação em andamento. Aguarde a confirmação; não reenvie o comando.</p>}
         {hasHeader && (
           <div
             className="flex items-center justify-between px-5 py-3.5 border-b border-(--border-custom) shrink-0"
@@ -163,6 +162,19 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
               </button>
             )}
           </div>
+        )}
+
+        {pending && (
+          <p
+            role="status"
+            className="flex items-center gap-2 border-b border-(--border-custom) bg-[#F7F9F9] px-5 py-2 text-[0.68rem] text-(--text-muted) shrink-0"
+          >
+            <span
+              aria-hidden="true"
+              className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-[#257E8C]/25 border-t-[#257E8C]"
+            />
+            Operação em andamento. Aguarde a confirmação; não reenvie o comando.
+          </p>
         )}
 
         <div className="px-5 py-4 flex-1 overflow-y-auto"><fieldset disabled={pending} className="contents space-y-3.5">{children}</fieldset></div>

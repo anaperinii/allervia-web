@@ -9,8 +9,8 @@ export function PlansPage() {
   return (
     <SettingsLayout subtitle="Planos e Serviços">
       <div className="max-w-4xl mx-auto space-y-6">
-        <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
-          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
+        <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
             <h2 className="text-xs font-bold text-(--text)">Faturamento</h2>
           </div>
           <div className="p-4 flex items-start gap-3">
@@ -47,7 +47,7 @@ export function PlansPage() {
               return (
                 <div
                   key={plan.id}
-                  className="border border-(--border-custom) rounded-xl overflow-hidden flex flex-col bg-[#F6F8F8]"
+                  className="border border-(--border-custom) rounded-xl overflow-hidden flex flex-col bg-white"
                 >
                   <div className="p-5 flex flex-col flex-1">
                     <div className="flex items-center gap-2.5 mb-3">

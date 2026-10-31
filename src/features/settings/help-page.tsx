@@ -50,8 +50,8 @@ function SupportRequestSection() {
   })
 
   return (
-    <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
-      <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
+    <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white">
+      <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
         <h2 className="text-xs font-bold text-(--text)">Solicitação de suporte</h2>
         <p className="text-[0.62rem] text-(--text-muted) mt-0.5">
           Cada solicitação é persistida com confirmação de recebimento; suas
@@ -138,8 +138,8 @@ export function HelpPage() {
               })}
             </div>
 
-            <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
+            <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
                 <h2 className="text-xs font-bold text-(--text)">Perguntas frequentes</h2>
               </div>
               <div className="divide-y divide-(--border-custom)">

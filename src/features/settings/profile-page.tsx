@@ -2,6 +2,7 @@ import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { profileSchema, type ProfileForm } from '@/features/settings/schemas/profile'
 import { PROFESSION_LABELS, ROLE_BADGES } from '@/features/settings/constants/team-roles'
 import { Button, FieldLabel, Modal, ReadOnlyField, TextInput } from '@/shared/components'
+import { RequestOwnEmailChangeModal } from '@/features/settings/components/RequestOwnEmailChangeModal'
 import { queryKeys } from '@/shared/api/query-keys'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { readOwnProfile, updateOwnProfile } from '@/shared/api/team.api'
@@ -20,6 +21,7 @@ export function ProfilePage() {
 
   const [editing, setEditing] = useState(false)
   const [showSaveModal, setShowSaveModal] = useState(false)
+  const [showChangeEmailModal, setShowChangeEmailModal] = useState(false)
 
   const profileQuery = useQuery({
     queryKey: queryKeys.professionalProfile(),
@@ -148,8 +150,8 @@ export function ProfilePage() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
             {}
             <div className="flex flex-col gap-6">
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
                 <h2 className="text-xs font-bold text-(--text)">Dados Pessoais</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
@@ -170,8 +172,8 @@ export function ProfilePage() {
               </div>
             </section>
 
-            <section className="flex flex-1 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-[#F6F8F8]">
-              <div className="flex items-center gap-2 border-b border-(--border-custom) bg-gray-50/50 px-4 py-2.5">
+            <section className="flex flex-1 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-white">
+              <div className="flex items-center gap-2 border-b border-(--border-custom) bg-[#F7F9F9] px-4 py-2.5">
                 <FontAwesomeIcon icon={faUserGear} className="text-(--text-muted)" style={{ fontSize: 13 }} />
                 <h2 className="text-xs font-bold text-(--text)">Acesso e papéis</h2>
               </div>
@@ -201,13 +203,24 @@ export function ProfilePage() {
             </section>
             </div>
 
-            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
+            <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
                 <h2 className="text-xs font-bold text-(--text)">Dados Profissionais</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
                 <FieldLabel label="E-mail">
-                  <ReadOnlyField>{account?.user.email ?? ''}</ReadOnlyField>
+                  <div className="flex items-center gap-2">
+                    <ReadOnlyField>{account?.user.email ?? ''}</ReadOnlyField>
+                    <Button
+                      tone="brand"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      onClick={() => setShowChangeEmailModal(true)}
+                    >
+                      Alterar
+                    </Button>
+                  </div>
                 </FieldLabel>
                 <FieldLabel label="Profissão">
                   <ReadOnlyField>{PROFESSION_LABELS[profile.profession]}</ReadOnlyField>
@@ -257,6 +270,11 @@ export function ProfilePage() {
           As alterações do seu cadastro profissional serão salvas no servidor.
         </p>
       </Modal>
+
+      <RequestOwnEmailChangeModal
+        open={showChangeEmailModal}
+        onClose={() => setShowChangeEmailModal(false)}
+      />
     </SettingsLayout>
   )
 }

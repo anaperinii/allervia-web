@@ -2,13 +2,14 @@ import { Modal, Button } from '@/shared/components'
 import type { ReactNode } from 'react'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPaperPlane, faTrash, faUserCheck, faUserXmark } from '@fortawesome/free-solid-svg-icons'
+import { faPaperPlane, faTrash, faUserCheck, faUserXmark, faXmark } from '@fortawesome/free-solid-svg-icons'
 
 export type TeamConfirmType =
   | 'cancel-invite'
   | 'resend-invite'
   | 'deactivate'
   | 'activate'
+  | 'reject-email-change'
 
 export interface TeamConfirmState {
   type: TeamConfirmType
@@ -70,6 +71,14 @@ const buildConfig = (state: TeamConfirmState): ConfirmConfig => {
         title: 'Cancelar convite',
         body: <>O link enviado para {name} deixa de funcionar imediatamente.</>,
         btn: 'Cancelar convite',
+      }
+    case 'reject-email-change':
+      return {
+        icon: <FontAwesomeIcon icon={faXmark} style={{ fontSize: 16 }} />,
+        tone: 'danger',
+        title: 'Recusar troca de e-mail',
+        body: <>O pedido de troca de e-mail de {name} é recusado e nenhuma confirmação é enviada.</>,
+        btn: 'Recusar',
       }
   }
 }

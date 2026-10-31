@@ -452,7 +452,7 @@ export function PatientChartPage() {
             previousDose={previousDose}
           />
 
-          <div className="flex flex-1 flex-col min-h-0 min-w-0">
+          <div className="flex flex-1 flex-col min-h-0 min-w-0 pl-1.5">
           <div className="relative z-10 flex items-end justify-between gap-2">
             <div className="flex items-end gap-1">
             {([
@@ -469,7 +469,9 @@ export function PatientChartPage() {
                   onClick={() => setActiveTab(t.key)}
                   className={cn(
                     'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors cursor-pointer',
-                    active ? 'bg-white text-slate-800 z-10' : 'bg-gray-100/70 text-slate-400 hover:bg-gray-100 hover:text-slate-600',
+                    active
+                      ? 'bg-white text-slate-800 z-10 shadow-[0_-3px_10px_-3px_rgba(18,51,58,0.10),-5px_0_10px_-5px_rgba(18,51,58,0.10),5px_0_10px_-5px_rgba(18,51,58,0.10)]'
+                      : 'bg-gray-100/70 text-slate-400 hover:bg-gray-100 hover:text-slate-600',
                   )}
                 >
                   {active && (

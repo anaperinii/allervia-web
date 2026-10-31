@@ -3,7 +3,7 @@ import { IconButton } from '@/shared/components'
 import type { TeamMember } from '@/shared/api/contracts/team'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEllipsis, faUserCheck, faUserGear, faUserXmark } from '@fortawesome/free-solid-svg-icons'
+import { faEllipsis, faEnvelopeCircleCheck, faUserCheck, faUserGear, faUserXmark } from '@fortawesome/free-solid-svg-icons'
 
 interface MemberActionMenuProps {
   member: TeamMember
@@ -13,6 +13,7 @@ interface MemberActionMenuProps {
   onDeactivate: () => void
   onActivate: () => void
   onManageRoles: () => void
+  onChangeEmail: () => void
 }
 
 export function MemberActionMenu({
@@ -23,6 +24,7 @@ export function MemberActionMenu({
   onDeactivate,
   onActivate,
   onManageRoles,
+  onChangeEmail,
 }: MemberActionMenuProps) {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -59,6 +61,14 @@ export function MemberActionMenu({
           >
             <FontAwesomeIcon icon={faUserGear} style={{ fontSize: 12 }} />
             Gerenciar papéis
+          </button>
+          <button
+            role="menuitem"
+            onClick={onChangeEmail}
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-(--text) hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            <FontAwesomeIcon icon={faEnvelopeCircleCheck} style={{ fontSize: 12 }} />
+            Alterar e-mail de acesso
           </button>
           {member.isActive ? (
             <button

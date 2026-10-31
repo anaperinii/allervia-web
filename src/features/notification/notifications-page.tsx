@@ -25,16 +25,23 @@ import { faCheckDouble } from '@fortawesome/free-solid-svg-icons'
 
 const PAGE_SIZE = 25
 
+const FALLBACK_PRESENTATION: {
+  type: NotificationType
+  priority: NotificationPriority
+} = { type: 'system_alert', priority: 'medium' }
+
 const KIND_PRESENTATION: Record<
   ServerNotificationKind,
   { type: NotificationType; priority: NotificationPriority }
 > = {
   PHYSICIAN_REVIEW_REQUESTED: { type: 'adverse_reaction', priority: 'critical' },
   TREATMENT_SUSPENDED: { type: 'patient_inactivity', priority: 'high' },
+  EMAIL_CHANGE_REQUEST_PENDING: { type: 'system_alert', priority: 'high' },
+  EMAIL_CHANGE_REQUEST_DECIDED: { type: 'system_alert', priority: 'medium' },
 }
 
 function toPresentation(item: ServerNotification): Notification {
-  const display = KIND_PRESENTATION[item.kind]
+  const display = KIND_PRESENTATION[item.kind] ?? FALLBACK_PRESENTATION
   return {
     id: item.id,
     type: display.type,

@@ -169,6 +169,7 @@ export function ImmunotherapiesPage() {
           currentPage={currentPage}
           totalPages={totalPages}
           totalItems={total}
+          visibleItems={items.length}
           onPageChange={setCurrentPage}
         />
       </div>

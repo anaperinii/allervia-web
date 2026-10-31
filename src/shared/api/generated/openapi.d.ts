@@ -15,6 +15,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/account/me/email-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AccountController_requestOwnEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/account/me/password": {
         parameters: {
             query?: never;
@@ -169,6 +185,38 @@ export interface paths {
         get: operations["SessionController_issueCsrfToken"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/email-change/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_emailChangeConfirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/email-change/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_emailChangeVerify"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1231,6 +1279,70 @@ export interface paths {
         patch: operations["ProfessionalsController_changeAccess"];
         trace?: never;
     };
+    "/professionals/{id}/email-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProfessionalsController_startEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/professionals/email-change-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProfessionalsController_listPendingEmailChanges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/professionals/email-change-requests/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProfessionalsController_approvePendingEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/professionals/email-change-requests/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProfessionalsController_rejectPendingEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/professionals/me": {
         parameters: {
             query?: never;
@@ -1553,6 +1665,10 @@ export interface components {
             volume: string;
             volumeUnit: "mL";
         };
+        AdminRequestEmailChangeDto: {
+            channel: "email" | "whatsapp";
+            newEmail: string;
+        };
         AppointmentDoseDto: {
             id: string;
             scheduledAt: string;
@@ -1592,6 +1708,9 @@ export interface components {
             statusReason: string | null;
             title: string | null;
             updatedAt: string;
+        };
+        ApproveEmailChangeDto: {
+            channel: "email" | "whatsapp";
         };
         AuditLogDto: {
             action: string;
@@ -2059,6 +2178,34 @@ export interface components {
             definition: components["schemas"]["ProtocolDefinitionDto"];
             expectedRevision: number;
         };
+        EmailChangeConfirmDTO: Record<string, never>;
+        EmailChangeMessageResponseDto: {
+            message: string;
+        };
+        EmailChangeRequestDto: {
+            currentEmail: string;
+            decidedAt?: string | null;
+            expiresAt: string;
+            id: string;
+            newEmail: string;
+            professionalId: string;
+            professionalName: string;
+            requestedAt: string;
+            status: "PENDING" | "DISPATCHED" | "CONFIRMED" | "REJECTED" | "SUPERSEDED" | "EXPIRED";
+            whatsappUrl?: string;
+        };
+        EmailChangeRequestPageDto: {
+            items: components["schemas"]["EmailChangeRequestDto"][];
+            page: number;
+            pageSize: number;
+            pending: number;
+            total: number;
+        };
+        EmailChangeVerifyDTO: Record<string, never>;
+        EmailChangeVerifyResponseDto: {
+            newEmail: string;
+            valid: boolean;
+        };
         EnrollMfaDto: {
             label?: string;
         };
@@ -2332,7 +2479,7 @@ export interface components {
             entityId: string | null;
             entityType: string | null;
             id: string;
-            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED";
+            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED" | "EMAIL_CHANGE_REQUEST_PENDING" | "EMAIL_CHANGE_REQUEST_DECIDED";
             organizationId: string;
             outboxEventId: string;
             readAt: string | null;
@@ -2348,7 +2495,7 @@ export interface components {
         };
         NotificationPreferenceDto: {
             enabled: boolean;
-            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED";
+            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED" | "EMAIL_CHANGE_REQUEST_PENDING" | "EMAIL_CHANGE_REQUEST_DECIDED";
         };
         OrganizationResponseDto: {
             automationEnabled: boolean;
@@ -2384,7 +2531,7 @@ export interface components {
             attempts: number;
             createdAt: string;
             id: string;
-            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED";
+            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED" | "EMAIL_CHANGE_REQUEST_PENDING" | "EMAIL_CHANGE_REQUEST_DECIDED";
             lastError: string | null;
             processedAt: string | null;
         };
@@ -2772,6 +2919,9 @@ export interface components {
             revision: number;
             status: "IN_PROGRESS" | "SUSPENDED" | "COMPLETED";
         };
+        SelfRequestEmailChangeDto: {
+            newEmail: string;
+        };
         SessionEnvelopeDto: {
             authenticated: true;
             csrfToken: string;
@@ -2789,7 +2939,7 @@ export interface components {
         };
         SetPreferenceDto: {
             enabled: boolean;
-            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED";
+            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED" | "EMAIL_CHANGE_REQUEST_PENDING" | "EMAIL_CHANGE_REQUEST_DECIDED";
         };
         SimulateProtocolDto: {
             administered: components["schemas"]["AdministeredValuesInputDto"];
@@ -3118,6 +3268,29 @@ export interface operations {
             };
         };
     };
+    AccountController_requestOwnEmailChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelfRequestEmailChangeDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeRequestDto"];
+                };
+            };
+        };
+    };
     AccountController_changePassword: {
         parameters: {
             query?: never;
@@ -3420,6 +3593,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CsrfTokenResponseDto"];
+                };
+            };
+        };
+    };
+    AuthController_emailChangeConfirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailChangeConfirmDTO"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeMessageResponseDto"];
+                };
+            };
+        };
+    };
+    AuthController_emailChangeVerify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailChangeVerifyDTO"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeVerifyResponseDto"];
                 };
             };
         };
@@ -5216,6 +5435,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MemberAccessStatusDto"];
+                };
+            };
+        };
+    };
+    ProfessionalsController_startEmailChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminRequestEmailChangeDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeRequestDto"];
+                };
+            };
+        };
+    };
+    ProfessionalsController_listPendingEmailChanges: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeRequestPageDto"];
+                };
+            };
+        };
+    };
+    ProfessionalsController_approvePendingEmailChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveEmailChangeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeRequestDto"];
+                };
+            };
+        };
+    };
+    ProfessionalsController_rejectPendingEmailChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeRequestDto"];
                 };
             };
         };
