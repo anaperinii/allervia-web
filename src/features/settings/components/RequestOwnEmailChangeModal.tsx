@@ -8,11 +8,11 @@ import { humanErrorMessage } from '@/shared/api/error-copy'
 import { requestOwnEmailChange } from '@/shared/api/email-change.api'
 import { useReauthenticatedAction } from '@/shared/auth/useReauthenticatedAction'
 import { useSession } from '@/shared/auth/useSession'
+import { ReauthenticateFields } from '@/features/settings/components/ReauthenticateModal'
 import {
-  ReauthenticateFields,
   reauthenticateIcon,
   useReauthenticateForm,
-} from '@/features/settings/components/ReauthenticateModal'
+} from '@/features/settings/components/use-reauthenticate-form'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faEnvelopeCircleCheck } from '@fortawesome/free-solid-svg-icons'
