@@ -14,8 +14,6 @@ import {
   Select,
 } from '@/shared/components'
 import { MediaRow } from '@/features/settings/components/MediaRow'
-import { GoogleCalendarRow } from '@/features/settings/components/GoogleCalendarRow'
-import { GoogleCalendarCallbackToast } from '@/features/settings/components/GoogleCalendarCallbackToast'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { AuditTrailPanel } from '@/features/settings/components/AuditTrailPanel'
 import { NotificationPreferencesPanel } from '@/features/settings/components/NotificationPreferencesPanel'
@@ -205,13 +203,6 @@ export function AdvancedSettingsPage() {
                 <h2 className="text-xs font-bold text-(--text)">Agendamentos</h2>
               </div>
               <div className="p-4 space-y-4">
-                <div className="mb-3">
-                  <GoogleCalendarCallbackToast />
-                  <GoogleCalendarRow />
-                </div>
-
-                <div className="border-t border-(--border-custom)" />
-
                 <MediaRow
                   icon={<FontAwesomeIcon icon={faBell} style={{ fontSize: 14 }} />}
                   title="Lembrete automático via WhatsApp"

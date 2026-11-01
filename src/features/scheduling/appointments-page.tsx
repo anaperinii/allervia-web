@@ -26,7 +26,6 @@ import { WeekView } from '@/features/scheduling/components/WeekView'
 import { MonthView } from '@/features/scheduling/components/MonthView'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
 import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
-import { GoogleCalendarStatusBadge } from '@/features/scheduling/components/GoogleCalendarStatusBadge'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
@@ -185,7 +184,6 @@ export function AppointmentsPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden pt-0">
-      <GoogleCalendarStatusBadge />
       <PageHeader
         title="Agendamentos"
         actions={

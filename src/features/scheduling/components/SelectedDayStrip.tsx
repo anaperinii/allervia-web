@@ -6,19 +6,17 @@ import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmun
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCalendar, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
 
 interface SelectedDayStripProps {
   selectedDate: Date
   applications: Application[]
-  googleConnected: boolean
   onSelectApplication: (application: Application) => void
 }
 
 export function SelectedDayStrip({
   selectedDate,
   applications,
-  googleConnected,
   onSelectApplication,
 }: SelectedDayStripProps) {
   const { getName } = useImmunotherapyLookup()
@@ -36,12 +34,6 @@ export function SelectedDayStrip({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          {googleConnected && (
-            <span className="text-[0.5rem] text-(--text-muted) flex items-center gap-1">
-              <FontAwesomeIcon icon={faCalendar} style={{ fontSize: 9 }} />
-              Sincronizado com Google Agenda
-            </span>
-          )}
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}

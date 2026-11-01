@@ -25,11 +25,6 @@ function stubSettingsApi() {
     { path: '/immunotherapies/types', handler: ['Ácaros'] },
     { path: '/notifications/preferences', handler: notificationPreferences() },
     { path: '/treatment-protocols/automation', handler: automationSettings() },
-    {
-      path: '/integrations/google-calendar/connection',
-      handler: { connected: false },
-    },
-    { path: '/integrations/google-calendar/connections', handler: [] },
     { path: '/audit-logs', handler: [] },
   ])
 }
