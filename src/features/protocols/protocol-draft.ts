@@ -1,6 +1,7 @@
 import type {
   ProtocolDefinitionDraft,
 } from '@/shared/api/contracts/protocols'
+import { toleranceProblems } from '@/shared/lib/dose-interval'
 
 export const EMPTY_DRAFT: ProtocolDefinitionDraft = {
   schemaVersion: 1,
@@ -43,6 +44,14 @@ export function validateDraft(draft: ProtocolDefinitionDraft): string[] {
       problems.push(
         `Etapa "${name}": intervalo deve ser inteiro positivo em dias.`,
       )
+    }
+    if (step.intervalTolerance) {
+      for (const problem of toleranceProblems(
+        step.intervalTolerance,
+        step.intervalDays,
+      )) {
+        problems.push(`Etapa "${name}": ${problem}.`)
+      }
     }
   }
 

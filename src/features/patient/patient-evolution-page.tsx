@@ -3,7 +3,10 @@ import {
   EvolutionReviewStep,
   NextDosePreview,
 } from '@/features/patient/components/treatment-evolution/EvolutionReviewStep'
-import { PostApplicationStep } from '@/features/patient/components/treatment-evolution/PostApplicationStep'
+import {
+  PostApplicationStep,
+  type NextScheduleState,
+} from '@/features/patient/components/treatment-evolution/PostApplicationStep'
 import { PreApplicationStep } from '@/features/patient/components/treatment-evolution/PreApplicationStep'
 import { SelectPatientStep } from '@/features/patient/components/treatment-evolution/SelectPatientStep'
 import {
@@ -29,7 +32,8 @@ import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { Button, CancelWizardModal, showApiErrorToast, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
-import { todayStr, toZonedOffsetIso, tryZonedOffsetIso } from '@/shared/lib/dates'
+import { dayInZone, todayStr, toZonedOffsetIso, tryZonedOffsetIso } from '@/shared/lib/dates'
+import { civilDaysBetween, classifyDoseInterval } from '@/shared/lib/dose-interval'
 import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -100,6 +104,10 @@ function PatientEvolutionContent() {
     enabled: organizationId !== '' && pendingDoseId !== null,
   })
   const dose = doseQuery.data ?? null
+  const clinicalTimeZone =
+    dose?.immunotherapy.currentPrescription?.resolved.timeZone ??
+    account?.organization?.timeZone ??
+    'America/Sao_Paulo'
 
   const historyQuery = useQuery({
     queryKey: queryKeys.doses(organizationId, selectedId ?? ''),
@@ -142,7 +150,7 @@ function PatientEvolutionContent() {
   function previewBody(): PreviewDoseBody | null {
     if (!dose || !selectedStep || !formValues.applicationDate || !formValues.startTime)
       return null
-    const administeredAt = tryZonedOffsetIso(formValues.applicationDate, formValues.startTime, dose.immunotherapy.currentPrescription?.resolved.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo')
+    const administeredAt = tryZonedOffsetIso(formValues.applicationDate, formValues.startTime, clinicalTimeZone)
     if (!administeredAt) return null
     return {
       values: {
@@ -168,10 +176,58 @@ function PatientEvolutionContent() {
       bodyForPreview?.expectedTherapyRevision,
     ],
     queryFn: ({ signal }) => previewDose(dose!.id, bodyForPreview!, signal),
-    enabled: step === 3 && dose !== null && bodyForPreview !== null,
+    enabled: step >= 2 && dose !== null && bodyForPreview !== null,
     retry: false,
     staleTime: 0,
   })
+
+  const lastPlannedNextRef = useRef('')
+  const previewNextScheduledAt = previewQuery.data?.nextScheduledAt ?? null
+  useEffect(() => {
+    if (!previewQuery.data) return
+    const planned = previewNextScheduledAt
+      ? dayInZone(new Date(previewNextScheduledAt), clinicalTimeZone)
+      : ''
+    setValue('nextApplicationDatePlanned', planned)
+    const current = getValues('nextApplicationDate')
+    if (current === '' || current === lastPlannedNextRef.current) {
+      setValue('nextApplicationDate', planned)
+      if (planned === lastPlannedNextRef.current) return
+      setValue('nextScheduleReason', '')
+    }
+    lastPlannedNextRef.current = planned
+  }, [previewQuery.data, previewNextScheduledAt, clinicalTimeZone, getValues, setValue])
+
+  const intervalTolerance = previewQuery.data?.nextIntervalTolerance ?? null
+  const chosenNextDate = formValues.nextApplicationDate
+  useEffect(() => {
+    const days = intervalTolerance
+      ? civilDaysBetween(formValues.applicationDate, chosenNextDate)
+      : null
+    const band =
+      intervalTolerance && days !== null
+        ? classifyDoseInterval(intervalTolerance, days)
+        : ''
+    if (getValues('nextIntervalBand') === band) return
+    setValue('nextIntervalBand', band)
+    if (band !== 'REQUIRES_STEP_REVIEW') setValue('nextScheduleReview', '')
+  }, [
+    intervalTolerance,
+    chosenNextDate,
+    formValues.applicationDate,
+    getValues,
+    setValue,
+  ])
+
+  const nextScheduleState: NextScheduleState = previewQuery.isSuccess
+    ? previewNextScheduledAt
+      ? 'planned'
+      : 'end-of-sequence'
+    : previewQuery.isError
+      ? 'unavailable'
+      : previewQuery.fetchStatus === 'fetching'
+        ? 'loading'
+        : 'waiting-input'
 
   const administerMutation = useMutation({
     mutationFn: async (command: Omit<AdministerDoseBody, 'idempotencyKey'>) => {
@@ -252,6 +308,28 @@ function PatientEvolutionContent() {
         })
         return
       }
+      const bandNeedsReason =
+        values.nextIntervalBand === 'TOO_SHORT' ||
+        values.nextIntervalBand === 'REQUIRES_STEP_REVIEW'
+      if (bandNeedsReason && !values.nextScheduleReason.trim()) {
+        setStep(2)
+        setError('nextScheduleReason', {
+          type: 'custom',
+          message: 'Justifique o intervalo escolhido',
+        })
+        return
+      }
+      if (
+        values.nextIntervalBand === 'REQUIRES_STEP_REVIEW' &&
+        !values.nextScheduleReview
+      ) {
+        setStep(2)
+        setError('nextScheduleReview', {
+          type: 'custom',
+          message: 'Avalie se é preciso retroceder doses',
+        })
+        return
+      }
     }
     setStep(target)
   }
@@ -260,6 +338,7 @@ function PatientEvolutionContent() {
   const applySelection = (id: string) => {
     setSelectedId(id)
     form.reset({ ...EVOLUTION_DEFAULTS, applicationDate: todayStr() })
+    lastPlannedNextRef.current = ''
     idempotencyKeyRef.current = new RegistrationIntent()
     setStep(0)
     setPendingSelectionId(null)
@@ -274,10 +353,24 @@ function PatientEvolutionContent() {
   const onSaveEvolution = () =>
     handleSubmit((data) => {
       if (!dose || !selectedStep) return
-      if (!tryZonedOffsetIso(data.applicationDate, data.startTime, dose.immunotherapy.currentPrescription?.resolved.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo')) { setError('startTime', { type: 'custom', message: 'Horário inválido, ambíguo ou inexistente no fuso clínico.' }); return }
+      if (!tryZonedOffsetIso(data.applicationDate, data.startTime, clinicalTimeZone)) { setError('startTime', { type: 'custom', message: 'Horário inválido, ambíguo ou inexistente no fuso clínico.' }); return }
       const executor = professionals.find((member) => member.professionalId === data.performerId)
       if (!executor) {
         setError('performerId', { type: 'custom', message: 'Selecione um profissional disponível.' })
+        return
+      }
+      const reschedulesNext =
+        data.nextApplicationDatePlanned !== '' &&
+        data.nextApplicationDate !== '' &&
+        data.nextApplicationDate !== data.nextApplicationDatePlanned
+      const nextScheduledAt = reschedulesNext
+        ? tryZonedOffsetIso(data.nextApplicationDate, data.startTime, clinicalTimeZone)
+        : null
+      if (reschedulesNext && !nextScheduledAt) {
+        setError('nextApplicationDate', {
+          type: 'custom',
+          message: 'Data inválida ou inexistente no fuso clínico. Escolha outro dia.',
+        })
         return
       }
       const observations: AdministerDoseBody['observations'] = [
@@ -301,9 +394,9 @@ function PatientEvolutionContent() {
           intervalDays: selectedStep.intervalDays,
           stepId: selectedStep.id,
         },
-        administeredAt: toZonedOffsetIso(data.applicationDate, data.startTime, dose.immunotherapy.currentPrescription?.resolved.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo'),
+        administeredAt: toZonedOffsetIso(data.applicationDate, data.startTime, clinicalTimeZone),
         ...(data.endTime
-          ? { administrationEndedAt: toZonedOffsetIso(data.applicationDate, data.endTime, dose.immunotherapy.currentPrescription?.resolved.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo') }
+          ? { administrationEndedAt: toZonedOffsetIso(data.applicationDate, data.endTime, clinicalTimeZone) }
           : {}),
         expectedRevision: dose.revision,
         expectedTherapyRevision: dose.therapyRevision,
@@ -311,6 +404,13 @@ function PatientEvolutionContent() {
         administeredById: executor.userId,
         ...(data.stepId !== dose.plannedStepId && data.adjustmentReason.trim()
           ? { reason: data.adjustmentReason.trim() }
+          : {}),
+        ...(nextScheduledAt ? { nextScheduledAt } : {}),
+        ...(data.nextScheduleReason.trim()
+          ? { nextScheduleReason: data.nextScheduleReason.trim() }
+          : {}),
+        ...(data.nextScheduleReview
+          ? { nextScheduleReview: data.nextScheduleReview }
           : {}),
         observations,
         ...(data.conduct
@@ -353,7 +453,7 @@ function PatientEvolutionContent() {
         title={therapy ? therapy.patient.fullName : 'Evolução do Paciente'}
       />
 
-      <div className="mb-2">
+      <div className="-mt-2 mb-2">
         <WizardStepsBreadcrumb
           steps={STEPS}
           current={step}
@@ -384,7 +484,13 @@ function PatientEvolutionContent() {
                 />
               )}
               {step === 1 && <PreApplicationStep form={form} />}
-              {step === 2 && <PostApplicationStep form={form} dose={dose} />}
+              {step === 2 && (
+                <PostApplicationStep
+                  form={form}
+                  dose={dose}
+                  nextScheduleState={nextScheduleState}
+                />
+              )}
               {step === 3 && (
                 <EvolutionReviewStep
                   form={formValues}
@@ -397,6 +503,9 @@ function PatientEvolutionContent() {
           </div>
 
           <div className="border-t border-(--border-custom) px-5 py-3 flex items-center justify-between gap-4">
+            <Button type="button" tone="danger" variant="outline" onClick={() => setShowCancelModal(true)}>
+              Cancelar
+            </Button>
             <div className="min-w-0 flex-1">
               {step === 3 && (
                 <NextDosePreview
@@ -413,14 +522,15 @@ function PatientEvolutionContent() {
               )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
-            <Button type="button" tone="danger" variant="outline" onClick={() => setShowCancelModal(true)}>
-              Cancelar
+            <Button
+              type="button"
+              tone="brand"
+              variant="outline"
+              disabled={step === 0}
+              onClick={() => setStep((s) => (s - 1) as 0 | 1 | 2 | 3)}
+            >
+              Voltar
             </Button>
-            {step > 0 && (
-              <Button type="button" tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 0 | 1 | 2 | 3)}>
-                Voltar
-              </Button>
-            )}
             <Button
               type="submit"
               tone="brand"

@@ -115,6 +115,18 @@ const TEAM_PAGE = {
   total: 2,
 }
 
+function dayOffset(days: number): string {
+  const date = new Date()
+  date.setDate(date.getDate() + days)
+  return date.toISOString().slice(0, 10)
+}
+
+const PLANNED_NEXT_DAY = dayOffset(14)
+
+function formatPt(day: string): string {
+  return day.split('-').reverse().join('/')
+}
+
 const PREVIEW_RESULT = {
   recommendation: {
     kind: 'RECOMMENDED',
@@ -126,7 +138,8 @@ const PREVIEW_RESULT = {
     values: { concentration: '1000', volume: '0.4', intervalDays: 14 },
   },
   allowedValues: ALLOWED_VALUES,
-  nextScheduledAt: '2026-10-04T11:00:00.000Z',
+  nextScheduledAt: `${PLANNED_NEXT_DAY}T11:00:00.000Z`,
+  nextIntervalTolerance: { shortBelowDays: 7, longFromDays: 21, stepReviewAboveDays: 28 },
   expectedRevision: 1,
   expectedTherapyRevision: 3,
   prescriptionRevision: 1,
@@ -135,6 +148,7 @@ const PREVIEW_RESULT = {
 
 function stubApi(overrides: {
   administer?: (init?: RequestInit) => Response
+  preview?: () => Response
 } = {}) {
   const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input)
@@ -147,7 +161,7 @@ function stubApi(overrides: {
       return Promise.resolve(jsonResponse(THERAPY))
     }
     if (url.includes('/doses/dose-2/preview') && method === 'POST') {
-      return Promise.resolve(jsonResponse(PREVIEW_RESULT))
+      return Promise.resolve(overrides.preview ? overrides.preview() : jsonResponse(PREVIEW_RESULT))
     }
     if (url.includes('/doses/dose-2/administer') && method === 'POST') {
       if (overrides.administer) return Promise.resolve(overrides.administer(init))
@@ -223,7 +237,7 @@ function controlByLabel(labelText: RegExp): HTMLElement {
   return control as HTMLElement
 }
 
-async function fillToReview(user: ReturnType<typeof userEvent.setup>) {
+async function fillPostApplication(user: ReturnType<typeof userEvent.setup>) {
   expect(await screen.findByText('Previsão pendente')).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Continuar' }))
 
@@ -238,6 +252,10 @@ async function fillToReview(user: ReturnType<typeof userEvent.setup>) {
   expect(stepSelect.value).toBe('low')
   await user.type(controlByLabel(/hora início/i), '10:00')
   await user.selectOptions(controlByLabel(/executor da aplicação/i), 'professional-2')
+}
+
+async function fillToReview(user: ReturnType<typeof userEvent.setup>) {
+  await fillPostApplication(user)
   await user.click(screen.getByRole('button', { name: 'Continuar' }))
 }
 
@@ -254,8 +272,10 @@ describe('wizard de evolução sobre o contrato de doses', () => {
 
     await fillToReview(user)
 
-    expect(await screen.findByText(/o servidor recomenda como próxima dose/i)).toBeInTheDocument()
-    expect(screen.getByText(/Meta — 1:1\.000 - 0,4ml/)).toBeInTheDocument()
+    expect(await screen.findByText('Data da próxima aplicação')).toBeInTheDocument()
+    expect(screen.getByText(formatPt(PLANNED_NEXT_DAY))).toBeInTheDocument()
+    expect(screen.queryByText('Prevista pelo protocolo')).toBeNull()
+    expect(screen.queryByText('Justificativa da data')).toBeNull()
 
     await user.click(screen.getByRole('button', { name: /salvar evolução/i }))
 
@@ -282,6 +302,8 @@ describe('wizard de evolução sobre o contrato de doses', () => {
       expect(body.immediateConduct).toBeUndefined()
       expect(body.reason).toBeUndefined()
       expect(body.nextInterval).toBeUndefined()
+      expect(body.nextScheduledAt).toBeUndefined()
+      expect(body.nextScheduleReason).toBeUndefined()
     })
 
     await waitFor(
@@ -313,10 +335,210 @@ describe('wizard de evolução sobre o contrato de doses', () => {
     const router = await renderWizard()
 
     await fillToReview(user)
-    await screen.findByText(/o servidor recomenda como próxima dose/i)
+    await screen.findByText('Data da próxima aplicação')
     await user.click(screen.getByRole('button', { name: /salvar evolução/i }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/mudou desde que você abriu/i)
     expect(router.state.location.pathname).toBe('/patient-evolution')
+  })
+
+  it('só libera a próxima aplicação depois que o servidor devolve a previsão', async () => {
+    stubApi()
+    const user = userEvent.setup()
+    await renderWizard()
+
+    expect(await screen.findByText('Previsão pendente')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    await user.type(
+      await screen.findByPlaceholderText('Descreva aqui'),
+      'Sem intercorrências no intervalo.',
+    )
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+
+    // Passo 2 sem hora de início: o servidor ainda não tem o que prever.
+    await screen.findByText(/valor administrado/i, { selector: 'label' })
+    const nextDate = controlByLabel(/próxima aplicação/i) as HTMLInputElement
+    expect(nextDate).toBeDisabled()
+    expect(nextDate.value).toBe('')
+
+    await user.type(controlByLabel(/hora início/i), '10:00')
+    await waitFor(() => expect(nextDate.value).toBe(PLANNED_NEXT_DAY))
+    expect(nextDate).toBeEnabled()
+  })
+
+  it('mantém a próxima aplicação vazia quando o servidor responde sem sucessora', async () => {
+    stubApi({
+      preview: () =>
+        jsonResponse({
+          ...PREVIEW_RESULT,
+          recommendation: { kind: 'END_OF_SEQUENCE', protocolVersionId: 'version-1', fromStepId: 'low' },
+          nextScheduledAt: null,
+        }),
+    })
+    const user = userEvent.setup()
+    await renderWizard()
+
+    await fillPostApplication(user)
+
+    const nextDate = controlByLabel(/próxima aplicação/i) as HTMLInputElement
+    await waitFor(() => expect(nextDate).toBeDisabled())
+    expect(nextDate.value).toBe('')
+  })
+
+  it('deixa passar sem justificativa um intervalo dentro da tolerância do passo', async () => {
+    const fetchMock = stubApi()
+    const user = userEvent.setup()
+    await renderWizard()
+
+    await fillPostApplication(user)
+
+    const nextDate = controlByLabel(/próxima aplicação/i) as HTMLInputElement
+    await waitFor(() => expect(nextDate.value).toBe(PLANNED_NEXT_DAY))
+
+    const within = dayOffset(17)
+    await user.clear(nextDate)
+    await user.type(nextDate, within)
+
+    expect(screen.queryByText(/intervalo mais/i)).toBeNull()
+    expect(screen.queryByText(/justificativa clínica do intervalo/i)).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    expect(await screen.findByText('Data da próxima aplicação')).toBeInTheDocument()
+    expect(screen.getByText('Data prevista pelo protocolo')).toBeInTheDocument()
+    expect(screen.getByText('+3d')).toBeInTheDocument()
+    expect(screen.queryByText('Justificativa da data')).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: /salvar evolução/i }))
+    await waitFor(() => {
+      const call = fetchMock.mock.calls.find(
+        ([url, init]) =>
+          String(url).includes('/doses/dose-2/administer') &&
+          (init as RequestInit | undefined)?.method === 'POST',
+      )
+      expect(call).toBeDefined()
+      const body = JSON.parse((call![1] as RequestInit).body as string)
+      expect(body.nextScheduledAt).toMatch(
+        new RegExp(`^${within}T10:00:00[+-]\\d{2}:\\d{2}$`),
+      )
+      expect(body.nextScheduleReason).toBeUndefined()
+    })
+  })
+
+  it('mostra o desvio em dias com sinal e sem selo quando a data é a prevista', async () => {
+    stubApi()
+    const user = userEvent.setup()
+    await renderWizard()
+
+    await fillPostApplication(user)
+
+    const nextDate = controlByLabel(/próxima aplicação/i) as HTMLInputElement
+    await waitFor(() => expect(nextDate.value).toBe(PLANNED_NEXT_DAY))
+
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    await screen.findByText('Data da próxima aplicação')
+    expect(screen.queryByText(/^[+−]\d+d$/)).toBeNull()
+    expect(screen.queryByText('Data prevista pelo protocolo')).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'Voltar' }))
+    const back = controlByLabel(/próxima aplicação/i) as HTMLInputElement
+    await user.clear(back)
+    await user.type(back, dayOffset(11))
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+
+    await screen.findByText('Data da próxima aplicação')
+    const badge = screen.getByText('−3d')
+    expect(badge).toBeInTheDocument()
+    expect(badge.className).toContain('amber')
+    expect(screen.queryByText('Justificativa da data')).toBeNull()
+  })
+
+  it('exige justificativa quando o intervalo fica curto demais para o passo', async () => {
+    const fetchMock = stubApi()
+    const user = userEvent.setup()
+    await renderWizard()
+
+    await fillPostApplication(user)
+
+    const nextDate = controlByLabel(/próxima aplicação/i) as HTMLInputElement
+    await waitFor(() => expect(nextDate.value).toBe(PLANNED_NEXT_DAY))
+
+    await user.clear(nextDate)
+    await user.type(nextDate, dayOffset(3))
+
+    expect(
+      await screen.findByText(/intervalo mais curto que o previsto/i),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    expect(
+      await screen.findByText(/justifique o intervalo mais curto/i),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Data da próxima aplicação')).toBeNull()
+
+    await user.type(
+      controlByLabel(/justificativa clínica do intervalo/i),
+      'Antecipação acordada com o prescritor.',
+    )
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    expect(await screen.findByText('Data da próxima aplicação')).toBeInTheDocument()
+    expect(screen.getByText('Justificativa da data')).toBeInTheDocument()
+    expect(
+      screen.getByText('Antecipação acordada com o prescritor.'),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /salvar evolução/i }))
+    await waitFor(() => {
+      const call = fetchMock.mock.calls.find(
+        ([url, init]) =>
+          String(url).includes('/doses/dose-2/administer') &&
+          (init as RequestInit | undefined)?.method === 'POST',
+      )
+      expect(call).toBeDefined()
+      const body = JSON.parse((call![1] as RequestInit).body as string)
+      expect(body.nextScheduleReason).toBe('Antecipação acordada com o prescritor.')
+      expect(body.nextScheduleReview).toBeUndefined()
+    })
+  })
+
+  it('exige avaliação de retrocesso quando o intervalo passa de um ciclo inteiro', async () => {
+    const fetchMock = stubApi()
+    const user = userEvent.setup()
+    await renderWizard()
+
+    await fillPostApplication(user)
+
+    const nextDate = controlByLabel(/próxima aplicação/i) as HTMLInputElement
+    await waitFor(() => expect(nextDate.value).toBe(PLANNED_NEXT_DAY))
+
+    await user.clear(nextDate)
+    await user.type(nextDate, dayOffset(40))
+
+    expect(await screen.findByText(/intervalo muito longo/i)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    expect(
+      await screen.findByText(/avalie se é preciso retroceder doses/i),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('radio', { name: /retroceder doses/i }))
+    await user.type(
+      controlByLabel(/justificativa clínica do intervalo/i),
+      'Paciente internado por um mês.',
+    )
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    expect(await screen.findByText('Data da próxima aplicação')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /salvar evolução/i }))
+    await waitFor(() => {
+      const call = fetchMock.mock.calls.find(
+        ([url, init]) =>
+          String(url).includes('/doses/dose-2/administer') &&
+          (init as RequestInit | undefined)?.method === 'POST',
+      )
+      expect(call).toBeDefined()
+      const body = JSON.parse((call![1] as RequestInit).body as string)
+      expect(body.nextScheduleReview).toBe('STEP_BACK_REQUESTED')
+      expect(body.nextScheduleReason).toBe('Paciente internado por um mês.')
+    })
   })
 })
