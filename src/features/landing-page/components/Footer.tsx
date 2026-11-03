@@ -35,7 +35,7 @@ export function Footer() {
           opacity: 0.05,
         }}
       >
-        Allervia
+        allervia
       </span>
 
       <div
@@ -106,7 +106,7 @@ export function Footer() {
         style={{ borderColor: 'var(--ll-border)' }}
       >
         <p className="text-[0.8rem]" style={{ color: 'var(--ll-ink-muted)' }}>
-          &copy; {new Date().getFullYear()} Allervia. Todos os direitos reservados.
+          &copy; {new Date().getFullYear()} allervia. Todos os direitos reservados.
         </p>
         <p className="text-[0.8rem] inline-flex items-center gap-1" style={{ color: 'var(--ll-ink-muted)' }}>
           Feito com <FontAwesomeIcon icon={faHeart} className="fill-current" style={{ fontSize: 13, color: 'var(--ll-accent)' }} /> para a alergologia brasileira

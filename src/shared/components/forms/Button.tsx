@@ -58,7 +58,7 @@ const STYLES: Record<ButtonTone, Record<ButtonVariant, string>> = {
   },
   danger: {
     solid: 'bg-[#A41517] text-white hover:bg-[#8a1114]',
-    outline: 'border border-[#A41517]/40 bg-[#A41517]/6 text-[#A41517] hover:border-[#A41517]/70 hover:bg-[#A41517]/12',
+    outline: 'border border-red-300 bg-red-50 text-red-700 hover:border-red-400 hover:bg-red-100',
     'outline-white': 'border border-[#A41517]/40 bg-white text-[#A41517] hover:border-[#A41517]/70 hover:bg-[#A41517]/6',
     ghost: 'text-[#A41517] hover:bg-[#A41517]/10',
   },

@@ -174,7 +174,7 @@ export function HelpPage() {
         <SupportRequestSection />
 
         <div className="lg:col-span-2 text-center text-[0.65rem] text-(--text-muted) py-2">
-          Allervia · Precisa de ajuda? Envie uma solicitação de suporte acima.
+          allervia · Precisa de ajuda? Envie uma solicitação de suporte acima.
         </div>
       </div>
     </SettingsLayout>

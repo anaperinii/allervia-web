@@ -261,7 +261,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className={cn('flex items-center', collapsed ? 'flex-col gap-3' : 'justify-between gap-2')}>
           <Link
             to={defaultDestination(capabilities)}
-            aria-label="Allervia"
+            aria-label="allervia"
             className="flex items-center gap-3 no-underline"
           >
             <img src={allerviaMark} alt="" className="h-7 w-7 shrink-0 object-contain" />
