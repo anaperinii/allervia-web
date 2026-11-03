@@ -82,6 +82,20 @@ const PATIENT_7_DETAIL = {
   updatedAt: '2026-09-01T12:00:00.000Z',
 }
 
+const PATIENT_7_THERAPIES = [
+  {
+    id: 'therapy-7',
+    immunoType: 'Ácaros',
+    extract: 'Der p 60% + Der f 40%',
+    administrationRoute: 'SUBCUTANEOUS',
+    status: 'IN_PROGRESS',
+    revision: 1,
+    inductionStartDate: '2026-03-10T11:00:00.000Z',
+    maintenanceStartDate: null,
+    createdAt: '2026-03-01T12:00:00.000Z',
+  },
+]
+
 const SERVER_TYPES = ['Ácaros', 'Gramíneas']
 
 function stubApi() {
@@ -121,6 +135,9 @@ function stubApi() {
           201,
         ),
       )
+    }
+    if (url.includes('/immunotherapies/patients/patient-7')) {
+      return Promise.resolve(jsonResponse(PATIENT_7_THERAPIES))
     }
     if (url.includes('/patients/patient-7')) {
       return Promise.resolve(jsonResponse(PATIENT_7_DETAIL))
@@ -293,6 +310,26 @@ describe('prescription wizard', () => {
     expect(
       await screen.findByText('Lista', {}, { timeout: 5000 }),
     ).toBeInTheDocument()
+  })
+
+  it('warns about open immunotherapies without blocking the new prescription', async () => {
+    stubApi()
+    const user = userEvent.setup()
+    await renderWizard()
+
+    expect(screen.queryByText(/já em andamento neste paciente/i)).toBeNull()
+
+    await user.type(screen.getByPlaceholderText('Nome completo'), 'Paula')
+    await user.click(await screen.findByRole('option', { name: /paula andrade/i }))
+
+    expect(
+      await screen.findByText(/1 imunoterapia já em andamento neste paciente/i),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ácaros' })).toBeInTheDocument()
+    expect(screen.getByText('Em andamento')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    expect(await screen.findByDisplayValue('Subcutânea (SCIT)')).toBeInTheDocument()
   })
 
   it('preserves the form without local success after a server rejection', async () => {
