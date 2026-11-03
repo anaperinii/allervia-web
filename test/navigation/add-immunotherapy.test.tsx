@@ -274,11 +274,37 @@ describe('prescription wizard', () => {
       expect(body.patient.responsiblePhysicianId).toBe('professional-1')
       expect(body.targetConcentration).toBeUndefined()
       expect(body.targetVolume).toBeUndefined()
+      expect(body.inductionStartDate).toMatch(/T08:00:00[+-]\d{2}:\d{2}$/)
     })
 
     expect(
       await screen.findByText('Lista', {}, { timeout: 5000 }),
     ).toBeInTheDocument()
+  })
+
+  it('usa a hora escolhida para a primeira aplicação em vez das 08:00 fixas', async () => {
+    const fetchMock = stubApi()
+    const user = userEvent.setup()
+    await renderWizard()
+
+    await fillPatientStep(user)
+    await screen.findByDisplayValue('Subcutânea (SCIT)')
+
+    const startTime = controlByLabel(/hora da 1ª aplicação/i) as HTMLInputElement
+    expect(startTime).toHaveValue('08:00')
+    await user.clear(startTime)
+    await user.type(startTime, '14:30')
+
+    await fillPrescriptionStep(user)
+    expect(await screen.findByText(/às 14:30/)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /salvar prescrição/i }))
+
+    await waitFor(() => {
+      const body = registerBody(fetchMock)
+      expect(body).not.toBeNull()
+      expect(body.inductionStartDate).toMatch(/T14:30:00[+-]\d{2}:\d{2}$/)
+    })
   })
 
   it('registers an existing patient without editing the patient record', async () => {

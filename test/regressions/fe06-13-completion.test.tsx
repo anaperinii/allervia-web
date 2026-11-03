@@ -57,11 +57,17 @@ describe('FE-06 through FE-13 completion', () => {
     expect(calculateAge('2008-02-29', '2026-03-01')).toBe(18)
   })
   it('accepts missing CPF and requires the minor guardian', () => {
-    const form = { name: 'Synthetic Patient', cpf: '', phone: '11999999999', birthDate: '1990-01-01', weight: '70', guardianName: '', guardianCpf: '', guardianPhone: '', patientId: '', type: 'Synthetic', startDate: '2099-01-01', extract: 'Der p 100%', protocolVersionId: 'version-1', stepIds: ['low'], startingStepId: 'low', targetStepId: 'low' }
+    const form = { name: 'Synthetic Patient', cpf: '', phone: '11999999999', birthDate: '1990-01-01', weight: '70', guardianName: '', guardianCpf: '', guardianPhone: '', patientId: '', type: 'Synthetic', startDate: '2099-01-01', startTime: '08:00', extract: 'Der p 100%', protocolVersionId: 'version-1', stepIds: ['low'], startingStepId: 'low', targetStepId: 'low' }
     expect(addImmunotherapySchema.safeParse(form).success).toBe(true)
     const minor = { ...form, birthDate: '2020-01-01' }
     expect(addImmunotherapySchema.safeParse(minor).success).toBe(false)
     expect(addImmunotherapySchema.safeParse({ ...minor, guardianName: 'Synthetic Guardian', guardianPhone: '11999999999' }).success).toBe(true)
+  })
+  it('accepts a past start date for therapies that began before the record', () => {
+    const form = { name: 'Synthetic Patient', cpf: '', phone: '11999999999', birthDate: '1990-01-01', weight: '70', guardianName: '', guardianCpf: '', guardianPhone: '', patientId: '', type: 'Synthetic', startDate: '2099-01-01', startTime: '08:00', extract: 'Der p 100%', protocolVersionId: 'version-1', stepIds: ['low'], startingStepId: 'low', targetStepId: 'low' }
+    expect(addImmunotherapySchema.safeParse({ ...form, startDate: '2019-03-14' }).success).toBe(true)
+    expect(addImmunotherapySchema.safeParse({ ...form, startDate: '' }).success).toBe(false)
+    expect(addImmunotherapySchema.safeParse({ ...form, startDate: 'não é data' }).success).toBe(false)
   })
   it('separates notification, preference and support caches by both organization and user', () => {
     for (const factory of [queryKeys.notifications, queryKeys.notificationPreferences, queryKeys.supportRequests]) {

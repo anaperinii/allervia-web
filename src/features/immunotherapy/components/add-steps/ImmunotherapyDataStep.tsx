@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Controller, type UseFormReturn } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
-import { FieldLabel, Select, StepHeading, TextInput } from '@/shared/components'
-import { todayStr } from '@/shared/lib/dates'
+import { FieldLabel, Select, StepHeading, TextInput, TimeSelect } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
 import { listImmunotherapyTypes } from '@/shared/api/clinical.api'
 import { listProtocols, readAutomation } from '@/shared/api/protocols.api'
@@ -220,13 +219,30 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
         <FieldLabel label="Via de Administração">
           <TextInput value="Subcutânea (SCIT)" readOnly className="text-(--text-muted) bg-gray-100/60" />
         </FieldLabel>
-        <FieldLabel
-          label="Data de Início"
-          error={errors.startDate?.message}
-          helperText={`Primeira previsão às 08:00 no fuso ${account?.organization?.timeZone ?? 'America/Sao_Paulo'}.`}
-        >
-          <TextInput type="date" min={todayStr()} invalid={!!errors.startDate} {...register('startDate')} />
-        </FieldLabel>
+        <div className="grid grid-cols-2 gap-2">
+          <FieldLabel
+            label="Data de Início"
+            error={errors.startDate?.message}
+            helperText={`Primeira previsão no fuso ${account?.organization?.timeZone ?? 'America/Sao_Paulo'}. Aceita data passada, para tratamentos que começaram antes do cadastro.`}
+          >
+            <TextInput type="date" invalid={!!errors.startDate} {...register('startDate')} />
+          </FieldLabel>
+          <FieldLabel label="Hora da 1ª aplicação" error={errors.startTime?.message}>
+            <Controller
+              control={control}
+              name="startTime"
+              render={({ field }) => (
+                <TimeSelect
+                  aria-label="Hora da 1ª aplicação"
+                  value={field.value}
+                  onBlur={field.onBlur}
+                  onChange={field.onChange}
+                  invalid={!!errors.startTime}
+                />
+              )}
+            />
+          </FieldLabel>
+        </div>
         <FieldLabel label="Extrato" error={errors.extract?.message}>
           <TextInput placeholder="Ex: Der p 60% + Der f 10% + Blt 30%" invalid={!!errors.extract} {...register('extract')} />
         </FieldLabel>

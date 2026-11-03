@@ -19,7 +19,7 @@ const VISIBLE_ITEMS = 5
 const LIST_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS
 
 function splitTime(value: string): { hour: string; minute: string } {
-  const [hour = '', minute = ''] = value.split(':')
+  const [hour = '', minute = ''] = (value ?? '').split(':')
   return { hour, minute }
 }
 
