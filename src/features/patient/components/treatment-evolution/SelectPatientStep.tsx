@@ -1,4 +1,5 @@
-import { collectPages } from '@/shared/api/pagination'
+import { collectAccentTolerantPages } from '@/shared/api/search'
+import { searchVariants } from '@/shared/lib/search-terms'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { StepHeading, TextInput } from '@/shared/components'
@@ -48,12 +49,21 @@ export function SelectPatientStep({
   const inputId = 'evolution-patient-search'
   const listboxId = 'evolution-patient-suggestions'
 
+  const searchTerms = searchVariants(search)
   const therapiesQuery = useQuery({
     queryKey: queryKeys.immunotherapies(organizationId, {
       picker: 'evolution',
-      search: search.trim() || undefined,
+      search: searchTerms.join('|') || undefined,
     }),
-    queryFn: ({ signal }) => collectPages(page => listImmunotherapies({ page, pageSize: 100, status: 'IN_PROGRESS', search: search.trim() || undefined }, signal), { signal, maxPages: 5 }),
+    queryFn: ({ signal }) =>
+      collectAccentTolerantPages({
+        term: search,
+        signal,
+        load: (page, term) =>
+          listImmunotherapies({ page, pageSize: 100, status: 'IN_PROGRESS', search: term }, signal),
+        getId: (item) => item.id,
+        getSearchableText: (item) => `${item.patient.fullName} ${item.immunoType}`,
+      }),
     enabled: organizationId !== '' && !preselectedLocked,
   })
 
@@ -112,6 +122,11 @@ export function SelectPatientStep({
           id={inputId}
           placeholder="Buscar paciente por nome"
           value={search}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          name="evolution-patient-search"
           disabled={preselectedLocked}
           onChange={(e) => { setSearch(e.target.value); setShowSuggestions(true) }}
           onFocus={() => setShowSuggestions(true)}
