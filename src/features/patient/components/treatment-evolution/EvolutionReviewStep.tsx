@@ -4,18 +4,27 @@ import { cn } from '@/shared/lib/cn'
 import type { EvolutionForm } from '@/features/patient/schemas/evolution'
 import type { PreviewDoseResult } from '@/shared/api/contracts/clinical'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
-import {
-  formatInstantDate,
-  formatStepOption,
-} from '@/features/patient/adapters/clinical-presentation'
+import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
+import { civilDaysBetween, requiresJustification } from '@/shared/lib/dose-interval'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCalendarCheck, faCircleInfo, faFlagCheckered } from '@fortawesome/free-solid-svg-icons'
+import { faCircleInfo, faFlagCheckered } from '@fortawesome/free-solid-svg-icons'
 
 const CONDUCT_LABELS: Record<string, string> = {
   MAINTAIN: 'Manter protocolo',
   REQUEST_PHYSICIAN_REVIEW: 'Solicitar avaliação médica',
   SUSPEND_TREATMENT: 'Suspender tratamento',
+}
+
+const BADGE_TONES = {
+  later: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+  earlier: 'bg-amber-50 text-amber-700 ring-amber-600/20',
+} as const
+
+interface ReviewItem {
+  label: string
+  value: string
+  badge?: { text: string; tone: keyof typeof BADGE_TONES }
 }
 
 interface ReviewStepProps {
@@ -31,7 +40,7 @@ export function EvolutionReviewStep({
   selectedStep,
   performerName,
 }: ReviewStepProps) {
-  const preItems: { label: string; value: string }[] = [
+  const preItems: ReviewItem[] = [
     ...(form.intervalReport ? [{ label: 'Relato do intervalo', value: form.intervalReport }] : []),
     { label: 'Efeito Colateral', value: form.sideEffect === 'yes' ? 'Sim' : 'Não' },
     { label: 'Necessidade de Medicação', value: form.medicationNeeded === 'yes' ? 'Sim' : 'Não' },
@@ -40,8 +49,40 @@ export function EvolutionReviewStep({
     ...(form.notesPre ? [{ label: 'Notas', value: form.notesPre }] : []),
   ]
 
-  const postItems: { label: string; value: string }[] = [
-    { label: 'Data', value: form.applicationDate ? format(parse(form.applicationDate, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy') : '—' },
+  const nextDateDiverges =
+    form.nextApplicationDate !== '' &&
+    form.nextApplicationDatePlanned !== '' &&
+    form.nextApplicationDate !== form.nextApplicationDatePlanned
+
+  const shiftFromPlanned = nextDateDiverges
+    ? civilDaysBetween(form.nextApplicationDatePlanned, form.nextApplicationDate)
+    : null
+
+  const askedForIntervalReason =
+    form.nextIntervalBand !== '' && requiresJustification(form.nextIntervalBand)
+
+  const postItems: ReviewItem[] = [
+    { label: 'Data da aplicação', value: formatDayOrDash(form.applicationDate) },
+    {
+      label: 'Data da próxima aplicação',
+      value: formatDayOrDash(form.nextApplicationDate),
+      ...(shiftFromPlanned !== null && shiftFromPlanned !== 0
+        ? {
+            badge: {
+              text: `${shiftFromPlanned > 0 ? '+' : '−'}${Math.abs(shiftFromPlanned)}d`,
+              tone: shiftFromPlanned > 0 ? ('later' as const) : ('earlier' as const),
+            },
+          }
+        : {}),
+    },
+    ...(nextDateDiverges
+      ? [
+          { label: 'Data prevista pelo protocolo', value: formatDayOrDash(form.nextApplicationDatePlanned) },
+        ]
+      : []),
+    ...(askedForIntervalReason
+      ? [{ label: 'Justificativa da data', value: form.nextScheduleReason || '—' }]
+      : []),
     { label: 'Horário', value: form.endTime ? `${form.startTime} – ${form.endTime}` : form.startTime || '—' },
     {
       label: 'Previsto pela prescrição',
@@ -84,8 +125,10 @@ interface NextDosePreviewProps {
   previewError: string | null
 }
 
-
-
+function formatDayOrDash(day: string): string {
+  if (!day) return '—'
+  return format(parse(day, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')
+}
 
 
 export function NextDosePreview({
@@ -106,33 +149,6 @@ export function NextDosePreview({
       <p className="flex items-center gap-2 text-[0.72rem] text-red-700">
         <FontAwesomeIcon icon={faCircleInfo} className="shrink-0 text-red-500" style={{ fontSize: 13 }} />
         {previewError}
-      </p>
-    )
-  }
-
-  if (preview?.recommendation.kind === 'RECOMMENDED') {
-    return (
-      <p className="flex items-center gap-2.5 text-[0.72rem] leading-snug text-slate-600">
-        <span
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-          style={{ background: '#10b981', boxShadow: '0 2px 8px rgba(16,185,129,0.35)' }}
-        >
-          <FontAwesomeIcon icon={faCalendarCheck} style={{ fontSize: 13, color: '#ffffff' }} />
-        </span>
-        <span>
-          O servidor recomenda como próxima dose{' '}
-          <span className="font-bold text-slate-800">
-            {formatStepOption({ label: preview.recommendation.label, ...preview.recommendation.values })}
-          </span>
-          {preview.nextScheduledAt && (
-            <>
-              {' '}para <span className="font-bold text-slate-800">{formatInstantDate(preview.nextScheduledAt)}</span>
-              {' '}(intervalo de{' '}
-              <span className="font-bold text-slate-800">{preview.recommendation.values.intervalDays} dias</span>).
-            </>
-          )}
-          {' '}Ela será gravada junto desta confirmação.
-        </span>
       </p>
     )
   }
@@ -159,7 +175,7 @@ export function NextDosePreview({
 
 interface ReviewCardProps {
   title: string
-  items: { label: string; value: string }[]
+  items: ReviewItem[]
 }
 
 function ReviewCard({ title, items }: ReviewCardProps) {
@@ -192,7 +208,24 @@ function ReviewCard({ title, items }: ReviewCardProps) {
             )}
           >
             <div className="text-[0.7rem] font-semibold text-(--text-muted) mb-0.5">{item.label}</div>
-            <div className="text-[0.82rem] font-medium text-(--text)">{item.value || '—'}</div>
+            <div className="flex items-center gap-1.5 text-[0.82rem] font-medium text-(--text)">
+              <span>{item.value || '—'}</span>
+              {item.badge && (
+                <span
+                  className={cn(
+                    'inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-[0.62rem] font-bold tabular-nums ring-1 ring-inset',
+                    BADGE_TONES[item.badge.tone],
+                  )}
+                  title={
+                    item.badge.tone === 'later'
+                      ? 'Dias além da data prevista pelo protocolo'
+                      : 'Dias antes da data prevista pelo protocolo'
+                  }
+                >
+                  {item.badge.text}
+                </span>
+              )}
+            </div>
           </div>
         ))}
       </div>

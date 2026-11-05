@@ -21,6 +21,17 @@ export const evolutionSchema = z
     applicationDate: z.string().min(1, 'Data é obrigatória'),
     startTime: z.string().min(1, 'Hora de início é obrigatória'),
     endTime: z.string(),
+    nextApplicationDate: z.string(),
+    nextApplicationDatePlanned: z.string(),
+    nextIntervalBand: z.enum([
+      '',
+      'TOO_SHORT',
+      'ON_PLAN',
+      'LONG',
+      'REQUIRES_STEP_REVIEW',
+    ]),
+    nextScheduleReason: z.string(),
+    nextScheduleReview: z.enum(['', 'KEEP_STEP', 'STEP_BACK_REQUESTED']),
     stepId: z.string().min(1, 'Selecione o valor aplicado'),
     adjustmentReason: z.string(),
     performerId: z.string().min(1, 'Selecione o executor da aplicação'),
@@ -53,6 +64,41 @@ export const evolutionSchema = z
         path: ['endTime'],
         code: z.ZodIssueCode.custom,
         message: 'Hora fim deve ser após início',
+      })
+    }
+
+    if (
+      data.nextApplicationDate &&
+      data.applicationDate &&
+      data.nextApplicationDate <= data.applicationDate
+    ) {
+      ctx.addIssue({
+        path: ['nextApplicationDate'],
+        code: z.ZodIssueCode.custom,
+        message: 'A próxima aplicação deve ser depois desta',
+      })
+    }
+    const needsJustification =
+      data.nextIntervalBand === 'TOO_SHORT' ||
+      data.nextIntervalBand === 'REQUIRES_STEP_REVIEW'
+    if (needsJustification && !data.nextScheduleReason.trim()) {
+      ctx.addIssue({
+        path: ['nextScheduleReason'],
+        code: z.ZodIssueCode.custom,
+        message:
+          data.nextIntervalBand === 'TOO_SHORT'
+            ? 'Justifique o intervalo mais curto que o previsto'
+            : 'Justifique o intervalo mais longo que o previsto',
+      })
+    }
+    if (
+      data.nextIntervalBand === 'REQUIRES_STEP_REVIEW' &&
+      !data.nextScheduleReview
+    ) {
+      ctx.addIssue({
+        path: ['nextScheduleReview'],
+        code: z.ZodIssueCode.custom,
+        message: 'Avalie se é preciso retroceder doses',
       })
     }
 
@@ -105,6 +151,9 @@ export const STEP_2_FIELDS = [
   'applicationDate',
   'startTime',
   'endTime',
+  'nextApplicationDate',
+  'nextScheduleReason',
+  'nextScheduleReview',
   'stepId',
   'adjustmentReason',
   'performerId',
@@ -127,6 +176,11 @@ export const EVOLUTION_DEFAULTS: EvolutionForm = {
   applicationDate: '',
   startTime: '',
   endTime: '',
+  nextApplicationDate: '',
+  nextApplicationDatePlanned: '',
+  nextIntervalBand: '',
+  nextScheduleReason: '',
+  nextScheduleReview: '',
   stepId: '',
   adjustmentReason: '',
   performerId: '',

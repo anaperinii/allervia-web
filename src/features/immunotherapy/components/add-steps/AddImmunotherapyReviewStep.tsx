@@ -46,7 +46,10 @@ export function AddImmunotherapyReviewStep({
   const prescriptionItems = [
     { label: 'Tipo', value: form.type || '—' },
     { label: 'Via', value: 'Subcutânea (SCIT)' },
-    { label: 'Data de Início', value: formatIsoToPtOrDash(form.startDate) },
+    {
+      label: 'Primeira aplicação',
+      value: `${formatIsoToPtOrDash(form.startDate)}${form.startTime ? ` às ${form.startTime}` : ''}`,
+    },
     { label: 'Extrato', value: form.extract || '—' },
     { label: 'Versão do protocolo', value: versionLabel || '—' },
     {

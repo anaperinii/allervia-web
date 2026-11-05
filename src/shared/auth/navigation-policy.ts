@@ -19,6 +19,7 @@ export const ROUTE_POLICIES: readonly RoutePolicy[] = [
   { path: '/login', label: 'Entrar', public: true },
   { path: '/register', label: 'Cadastro por convite', public: true },
   { path: '/forgot-password', label: 'Recuperar senha', public: true },
+  { path: '/confirm-email-change', label: 'Confirmar troca de e-mail', public: true },
   { path: '/trial', label: 'Pedir demonstração', public: true },
 
 

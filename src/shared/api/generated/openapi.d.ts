@@ -1566,6 +1566,9 @@ export interface components {
             expectedTherapyRevision: number;
             idempotencyKey: string;
             immediateConduct?: components["schemas"]["DoseImmediateConductDto"];
+            nextScheduledAt?: string;
+            nextScheduleReason?: string;
+            nextScheduleReview?: "KEEP_STEP" | "STEP_BACK_REQUESTED";
             observations?: components["schemas"]["DoseObservationDto"][];
             reason?: string;
             values: components["schemas"]["ConfiguredDoseValuesDto"];
@@ -1957,6 +1960,7 @@ export interface components {
             allowedValues: components["schemas"]["ProtocolStepResponseDto"][];
             expectedRevision: number;
             expectedTherapyRevision: number;
+            nextIntervalTolerance: components["schemas"]["StepIntervalToleranceDto"] | null;
             nextScheduledAt: string | null;
             prescriptionRevision: number;
             protocolVersionId: string;
@@ -2604,6 +2608,7 @@ export interface components {
             concentration: string;
             id: string;
             intervalDays: number;
+            intervalTolerance?: components["schemas"]["StepIntervalToleranceInputDto"];
             label: string;
             nextStepId: string | null;
             phase: "BUILD_UP" | "MAINTENANCE";
@@ -2613,6 +2618,7 @@ export interface components {
             concentration: string;
             id: string;
             intervalDays: number;
+            intervalTolerance?: components["schemas"]["StepIntervalToleranceDto"];
             label: string;
             nextStepId: string | null;
             phase: "BUILD_UP" | "MAINTENANCE";
@@ -2878,6 +2884,16 @@ export interface components {
             timeZone: string;
             totalTherapies: number;
         };
+        StepIntervalToleranceDto: {
+            longFromDays: number;
+            shortBelowDays: number;
+            stepReviewAboveDays: number;
+        };
+        StepIntervalToleranceInputDto: {
+            longFromDays: number;
+            shortBelowDays: number;
+            stepReviewAboveDays: number;
+        };
         SupportRequestDto: {
             message: string;
             subject: string;
@@ -3069,8 +3085,9 @@ export interface components {
             expectedRevision: number;
             expectedTherapyRevision: number;
             idempotencyKey?: string;
-            reason: string;
+            reason?: string;
             scheduledAt: string;
+            scheduleReview?: "KEEP_STEP" | "STEP_BACK_REQUESTED";
             values: components["schemas"]["ConfiguredDoseValuesDto"];
         };
         UpdateScheduledDoseResponseDto: {

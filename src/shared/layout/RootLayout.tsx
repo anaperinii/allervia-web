@@ -3,10 +3,10 @@ import { AppShell } from '@/shared/layout/AppShell'
 import { Header } from '@/shared/layout/header'
 import { cn } from '@/shared/lib/cn'
 import { RequireSession } from '@/shared/auth/RequireSession'
+import { isPublicRoute } from '@/shared/auth/navigation-policy'
 import { Outlet, useLocation } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
-const publicRoutes = ['/', '/login', '/register', '/trial', '/forgot-password', '/confirm-email-change']
 const authRoutes = ['/login', '/register', '/forgot-password', '/trial']
 const noHeaderRoutes: string[] = ['/login', '/register', '/forgot-password', '/trial', '/confirm-email-change']
 const heroRoutes = ['/', '/trial', '/login', '/register', '/forgot-password']
@@ -53,12 +53,12 @@ function PublicShell({ hideHeader, isAuthRoute, hasHero, pathname }: PublicShell
 
 export function RootComponent() {
   const location = useLocation()
-  const isPublicRoute = publicRoutes.includes(location.pathname)
+  const isPublic = isPublicRoute(location.pathname)
   const isAuthRoute = authRoutes.includes(location.pathname)
   const hideHeader = noHeaderRoutes.includes(location.pathname)
   const hasHero = heroRoutes.includes(location.pathname)
 
-  if (isPublicRoute) {
+  if (isPublic) {
     return (
       <PublicShell
         hideHeader={hideHeader}

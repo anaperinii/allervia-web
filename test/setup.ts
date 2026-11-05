@@ -8,7 +8,6 @@ import { usePatientStore } from '@/features/patient/stores/usePatientStore'
 import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
 import { useToastStore } from '@/shared/components/toasts/useToastStore'
 import { useSidebarStore } from '@/shared/layout/useSidebarStore'
-import { useAuditStore } from '@/shared/stores/useAuditStore'
 import { useUserStore } from '@/shared/stores/useUserStore'
 import { assertDiagnostics, installDiagnostics } from './helpers/diagnostics'
 import { assertNoUnexpectedRequests } from './helpers/http'
@@ -65,7 +64,6 @@ const stores = (
     useSettingsStore,
     useToastStore,
     useSidebarStore,
-    useAuditStore,
     useUserStore,
   ] as unknown as ResettableStore[]
 ).map((store) => ({ store, initial: store.getState() as never }))

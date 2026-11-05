@@ -4,6 +4,11 @@ import type {
   ProtocolDefinitionDraft,
   ProtocolStep,
 } from '@/shared/api/contracts/protocols'
+import {
+  deriveStepIntervalTolerance,
+  toleranceProblems,
+  type StepIntervalTolerance,
+} from '@/shared/lib/dose-interval'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
@@ -23,6 +28,14 @@ export function ProtocolEditor({ draft, readOnly, onChange }: ProtocolEditorProp
   const [nextIndex, setNextIndex] = useState(draft.steps.length + 1)
 
   const stepIds = useMemo(() => draft.steps.map((step) => step.id), [draft.steps])
+
+  const followingIntervalOf = (step: ProtocolStep): number | null => {
+    if (step.nextStepId === null) return null
+    return (
+      draft.steps.find((candidate) => candidate.id === step.nextStepId)
+        ?.intervalDays ?? null
+    )
+  }
 
   const patchStep = (index: number, patch: Partial<ProtocolStep>) => {
     const steps = draft.steps.map((step, position) =>
@@ -158,6 +171,13 @@ export function ProtocolEditor({ draft, readOnly, onChange }: ProtocolEditorProp
               </Button>
             </div>
           )}
+
+          <StepToleranceFields
+            step={step}
+            followingIntervalDays={followingIntervalOf(step)}
+            readOnly={readOnly}
+            onChange={(intervalTolerance) => patchStep(index, { intervalTolerance })}
+          />
         </div>
       ))}
 
@@ -170,6 +190,102 @@ export function ProtocolEditor({ draft, readOnly, onChange }: ProtocolEditorProp
         >
           Adicionar etapa
         </Button>
+      )}
+    </div>
+  )
+}
+
+interface StepToleranceFieldsProps {
+  step: ProtocolStep
+  followingIntervalDays: number | null
+  readOnly: boolean
+  onChange: (tolerance: StepIntervalTolerance | undefined) => void
+}
+
+const TOLERANCE_FIELDS = [
+  {
+    key: 'shortBelowDays',
+    label: 'Curto abaixo de',
+    hint: 'alerta e exige justificativa',
+  },
+  {
+    key: 'longFromDays',
+    label: 'Longo a partir de',
+    hint: 'alerta, mantém a dose calculada',
+  },
+  {
+    key: 'stepReviewAboveDays',
+    label: 'Revisão acima de',
+    hint: 'exige avaliar retrocesso',
+  },
+] as const
+
+function StepToleranceFields({
+  step,
+  followingIntervalDays,
+  readOnly,
+  onChange,
+}: StepToleranceFieldsProps) {
+  const derived = deriveStepIntervalTolerance(
+    step.intervalDays,
+    followingIntervalDays,
+  )
+  const authored = step.intervalTolerance
+  const problems = authored ? toleranceProblems(authored, step.intervalDays) : []
+
+  return (
+    <div className="col-span-2 md:col-span-4 border-t border-(--border-custom) pt-3">
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <div>
+          <div className="text-[0.72rem] font-bold text-(--text)">
+            Tolerância do intervalo
+          </div>
+          <div className="text-[0.66rem] text-(--text-muted) mt-0.5">
+            {authored
+              ? 'Limites definidos neste protocolo.'
+              : derived
+                ? `Derivado desta etapa e da seguinte: curto abaixo de ${derived.shortBelowDays}d, longo de ${derived.longFromDays}d a ${derived.stepReviewAboveDays}d, revisão acima de ${derived.stepReviewAboveDays}d.`
+                : 'Preencha o intervalo da etapa para ver os limites derivados.'}
+          </div>
+        </div>
+        {!readOnly && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onChange(authored ? undefined : (derived ?? undefined))}
+            disabled={!authored && !derived}
+          >
+            {authored ? 'Voltar ao derivado' : 'Definir limites'}
+          </Button>
+        )}
+      </div>
+
+      {authored && (
+        <div className="grid grid-cols-3 gap-3">
+          {TOLERANCE_FIELDS.map((field) => (
+            <FieldLabel key={field.key} label={field.label} hint={field.hint}>
+              <TextInput
+                value={String(authored[field.key])}
+                disabled={readOnly}
+                inputMode="numeric"
+                onChange={(e) =>
+                  onChange({
+                    ...authored,
+                    [field.key]: Number(e.target.value.replace(/\D/g, '')) || 0,
+                  })
+                }
+              />
+            </FieldLabel>
+          ))}
+        </div>
+      )}
+
+      {problems.length > 0 && (
+        <ul className="mt-2 list-disc pl-4 text-[0.66rem] text-red-600">
+          {problems.map((problem) => (
+            <li key={problem}>{problem}</li>
+          ))}
+        </ul>
       )}
     </div>
   )

@@ -82,6 +82,20 @@ const PATIENT_7_DETAIL = {
   updatedAt: '2026-09-01T12:00:00.000Z',
 }
 
+const PATIENT_7_THERAPIES = [
+  {
+    id: 'therapy-7',
+    immunoType: 'Ácaros',
+    extract: 'Der p 60% + Der f 40%',
+    administrationRoute: 'SUBCUTANEOUS',
+    status: 'IN_PROGRESS',
+    revision: 1,
+    inductionStartDate: '2026-03-10T11:00:00.000Z',
+    maintenanceStartDate: null,
+    createdAt: '2026-03-01T12:00:00.000Z',
+  },
+]
+
 const SERVER_TYPES = ['Ácaros', 'Gramíneas']
 
 function stubApi() {
@@ -121,6 +135,9 @@ function stubApi() {
           201,
         ),
       )
+    }
+    if (url.includes('/immunotherapies/patients/patient-7')) {
+      return Promise.resolve(jsonResponse(PATIENT_7_THERAPIES))
     }
     if (url.includes('/patients/patient-7')) {
       return Promise.resolve(jsonResponse(PATIENT_7_DETAIL))
@@ -257,11 +274,37 @@ describe('prescription wizard', () => {
       expect(body.patient.responsiblePhysicianId).toBe('professional-1')
       expect(body.targetConcentration).toBeUndefined()
       expect(body.targetVolume).toBeUndefined()
+      expect(body.inductionStartDate).toMatch(/T08:00:00[+-]\d{2}:\d{2}$/)
     })
 
     expect(
       await screen.findByText('Lista', {}, { timeout: 5000 }),
     ).toBeInTheDocument()
+  })
+
+  it('usa a hora escolhida para a primeira aplicação em vez das 08:00 fixas', async () => {
+    const fetchMock = stubApi()
+    const user = userEvent.setup()
+    await renderWizard()
+
+    await fillPatientStep(user)
+    await screen.findByDisplayValue('Subcutânea (SCIT)')
+
+    const startTime = controlByLabel(/hora da 1ª aplicação/i) as HTMLInputElement
+    expect(startTime).toHaveValue('08:00')
+    await user.clear(startTime)
+    await user.type(startTime, '14:30')
+
+    await fillPrescriptionStep(user)
+    expect(await screen.findByText(/às 14:30/)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /salvar prescrição/i }))
+
+    await waitFor(() => {
+      const body = registerBody(fetchMock)
+      expect(body).not.toBeNull()
+      expect(body.inductionStartDate).toMatch(/T14:30:00[+-]\d{2}:\d{2}$/)
+    })
   })
 
   it('registers an existing patient without editing the patient record', async () => {
@@ -293,6 +336,26 @@ describe('prescription wizard', () => {
     expect(
       await screen.findByText('Lista', {}, { timeout: 5000 }),
     ).toBeInTheDocument()
+  })
+
+  it('warns about open immunotherapies without blocking the new prescription', async () => {
+    stubApi()
+    const user = userEvent.setup()
+    await renderWizard()
+
+    expect(screen.queryByText(/já em andamento neste paciente/i)).toBeNull()
+
+    await user.type(screen.getByPlaceholderText('Nome completo'), 'Paula')
+    await user.click(await screen.findByRole('option', { name: /paula andrade/i }))
+
+    expect(
+      await screen.findByText(/1 imunoterapia já em andamento neste paciente/i),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ácaros' })).toBeInTheDocument()
+    expect(screen.getByText('Em andamento')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    expect(await screen.findByDisplayValue('Subcutânea (SCIT)')).toBeInTheDocument()
   })
 
   it('preserves the form without local success after a server rejection', async () => {

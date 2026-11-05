@@ -1,4 +1,5 @@
-import { collectPages } from '@/shared/api/pagination'
+import { collectAccentTolerantPages } from '@/shared/api/search'
+import { searchVariants } from '@/shared/lib/search-terms'
 import { Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { Controller, type UseFormReturn } from 'react-hook-form'
@@ -7,16 +8,27 @@ import { FieldLabel, StepHeading, TextInput } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
 import { formatCPF, formatPhone, formatWeight } from '@/shared/lib/formatters'
 import { calculateAge, parseIsoDate, toDateInputValue } from '@/shared/lib/dates'
-import { getPatient, listPatients } from '@/shared/api/clinical.api'
+import {
+  getPatient,
+  listDosesForTherapy,
+  listPatients,
+  listTherapiesForPatient,
+} from '@/shared/api/clinical.api'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
-import type { PatientListItem } from '@/shared/api/contracts/clinical'
+import type { PatientListItem, TherapySummary } from '@/shared/api/contracts/clinical'
+import { PHASE_VIEW } from '@/features/protocols/lab/phase-view'
+import {
+  formatInstantDate,
+  formatStepPresentation,
+  THERAPY_STATUS_LABELS,
+} from '@/features/patient/adapters/clinical-presentation'
 import {
   isMinorBirthDate,
   type AddImmunotherapyForm,
 } from '@/features/immunotherapy/schemas/add-immunotherapy'
 
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faChevronUp, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const MIN_SEARCH_LENGTH = 2
@@ -40,10 +52,17 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
   const suggestionsRef = useRef<HTMLDivElement>(null)
 
   const term = name.trim()
+  const terms = searchVariants(term)
   const patientsQuery = useQuery({
-    queryKey: queryKeys.patients(organizationId, { picker: true, search: term }),
+    queryKey: queryKeys.patients(organizationId, { picker: true, search: terms.join('|') }),
     queryFn: ({ signal }) =>
-      collectPages(page => listPatients({ page, pageSize: 100, isActive: true, search: term }, signal), { signal, maxPages: 5 }),
+      collectAccentTolerantPages({
+        term,
+        signal,
+        load: (page, search) => listPatients({ page, pageSize: 100, isActive: true, search }, signal),
+        getId: (patient) => patient.id,
+        getSearchableText: (patient) => patient.fullName,
+      }),
     enabled:
       organizationId !== '' && !isExisting && term.length >= MIN_SEARCH_LENGTH,
   })
@@ -67,6 +86,16 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
     setValue('guardianCpf', formatCPF(detailGuardian?.cpf ?? ''))
     setValue('guardianPhone', formatPhone(detailGuardian?.phoneNumber ?? ''))
   }, [patientDetailQuery.data, detailGuardian, setValue])
+
+  const therapiesQuery = useQuery({
+    queryKey: [...queryKeys.patient(organizationId, patientId), 'therapies'],
+    queryFn: ({ signal }) => listTherapiesForPatient(patientId, signal),
+    enabled: organizationId !== '' && isExisting,
+  })
+  const openTherapies = (therapiesQuery.data ?? []).filter(
+    (therapy) => therapy.status === 'IN_PROGRESS' || therapy.status === 'SUSPENDED',
+  )
+  const [showOpenTherapies, setShowOpenTherapies] = useState(true)
 
   const cpfLocked = isExisting
 
@@ -262,6 +291,55 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
           />
         </FieldLabel>
 
+        {isExisting && openTherapies.length > 0 && (
+          <div
+            className="col-span-2 overflow-hidden rounded-xl border border-(--border-custom) bg-white"
+            style={{ animation: 'fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}
+          >
+            <div className="flex items-center gap-2 px-4 py-2.5">
+              <span
+                aria-hidden="true"
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                style={{ background: '#f59e0b' }}
+              />
+              <span className="text-[0.78rem] font-semibold text-(--text)">
+                {openTherapies.length === 1
+                  ? '1 imunoterapia já em andamento neste paciente'
+                  : `${openTherapies.length} imunoterapias já em andamento neste paciente`}
+              </span>
+              <span className="truncate text-[0.78rem] text-(--text-muted)">
+                · cada uma segue protocolo e agenda próprios; prescrever outra não
+                interrompe as atuais
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowOpenTherapies((open) => !open)}
+                aria-expanded={showOpenTherapies}
+                className="ml-auto flex shrink-0 items-center gap-1.5 text-[0.75rem] font-semibold text-(--text-muted) transition-colors hover:text-(--text) cursor-pointer"
+              >
+                {showOpenTherapies ? 'Ocultar' : 'Mostrar'}
+                <FontAwesomeIcon
+                  icon={showOpenTherapies ? faChevronUp : faChevronDown}
+                  style={{ fontSize: 9 }}
+                />
+              </button>
+            </div>
+
+            {showOpenTherapies && (
+              <ul className="border-t border-(--border-custom)">
+                {openTherapies.map((therapy) => (
+                  <OpenTherapyRow
+                    key={therapy.id}
+                    therapy={therapy}
+                    patientId={patientId}
+                    organizationId={organizationId}
+                  />
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
         <FieldLabel label="Telefone" error={errors.phone?.message}>
           <Controller
             control={control}
@@ -385,6 +463,80 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
           </p>
         )}
       </div>
+
+      {isExisting && therapiesQuery.isError && (
+        <p role="status" className="text-[0.65rem] leading-relaxed text-amber-700">
+          Não foi possível verificar as imunoterapias já cadastradas deste paciente.{' '}
+          <button type="button" onClick={() => void therapiesQuery.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
     </div>
+  )
+}
+
+interface OpenTherapyRowProps {
+  therapy: TherapySummary
+  patientId: string
+  organizationId: string
+}
+
+function OpenTherapyRow({ therapy, patientId, organizationId }: OpenTherapyRowProps) {
+  const dosesQuery = useQuery({
+    queryKey: queryKeys.doses(organizationId, therapy.id),
+    queryFn: ({ signal }) => listDosesForTherapy(therapy.id, signal),
+    enabled: organizationId !== '',
+  })
+
+  const lastAdministered = (dosesQuery.data ?? [])
+    .filter(
+      (dose) => dose.administeredAt !== null && dose.status !== 'ENTERED_IN_ERROR',
+    )
+    .sort((a, b) => (b.administeredAt ?? '').localeCompare(a.administeredAt ?? ''))[0]
+
+  const administeredValues =
+    lastAdministered?.administeredValues ?? lastAdministered?.plannedValues ?? null
+  const phase =
+    administeredValues?.phase ??
+    (therapy.maintenanceStartDate ? 'MAINTENANCE' : 'BUILD_UP')
+
+  const details = [
+    therapy.extract,
+    `Início ${formatInstantDate(therapy.inductionStartDate)}`,
+    ...(administeredValues
+      ? [
+          `Última dose ${formatStepPresentation(administeredValues)}`,
+          PHASE_VIEW[phase].label,
+        ]
+      : dosesQuery.isPending
+        ? ['Carregando doses…']
+        : ['Sem dose aplicada']),
+  ]
+
+  return (
+    <li className="flex items-center gap-3 border-b border-(--border-custom) px-4 py-2.5 last:border-b-0">
+      <Link
+        to="/patient/$patientId"
+        params={{ patientId }}
+        search={{ therapy: therapy.id }}
+        className="truncate text-[0.82rem] font-semibold text-(--text) underline-offset-2 hover:underline"
+      >
+        {therapy.immunoType}
+      </Link>
+      <span className="ml-auto shrink-0 text-[0.72rem] text-(--text-muted)">
+        {details.join(' · ')}
+      </span>
+      <span
+        className={cn(
+          'inline-flex shrink-0 items-center rounded-md border px-2 py-0.5 text-[0.65rem] font-semibold',
+          therapy.status === 'SUSPENDED'
+            ? 'border-red-300 bg-red-50 text-red-700'
+            : 'border-brand/40 bg-brand-50 text-brand-dark',
+        )}
+      >
+        {THERAPY_STATUS_LABELS[therapy.status]}
+      </span>
+    </li>
   )
 }

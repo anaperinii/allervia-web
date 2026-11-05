@@ -300,7 +300,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
   doc.setTextColor(...MUTED)
   doc.setFont('helvetica', 'normal')
   doc.text(`Período: ${data.periodLabel}`, margin, (y += 7))
-  doc.text(`Gerado em ${data.generatedAt} · Allervia`, margin, (y += 5))
+  doc.text(`Gerado em ${data.generatedAt} · allervia`, margin, (y += 5))
   doc.setDrawColor(...GRID)
   doc.line(margin, (y += 3), pageW - margin, y)
   y += 6

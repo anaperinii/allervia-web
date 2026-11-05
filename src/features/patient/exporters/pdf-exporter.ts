@@ -43,7 +43,7 @@ export function buildPatientReportPdf(data: ReportData): jsPDF {
   doc.setFontSize(9)
   doc.setTextColor(100, 116, 139)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Gerado em ${data.generatedAt} · Allervia`, margin, (y += 10))
+  doc.text(`Gerado em ${data.generatedAt} · allervia`, margin, (y += 10))
   doc.setDrawColor(226, 240, 239)
   doc.line(margin, (y += 3), pageW - margin, y)
   y += 6

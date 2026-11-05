@@ -60,7 +60,7 @@ function StepHarness() {
     defaultValues: {
       name: '', cpf: '', phone: '', birthDate: '', weight: '', patientId: '',
       guardianName: '', guardianCpf: '', guardianPhone: '',
-      type: '', startDate: '', extract: '',
+      type: '', startDate: '', startTime: '08:00', extract: '',
       protocolVersionId: '', stepIds: [], startingStepId: '', targetStepId: '',
     },
   })

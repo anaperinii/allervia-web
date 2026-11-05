@@ -1,6 +1,7 @@
 import { ClinicalReviewNotice } from '@/shared/components/ClinicalReviewNotice'
 import { ApiError } from '@/shared/api/contracts/errors'
-import { collectPages } from '@/shared/api/pagination'
+import { collectAccentTolerantPages } from '@/shared/api/search'
+import { searchVariants } from '@/shared/lib/search-terms'
 import { useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
@@ -94,12 +95,20 @@ function NewAppointmentForm({
   const [endTime, setEndTime] = useState('')
   const [notes, setNotes] = useState('')
 
+  const searchTerms = searchVariants(search)
   const patientsQuery = useQuery({
     queryKey: queryKeys.patients(organizationId, {
       picker: 'appointment',
-      search: search.trim() || undefined,
+      search: searchTerms.join('|') || undefined,
     }),
-    queryFn: ({ signal }) => collectPages(page => listPatients({ page, pageSize: 100, isActive: true, search: search.trim() || undefined }, signal), { signal, maxPages: 5 }),
+    queryFn: ({ signal }) =>
+      collectAccentTolerantPages({
+        term: search,
+        signal,
+        load: (page, term) => listPatients({ page, pageSize: 100, isActive: true, search: term }, signal),
+        getId: (patient) => patient.id,
+        getSearchableText: (patient) => patient.fullName,
+      }),
     enabled: organizationId !== '',
   })
   const patientOptions = patientsQuery.data?.items ?? []
