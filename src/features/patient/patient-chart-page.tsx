@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
@@ -22,7 +22,6 @@ import { ApiError } from '@/shared/api/contracts/errors'
 import { humanErrorMessage } from '@/shared/api/error-copy'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
-import { useAuditStore } from '@/shared/stores/useAuditStore'
 import { useCurrentUser, useHasPermission } from '@/shared/stores/useUserStore'
 import { formatDurationFromDays } from '@/shared/lib/dates'
 import { monthIndexFromPtUpper } from '@/shared/constants/months-pt'
@@ -170,24 +169,6 @@ export function PatientChartPage() {
   }, [patientDetail, selectedTherapy, setSelectedPatient, dosesQuery.data, account?.organization?.timeZone])
 
   const currentUser = useCurrentUser()
-  const logAccess = useAuditStore((s) => s.logAccess)
-  const loggedAccessRef = useRef<string | null>(null)
-  useEffect(() => {
-    if (!selectedPatient) return
-    const key = `${currentUser.id}::${selectedPatient.id}`
-    if (loggedAccessRef.current === key) return
-    loggedAccessRef.current = key
-    logAccess({
-      userId: currentUser.id,
-      userName: currentUser.name,
-      userRole: currentUser.role,
-      userRegistration: currentUser.registration,
-      patientId: selectedPatient.id,
-      patientName: selectedPatient.name,
-      action: 'view_chart',
-      description: 'Consultou o prontuário',
-    })
-  }, [selectedPatient, currentUser, logAccess])
 
   const [selectedApplication, setSelectedApp] = useState<Application | null>(null)
   const [monthFilter, setMonthFilter] = useState('all')
