@@ -22,7 +22,7 @@ import { ApiError } from '@/shared/api/contracts/errors'
 import { humanErrorMessage } from '@/shared/api/error-copy'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
-import { useCurrentUser, useHasPermission } from '@/shared/stores/useUserStore'
+import { useHasPermission } from '@/shared/stores/useUserStore'
 import { formatDurationFromDays } from '@/shared/lib/dates'
 import { monthIndexFromPtUpper } from '@/shared/constants/months-pt'
 import { PatientInfoSidebar } from '@/features/patient/components/chart/PatientInfoSidebar'
@@ -167,8 +167,6 @@ export function PatientChartPage() {
     if (!patientDetail) return
     setSelectedPatient(buildLegacyPatient(patientDetail, selectedTherapy, dosesQuery.data?.find(record => record.id === selectedTherapy?.nextDose?.id)?.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo'))
   }, [patientDetail, selectedTherapy, setSelectedPatient, dosesQuery.data, account?.organization?.timeZone])
-
-  const currentUser = useCurrentUser()
 
   const [selectedApplication, setSelectedApp] = useState<Application | null>(null)
   const [monthFilter, setMonthFilter] = useState('all')
