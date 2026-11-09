@@ -62,6 +62,10 @@ export function getStatusHistory(query: { from: string; to: string; timeZone: st
   return apiRequest<GeneratedSchema<'StatusHistoryResponseDto'>>(`/immunotherapies/status-history${toQueryString(query)}`, { signal }).then(createContractParser<GeneratedSchema<'StatusHistoryResponseDto'>>(z.object({ asOf: z.string().datetime({ offset: true }), timeZone: z.string(), complete: z.literal(true), totalTherapies: z.number().int().nonnegative(), buckets: z.array(z.object({ date: z.string(), label: z.string(), active: z.number().int().nonnegative(), suspended: z.number().int().nonnegative(), completed: z.number().int().nonnegative(), unknown: z.number().int().nonnegative() })) }), 'Série histórica inválida.'))
 }
 
+export function getPhaseTimeline(query: { from: string; to: string; timeZone: string }, signal?: AbortSignal) {
+  return apiRequest<GeneratedSchema<'PhaseTimelineResponseDto'>>(`/immunotherapies/phase-timeline${toQueryString(query)}`, { signal }).then(createContractParser<GeneratedSchema<'PhaseTimelineResponseDto'>>(z.object({ asOf: z.string().datetime({ offset: true }), timeZone: z.string(), totalTherapies: z.number().int().nonnegative(), days: z.array(z.object({ date: z.string(), buildUp: z.number().int().nonnegative(), maintenance: z.number().int().nonnegative() })) }), 'Linha do tempo de fases inválida.'))
+}
+
 function toQueryString(params: Record<string, unknown>): string {
   const search = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {

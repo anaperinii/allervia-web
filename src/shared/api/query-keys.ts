@@ -9,6 +9,7 @@ export const queryKeys = {
   supportRequests: (organizationId: string, userId: string) => ['support-requests', organizationId, userId] as const,
   patientRecord: (organizationId: string, patientId: string) => ['clinical', organizationId, currentUserId(), 'patients', 'record', patientId] as const,
   statusHistory: (organizationId: string, filters: Record<string, unknown>) => ['clinical', organizationId, currentUserId(), 'status-history', filters] as const,
+  phaseTimeline: (organizationId: string, filters: Record<string, unknown>) => ['clinical', organizationId, currentUserId(), 'phase-timeline', filters] as const,
   session: () => ['session'] as const,
   account: () => ['account', 'me'] as const,
   devices: () => ['account', 'devices'] as const,

@@ -799,6 +799,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/immunotherapies/phase-timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ImmunotherapiesController_readPhaseTimeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/immunotherapies/record/{patientId}": {
         parameters: {
             query?: never;
@@ -1890,14 +1906,27 @@ export interface components {
             count: number;
             day: string;
         };
+        DoseMetricsConcentrationDto: {
+            concentration: number;
+            count: number;
+            totalVolume: number;
+        };
+        DoseMetricsPhasesDto: {
+            buildUp: number;
+            maintenance: number;
+        };
         DoseMetricsResponseDto: {
             adherence: components["schemas"]["DoseMetricsAdherenceDto"];
             applications: components["schemas"]["DoseMetricsApplicationsDto"];
+            concentration: components["schemas"]["DoseMetricsConcentrationDto"][];
             from: string;
+            phases: components["schemas"]["DoseMetricsPhasesDto"];
             scheduled: components["schemas"]["DoseMetricsScheduledDto"];
             therapies: components["schemas"]["DoseMetricsTherapiesDto"];
             timeZone: string;
             to: string;
+            typesActive: components["schemas"]["DoseMetricsTypeDto"][];
+            volumeMatrix: components["schemas"]["DoseMetricsVolumeMatrixDto"][];
         };
         DoseMetricsScheduledDto: {
             overdue: number;
@@ -1909,6 +1938,15 @@ export interface components {
             inProgress: number;
             maintenance: number;
             suspended: number;
+        };
+        DoseMetricsTypeDto: {
+            count: number;
+            immunoType: string;
+        };
+        DoseMetricsVolumeMatrixDto: {
+            concentration: number;
+            count: number;
+            volume: number;
         };
         DoseObservationAddendumResponseDto: {
             administeredMedications: string[];
@@ -2528,6 +2566,17 @@ export interface components {
             updatedById: string;
             userId: string | null;
             weightInKg: number;
+        };
+        PhaseTimelineDayDto: {
+            buildUp: number;
+            date: string;
+            maintenance: number;
+        };
+        PhaseTimelineResponseDto: {
+            asOf: string;
+            days: components["schemas"]["PhaseTimelineDayDto"][];
+            timeZone: string;
+            totalTherapies: number;
         };
         PrescriptionRevisionAppliedDto: {
             dryRun: false;
@@ -4611,6 +4660,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ImmunotherapyListItemDto"][];
+                };
+            };
+        };
+    };
+    ImmunotherapiesController_readPhaseTimeline: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                timeZone: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhaseTimelineResponseDto"];
                 };
             };
         };

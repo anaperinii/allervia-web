@@ -71,7 +71,7 @@ export function TeamsPage() {
     isActive: statusFilter === 'all' ? undefined : statusFilter === 'active',
   }
 
-  const inviteFilters = { page: invitePage, pageSize: 50, includeExpired: true }
+  const inviteFilters = { page: invitePage, pageSize: itemsPerPage, includeExpired: true }
   const requestFilters = { page: requestsPage, pageSize: itemsPerPage }
 
   const membersQuery = useQuery({
@@ -146,6 +146,8 @@ export function TeamsPage() {
   const totalRequests = emailChangeRequestsQuery.data?.total ?? 0
   const pendingRequests = emailChangeRequestsQuery.data?.pending ?? 0
   const totalRequestPages = Math.max(1, Math.ceil(totalRequests / itemsPerPage))
+  const totalInvites = invitesQuery.data?.total ?? 0
+  const totalInvitePages = Math.max(1, Math.ceil(totalInvites / itemsPerPage))
 
   const applyFilter = (apply: () => void) => {
     apply()
@@ -256,7 +258,6 @@ export function TeamsPage() {
       </div>
 
       {deliveryNotice && <p role="status" className="mb-3">{deliveryNotice}</p>}
-      {tab === 'invites' && (invitesQuery.data?.total ?? 0) > 50 && <div><Button disabled={invitePage === 1} onClick={() => setInvitePage(page => page - 1)}>Anterior</Button><span>Página {invitePage}</span><Button disabled={invitePage * 50 >= (invitesQuery.data?.total ?? 0)} onClick={() => setInvitePage(page => page + 1)}>Próxima</Button></div>}
       {loadFailure && (
         <div
           role="alert"
@@ -355,7 +356,7 @@ export function TeamsPage() {
 
       {tab === 'members' ? (
         <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-white border border-[#DDE6E6]">
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1">
             {membersQuery.isPending ? (
               <div className="py-12 text-center text-xs text-(--text-muted)">
                 Carregando equipe…
@@ -397,12 +398,14 @@ export function TeamsPage() {
           <TablePagination
             currentPage={currentPage}
             totalPages={totalPages}
+            totalItems={totalMembers}
+            visibleItems={members.length}
             onPageChange={setCurrentPage}
           />
         </div>
       ) : tab === 'invites' ? (
         <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-white border border-[#DDE6E6]">
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1">
             {invitesQuery.isPending ? (
               <div className="py-12 text-center text-xs text-(--text-muted)">
                 Carregando convites…
@@ -427,10 +430,17 @@ export function TeamsPage() {
               />
             )}
           </div>
+          <TablePagination
+            currentPage={invitePage}
+            totalPages={totalInvitePages}
+            totalItems={totalInvites}
+            visibleItems={invites.length}
+            onPageChange={setInvitePage}
+          />
         </div>
       ) : (
         <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-white border border-[#DDE6E6]">
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1">
             {emailChangeRequestsQuery.isPending ? (
               <div className="py-12 text-center text-xs text-(--text-muted)">
                 Carregando pedidos…
@@ -452,6 +462,8 @@ export function TeamsPage() {
           <TablePagination
             currentPage={requestsPage}
             totalPages={totalRequestPages}
+            totalItems={totalRequests}
+            visibleItems={emailChangeRequests.length}
             onPageChange={setRequestsPage}
           />
         </div>

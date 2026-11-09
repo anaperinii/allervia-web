@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@fontsource/manrope/latin-400.css";
+@import "@fontsource/manrope/latin-500.css";
 @import "@fontsource/manrope/latin-600.css";
 @import "@fontsource/manrope/latin-700.css";
 @import "@fontsource/manrope/latin-800.css";
@@ -54,6 +56,16 @@
   src: url("./assets/fonts/aspekta-latin-600.woff2") format("woff2");
 }
 
+/* Digit-only subset: lets text run in Manrope while numerals keep rendering in Aspekta */
+@font-face {
+  font-family: "AspektaDigits";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  unicode-range: U+30-39, U+2C, U+2E;
+  src: url("./assets/fonts/aspekta-latin-400.woff2") format("woff2");
+}
+
 @theme {
   --color-teal-50: #f0fdfc;
   --color-teal-100: #ccfbf5;
@@ -81,8 +93,8 @@
   --color-allervia-ink-muted: #7FA6AC;
   --color-allervia-dot: #9BC1C4;
   --color-allervia-foot: #0a181b;
-  --font-family-sans: "Aspekta", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-family-heading: "Aspekta", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-family-sans: "AspektaDigits", "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-family-heading: "AspektaDigits", "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 @layer base {

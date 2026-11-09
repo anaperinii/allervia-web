@@ -1,63 +1,27 @@
-import { collectPages } from '@/shared/api/pagination'
 import { useQuery } from '@tanstack/react-query'
 import {
+  getPhaseTimeline,
   getStatusHistory,
-  listDoseSchedule,
-  listImmunotherapies,
 } from '@/shared/api/clinical.api'
 import type {
   ClinicalMetrics,
-  DoseValues,
-  ImmunotherapyListItem,
   LifecycleEventType,
-  ScheduleDoseItem,
+  PhaseTimeline,
   TherapyStatus,
 } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { dayInZone } from '@/shared/lib/dates'
 
-const PAGE_SIZE = 100
-const MAX_PAGES = 20
-
-async function fetchDoseWindow(
-  period: { from: string; to: string },
-  signal?: AbortSignal,
-): Promise<ScheduleDoseItem[]> {
-  const result = await collectPages((page) => listDoseSchedule({ ...period, page, pageSize: PAGE_SIZE }, signal), { signal, maxPages: MAX_PAGES })
-  if (!result.complete) throw new Error('Aggregate window is incomplete; narrow the period.')
-  return result.items
-}
-
-async function fetchActiveTherapies(
-  signal?: AbortSignal,
-): Promise<ImmunotherapyListItem[]> {
-  const result = await collectPages((page) => listImmunotherapies({ status: 'IN_PROGRESS', page, pageSize: PAGE_SIZE }, signal), { signal, maxPages: MAX_PAGES })
-  if (!result.complete) throw new Error('Aggregate window is incomplete; narrow the period.')
-  return result.items
-}
-
-export function useDoseWindow(
+export function usePhaseTimeline(
   organizationId: string,
-  period: { from: string; to: string },
+  period: { fromDay: string; toDay: string },
+  timeZone: string,
 ) {
+  const filters = { from: period.fromDay, to: period.toDay, timeZone }
   return useQuery({
-    queryKey: queryKeys.schedule(organizationId, {
-      ...period,
-      scope: 'dashboard-aggregates',
-    }),
-    queryFn: ({ signal }) => fetchDoseWindow(period, signal),
-    enabled: organizationId !== '',
-  })
-}
-
-export function useActiveTherapies(organizationId: string) {
-  return useQuery({
-    queryKey: queryKeys.immunotherapies(organizationId, {
-      status: 'IN_PROGRESS',
-      scope: 'dashboard-aggregates',
-    }),
-    queryFn: ({ signal }) => fetchActiveTherapies(signal),
+    queryKey: queryKeys.phaseTimeline(organizationId, filters),
+    queryFn: ({ signal }) => getPhaseTimeline(filters, signal),
     enabled: organizationId !== '',
   })
 }
@@ -82,51 +46,12 @@ export function useStatusHistory(organizationId: string, granularity: StatusGran
   })
 }
 
-function isAdministered(dose: ScheduleDoseItem): boolean {
-  return (
-    dose.status === 'ADMINISTERED_ON_SCHEDULE' ||
-    dose.status === 'ADMINISTERED_OFF_SCHEDULE'
-  )
+export function concentrationLabel(concentration: number): string {
+  return `1:${concentration.toLocaleString('pt-BR')}`
 }
 
-function administeredValues(dose: ScheduleDoseItem): DoseValues | null {
-  return dose.administeredValues ?? dose.plannedValues
-}
-
-export function concentrationLabel(values: DoseValues): string {
-  const parsed = Number(values.concentration)
-  return Number.isFinite(parsed)
-    ? `1:${parsed.toLocaleString('pt-BR')}`
-    : `1:${values.concentration}`
-}
-
-export function volumeLabel(values: DoseValues): string {
-  const amount = values.volume.replace('.', ',')
-  const unit = values.volumeUnit?.trim()
-  if (!unit || unit.toLowerCase() === 'ml') return `${amount}ml`
-  return `${amount} ${unit}`
-}
-
-function concentrationOrder(a: string, b: string): number {
-  const parse = (label: string) => {
-    const match = /^1:([\d.,]+)/.exec(label)
-    if (!match) return null
-    return Number(match[1].replace(/\./g, '').replace(',', '.'))
-  }
-  const va = parse(a)
-  const vb = parse(b)
-  if (va !== null && vb !== null) return vb - va
-  if (va !== null) return -1
-  if (vb !== null) return 1
-  return a.localeCompare(b, 'pt-BR')
-}
-
-function volumeOrder(a: string, b: string): number {
-  const parse = (label: string) => Number.parseFloat(label.replace(',', '.'))
-  const va = parse(a)
-  const vb = parse(b)
-  if (Number.isNaN(va) || Number.isNaN(vb)) return a.localeCompare(b, 'pt-BR')
-  return va - vb
+export function volumeLabel(volume: number): string {
+  return `${volume.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}ml`
 }
 
 export interface CountEntry {
@@ -135,20 +60,31 @@ export interface CountEntry {
   pct: number
 }
 
-export function aggregateByConcentration(
-  doses: ScheduleDoseItem[],
+export function concentrationFromMetrics(metrics: ClinicalMetrics): CountEntry[] {
+  const rows = metrics.concentration
+  const total = rows.reduce((sum, row) => sum + row.count, 0)
+  return [...rows]
+    .sort((a, b) => b.concentration - a.concentration)
+    .map((row) => ({
+      label: concentrationLabel(row.concentration),
+      count: row.count,
+      pct: total > 0 ? Math.round((row.count / total) * 100) : 0,
+    }))
+}
+
+export function activeByTypeFromMetrics(
+  metrics: ClinicalMetrics,
+  knownTypes: string[] = [],
 ): CountEntry[] {
   const counts = new Map<string, number>()
-  for (const dose of doses) {
-    if (!isAdministered(dose)) continue
-    const values = administeredValues(dose)
-    if (!values) continue
-    const label = concentrationLabel(values)
-    counts.set(label, (counts.get(label) ?? 0) + 1)
+  for (const label of knownTypes) counts.set(label, 0)
+  let total = 0
+  for (const row of metrics.typesActive) {
+    counts.set(row.immunoType, (counts.get(row.immunoType) ?? 0) + row.count)
+    total += row.count
   }
-  const total = [...counts.values()].reduce((sum, count) => sum + count, 0)
   return [...counts.entries()]
-    .sort(([a], [b]) => concentrationOrder(a, b))
+    .sort(([labelA, a], [labelB, b]) => b - a || labelA.localeCompare(labelB, 'pt-BR'))
     .map(([label, count]) => ({
       label,
       count,
@@ -182,57 +118,25 @@ export interface VolumeConcentrationMatrix {
   total: number
 }
 
-export function aggregateVolumeMatrix(
-  doses: ScheduleDoseItem[],
+export function volumeMatrixFromMetrics(
+  metrics: ClinicalMetrics,
 ): VolumeConcentrationMatrix {
+  const rows = metrics.volumeMatrix
+  const concentrations = [...new Set(rows.map((row) => row.concentration))].sort((a, b) => b - a)
+  const volumes = [...new Set(rows.map((row) => row.volume))].sort((a, b) => a - b)
   const cells = new Map<string, number>()
-  const concentrations = new Set<string>()
-  const volumes = new Set<string>()
-  for (const dose of doses) {
-    if (!isAdministered(dose)) continue
-    const values = administeredValues(dose)
-    if (!values) continue
-    const conc = concentrationLabel(values)
-    const vol = volumeLabel(values)
-    concentrations.add(conc)
-    volumes.add(vol)
-    const key = `${conc}\0${vol}`
-    cells.set(key, (cells.get(key) ?? 0) + 1)
-  }
-  const concList = [...concentrations].sort(concentrationOrder)
-  const volList = [...volumes].sort(volumeOrder)
-  const counts = concList.map((conc) =>
-    volList.map((vol) => cells.get(`${conc}\0${vol}`) ?? 0),
+  for (const row of rows) cells.set(`${row.concentration}\0${row.volume}`, row.count)
+  const counts = concentrations.map((conc) =>
+    volumes.map((vol) => cells.get(`${conc}\0${vol}`) ?? 0),
   )
   const flat = counts.flat()
   return {
-    concentrations: concList,
-    volumes: volList,
+    concentrations: concentrations.map(concentrationLabel),
+    volumes: volumes.map(volumeLabel),
     counts,
     max: flat.length > 0 ? Math.max(...flat) : 0,
     total: flat.reduce((sum, count) => sum + count, 0),
   }
-}
-
-export function aggregateActiveByType(
-  therapies: ImmunotherapyListItem[],
-  knownTypes: string[] = [],
-): CountEntry[] {
-  const counts = new Map<string, number>()
-  for (const label of knownTypes) {
-    counts.set(label, 0)
-  }
-  for (const therapy of therapies) {
-    counts.set(therapy.immunoType, (counts.get(therapy.immunoType) ?? 0) + 1)
-  }
-  const total = therapies.length
-  return [...counts.entries()]
-    .sort(([labelA, a], [labelB, b]) => b - a || labelA.localeCompare(labelB, 'pt-BR'))
-    .map(([label, count]) => ({
-      label,
-      count,
-      pct: total > 0 ? Math.round((count / total) * 100) : 0,
-    }))
 }
 
 export interface PhaseDayEntry {
@@ -280,59 +184,13 @@ function dayLabel(day: string): string {
   return `${day.slice(8, 10)}/${day.slice(5, 7)}`
 }
 
-export function aggregatePhasesByDay(
-  doses: ScheduleDoseItem[],
-  fromDay: string,
-  toDay: string,
-  timeZone: string,
-): PhaseDayEntry[] {
-  const byDay = new Map<string, { buildUp: number; maintenance: number }>()
-  for (const day of eachDay(fromDay, toDay)) {
-    byDay.set(day, { buildUp: 0, maintenance: 0 })
-  }
-  for (const dose of doses) {
-    if (!isAdministered(dose) || !dose.administeredAt) continue
-    const values = administeredValues(dose)
-    if (!values) continue
-    const day = dayInZone(new Date(dose.administeredAt), timeZone)
-    const bucket = byDay.get(day)
-    if (!bucket) continue
-    if (values.phase === 'BUILD_UP') bucket.buildUp += 1
-    else bucket.maintenance += 1
-  }
-  return [...byDay.entries()].map(([date, bucket]) => ({
-    date,
-    label: dayLabel(date),
-    ...bucket,
+export function phaseSeriesFromTimeline(timeline: PhaseTimeline): PhaseDayEntry[] {
+  return timeline.days.map((day) => ({
+    date: day.date,
+    label: dayLabel(day.date),
+    buildUp: day.buildUp,
+    maintenance: day.maintenance,
   }))
-}
-
-export function aggregatePhasePatientsByDay(
-  therapies: ImmunotherapyListItem[],
-  fromDay: string,
-  toDay: string,
-  timeZone = 'America/Sao_Paulo',
-): PhaseDayEntry[] {
-  return eachDay(fromDay, toDay).map((day) => {
-    const buildUp = new Set<string>()
-    const maintenance = new Set<string>()
-    for (const therapy of therapies) {
-      const induction = dayInZone(new Date(therapy.inductionStartDate), timeZone)
-      if (induction > day) continue
-      const maintenanceStart = therapy.maintenanceStartDate ? dayInZone(new Date(therapy.maintenanceStartDate), timeZone) : null
-      if (maintenanceStart !== null && maintenanceStart <= day) {
-        maintenance.add(therapy.patient.id)
-      } else {
-        buildUp.add(therapy.patient.id)
-      }
-    }
-    return {
-      date: day,
-      label: dayLabel(day),
-      buildUp: buildUp.size,
-      maintenance: maintenance.size,
-    }
-  })
 }
 
 export type StatusGranularity = 'week' | 'month'

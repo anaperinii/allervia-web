@@ -26,15 +26,14 @@ import {
   exportDashboardReportJson,
 } from '@/features/dashboard/exporters/data-report-exporters'
 import {
-  aggregateActiveByType,
-  aggregateByConcentration,
-  aggregatePhasePatientsByDay,
-  aggregateVolumeMatrix,
+  activeByTypeFromMetrics,
   buildApplicationSeries,
+  concentrationFromMetrics,
   eachDay,
-  useActiveTherapies,
-  useDoseWindow,
+  phaseSeriesFromTimeline,
+  usePhaseTimeline,
   useStatusHistory,
+  volumeMatrixFromMetrics,
 } from '@/features/dashboard/hooks/useDashboardAggregates'
 import { downloadFile } from '@/shared/lib/file-download'
 import { addDaysToDay, dayInZone, toZonedOffsetIso } from '@/shared/lib/dates'
@@ -153,8 +152,7 @@ export function ExportReportPage() {
     queryFn: ({ signal }) => getClinicalMetrics(period, signal),
     enabled: dashboardOrganizationId !== '',
   })
-  const doseWindowQuery = useDoseWindow(dashboardOrganizationId, period)
-  const activeTherapiesQuery = useActiveTherapies(dashboardOrganizationId)
+  const phaseTimelineQuery = usePhaseTimeline(dashboardOrganizationId, periodDays, timeZone)
   const statusHistoryQuery = useStatusHistory(dashboardOrganizationId)
   const typesQuery = useQuery({
     queryKey: queryKeys.immunotherapyTypes(dashboardOrganizationId),
@@ -165,15 +163,13 @@ export function ExportReportPage() {
   const dashboardLoading =
     isDashboardFormat &&
     (metricsQuery.isPending ||
-      doseWindowQuery.isPending ||
-      activeTherapiesQuery.isPending ||
+      phaseTimelineQuery.isPending ||
       statusHistoryQuery.isPending ||
       typesQuery.isPending)
   const dashboardError =
     isDashboardFormat &&
     (metricsQuery.isError ||
-      doseWindowQuery.isError ||
-      activeTherapiesQuery.isError ||
+      phaseTimelineQuery.isError ||
       statusHistoryQuery.isError ||
       typesQuery.isError)
 
@@ -187,7 +183,6 @@ export function ExportReportPage() {
   const reportData = useMemo<DashboardReportData | null>(() => {
     const metrics = metricsQuery.data
     if (!metrics) return null
-    const doses = doseWindowQuery.data ?? []
     const generatedAtLabel = new Date()
       .toLocaleString('pt-BR', {
         timeZone,
@@ -205,15 +200,14 @@ export function ExportReportPage() {
       metrics,
       applicationSeries: buildApplicationSeries(metrics, periodDays.fromDay, periodDays.toDay),
       statusSeries: statusHistoryQuery.data?.buckets ?? [],
-      phaseSeries: aggregatePhasePatientsByDay(activeTherapiesQuery.data ?? [], periodDays.fromDay, periodDays.toDay, timeZone),
-      concentrationData: aggregateByConcentration(doses),
-      typeData: aggregateActiveByType(activeTherapiesQuery.data ?? [], typesQuery.data ?? []),
-      volumeMatrix: aggregateVolumeMatrix(doses),
+      phaseSeries: phaseTimelineQuery.data ? phaseSeriesFromTimeline(phaseTimelineQuery.data) : [],
+      concentrationData: concentrationFromMetrics(metrics),
+      typeData: activeByTypeFromMetrics(metrics, typesQuery.data ?? []),
+      volumeMatrix: volumeMatrixFromMetrics(metrics),
     }
   }, [
     metricsQuery.data,
-    doseWindowQuery.data,
-    activeTherapiesQuery.data,
+    phaseTimelineQuery.data,
     statusHistoryQuery.data,
     typesQuery.data,
     periodDays,
