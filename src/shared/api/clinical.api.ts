@@ -66,6 +66,14 @@ export function getPhaseTimeline(query: { from: string; to: string; timeZone: st
   return apiRequest<GeneratedSchema<'PhaseTimelineResponseDto'>>(`/immunotherapies/phase-timeline${toQueryString(query)}`, { signal }).then(createContractParser<GeneratedSchema<'PhaseTimelineResponseDto'>>(z.object({ asOf: z.string().datetime({ offset: true }), timeZone: z.string(), totalTherapies: z.number().int().nonnegative(), days: z.array(z.object({ date: z.string(), buildUp: z.number().int().nonnegative(), maintenance: z.number().int().nonnegative() })) }), 'Linha do tempo de fases inválida.'))
 }
 
+export function auditPatientReportPdf(patientId: string, body: { sections: string[]; anonymized?: boolean }, signal?: AbortSignal) {
+  return apiRequest<GeneratedSchema<'PdfAuditResponseDto'>>(`/immunotherapies/record/${patientId}/pdf-audit`, { method: 'POST', body, signal }).then(createContractParser<GeneratedSchema<'PdfAuditResponseDto'>>(z.object({ recorded: z.boolean() }), 'Registro de auditoria inválido.'))
+}
+
+export function auditDashboardReportPdf(body: { sections: string[] }, signal?: AbortSignal) {
+  return apiRequest<GeneratedSchema<'PdfAuditResponseDto'>>('/doses/pdf-audit', { method: 'POST', body, signal }).then(createContractParser<GeneratedSchema<'PdfAuditResponseDto'>>(z.object({ recorded: z.boolean() }), 'Registro de auditoria inválido.'))
+}
+
 function toQueryString(params: Record<string, unknown>): string {
   const search = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {

@@ -1,6 +1,6 @@
 import { collectAccentTolerantPages } from '@/shared/api/search'
 import { searchVariants } from '@/shared/lib/search-terms'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { StepHeading, TextInput } from '@/shared/components'
 import { PatientInitials } from '@/shared/components/glass-card'
@@ -8,6 +8,7 @@ import { cn } from '@/shared/lib/cn'
 import { listImmunotherapies } from '@/shared/api/clinical.api'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
+import { useKeyboardAutocomplete } from '@/shared/hooks/useKeyboardAutocomplete'
 import {
   formatInstantDate,
   formatStepPresentation,
@@ -44,8 +45,6 @@ export function SelectPatientStep({
   const organizationId = account?.organization?.id ?? ''
   const [search, setSearch] = useState(selected?.patient.fullName ?? '')
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [highlightedIndex, setHighlightedIndex] = useState(-1)
-  const suggestionsRef = useRef<HTMLDivElement>(null)
   const inputId = 'evolution-patient-search'
   const listboxId = 'evolution-patient-suggestions'
 
@@ -72,41 +71,20 @@ export function SelectPatientStep({
     [therapiesQuery.data],
   )
 
-  const suggestionsKey = JSON.stringify([search, showSuggestions, filtered.map((item) => item.id)])
-  const [previousSuggestionsKey, setPreviousSuggestionsKey] = useState(suggestionsKey)
-  if (previousSuggestionsKey !== suggestionsKey) {
-    setPreviousSuggestionsKey(suggestionsKey)
-    setHighlightedIndex(-1)
-  }
-
-  useEffect(() => {
-    if (highlightedIndex >= 0 && suggestionsRef.current) {
-      const items = suggestionsRef.current.querySelectorAll('[data-suggestion-item]')
-      items[highlightedIndex]?.scrollIntoView({ block: 'nearest' })
-    }
-  }, [highlightedIndex])
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showSuggestions || filtered.length === 0) return
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setHighlightedIndex((prev) => (prev < filtered.length - 1 ? prev + 1 : 0))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : filtered.length - 1))
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      const idx = highlightedIndex >= 0 ? highlightedIndex : 0
+  const suggestionsKey = JSON.stringify([search, filtered.map((item) => item.id)])
+  const { highlightedIndex, setHighlightedIndex, suggestionsRef, handleKeyDown } = useKeyboardAutocomplete({
+    isOpen: showSuggestions,
+    itemCount: filtered.length,
+    resetKey: suggestionsKey,
+    onClose: () => setShowSuggestions(false),
+    onSelect: (idx) => {
       if (filtered[idx]) {
         onSelect(filtered[idx])
         setSearch(filtered[idx].patient.fullName)
         setShowSuggestions(false)
       }
-    } else if (e.key === 'Escape') {
-      setShowSuggestions(false)
-      setHighlightedIndex(-1)
-    }
-  }
+    },
+  })
 
   const planned = pendingDose?.plannedValues ?? null
   const administered = lastAdministered?.administeredValues ?? null

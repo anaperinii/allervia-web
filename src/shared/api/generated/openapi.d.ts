@@ -639,6 +639,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/doses/pdf-audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DosesController_auditDashboardReportPdf"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/doses/update/status/{id}": {
         parameters: {
             query?: never;
@@ -825,6 +841,22 @@ export interface paths {
         get: operations["ImmunotherapiesController_readPatientRecord"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/immunotherapies/record/{patientId}/pdf-audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ImmunotherapiesController_auditPatientReportPdf"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2574,6 +2606,13 @@ export interface components {
             updatedById: string;
             userId: string | null;
             weightInKg: number;
+        };
+        PdfAuditDto: {
+            anonymized?: boolean;
+            sections: string[];
+        };
+        PdfAuditResponseDto: {
+            recorded: boolean;
         };
         PhaseTimelineDayDto: {
             buildUp: number;
@@ -4382,6 +4421,47 @@ export interface operations {
             };
         };
     };
+    DosesController_auditDashboardReportPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PdfAuditDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdfAuditResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     DosesController_legacyStatus: {
         parameters: {
             query?: never;
@@ -4712,6 +4792,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PatientClinicalRecordDto"];
+                };
+            };
+        };
+    };
+    ImmunotherapiesController_auditPatientReportPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patientId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PdfAuditDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdfAuditResponseDto"];
                 };
             };
         };
