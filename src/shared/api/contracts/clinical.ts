@@ -102,3 +102,5 @@ export type ScheduleDoseItem = Schema<'ScheduleDoseItemDto'>
 export type SchedulePage = Page<ScheduleDoseItem>
 
 export type ClinicalMetrics = Schema<'DoseMetricsResponseDto'>
+
+export type PhaseTimeline = Schema<'PhaseTimelineResponseDto'>

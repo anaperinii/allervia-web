@@ -17,12 +17,12 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
     <table className="w-full" aria-label="Lista de imunoterapias">
       <thead>
         <tr className="border-b border-(--border-custom) bg-[#F7F9F9]">
-          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] pl-5 pr-4 pt-2.5 pb-2.5">Paciente</th>
-          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] pl-6 pr-4 pt-2.5 pb-2.5">Tipo</th>
-          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-2.5 pb-2.5">Intervalo e fase</th>
-          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-2.5 pb-2.5">Via de administração</th>
-          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-2.5 pb-2.5">Próxima aplicação</th>
-          <th className="text-left text-[0.8rem] font-semibold text-[#12333a] px-4 pt-2.5 pb-2.5">Médico responsável</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] pl-5 pr-4 pt-2.5 pb-2.5">Paciente</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] pl-6 pr-4 pt-2.5 pb-2.5">Tipo</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-4 pt-2.5 pb-2.5">Intervalo e fase</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-4 pt-2.5 pb-2.5">Via de administração</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-4 pt-2.5 pb-2.5">Próxima aplicação</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-4 pt-2.5 pb-2.5">Médico responsável</th>
         </tr>
       </thead>
       <tbody>

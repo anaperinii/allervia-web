@@ -20,18 +20,18 @@ export function TablePagination({ currentPage, totalPages, totalItems, visibleIt
   ]
 
   return (
-    <div className="border-t border-(--border-custom) px-4 py-2.5">
+    <div className="border-t border-(--border-custom) px-4 py-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           {totalItems !== undefined && (
-            <span className="text-xs text-(--text-muted)">
+            <span className="text-[0.7rem] text-(--text-muted)">
               {visibleItems !== undefined ? `${visibleItems} de ${totalItems}` : totalItems}{' '}
               {totalItems === 1 ? 'registro' : 'registros'} no total
             </span>
           )}
         </div>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-(--text-muted) mr-1.5">Página {currentPage} de {totalPages}</span>
+          <span className="text-[0.7rem] text-(--text-muted) mr-1.5">Página {currentPage} de {totalPages}</span>
           {controls.map(({ icon: Icon, label, action, disabled }) => (
             <IconButton
               key={label}
@@ -39,9 +39,9 @@ export function TablePagination({ currentPage, totalPages, totalItems, visibleIt
               size="sm"
               onClick={action}
               disabled={disabled}
-              className="border border-(--border-custom)"
+              className="border border-(--border-custom) h-7 w-7"
             >
-              <FontAwesomeIcon icon={Icon} style={{ fontSize: 12 }} />
+              <FontAwesomeIcon icon={Icon} style={{ fontSize: 11 }} />
             </IconButton>
           ))}
         </div>

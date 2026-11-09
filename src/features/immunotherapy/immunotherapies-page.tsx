@@ -155,7 +155,7 @@ export function ImmunotherapiesPage() {
         className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-xl"
         style={{ background: SHOWCASE.white, border: `1px solid ${SHOWCASE.line}` }}
       >
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1">
           {listQuery.isPending ? (
             <div className="py-12 text-center text-xs text-(--text-muted)">
               Carregando tratamentos…

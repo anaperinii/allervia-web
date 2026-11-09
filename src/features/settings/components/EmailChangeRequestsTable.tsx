@@ -65,13 +65,13 @@ export function EmailChangeRequestsTable({
     <table className="w-full">
       <thead>
         <tr className="border-b border-(--border-custom) bg-[#F7F9F9]">
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Profissional</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">E-mail atual</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Novo e-mail</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Status</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Pedido em</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Prazo</th>
-          <th className="text-right text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5 w-36">Ações</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Profissional</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">E-mail atual</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Novo e-mail</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Status</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Pedido em</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Prazo</th>
+          <th className="text-right text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5 w-36">Ações</th>
         </tr>
       </thead>
       <tbody>

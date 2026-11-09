@@ -43,12 +43,12 @@ export function InvitesTable({ invites, onResend, onCancel }: InvitesTableProps)
     <table className="w-full">
       <thead>
         <tr className="border-b border-(--border-custom) bg-[#F7F9F9]">
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Convidado</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Papel</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Enviado em</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Válido até</th>
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5">Situação</th>
-          <th className="text-right text-[0.72rem] font-semibold text-[#12333a] px-5 pt-4 pb-2.5 w-24">Ações</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Convidado</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Papel</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Enviado em</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Válido até</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Situação</th>
+          <th className="text-right text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5 w-24">Ações</th>
         </tr>
       </thead>
       <tbody>

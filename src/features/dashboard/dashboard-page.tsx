@@ -17,16 +17,15 @@ import {
   type PhaseGranularity,
 } from '@/features/dashboard/components/showcase/AggregateCharts'
 import {
-  aggregateActiveByType,
-  aggregateByConcentration,
-  aggregatePhasePatientsByDay,
-  aggregateVolumeMatrix,
+  activeByTypeFromMetrics,
   buildApplicationSeries,
+  concentrationFromMetrics,
   eachDay,
   filterMatrixByConcentration,
-  useActiveTherapies,
-  useDoseWindow,
+  phaseSeriesFromTimeline,
+  usePhaseTimeline,
   useStatusHistory,
+  volumeMatrixFromMetrics,
   type StatusGranularity,
 } from '@/features/dashboard/hooks/useDashboardAggregates'
 import type { CardFilter } from '@/features/dashboard/hooks/useChartWindow'
@@ -49,6 +48,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
+
+const EMPTY_VOLUME_MATRIX = { concentrations: [], volumes: [], counts: [], max: 0, total: 0 }
 
 function dayInput(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
@@ -92,26 +93,19 @@ export function DashboardPage() {
   })
   const metrics = metricsQuery.data ?? null
 
-  const doseWindowQuery = useDoseWindow(organizationId, period)
-  const activeTherapiesQuery = useActiveTherapies(organizationId)
+  const phaseTimelineQuery = usePhaseTimeline(organizationId, periodDays, timeZone)
 
   const concentrationData = useMemo(
-    () => aggregateByConcentration(doseWindowQuery.data ?? []),
-    [doseWindowQuery.data],
+    () => (metrics ? concentrationFromMetrics(metrics) : []),
+    [metrics],
   )
   const volumeMatrix = useMemo(
-    () => aggregateVolumeMatrix(doseWindowQuery.data ?? []),
-    [doseWindowQuery.data],
+    () => (metrics ? volumeMatrixFromMetrics(metrics) : EMPTY_VOLUME_MATRIX),
+    [metrics],
   )
   const phaseSeries = useMemo(
-    () =>
-      aggregatePhasePatientsByDay(
-        activeTherapiesQuery.data ?? [],
-        periodDays.fromDay,
-        periodDays.toDay,
-        timeZone,
-      ),
-    [activeTherapiesQuery.data, periodDays, timeZone],
+    () => (phaseTimelineQuery.data ? phaseSeriesFromTimeline(phaseTimelineQuery.data) : []),
+    [phaseTimelineQuery.data],
   )
   const typesQuery = useQuery({
     queryKey: queryKeys.immunotherapyTypes(organizationId),
@@ -119,9 +113,8 @@ export function DashboardPage() {
     enabled: organizationId !== '',
   })
   const typeData = useMemo(
-    () =>
-      aggregateActiveByType(activeTherapiesQuery.data ?? [], typesQuery.data ?? []),
-    [activeTherapiesQuery.data, typesQuery.data],
+    () => (metrics ? activeByTypeFromMetrics(metrics, typesQuery.data ?? []) : []),
+    [metrics, typesQuery.data],
   )
   const phasesEmpty = phaseSeries.every(
     (entry) => entry.buildUp + entry.maintenance === 0,
@@ -449,8 +442,8 @@ export function DashboardPage() {
         >
           <ChartCaption>Aplicações administradas no período, por concentração</ChartCaption>
           <ChartState
-            loading={doseWindowQuery.isPending}
-            error={doseWindowQuery.isError}
+            loading={metricsQuery.isPending}
+            error={metricsQuery.isError}
             empty={concentrationView.length === 0}
             emptyText="Sem aplicações administradas no período."
           >
@@ -464,8 +457,8 @@ export function DashboardPage() {
         >
           <ChartCaption>Matriz de valores administrados no período</ChartCaption>
           <ChartState
-            loading={doseWindowQuery.isPending}
-            error={doseWindowQuery.isError}
+            loading={metricsQuery.isPending}
+            error={metricsQuery.isError}
             empty={matrixView.total === 0}
             emptyText="Sem aplicações administradas no período."
           >
@@ -479,8 +472,8 @@ export function DashboardPage() {
         >
           <ChartCaption>Tratamentos em andamento, por tipo de alérgeno</ChartCaption>
           <ChartState
-            loading={activeTherapiesQuery.isPending || typesQuery.isPending}
-            error={activeTherapiesQuery.isError || typesQuery.isError}
+            loading={metricsQuery.isPending || typesQuery.isPending}
+            error={metricsQuery.isError || typesQuery.isError}
             empty={typeView.every((entry) => entry.count === 0)}
             emptyText="Sem tratamentos em andamento."
           >
@@ -497,8 +490,8 @@ export function DashboardPage() {
             Pacientes com tratamento em andamento em cada dia, por fase — reconstruídos das datas de início de indução e manutenção
           </ChartCaption>
           <ChartState
-            loading={activeTherapiesQuery.isPending}
-            error={activeTherapiesQuery.isError}
+            loading={phaseTimelineQuery.isPending}
+            error={phaseTimelineQuery.isError}
             empty={phasesEmpty}
             emptyText="Sem tratamentos em andamento no período."
           >
