@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useHasPermission } from '@/shared/stores/useUserStore'
-import { exportClinicalDoses, getClinicalMetrics, listImmunotherapyTypes } from '@/shared/api/clinical.api'
+import { auditDashboardReportPdf, exportClinicalDoses, getClinicalMetrics, listImmunotherapyTypes } from '@/shared/api/clinical.api'
 import type { TherapyStatus } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
@@ -220,7 +220,10 @@ export function ExportReportPage() {
   function runDashboardExport() {
     const data = reportData
     if (!data) return
-    if (format === 'dashboard-pdf') exportDashboardReportPdf(data)
+    if (format === 'dashboard-pdf') {
+      void auditDashboardReportPdf({ sections: data.sections ?? [] }).catch(() => {})
+      exportDashboardReportPdf(data)
+    }
     else if (format === 'dashboard-csv') exportDashboardReportCsv(data)
     else exportDashboardReportJson(data)
     toast.success({

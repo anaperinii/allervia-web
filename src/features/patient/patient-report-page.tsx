@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Button, Modal } from '@/shared/components'
-import { getPatient, getDose, listDosesForTherapy, getPatientClinicalRecord } from '@/shared/api/clinical.api'
+import { getPatient, getDose, listDosesForTherapy, getPatientClinicalRecord, auditPatientReportPdf } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
@@ -185,10 +185,15 @@ export function PatientReportPage() {
     )
   }
 
+  const exportPdfAudited = (data: ReportData) => {
+    void auditPatientReportPdf(patientId, { sections: data.sections, anonymized: data.anonymized }).catch(() => {})
+    exportPdf(data)
+  }
+
   const handleExport = () => {
     if (!reportData || !consented || !justification.trim()) return
     if (fileFormat === 'csv') exportCsv(reportData)
-    else exportPdf(reportData)
+    else exportPdfAudited(reportData)
   }
 
   const exportDisabled = !consented || !justification.trim() || !reportData
@@ -207,7 +212,7 @@ export function PatientReportPage() {
             <div className="flex items-center gap-1.5">
             <Pill
               icon={faPrint}
-              onClick={() => !exportDisabled && reportData && exportPdf(reportData)}
+              onClick={() => !exportDisabled && reportData && exportPdfAudited(reportData)}
               disabled={exportDisabled}
               className={exportDisabled ? 'opacity-50 cursor-not-allowed' : undefined}
             >

@@ -22,6 +22,7 @@ import type { Appointment } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
+import { useKeyboardAutocomplete } from '@/shared/hooks/useKeyboardAutocomplete'
 import { appointmentWindow, dayInZone, timeInZone, addMinutesToTime } from '@/shared/lib/dates'
 import { formatInstantDate } from '@/features/patient/adapters/clinical-presentation'
 
@@ -112,6 +113,21 @@ function NewAppointmentForm({
     enabled: organizationId !== '',
   })
   const patientOptions = patientsQuery.data?.items ?? []
+  const { highlightedIndex, suggestionsRef, handleKeyDown } = useKeyboardAutocomplete({
+    isOpen: showSuggestions,
+    itemCount: patientOptions.length,
+    resetKey: JSON.stringify([search, patientOptions.map((p) => p.id)]),
+    onClose: () => setShowSuggestions(false),
+    onSelect: (idx) => {
+      const patient = patientOptions[idx]
+      if (patient) {
+        setPatientId(patient.id)
+        setDoseId('')
+        setSearch(patient.fullName)
+        setShowSuggestions(false)
+      }
+    },
+  })
   const professionals = useProfessionalDirectory()
   const therapiesQuery = useQuery({
     queryKey: [...queryKeys.patient(organizationId, patientId), 'therapies'],
@@ -194,31 +210,39 @@ function NewAppointmentForm({
             }}
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            onKeyDown={handleKeyDown}
             role="combobox"
             aria-expanded={showSuggestions && patientOptions.length > 0}
             aria-controls="appointment-patient-suggestions"
             aria-autocomplete="list"
+            aria-activedescendant={highlightedIndex >= 0 ? `appointment-patient-suggestions-${highlightedIndex}` : undefined}
             className="pl-8"
           />
           {showSuggestions && patientOptions.length > 0 && (
             <div
+              ref={suggestionsRef}
               id="appointment-patient-suggestions"
               role="listbox"
               className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-(--border-custom) bg-white shadow-lg"
             >
-              {patientOptions.map((patient) => (
+              {patientOptions.map((patient, idx) => (
                 <button
                   key={patient.id}
+                  id={`appointment-patient-suggestions-${idx}`}
                   type="button"
                   role="option"
-                  aria-selected={patient.id === patientId}
+                  aria-selected={highlightedIndex === idx}
+                  data-suggestion-item
                   onClick={() => {
                     setPatientId(patient.id)
                     setDoseId('')
                     setSearch(patient.fullName)
                     setShowSuggestions(false)
                   }}
-                  className="flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors hover:bg-teal-50"
+                  className={cn(
+                    'flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors',
+                    highlightedIndex === idx ? 'bg-teal-50' : 'hover:bg-teal-50',
+                  )}
                 >
                   <span className="text-xs font-medium text-(--text)">{patient.fullName}</span>
                   <span className="text-[0.65rem] text-(--text-muted)">{patient.phoneNumber}</span>
