@@ -1701,7 +1701,10 @@ export interface components {
             alreadyBound: boolean;
             prescriptionId: string;
         };
-        ChangePasswordDto: Record<string, never>;
+        ChangePasswordDto: {
+            currentPassword: string;
+            newPassword: string;
+        };
         ChangePasswordResponseDto: {
             message: string;
         };
@@ -2478,11 +2481,16 @@ export interface components {
             pageSize: number;
             total: number;
         };
-        PasswordResetConfirmDTO: Record<string, never>;
+        PasswordResetConfirmDTO: {
+            newPassword: string;
+            token: string;
+        };
         PasswordResetMessageResponseDto: {
             message: string;
         };
-        PasswordResetRequestDTO: Record<string, never>;
+        PasswordResetRequestDTO: {
+            email: string;
+        };
         PasswordResetVerifyDTO: Record<string, never>;
         PasswordResetVerifyResponseDto: {
             valid: boolean;
