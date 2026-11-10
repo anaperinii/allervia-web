@@ -90,12 +90,12 @@ export function PatientInfoSidebar({
 
   const therapyStatusDisplay =
     therapyStatus === 'IN_PROGRESS'
-      ? { label: 'Tratamento em andamento', dot: 'bg-emerald-500' }
+      ? { label: 'Tratamento em andamento', dot: 'bg-emerald-500', text: 'text-emerald-600' }
       : therapyStatus === 'SUSPENDED'
-        ? { label: 'Tratamento suspenso', dot: 'bg-yellow-500' }
+        ? { label: 'Tratamento suspenso', dot: 'bg-yellow-500', text: 'text-yellow-600' }
         : therapyStatus === 'COMPLETED'
-          ? { label: 'Tratamento concluído', dot: 'bg-gray-400' }
-          : { label: 'Sem tratamento selecionado', dot: 'bg-gray-300' }
+          ? { label: 'Tratamento concluído', dot: 'bg-gray-400', text: 'text-gray-500' }
+          : { label: 'Sem tratamento selecionado', dot: 'bg-gray-300', text: 'text-gray-400' }
 
   const immunoRows: [string, React.ReactNode][] = [
     ['Tipo', patient.immunotherapyType],
@@ -121,19 +121,17 @@ export function PatientInfoSidebar({
     <div className="flex w-104 shrink-0 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-white">
       <div className="border-b border-(--border-custom) px-5 py-4">
         <div className="flex items-center gap-3">
-          <span className="relative shrink-0">
+          <span className="shrink-0">
             <PatientInitials name={patient.name} size={48} />
-            <span
-              title={therapyStatusDisplay.label}
-              aria-label={therapyStatusDisplay.label}
-              className={cn(
-                'absolute -left-0.5 top-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-white',
-                therapyStatusDisplay.dot,
-              )}
-            />
           </span>
           <div className="min-w-0">
             <h1 className="text-xl font-bold text-(--text) leading-tight">{patient.name}</h1>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <span className={cn('h-2 w-2 shrink-0 rounded-full', therapyStatusDisplay.dot)} />
+              <span className={cn('text-xs font-semibold', therapyStatusDisplay.text)}>
+                {therapyStatusDisplay.label}
+              </span>
+            </div>
           </div>
         </div>
 
