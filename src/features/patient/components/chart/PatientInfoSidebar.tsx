@@ -90,12 +90,12 @@ export function PatientInfoSidebar({
 
   const therapyStatusDisplay =
     therapyStatus === 'IN_PROGRESS'
-      ? { label: 'Tratamento em andamento', dot: 'bg-emerald-500', text: 'text-emerald-600' }
+      ? { label: 'Tratamento em andamento', tone: 'emerald' as const }
       : therapyStatus === 'SUSPENDED'
-        ? { label: 'Tratamento suspenso', dot: 'bg-yellow-500', text: 'text-yellow-600' }
+        ? { label: 'Tratamento suspenso', tone: 'yellow' as const }
         : therapyStatus === 'COMPLETED'
-          ? { label: 'Tratamento concluído', dot: 'bg-gray-400', text: 'text-gray-500' }
-          : { label: 'Sem tratamento selecionado', dot: 'bg-gray-300', text: 'text-gray-400' }
+          ? { label: 'Tratamento concluído', tone: 'gray' as const }
+          : { label: 'Sem tratamento selecionado', tone: 'gray' as const }
 
   const immunoRows: [string, React.ReactNode][] = [
     ['Tipo', patient.immunotherapyType],
@@ -122,15 +122,18 @@ export function PatientInfoSidebar({
       <div className="border-b border-(--border-custom) px-5 py-4">
         <div className="flex items-center gap-3">
           <span className="shrink-0">
-            <PatientInitials name={patient.name} size={48} />
+            <PatientInitials
+              name={patient.name}
+              size={48}
+              muted={patient.status === 'inactive' || therapyStatus === 'SUSPENDED'}
+            />
           </span>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-(--text) leading-tight">{patient.name}</h1>
-            <div className="mt-0.5 flex items-center gap-1.5">
-              <span className={cn('h-2 w-2 shrink-0 rounded-full', therapyStatusDisplay.dot)} />
-              <span className={cn('text-xs font-semibold', therapyStatusDisplay.text)}>
+            <h1 className="text-lg font-bold text-(--text) leading-tight">{patient.name}</h1>
+            <div className="-mt-0.5">
+              <StatusBadge tone={therapyStatusDisplay.tone}>
                 {therapyStatusDisplay.label}
-              </span>
+              </StatusBadge>
             </div>
           </div>
         </div>

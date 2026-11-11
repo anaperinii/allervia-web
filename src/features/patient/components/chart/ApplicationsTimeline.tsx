@@ -7,7 +7,7 @@ import { parsePtDate } from '@/shared/lib/dates'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMessage, faPencil } from '@fortawesome/free-solid-svg-icons'
+import { faMessage, faPen } from '@fortawesome/free-solid-svg-icons'
 
 interface ApplicationsTimelineProps {
   applicationsByMonth: Record<string, Application[]>
@@ -106,7 +106,7 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditSche
                         aria-label="Editar dados previstos"
                         onClick={(e) => { e.stopPropagation(); onEditScheduled?.(application) }}
                       >
-                        <FontAwesomeIcon icon={faPencil} style={{ fontSize: 13 }} />
+                        <FontAwesomeIcon icon={faPen} style={{ fontSize: 13 }} />
                       </IconButton>
                       <IconButton
                         size="sm"
