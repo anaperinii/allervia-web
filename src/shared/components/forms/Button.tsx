@@ -146,7 +146,7 @@ export function Button(props: ButtonProps) {
   const { tone: _t, variant: _v, size: _s, leftIcon: _l, rightIcon: _r, fullWidth: _fw, prominent: _p, className: _c, children: _ch, disabled: _d, ...rest } = asAction
   void _t; void _v; void _s; void _l; void _r; void _fw; void _p; void _c; void _ch; void _d
   return (
-    <button {...rest} disabled={disabled} className={cls}>
+    <button type="button" {...rest} disabled={disabled} className={cls}>
       {leftIcon && <span className="relative z-10 inline-flex">{leftIcon}</span>}
       <span className="relative z-10">{children}</span>
       {rightIcon && <span className="relative z-10 inline-flex">{rightIcon}</span>}

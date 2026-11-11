@@ -65,7 +65,15 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
 
   const closeAndReset = () => {
     onClose()
-    reset()
+    // Sempre com valores explícitos: `reset()` sem argumentos faz o RHF chamar
+    // `form.reset()` nativo no <form> ancestral, limpando campos de fora do modal.
+    reset({
+      name: patient.name,
+      phone: patient.phone ? formatPhone(patient.phone) : '',
+      weight: patient.weight,
+      responsibleDoctor: patient.responsibleDoctorId ?? '',
+      ...guardianDefaults,
+    })
     setStep('form')
   }
 

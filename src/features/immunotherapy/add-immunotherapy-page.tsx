@@ -239,7 +239,7 @@ export function AddImmunotherapyPage() {
           >
             <div />
             <div className="flex items-center gap-2">
-              <Button type="button" variant="solid" className="bg-gray-300 text-gray-800 hover:bg-[#cbd0d3]" onClick={() => setShowCancelModal(true)}>
+              <Button type="button" variant="solid" className="bg-gray-200 text-gray-700 hover:bg-gray-300" onClick={() => setShowCancelModal(true)}>
                 Cancelar
               </Button>
               <Button

@@ -174,7 +174,6 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
   const openTherapies = (therapiesQuery.data ?? []).filter(
     (therapy) => therapy.status === 'IN_PROGRESS' || therapy.status === 'SUSPENDED',
   )
-  const hasSuspended = openTherapies.some((therapy) => therapy.status === 'SUSPENDED')
   const [showOpenTherapies, setShowOpenTherapies] = useState(true)
 
   const cpfLocked = isExisting
@@ -298,7 +297,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
           <span
             aria-hidden="true"
             className="pointer-events-none absolute inset-0"
-            style={{ background: 'rgba(255,255,255,0.8)' }}
+            style={{ background: 'rgba(255,255,255,0.72)' }}
           />
 
           <div className="relative z-10 flex items-center gap-2 px-4 py-2.5">
@@ -380,8 +379,8 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
                   type="button"
                   onClick={clearPatient}
                   aria-label="Limpar seleção e desvincular o paciente"
-                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.65rem] font-semibold text-gray-800 transition-colors hover:bg-[#cbd0d3] cursor-pointer"
-                  style={{ background: '#D1D5D8' }}
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.65rem] font-semibold text-gray-700 transition-colors hover:bg-gray-300 cursor-pointer"
+                  style={{ background: '#E5E7EB' }}
                 >
                   <FontAwesomeIcon icon={faXmark} style={{ fontSize: 10 }} />
                   Limpar seleção
