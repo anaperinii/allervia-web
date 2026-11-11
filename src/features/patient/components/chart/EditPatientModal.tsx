@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface EditPatientModalProps {
@@ -42,7 +42,7 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
     resolver: zodResolver(isMinor ? editMinorPatientSchema : editPatientSchema),
     defaultValues: {
       name: patient.name,
-      phone: patient.phone,
+      phone: patient.phone ? formatPhone(patient.phone) : '',
       weight: patient.weight,
       responsibleDoctor: patient.responsibleDoctorId ?? '',
       ...guardianDefaults,
@@ -92,6 +92,9 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
         onClose={handleCancel}
         title={step === 'form' ? 'Editar dados do paciente' : 'Confirmar alterações?'}
         size="lg"
+        {...(step === 'review'
+          ? { icon: <FontAwesomeIcon icon={faCheck} style={{ fontSize: 16 }} />, tone: 'brand' as const }
+          : {})}
         footer={
           step === 'form' ? (
             <>
@@ -117,7 +120,19 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
                 <TextInput invalid={!!errors.name} {...register('name')} />
               </FieldLabel>
               <FieldLabel label="Telefone" error={errors.phone?.message}>
-                <TextInput invalid={!!errors.phone} {...register('phone')} />
+                <Controller
+                  control={control}
+                  name="phone"
+                  render={({ field }) => (
+                    <TextInput
+                      placeholder="(00) 00000-0000"
+                      invalid={!!errors.phone}
+                      value={field.value ?? ''}
+                      onBlur={field.onBlur}
+                      onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                    />
+                  )}
+                />
               </FieldLabel>
               <FieldLabel label="Peso" error={errors.weight?.message}>
                 <TextInput invalid={!!errors.weight} {...register('weight')} />
@@ -136,7 +151,7 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
                 </Select>
               </FieldLabel>
               <FieldLabel label="CPF">
-                <ReadOnlyField>{patient.cpf}</ReadOnlyField>
+                <ReadOnlyField>{formatCPF(patient.cpf)}</ReadOnlyField>
               </FieldLabel>
               <FieldLabel label="Data de nascimento">
                 <ReadOnlyField>{patient.birthDate}</ReadOnlyField>

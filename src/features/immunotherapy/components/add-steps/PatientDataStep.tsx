@@ -1,10 +1,13 @@
+import proArt from '@/assets/pro-art.jpg'
 import { collectAccentTolerantPages } from '@/shared/api/search'
 import { searchVariants } from '@/shared/lib/search-terms'
 import { Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { Controller, type UseFormReturn } from 'react-hook-form'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FieldLabel, StepHeading, TextInput } from '@/shared/components'
+import { EditPatientModal } from '@/features/patient/components/chart/EditPatientModal'
+import type { Patient } from '@/features/patient/stores/usePatientStore'
 import { cn } from '@/shared/lib/cn'
 import { formatCPF, formatPhone, formatWeight } from '@/shared/lib/formatters'
 import { calculateAge, parseIsoDate, toDateInputValue } from '@/shared/lib/dates'
@@ -13,6 +16,7 @@ import {
   listDosesForTherapy,
   listPatients,
   listTherapiesForPatient,
+  updatePatient,
 } from '@/shared/api/clinical.api'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
@@ -28,7 +32,7 @@ import {
   type AddImmunotherapyForm,
 } from '@/features/immunotherapy/schemas/add-immunotherapy'
 
-import { faChevronDown, faChevronUp, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faArrowUpRightFromSquare, faChevronDown, faChevronUp, faPen, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const MIN_SEARCH_LENGTH = 2
@@ -87,14 +91,90 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
     setValue('guardianPhone', formatPhone(detailGuardian?.phoneNumber ?? ''))
   }, [patientDetailQuery.data, detailGuardian, setValue])
 
+  const detail = patientDetailQuery.data
+  useEffect(() => {
+    if (!detail) return
+    setValue('name', detail.fullName)
+    setValue('phone', formatPhone(detail.phoneNumber))
+    setValue('weight', formatWeight(String(detail.weightInKg)))
+    setValue('birthDate', toDateInputValue(detail.birthDate))
+  }, [detail, setValue])
+
   const therapiesQuery = useQuery({
     queryKey: [...queryKeys.patient(organizationId, patientId), 'therapies'],
     queryFn: ({ signal }) => listTherapiesForPatient(patientId, signal),
     enabled: organizationId !== '' && isExisting,
   })
+
+  const queryClient = useQueryClient()
+  const [showEditPatientModal, setShowEditPatientModal] = useState(false)
+  const patientDetail = patientDetailQuery.data
+  const patientForModal: Patient | null = patientDetail
+    ? {
+        id: patientDetail.id,
+        name: patientDetail.fullName,
+        birthDate: patientDetail.birthDate,
+        age: calculateAge(patientDetail.birthDate),
+        phone: formatPhone(patientDetail.phoneNumber),
+        weight: formatWeight(String(patientDetail.weightInKg)),
+        cpf: patientDetail.cpf ?? '',
+        guardian: patientDetail.guardian
+          ? {
+              name: patientDetail.guardian.fullName,
+              cpf: patientDetail.guardian.cpf ?? '',
+              phone: patientDetail.guardian.phoneNumber,
+            }
+          : null,
+        responsibleDoctor: patientDetail.responsiblePhysician.fullName,
+        responsibleDoctorId: patientDetail.responsiblePhysician.id,
+        status: patientDetail.isActive ? 'active' : 'inactive',
+        immunotherapyType: '',
+        administrationRoute: '',
+        extract: '',
+        targetConcentrationVolume: '',
+        targetReached: false,
+        currentInterval: 0,
+        nextApplicationDate: '',
+        currentDoseConcentration: '',
+      }
+    : null
+
+  const savePatientMutation = useMutation({
+    mutationFn: (patch: {
+      name: string
+      phone: string
+      weight: string
+      responsibleDoctor: string
+      guardianName?: string
+      guardianCpf?: string
+      guardianPhone?: string
+    }) =>
+      updatePatient(patientId, {
+        fullName: patch.name,
+        phoneNumber: patch.phone.replace(/\D/g, ''),
+        weightInKg: Number(patch.weight.replace(',', '.').replace(/[^0-9.]/g, '')),
+        ...(patch.responsibleDoctor && patch.responsibleDoctor !== patientDetail?.responsiblePhysician.id
+          ? { responsiblePhysicianId: patch.responsibleDoctor }
+          : {}),
+        ...(patch.guardianName
+          ? {
+              guardian: {
+                fullName: patch.guardianName.trim(),
+                cpf: patch.guardianCpf,
+                phoneNumber: (patch.guardianPhone ?? '').replace(/\D/g, ''),
+              },
+            }
+          : {}),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.patient(organizationId, patientId) })
+      setShowEditPatientModal(false)
+    },
+  })
   const openTherapies = (therapiesQuery.data ?? []).filter(
     (therapy) => therapy.status === 'IN_PROGRESS' || therapy.status === 'SUSPENDED',
   )
+  const hasSuspended = openTherapies.some((therapy) => therapy.status === 'SUSPENDED')
   const [showOpenTherapies, setShowOpenTherapies] = useState(true)
 
   const cpfLocked = isExisting
@@ -195,6 +275,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
     : ''
 
   return (
+    <>
     <div className="space-y-5">
       {patientsQuery.data?.truncated && <p role="status">Lista limitada: {patientsQuery.data.items.length}/{patientsQuery.data.total}. Refine a busca.</p>}
       <StepHeading description="Digite o nome do paciente: se ele já estiver cadastrado, selecione-o na lista para reaproveitar os dados pessoais. Caso contrário, preencha os campos para criar o cadastro. O tratamento é vinculado ao prescritor autenticado." />
@@ -202,6 +283,73 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
       {isExisting && patientDetailQuery.isError && <p role="alert">
         Não foi possível carregar o cadastro. <button type="button" onClick={() => void patientDetailQuery.refetch()}>Tentar novamente</button>
       </p>}
+
+      {isExisting && openTherapies.length > 0 && (
+        <div
+          className="relative overflow-hidden rounded-xl border border-gray-400/30"
+          style={{ animation: 'fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}
+        >
+          <img
+            src={proArt}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+            style={{ background: 'rgba(255,255,255,0.8)' }}
+          />
+
+          <div className="relative z-10 flex items-center gap-2 px-4 py-2.5">
+            <span
+              aria-hidden="true"
+              className="absolute left-0 h-5 w-[3px] rounded-r-full"
+              style={{ background: '#257E8C' }}
+            />
+            <span className="text-[0.78rem] font-semibold text-(--text)">
+              {openTherapies.length === 1
+                ? `1 imunoterapia vinculada para ${name}`
+                : `${openTherapies.length} imunoterapias vinculadas para ${name}`}
+            </span>
+            <span className="truncate text-[0.78rem] text-(--text-muted)">
+              · cada uma segue protocolo e agenda próprios; prescrever outra não
+              interrompe as atuais
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowOpenTherapies((open) => !open)}
+              aria-expanded={showOpenTherapies}
+              className="ml-auto flex shrink-0 items-center gap-1.5 text-[0.75rem] font-semibold text-(--text-muted) transition-colors hover:text-(--text) cursor-pointer"
+            >
+              {showOpenTherapies ? 'Minimizar' : 'Mostrar'}
+              <FontAwesomeIcon
+                icon={showOpenTherapies ? faChevronUp : faChevronDown}
+                style={{ fontSize: 9 }}
+              />
+            </button>
+          </div>
+
+          <div
+            className={cn(
+              'relative z-10 grid transition-all duration-300 ease-out',
+              showOpenTherapies ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
+            )}
+          >
+            <ul className="overflow-hidden border-t border-(--border-custom)">
+              {openTherapies.map((therapy) => (
+                <OpenTherapyRow
+                  key={therapy.id}
+                  therapy={therapy}
+                  patientId={patientId}
+                  organizationId={organizationId}
+                />
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <FieldLabel label="Nome do Paciente" error={errors.name?.message}>
           <div className="relative">
@@ -217,7 +365,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
               aria-activedescendant={
                 highlightedIndex >= 0 ? `${LISTBOX_ID}-${highlightedIndex}` : undefined
               }
-              className={cn(isExisting && 'pr-32')}
+              className={cn(isExisting && 'pr-56 bg-gray-100/60 text-(--text-muted)')}
               {...nameField}
               onFocus={() => setShowSuggestions(true)}
               onBlur={(e) => {
@@ -227,15 +375,29 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
               onKeyDown={handleKeyDown}
             />
             {isExisting && (
-              <button
-                type="button"
-                onClick={clearPatient}
-                aria-label="Limpar seleção e desvincular o paciente"
-                className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-2.5 py-1 text-[0.65rem] font-semibold text-red-700 transition-colors hover:border-red-400 hover:bg-red-100 cursor-pointer"
-              >
-                <FontAwesomeIcon icon={faXmark} style={{ fontSize: 10 }} />
-                Limpar seleção
-              </button>
+              <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={clearPatient}
+                  aria-label="Limpar seleção e desvincular o paciente"
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.65rem] font-semibold text-gray-800 transition-colors hover:bg-[#cbd0d3] cursor-pointer"
+                  style={{ background: '#D1D5D8' }}
+                >
+                  <FontAwesomeIcon icon={faXmark} style={{ fontSize: 10 }} />
+                  Limpar seleção
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEditPatientModal(true)}
+                  disabled={!patientForModal}
+                  aria-label="Editar dados do avaliado no prontuário"
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.65rem] font-semibold text-white transition-colors hover:bg-[#0c2429] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: '#12333a' }}
+                >
+                  <FontAwesomeIcon icon={faPen} style={{ fontSize: 10 }} />
+                  Editar dados pessoais
+                </button>
+              </div>
             )}
             {isOpen && (
               <div
@@ -291,65 +453,17 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
           />
         </FieldLabel>
 
-        {isExisting && openTherapies.length > 0 && (
-          <div
-            className="col-span-2 overflow-hidden rounded-xl border border-(--border-custom) bg-white"
-            style={{ animation: 'fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}
-          >
-            <div className="flex items-center gap-2 px-4 py-2.5">
-              <span
-                aria-hidden="true"
-                className="h-1.5 w-1.5 shrink-0 rounded-full"
-                style={{ background: '#f59e0b' }}
-              />
-              <span className="text-[0.78rem] font-semibold text-(--text)">
-                {openTherapies.length === 1
-                  ? '1 imunoterapia já em andamento neste paciente'
-                  : `${openTherapies.length} imunoterapias já em andamento neste paciente`}
-              </span>
-              <span className="truncate text-[0.78rem] text-(--text-muted)">
-                · cada uma segue protocolo e agenda próprios; prescrever outra não
-                interrompe as atuais
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowOpenTherapies((open) => !open)}
-                aria-expanded={showOpenTherapies}
-                className="ml-auto flex shrink-0 items-center gap-1.5 text-[0.75rem] font-semibold text-(--text-muted) transition-colors hover:text-(--text) cursor-pointer"
-              >
-                {showOpenTherapies ? 'Ocultar' : 'Mostrar'}
-                <FontAwesomeIcon
-                  icon={showOpenTherapies ? faChevronUp : faChevronDown}
-                  style={{ fontSize: 9 }}
-                />
-              </button>
-            </div>
-
-            {showOpenTherapies && (
-              <ul className="border-t border-(--border-custom)">
-                {openTherapies.map((therapy) => (
-                  <OpenTherapyRow
-                    key={therapy.id}
-                    therapy={therapy}
-                    patientId={patientId}
-                    organizationId={organizationId}
-                  />
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
         <FieldLabel label="Telefone" error={errors.phone?.message}>
           <Controller
             control={control}
             name="phone"
             render={({ field }) => (
               <TextInput
-              readOnly={isExisting}
+                readOnly={isExisting}
                 placeholder="(00) 00000-0000"
                 invalid={!!errors.phone}
                 value={field.value}
+                className={cn(isExisting && 'bg-gray-100/60 text-(--text-muted)')}
                 onBlur={field.onBlur}
                 onChange={(e) => field.onChange(formatPhone(e.target.value))}
               />
@@ -363,6 +477,7 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
               readOnly={isExisting}
               type="date"
               invalid={!!errors.birthDate}
+              className={cn(isExisting && 'bg-gray-100/60 text-(--text-muted)')}
               {...register('birthDate')}
             />
           </FieldLabel>
@@ -384,10 +499,10 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
               name="weight"
               render={({ field }) => (
                 <TextInput
-              readOnly={isExisting}
+                  readOnly={isExisting}
                   placeholder="Ex: 70.5"
                   invalid={!!errors.weight}
-                  className="pr-10"
+                  className={cn('pr-10', isExisting && 'bg-gray-100/60 text-(--text-muted)')}
                   value={field.value}
                   onBlur={field.onBlur}
                   onChange={(e) => field.onChange(formatWeight(e.target.value))}
@@ -403,65 +518,53 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
         </FieldLabel>
 
         {isMinor && (
-          <div className="col-span-2 rounded-xl border border-(--border-custom) bg-gray-50/60 p-4">
-            <div className="mb-1 text-xs font-bold text-(--text)">Responsável Legal</div>
-            <p className="mb-3 text-[0.65rem] leading-relaxed text-(--text-muted)">
-              Paciente menor de idade: informe nome, CPF e telefone de contato do
-              responsável legal.
-            </p>
-            <div className="grid grid-cols-2 gap-4">
-              <FieldLabel label="Nome do Responsável" error={errors.guardianName?.message}>
-                <TextInput
-              readOnly={isExisting}
-                  placeholder="Nome completo"
-                  invalid={!!errors.guardianName}
-                  {...register('guardianName')}
-                />
-              </FieldLabel>
-              <FieldLabel label="CPF do Responsável" error={errors.guardianCpf?.message}>
-                <Controller
-                  control={control}
-                  name="guardianCpf"
-                  render={({ field }) => (
-                    <TextInput
-              readOnly={isExisting}
-                      placeholder="000.000.000-00"
-                      invalid={!!errors.guardianCpf}
-                      value={field.value}
-                      onBlur={field.onBlur}
-                      onChange={(e) => field.onChange(formatCPF(e.target.value))}
-                    />
-                  )}
-                />
-              </FieldLabel>
-              <FieldLabel label="Telefone do Responsável" error={errors.guardianPhone?.message}>
-                <Controller
-                  control={control}
-                  name="guardianPhone"
-                  render={({ field }) => (
-                    <TextInput
-              readOnly={isExisting}
-                      placeholder="(00) 00000-0000"
-                      invalid={!!errors.guardianPhone}
-                      value={field.value}
-                      onBlur={field.onBlur}
-                      onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                    />
-                  )}
-                />
-              </FieldLabel>
-            </div>
+          <div className="col-span-2 grid grid-cols-3 gap-4">
+            <FieldLabel label="Nome do Responsável" error={errors.guardianName?.message}>
+              <TextInput
+                readOnly={isExisting}
+                placeholder="Nome completo"
+                invalid={!!errors.guardianName}
+                className={cn(isExisting && 'bg-gray-100/60 text-(--text-muted)')}
+                {...register('guardianName')}
+              />
+            </FieldLabel>
+            <FieldLabel label="CPF do Responsável" error={errors.guardianCpf?.message}>
+              <Controller
+                control={control}
+                name="guardianCpf"
+                render={({ field }) => (
+                  <TextInput
+                    readOnly={isExisting}
+                    placeholder="000.000.000-00"
+                    invalid={!!errors.guardianCpf}
+                    value={field.value}
+                    className={cn(isExisting && 'bg-gray-100/60 text-(--text-muted)')}
+                    onBlur={field.onBlur}
+                    onChange={(e) => field.onChange(formatCPF(e.target.value))}
+                  />
+                )}
+              />
+            </FieldLabel>
+            <FieldLabel label="Telefone do Responsável" error={errors.guardianPhone?.message}>
+              <Controller
+                control={control}
+                name="guardianPhone"
+                render={({ field }) => (
+                  <TextInput
+                    readOnly={isExisting}
+                    placeholder="(00) 00000-0000"
+                    invalid={!!errors.guardianPhone}
+                    value={field.value}
+                    className={cn(isExisting && 'bg-gray-100/60 text-(--text-muted)')}
+                    onBlur={field.onBlur}
+                    onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                  />
+                )}
+              />
+            </FieldLabel>
           </div>
         )}
 
-        {isExisting && (
-          <p className="col-span-2 text-[0.65rem] leading-relaxed text-(--text-muted)">
-            Cadastro vinculado somente para leitura. A prescrição não altera os dados pessoais.
-            {' '}<Link to="/patient/$patientId" params={{ patientId }}>
-              Editar cadastro no prontuário antes de prescrever
-            </Link>
-          </p>
-        )}
       </div>
 
       {isExisting && therapiesQuery.isError && (
@@ -473,6 +576,16 @@ export function PatientDataStep({ form }: PatientDataStepProps) {
         </p>
       )}
     </div>
+
+    {patientForModal && (
+      <EditPatientModal
+        open={showEditPatientModal}
+        patient={patientForModal}
+        onClose={() => setShowEditPatientModal(false)}
+        onSave={(patch) => savePatientMutation.mutate(patch)}
+      />
+    )}
+    </>
   )
 }
 
@@ -516,23 +629,25 @@ function OpenTherapyRow({ therapy, patientId, organizationId }: OpenTherapyRowPr
 
   return (
     <li className="flex items-center gap-3 border-b border-(--border-custom) px-4 py-2.5 last:border-b-0">
-      <Link
-        to="/patient/$patientId"
-        params={{ patientId }}
-        search={{ therapy: therapy.id }}
-        className="truncate text-[0.82rem] font-semibold text-(--text) underline-offset-2 hover:underline"
-      >
-        {therapy.immunoType}
-      </Link>
-      <span className="ml-auto shrink-0 text-[0.72rem] text-(--text-muted)">
-        {details.join(' · ')}
-      </span>
+      <div className="inline-flex items-center gap-1.5 truncate">
+        <span className="text-[0.76rem] font-medium text-(--text-muted)">{therapy.immunoType}</span>
+        <span className="text-[0.72rem] text-(--text-muted)">({details.join(' · ')})</span>
+        <Link
+          to="/patient/$patientId"
+          params={{ patientId }}
+          search={{ therapy: therapy.id }}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 border-b border-transparent pb-px text-brand hover:border-current"
+        >
+          <span className="text-[0.72rem] font-medium">· Acessar prontuário</span>
+          <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ fontSize: 10 }} className="shrink-0" />
+        </Link>
+      </div>
       <span
         className={cn(
-          'inline-flex shrink-0 items-center rounded-md border px-2 py-0.5 text-[0.65rem] font-semibold',
-          therapy.status === 'SUSPENDED'
-            ? 'border-red-300 bg-red-50 text-red-700'
-            : 'border-brand/40 bg-brand-50 text-brand-dark',
+          'ml-auto inline-flex shrink-0 items-center rounded-md px-2 py-0.5 text-[0.65rem] font-semibold text-white',
+          therapy.status === 'SUSPENDED' ? 'bg-amber-500' : 'bg-emerald-500',
         )}
       >
         {THERAPY_STATUS_LABELS[therapy.status]}

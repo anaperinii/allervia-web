@@ -73,12 +73,12 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditSche
                   <div className="w-px self-stretch bg-gray-200 my-2" />
 
                   <div className="flex-1 min-w-0 px-5 py-2.5">
-                    <div className="text-[0.8rem] text-(--text-muted)">
+                    <div className={cn('text-[0.8rem] text-(--text-muted)', isNext && 'font-semibold')}>
                       {weekday}, {application.startTime}
                       {application.endTime ? `–${application.endTime}` : ''}
                     </div>
                     <div className="mt-1 flex items-center gap-2 flex-wrap">
-                      <span className="text-sm text-(--text-muted)">{withSmallMl(application.dose)}</span>
+                      <span className={cn('text-sm text-(--text-muted)', isNext && 'font-semibold')}>{withSmallMl(application.dose)}</span>
                       <span
                         className="inline-flex items-center px-1.5 py-px rounded-md text-[0.55rem] font-semibold border"
                         style={{ backgroundColor: color.bg + '4D', color: color.text, borderColor: color.dot + '30' }}

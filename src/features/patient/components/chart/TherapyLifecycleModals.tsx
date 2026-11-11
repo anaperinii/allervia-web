@@ -22,7 +22,7 @@ import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 import { formatInstantDate } from '@/features/patient/adapters/clinical-presentation'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { faCircleInfo, faCirclePause, faRotateRight } from '@fortawesome/free-solid-svg-icons'
 
 const EVENT_LABELS: Record<LifecycleEventType, string> = {
   SUSPENSION: 'Suspensão',
@@ -106,6 +106,8 @@ function SuspendForm({
       dirty={!!reason}
       onClose={onClose}
       title="Suspender tratamento"
+      icon={<FontAwesomeIcon icon={faCirclePause} style={{ fontSize: 16 }} />}
+      tone="warning"
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>
@@ -200,6 +202,8 @@ function ResumeForm({
       dirty={!!reason}
       onClose={onClose}
       title="Retomar tratamento"
+      icon={<FontAwesomeIcon icon={faRotateRight} style={{ fontSize: 16 }} />}
+      tone="success"
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>

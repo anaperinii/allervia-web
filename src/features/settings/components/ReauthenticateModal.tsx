@@ -68,6 +68,7 @@ function ReauthenticateFormModal({
       size="sm"
       title="Confirme sua identidade"
       icon={reauthenticateIcon}
+      tone="brand"
       footer={
         <>
           <Button variant="outline" onClick={onClose} disabled={form.submitting}>

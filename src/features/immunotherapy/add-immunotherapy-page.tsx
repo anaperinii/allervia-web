@@ -215,10 +215,10 @@ export function AddImmunotherapyPage() {
         />
       </div>
 
-      <div className="wizard-fields flex flex-1 min-h-0 flex-col overflow-hidden">
+      <div className="wizard-fields relative flex flex-1 min-h-0 flex-col overflow-hidden">
         <form onSubmit={handleFormSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
           <div
-            className="flex flex-1 min-h-0 flex-col justify-start px-2 pt-1 pb-10 overflow-y-auto"
+            className="flex flex-1 min-h-0 flex-col justify-start px-2 pt-1 pb-24 overflow-y-auto"
           >
             <div className="w-full">
               {step === 1 && <PatientDataStep form={form} />}
@@ -233,11 +233,15 @@ export function AddImmunotherapyPage() {
             </div>
           </div>
 
-          <div className="border-t border-(--border-custom) px-5 py-3 flex items-center justify-between gap-2">
-            <Button type="button" tone="danger" variant="outline" onClick={() => setShowCancelModal(true)}>
-              Cancelar
-            </Button>
+          <div
+            className="absolute inset-x-2 -bottom-3 flex items-center justify-between gap-2 rounded-xl border px-5 py-3 backdrop-blur-md"
+            style={{ background: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.5)' }}
+          >
+            <div />
             <div className="flex items-center gap-2">
+              <Button type="button" variant="solid" className="bg-gray-300 text-gray-800 hover:bg-[#cbd0d3]" onClick={() => setShowCancelModal(true)}>
+                Cancelar
+              </Button>
               <Button
                 type="button"
                 tone="brand"

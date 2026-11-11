@@ -93,6 +93,7 @@ function RequestOwnEmailChangeForm({ onClose }: RequestOwnEmailChangeModalProps)
         size="sm"
         title="Confirme sua identidade"
         icon={reauthenticateIcon}
+        tone="brand"
         footer={
           <>
             <Button variant="outline" onClick={cancelReauth} disabled={reauth.submitting || sensitive.busy}>
