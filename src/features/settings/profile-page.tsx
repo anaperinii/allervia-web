@@ -10,7 +10,8 @@ import { useSession } from '@/shared/auth/useSession'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
+import { formatPhone } from '@/shared/lib/formatters'
 
 import { faFloppyDisk, faUser, faUserGear } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -41,7 +42,7 @@ export function ProfilePage() {
     resolver: zodResolver(profileSchema),
     values: {
       name: profile?.fullName ?? '',
-      phone: profile?.phoneNumber ?? '',
+      phone: profile?.phoneNumber ? formatPhone(profile.phoneNumber) : '',
       councilNumber: profile?.councilNumber ?? '',
       councilUf: profile?.councilUf ?? '',
     },
@@ -53,7 +54,7 @@ export function ProfilePage() {
     mutationFn: (values: ProfileForm) =>
       updateOwnProfile({
         fullName: values.name,
-        phoneNumber: values.phone,
+        phoneNumber: values.phone.replace(/\D/g, ''),
         councilNumber: values.councilNumber || undefined,
         councilUf: values.councilUf || undefined,
       }),
@@ -162,8 +163,21 @@ export function ProfilePage() {
                 </FieldLabel>
                 <FieldLabel label="Telefone" error={errors.phone?.message}>
                   {editing
-                    ? <TextInput invalid={!!errors.phone} {...register('phone')} />
-                    : <ReadOnlyField>{watched.phone}</ReadOnlyField>}
+                    ? (
+                      <Controller
+                        control={control}
+                        name="phone"
+                        render={({ field }) => (
+                          <TextInput
+                            invalid={!!errors.phone}
+                            value={field.value}
+                            onBlur={field.onBlur}
+                            onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                          />
+                        )}
+                      />
+                    )
+                    : <ReadOnlyField>{watched.phone ? formatPhone(watched.phone) : ''}</ReadOnlyField>}
                 </FieldLabel>
               </div>
               <div className="px-4 pb-4 text-[0.65rem] leading-relaxed text-(--text-muted)">

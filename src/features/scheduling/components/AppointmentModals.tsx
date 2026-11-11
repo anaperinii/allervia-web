@@ -245,7 +245,7 @@ function NewAppointmentForm({
                   )}
                 >
                   <span className="text-xs font-medium text-(--text)">{patient.fullName}</span>
-                  <span className="text-[0.65rem] text-(--text-muted)">{patient.phoneNumber}</span>
+                  <span className="text-[0.65rem] text-(--text-muted)">{formatPhone(patient.phoneNumber)}</span>
                 </button>
               ))}
             </div>

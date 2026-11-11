@@ -19,6 +19,7 @@ import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { toZonedOffsetIso, dayInZone, timeInZone } from '@/shared/lib/dates'
+import { formatPhone } from '@/shared/lib/formatters'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import { useCalendarNav } from '@/features/scheduling/hooks/useCalendarNav'
 import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolbar'
@@ -262,6 +263,7 @@ export function AppointmentsPage() {
           onPrev={calendar.goToPrev}
           onNext={calendar.goToNext}
           onToday={calendar.goToToday}
+          isToday={calendar.isToday}
         />
         <div className="flex-1 overflow-auto">
           {calendar.viewMode === 'week' ? (
@@ -397,7 +399,7 @@ function appointmentToApplication(item: Appointment, timeZone: string): Applicat
     month: MONTHS_UPPER[Number(day.slice(5, 7)) - 1],
     year: Number(day.slice(0, 4)),
     patientName: item.patient.fullName,
-    patientPhone: item.patient.phoneNumber,
+    patientPhone: formatPhone(item.patient.phoneNumber),
     modality: 'subcutaneous',
   }
 }

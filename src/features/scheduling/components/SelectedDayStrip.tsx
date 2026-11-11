@@ -50,23 +50,32 @@ export function SelectedDayStrip({
         <div className="flex gap-2 overflow-x-auto pb-1">
         {applications.map((application) => {
           const modalityColor = getApplicationEventColor(application)
+          const isScheduled = application.status === 'scheduled'
           return (
             <div
               key={application.id}
               onClick={() => onSelectApplication(application)}
-              className="group relative shrink-0 rounded-lg p-2.5 min-w-45 cursor-pointer hover:brightness-95 hover:-translate-y-px backdrop-blur-sm transition-all"
+              className={`group relative shrink-0 rounded-lg p-2.5 min-w-45 cursor-pointer hover:brightness-95 hover:-translate-y-px backdrop-blur-sm transition-all ${isScheduled ? 'border border-dashed opacity-70' : ''}`}
               style={{
                 backgroundColor: modalityColor.bg,
                 backgroundImage: modalityColor.grad,
                 color: modalityColor.text,
-                boxShadow: '0 2px 8px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
+                borderColor: isScheduled ? modalityColor.border : undefined,
+                boxShadow: isScheduled
+                  ? '0 1px 4px rgba(15,23,42,0.04)'
+                  : '0 2px 8px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
               }}
             >
               <div className="text-xs font-semibold">{getName(application.patientId)}</div>
               <div className="text-[0.65rem] opacity-90 mt-0.5">
-                {application.startTime} – {application.endTime}
+                {application.startTime}{application.endTime ? ` – ${application.endTime}` : ''}
               </div>
-              <div className="text-[0.6rem] font-medium opacity-90 mt-1.5">{application.dose}</div>
+              <div className="flex items-center justify-between mt-1.5">
+                <div className="text-[0.6rem] font-medium opacity-90">{application.dose}</div>
+                {isScheduled && (
+                  <div className="text-[0.55rem] font-semibold uppercase tracking-wide opacity-80">Agendada</div>
+                )}
+              </div>
             </div>
           )
         })}

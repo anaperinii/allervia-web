@@ -10,6 +10,7 @@ import type {
 import type { Immunotherapy } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
 import { MONTHS_PT_UPPER } from '@/shared/constants/months-pt'
+import { formatCPF, formatPhone } from '@/shared/lib/formatters'
 
 export const ROUTE_LABELS: Record<AdministrationRoute, string> = {
   SUBCUTANEOUS: 'Subcutânea',
@@ -119,14 +120,14 @@ export function buildLegacyPatient(
     name: detail.fullName,
     birthDate: formatCivilDate(detail.birthDate),
     age: ageFromBirthDate(detail.birthDate),
-    phone: detail.phoneNumber,
+    phone: formatPhone(detail.phoneNumber),
     weight: `${detail.weightInKg.toLocaleString('pt-BR')} kg`,
-    cpf: detail.cpf ?? detail.cpfMasked ?? '—',
+    cpf: detail.cpf ? formatCPF(detail.cpf) : detail.cpfMasked ?? '—',
     guardian: detail.guardian
       ? {
           name: detail.guardian.fullName,
-          cpf: detail.guardian.cpf ?? '',
-          phone: detail.guardian.phoneNumber,
+          cpf: detail.guardian.cpf ? formatCPF(detail.guardian.cpf) : '',
+          phone: formatPhone(detail.guardian.phoneNumber),
         }
       : null,
     responsibleDoctor: detail.responsiblePhysician.fullName,
@@ -208,7 +209,7 @@ export function scheduleItemToApplication(
   return {
     ...base,
     patientName: item.immunotherapy.patient.fullName,
-    patientPhone: item.immunotherapy.patient.phoneNumber,
+    patientPhone: formatPhone(item.immunotherapy.patient.phoneNumber),
     administrator: item.immunotherapy.patient.responsiblePhysician.fullName,
     modality: 'subcutaneous',
   }

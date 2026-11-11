@@ -11,6 +11,8 @@ import {
   endOfMonth,
   addMonths,
   subMonths,
+  isSameWeek,
+  isSameMonth,
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -40,6 +42,13 @@ export function useCalendarNav(timeZone = 'America/Sao_Paulo') {
     const m = format(currentDate, 'MMMM yyyy', { locale: ptBR })
     return m.charAt(0).toUpperCase() + m.slice(1)
   }, [currentDate])
+
+  const isToday = useMemo(() => {
+    const today = civilToday()
+    return viewMode === 'week'
+      ? isSameWeek(currentDate, today, { locale: ptBR })
+      : isSameMonth(currentDate, today)
+  }, [currentDate, viewMode])
 
   const goToPrev = () =>
     setCurrentDate(viewMode === 'week' ? subWeeks(currentDate, 1) : subMonths(currentDate, 1))
@@ -78,6 +87,7 @@ export function useCalendarNav(timeZone = 'America/Sao_Paulo') {
     weekDays,
     monthDays,
     monthLabel,
+    isToday,
     goToPrev,
     goToNext,
     goToToday,

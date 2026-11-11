@@ -1,6 +1,7 @@
-import type { UseFormReturn } from 'react-hook-form'
+import { Controller, type UseFormReturn } from 'react-hook-form'
 import { Button, FieldLabel, TextInput, PasswordInput, PasswordRequirements, Select } from '@/shared/components'
 import { PROFESSION_OPTIONS, type RegisterForm } from '@/features/auth/schemas/register'
+import { formatPhone } from '@/shared/lib/formatters'
 
 interface FormStepProps {
   form: UseFormReturn<RegisterForm>
@@ -79,12 +80,19 @@ export function FormStep({ form, maskedEmail, submitting, error, onSubmit }: For
         </FieldLabel>
 
         <FieldLabel label="Telefone comercial" error={errors.phoneNumber?.message}>
-          <TextInput
-            type="tel"
-            placeholder="(00) 00000-0000"
-            invalid={!!errors.phoneNumber}
-            maxLength={20}
-            {...form.register('phoneNumber')}
+          <Controller
+            control={form.control}
+            name="phoneNumber"
+            render={({ field }) => (
+              <TextInput
+                type="tel"
+                placeholder="(00) 00000-0000"
+                invalid={!!errors.phoneNumber}
+                value={field.value}
+                onBlur={field.onBlur}
+                onChange={(e) => field.onChange(formatPhone(e.target.value))}
+              />
+            )}
           />
         </FieldLabel>
 

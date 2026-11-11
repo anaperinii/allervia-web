@@ -3,24 +3,27 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
 import { FALLBACK_EVENT_COLORS } from '@/features/scheduling/components/modality-colors'
+import { Button } from '@/shared/components'
 
 interface CalendarToolbarProps {
   monthLabel: string
   onPrev: () => void
   onNext: () => void
   onToday: () => void
+  isToday?: boolean
   rightContent?: ReactNode
 }
 
 const LEGEND_MODALITIES = [
   { id: 'subcutaneous', label: 'Subcutânea' },
   { id: 'sublingual', label: 'Sublingual' },
+  { id: 'missed', label: 'Ausente' },
 ]
 
 const NAV_BUTTON_CLASS =
   'flex h-8 w-8 items-center justify-center rounded-lg cursor-pointer transition-colors text-(--text) hover:text-brand'
 
-export function CalendarToolbar({ monthLabel, onPrev, onNext, onToday, rightContent }: CalendarToolbarProps) {
+export function CalendarToolbar({ monthLabel, onPrev, onNext, onToday, isToday, rightContent }: CalendarToolbarProps) {
   const eventColors = useSettingsStore((s) => s.eventColors)
   const legendItems = LEGEND_MODALITIES.map((item) => ({
     ...item,
@@ -32,13 +35,9 @@ export function CalendarToolbar({ monthLabel, onPrev, onNext, onToday, rightCont
       <div className="flex items-center gap-3">
         <span className="text-base font-semibold text-(--text) capitalize">{monthLabel}</span>
 
-        <button
-          type="button"
-          onClick={onToday}
-          className="h-7 rounded-lg border border-[#257E8C] bg-[#257E8C]/10 px-4 text-[0.75rem] font-medium text-[#257E8C] cursor-pointer transition-colors hover:bg-[#257E8C]/20"
-        >
+        <Button type="button" tone="brand" variant="outline" size="sm" disabled={isToday} onClick={onToday} className="h-6!">
           Hoje
-        </button>
+        </Button>
 
         <div className="flex items-center gap-1">
           <button type="button" onClick={onPrev} aria-label="Período anterior" className={NAV_BUTTON_CLASS}>
