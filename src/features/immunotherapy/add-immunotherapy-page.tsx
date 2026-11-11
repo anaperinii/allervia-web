@@ -28,12 +28,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
 import { PageHeader } from '@/shared/components/showcase'
-import { faCircleCheck, faClipboardCheck, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
+import { faBong, faCircleCheck, faClipboardCheck, faUser } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const STEPS: WizardStep[] = [
   { label: 'Paciente', icon: faUser, description: 'Busque pelo nome para reaproveitar um cadastro existente ou preencha os dados de um paciente novo, vinculado ao prescritor autenticado.' },
-  { label: 'Prescrição', icon: faSyringe, description: 'Tipo, extrato, data de início e a versão publicada do protocolo com etapas, início e meta.' },
+  { label: 'Prescrição', icon: faBong, description: 'Tipo, extrato, data de início e a versão publicada do protocolo com etapas, início e meta.' },
   { label: 'Revisão', icon: faClipboardCheck, description: 'Confira os valores exatos e o fuso. Salvar grava paciente, tratamento e primeira previsão em uma única transação.' },
 ]
 

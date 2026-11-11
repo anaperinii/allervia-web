@@ -17,8 +17,8 @@ const CONDUCT_LABELS: Record<string, string> = {
 }
 
 const BADGE_TONES = {
-  later: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-  earlier: 'bg-amber-50 text-amber-700 ring-amber-600/20',
+  later: 'bg-emerald-500',
+  earlier: 'bg-amber-500',
 } as const
 
 interface ReviewItem {
@@ -69,7 +69,7 @@ export function EvolutionReviewStep({
       ...(shiftFromPlanned !== null && shiftFromPlanned !== 0
         ? {
             badge: {
-              text: `${shiftFromPlanned > 0 ? '+' : '−'}${Math.abs(shiftFromPlanned)}d`,
+              text: `${shiftFromPlanned > 0 ? '+' : '−'}${Math.abs(shiftFromPlanned)} ${Math.abs(shiftFromPlanned) === 1 ? 'dia' : 'dias'}`,
               tone: shiftFromPlanned > 0 ? ('later' as const) : ('earlier' as const),
             },
           }
@@ -202,29 +202,29 @@ function ReviewCard({ title, items }: ReviewCardProps) {
           <div
             key={item.label}
             className={cn(
-              'bg-white px-3 py-2',
+              'relative bg-white px-3 py-2',
               index % 3 !== 2 && index !== items.length - 1 && 'border-r border-(--border-custom)',
               index < items.length - (items.length % 3 || 3) && 'border-b border-(--border-custom)',
             )}
           >
+            {item.badge && (
+              <span
+                className={cn(
+                  'absolute right-3 top-1/2 -translate-y-1/2 inline-flex shrink-0 items-center rounded-md px-2 py-0.5 text-[0.65rem] font-semibold tabular-nums text-white',
+                  BADGE_TONES[item.badge.tone],
+                )}
+                title={
+                  item.badge.tone === 'later'
+                    ? 'Dias além da data prevista pelo protocolo'
+                    : 'Dias antes da data prevista pelo protocolo'
+                }
+              >
+                {item.badge.text}
+              </span>
+            )}
             <div className="text-[0.7rem] font-semibold text-(--text-muted) mb-0.5">{item.label}</div>
-            <div className="flex items-center gap-1.5 text-[0.82rem] font-medium text-(--text)">
+            <div className={cn('flex items-center gap-1.5 text-[0.82rem] font-medium text-(--text)', item.badge && 'pr-20')}>
               <span>{item.value || '—'}</span>
-              {item.badge && (
-                <span
-                  className={cn(
-                    'inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-[0.62rem] font-bold tabular-nums ring-1 ring-inset',
-                    BADGE_TONES[item.badge.tone],
-                  )}
-                  title={
-                    item.badge.tone === 'later'
-                      ? 'Dias além da data prevista pelo protocolo'
-                      : 'Dias antes da data prevista pelo protocolo'
-                  }
-                >
-                  {item.badge.text}
-                </span>
-              )}
             </div>
           </div>
         ))}

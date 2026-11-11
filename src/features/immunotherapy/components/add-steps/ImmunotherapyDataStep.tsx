@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Controller, type UseFormReturn } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import { FieldLabel, Select, StepHeading, TextInput, TimeSelect } from '@/shared/components'
@@ -11,11 +11,144 @@ import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import type { AddImmunotherapyForm } from '@/features/immunotherapy/schemas/add-immunotherapy'
 
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface ImmunotherapyDataStepProps {
   form: UseFormReturn<AddImmunotherapyForm>
+}
+
+interface StepsMultiSelectProps {
+  steps: ProtocolStep[]
+  selectedStepIds: string[]
+  onToggle: (stepId: string) => void
+  onSelectAll: () => void
+  onClear: () => void
+  invalid?: boolean
+  disabled?: boolean
+  disabledLabel: string
+}
+
+function StepsMultiSelect({
+  steps,
+  selectedStepIds,
+  onToggle,
+  onSelectAll,
+  onClear,
+  invalid,
+  disabled,
+  disabledLabel,
+}: StepsMultiSelectProps) {
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const allSelected =
+    steps.length > 0 && steps.every((step) => selectedStepIds.includes(step.id))
+
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (event: MouseEvent) => {
+      if (containerRef.current?.contains(event.target as Node)) return
+      setOpen(false)
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  const summary = disabled
+    ? disabledLabel
+    : allSelected
+      ? `Todas as ${steps.length} etapas`
+      : selectedStepIds.length === 0
+        ? 'Nenhuma etapa selecionada'
+        : `${selectedStepIds.length} de ${steps.length} selecionadas`
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        disabled={disabled}
+        aria-haspopup="true"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+        className={cn(
+          'flex h-9 w-full items-center justify-between gap-2 rounded-lg border bg-white px-3 text-xs transition-all',
+          'focus:border-[#257E8C] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#257E8C]/35',
+          disabled
+            ? 'cursor-not-allowed text-(--text-muted) opacity-70'
+            : 'cursor-pointer text-(--text)',
+          invalid ? 'border-red-400' : 'border-[#DDE6E6]',
+        )}
+      >
+        <span className="truncate">{summary}</span>
+        <FontAwesomeIcon
+          icon={faChevronDown}
+          style={{ fontSize: 10 }}
+          className={cn('shrink-0 text-(--text-muted) transition-transform', open && 'rotate-180')}
+        />
+      </button>
+
+      {open && !disabled && (
+        <div
+          role="dialog"
+          aria-label="Selecionar etapas permitidas"
+          className="absolute left-0 right-0 top-full z-50 mt-1 rounded-lg border border-(--border-custom) bg-white shadow-[0_12px_28px_-14px_rgba(16,60,68,0.45)]"
+        >
+          <div className="flex items-center justify-between gap-2 border-b border-(--border-custom) px-3 py-2">
+            <span className="text-[0.6rem] font-semibold uppercase tracking-wide text-(--text-muted)">
+              {selectedStepIds.length} de {steps.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => (allSelected ? onClear() : onSelectAll())}
+              className="cursor-pointer rounded-md px-2 py-0.5 text-[0.68rem] font-semibold text-brand-dark transition-colors hover:bg-brand/8"
+            >
+              {allSelected ? 'Limpar seleção' : 'Selecionar todas'}
+            </button>
+          </div>
+          <div className="max-h-56 overflow-y-auto py-1">
+            {steps.map((step) => {
+              const selected = selectedStepIds.includes(step.id)
+              return (
+                <button
+                  key={step.id}
+                  type="button"
+                  role="checkbox"
+                  aria-checked={selected}
+                  onClick={() => onToggle(step.id)}
+                  className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-1.5 text-left text-xs transition-colors hover:bg-teal-50"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors',
+                      selected
+                        ? 'border-brand bg-brand text-white'
+                        : 'border-(--border-custom) bg-white',
+                    )}
+                  >
+                    {selected && <FontAwesomeIcon icon={faCheck} style={{ fontSize: 8 }} />}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate font-medium text-(--text)">
+                    {formatStepOption(step)}
+                  </span>
+                  <span className="shrink-0 text-[0.65rem] text-(--text-muted)">
+                    {step.intervalDays}d
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 const TYPES_LISTBOX_ID = 'add-immunotherapy-type-suggestions'
@@ -139,9 +272,6 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
     applyStepIds(next)
   }
 
-  const allSelected =
-    steps.length > 0 && steps.every((step) => selectedStepIds.includes(step.id))
-
   return (
     <div className="space-y-5">
       <StepHeading description="Tipo de alérgeno, extrato, data de início e a versão publicada do protocolo com as etapas permitidas." />
@@ -223,7 +353,6 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
           <FieldLabel
             label="Data de Início"
             error={errors.startDate?.message}
-            helperText={`Primeira previsão no fuso ${account?.organization?.timeZone ?? 'America/Sao_Paulo'}. Aceita data passada, para tratamentos que começaram antes do cadastro.`}
           >
             <TextInput type="date" invalid={!!errors.startDate} {...register('startDate')} />
           </FieldLabel>
@@ -285,71 +414,22 @@ export function ImmunotherapyDataStep({ form }: ImmunotherapyDataStepProps) {
             )}
           />
         </FieldLabel>
+        <FieldLabel label="Etapas permitidas" error={errors.stepIds?.message}>
+          <StepsMultiSelect
+            steps={steps}
+            selectedStepIds={selectedStepIds}
+            onToggle={toggleStep}
+            onSelectAll={() => applyStepIds(steps.map((step) => step.id))}
+            onClear={() => applyStepIds([])}
+            invalid={!!errors.stepIds}
+            disabled={!selectedVersion}
+            disabledLabel="Selecione a versão primeiro"
+          />
+        </FieldLabel>
       </div>
 
       {selectedVersion && (
         <div className="space-y-3">
-          <fieldset
-            className="relative rounded-xl border px-3.5 pb-3.5 pt-2.5"
-            style={{ borderColor: 'rgba(18,51,58,0.22)' }}
-          >
-            <legend className="flex items-center gap-2 px-1.5">
-              <span className="text-xs font-semibold text-(--text-muted)">
-                Etapas permitidas na prescrição
-              </span>
-              <span className="text-[0.6rem] text-(--text-muted)">
-                {selectedStepIds.length} de {steps.length} selecionadas
-              </span>
-            </legend>
-            <button
-              type="button"
-              onClick={() =>
-                applyStepIds(allSelected ? [] : steps.map((step) => step.id))
-              }
-              className={cn(
-                'absolute -top-5 right-5 flex items-center gap-1.5 rounded-md border px-2 py-1 text-[0.65rem] font-semibold transition-colors cursor-pointer',
-                allSelected
-                  ? 'border-red-300 bg-red-50 text-red-700 hover:border-red-400 hover:bg-red-100'
-                  : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50 hover:text-brand-dark',
-              )}
-            >
-              {allSelected && (
-                <FontAwesomeIcon icon={faXmark} style={{ fontSize: 10 }} />
-              )}
-              {allSelected ? 'Limpar seleção' : 'Selecionar todas'}
-            </button>
-            <div className="flex flex-wrap gap-2">
-              {steps.map((step) => {
-                const selected = selectedStepIds.includes(step.id)
-                return (
-                  <button
-                    key={step.id}
-                    type="button"
-                    role="checkbox"
-                    aria-checked={selected}
-                    onClick={() => toggleStep(step.id)}
-                    className={cn(
-                      'rounded-lg border px-3 py-1.5 text-[0.7rem] font-semibold transition-colors cursor-pointer',
-                      selected
-                        ? 'border-brand bg-brand-50 text-brand-dark'
-                        : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50',
-                    )}
-                  >
-                    {formatStepOption(step)}
-                    <span className="ml-1.5 font-normal opacity-75">
-                      {step.intervalDays}d
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-            {errors.stepIds?.message && (
-              <span className="mt-0.5 block text-[0.6rem] text-red-500">
-                {errors.stepIds.message}
-              </span>
-            )}
-          </fieldset>
-
           <div className="grid grid-cols-2 gap-4">
             <FieldLabel label="Etapa inicial" error={errors.startingStepId?.message}>
               <Select invalid={!!errors.startingStepId} {...register('startingStepId')}>

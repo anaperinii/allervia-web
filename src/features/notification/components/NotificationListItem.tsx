@@ -64,8 +64,8 @@ export function NotificationListItem({
             </time>
             {!notification.read && <span className="w-1.5 h-1.5 rounded-full bg-red-500" aria-label="Não lida" />}
           </div>
-          <div className="text-[0.85rem] font-semibold text-(--text)">{notification.title}</div>
-          <div className={cn('text-[0.78rem] text-(--text-muted) mt-1 leading-relaxed', !expanded && 'line-clamp-2')}>
+          <div className="text-[0.76rem] font-semibold text-(--text)">{notification.title}</div>
+          <div className={cn('text-[0.7rem] text-(--text-muted) mt-1 leading-relaxed', !expanded && 'line-clamp-2')}>
             {notification.message}
           </div>
 

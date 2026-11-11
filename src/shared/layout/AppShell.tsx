@@ -32,6 +32,7 @@ import { listNotifications } from '@/shared/api/notifications.api'
 import { useUserStore, type Permission } from '@/shared/stores/useUserStore'
 import { canAccess, defaultDestination } from '@/shared/auth/navigation-policy'
 import { useSession } from '@/shared/auth/useSession'
+import { NotificationsDrawer } from '@/features/notification/components/NotificationsDrawer'
 
 const RAIL_ACTIVE_SOLID = 'linear-gradient(150deg, #257E8C, #12333a)'
 const RAIL_ACTIVE_MARKER = '#1D6772'
@@ -104,6 +105,7 @@ function RailLink({
   collapsed,
   compact = false,
   subtle = false,
+  onSelect,
 }: {
   item: RailItem
   active: boolean
@@ -111,6 +113,8 @@ function RailLink({
   collapsed: boolean
   compact?: boolean
   subtle?: boolean
+  /** When set, the item acts as a trigger (e.g. opens a drawer) instead of navigating. */
+  onSelect?: () => void
 }) {
   const size = compact ? 'h-7.5' : 'h-9'
   const solidActive = !subtle
@@ -129,6 +133,11 @@ function RailLink({
       to={item.path}
       aria-label={item.label}
       aria-current={active ? 'page' : undefined}
+      onClick={(e) => {
+        if (!onSelect) return
+        e.preventDefault()
+        onSelect()
+      }}
       className={cn(
         'group relative flex shrink-0 items-center no-underline transition-colors duration-200',
         size,
@@ -228,6 +237,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const unreadCount = unreadQuery.data?.unread ?? 0
   const userName = useUserStore((s) => s.current?.name ?? '')
   const [showLogout, setShowLogout] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
   const [logoutError, setLogoutError] = useState<string | null>(null)
   const { signOut } = useSession()
   const collapsed = useSidebarStore((s) => s.isCollapsed)
@@ -297,9 +307,18 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span key={item.path} data-rail-item="" className={cn('block', collapsed ? '' : 'w-full')}>
               <RailLink
                 item={item}
-                active={isActive(item)}
+                active={
+                  item.path === '/notifications'
+                    ? showNotifications || isActive(item)
+                    : isActive(item)
+                }
                 collapsed={collapsed}
                 badge={item.path === '/notifications' ? unreadCount : undefined}
+                onSelect={
+                  item.path === '/notifications'
+                    ? () => setShowNotifications(true)
+                    : undefined
+                }
               />
             </span>
           ))}
@@ -413,6 +432,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           </p>
         )}
       </Modal>
+
+      <NotificationsDrawer
+        open={showNotifications}
+        onClose={() => setShowNotifications(false)}
+      />
     </div>
   )
 }
