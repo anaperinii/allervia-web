@@ -9,22 +9,34 @@ interface PatientActionsMenuProps {
   canInactivate: boolean
   canLgpdPortability: boolean
   canComplete: boolean
+  canRevisePrescription: boolean
+  canShowLifecycleHistory: boolean
+  lifecycleEventCount: number
   completeDisabled: boolean
+  revisePrescriptionDisabled: boolean
   patientStatus: 'active' | 'inactive'
   onInactivate: () => void
   onPortability: () => void
   onComplete: () => void
+  onRevisePrescription: () => void
+  onShowLifecycleHistory: () => void
 }
 
 export function PatientActionsMenu({
   canInactivate,
   canLgpdPortability,
   canComplete,
+  canRevisePrescription,
+  canShowLifecycleHistory,
+  lifecycleEventCount,
   completeDisabled,
+  revisePrescriptionDisabled,
   patientStatus,
   onInactivate,
   onPortability,
   onComplete,
+  onRevisePrescription,
+  onShowLifecycleHistory,
 }: PatientActionsMenuProps) {
   const [open, setOpen] = useState(false)
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -78,6 +90,14 @@ export function PatientActionsMenu({
               disabled={isCompleteDisabled}
             />
           )}
+          {canRevisePrescription && (
+            <MenuItem
+              label="Revisar prescrição"
+              hint="Migrar para outra versão do protocolo"
+              onClick={handle(onRevisePrescription)}
+              disabled={revisePrescriptionDisabled}
+            />
+          )}
           {canInactivate && (
             <MenuItem
               label="Inativar imunoterapia"
@@ -93,6 +113,14 @@ export function PatientActionsMenu({
               onClick={handle(onPortability)}
             />
           )}
+          {canShowLifecycleHistory && (
+            <MenuItem
+              label="Histórico"
+              hint="Eventos de ciclo de vida do tratamento"
+              count={lifecycleEventCount}
+              onClick={handle(onShowLifecycleHistory)}
+            />
+          )}
         </div>
       )}
     </div>
@@ -102,11 +130,12 @@ export function PatientActionsMenu({
 interface MenuItemProps {
   label: string
   hint?: string
+  count?: number
   onClick: () => void
   disabled?: boolean
 }
 
-function MenuItem({ label, hint, onClick, disabled }: MenuItemProps) {
+function MenuItem({ label, hint, count, onClick, disabled }: MenuItemProps) {
   return (
     <button
       type="button"
@@ -114,7 +143,7 @@ function MenuItem({ label, hint, onClick, disabled }: MenuItemProps) {
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'group relative flex w-full items-center px-3 py-2.5 text-left transition-colors border-l-2 border-transparent',
+        'group relative flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left transition-colors border-l-2 border-transparent',
         disabled
           ? 'opacity-50 cursor-not-allowed'
           : 'hover:bg-teal-50/60 hover:border-l-brand cursor-pointer',
@@ -124,6 +153,9 @@ function MenuItem({ label, hint, onClick, disabled }: MenuItemProps) {
         <div className="text-xs font-medium text-(--text)">{label}</div>
         {hint && <div className="text-[0.55rem] text-(--text-muted)">{hint}</div>}
       </div>
+      {count !== undefined && (
+        <span className="shrink-0 text-[0.65rem] text-(--text-muted)">({count})</span>
+      )}
     </button>
   )
 }

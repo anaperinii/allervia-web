@@ -9,7 +9,7 @@ import type { Inactivation, Patient } from '@/features/patient/stores/usePatient
 import type { TherapyStatus } from '@/shared/api/contracts/clinical'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronDown, faChevronUp, faCircleInfo, faClockRotateLeft, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faChevronUp, faCircleInfo, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 
 interface PatientInfoSidebarProps {
   patient: Patient
@@ -88,34 +88,31 @@ export function PatientInfoSidebar({
       : []),
   ]
 
-  const therapyStatusDisplay =
+  const therapyStatusLabel =
     therapyStatus === 'IN_PROGRESS'
-      ? { label: 'Tratamento em andamento', tone: 'emerald' as const }
+      ? 'Em andamento'
       : therapyStatus === 'SUSPENDED'
-        ? { label: 'Tratamento suspenso', tone: 'yellow' as const }
+        ? 'Suspenso'
         : therapyStatus === 'COMPLETED'
-          ? { label: 'Tratamento concluído', tone: 'gray' as const }
-          : { label: 'Sem tratamento selecionado', tone: 'gray' as const }
+          ? 'Concluído'
+          : null
 
   const immunoRows: [string, React.ReactNode][] = [
+    ...(therapyStatusLabel
+      ? ([[
+          'Status',
+          <span className="inline-flex items-center gap-1.5">
+            {therapyStatusLabel}
+            {treatmentTime && <span className="text-(--text-muted)">({treatmentTime})</span>}
+          </span>,
+        ]] as [string, React.ReactNode][])
+      : []),
     ['Tipo', patient.immunotherapyType],
     ['Via de Administração', patient.administrationRoute],
-    [
-      'Início Indução',
-      <span className="inline-flex items-center gap-1.5">
-        {treatmentTime && <StatusBadge tone="gray">{treatmentTime}</StatusBadge>}
-        {inductionStart || '-'}
-      </span>,
-    ],
+    ['Início Indução', inductionStart || '-'],
     ['Início Manutenção', maintenanceStart || '-'],
     ['Meta Concentração e Volume', targetValues || patient.targetConcentrationVolume || '-'],
   ]
-
-  const showImmunoActions =
-    canRevisePrescription ||
-    therapyStatus !== null ||
-    (patient.protocolAdjustments?.length ?? 0) > 0 ||
-    inactivationCount > 0
 
   return (
     <div className="flex w-104 shrink-0 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-white">
@@ -130,11 +127,6 @@ export function PatientInfoSidebar({
           </span>
           <div className="min-w-0">
             <h1 className="text-lg font-bold text-(--text) leading-tight">{patient.name}</h1>
-            <div className="-mt-0.5">
-              <StatusBadge tone={therapyStatusDisplay.tone}>
-                {therapyStatusDisplay.label}
-              </StatusBadge>
-            </div>
           </div>
         </div>
 
@@ -197,11 +189,17 @@ export function PatientInfoSidebar({
             canInactivate={canInactivate}
             canLgpdPortability={canLgpdPortability}
             canComplete={canComplete}
+            canRevisePrescription={canRevisePrescription}
+            canShowLifecycleHistory={therapyStatus !== null}
+            lifecycleEventCount={inactivationCount}
             completeDisabled={completeDisabled}
+            revisePrescriptionDisabled={therapyStatus !== 'IN_PROGRESS'}
             patientStatus={patient.status}
             onInactivate={onInactivate}
             onPortability={onPortability}
             onComplete={onComplete}
+            onRevisePrescription={onRevisePrescription}
+            onShowLifecycleHistory={onShowLifecycleHistory}
           />
         </div>
       </div>
@@ -265,32 +263,6 @@ export function PatientInfoSidebar({
                 <span className="text-(--text-muted) shrink-0">Extrato:</span>
                 <span className="font-medium text-(--text) text-right max-w-[55%] wrap-break-word leading-relaxed">{patient.extract}</span>
               </div>
-              {showImmunoActions && (
-                <div className="pt-2 mt-1 border-t border-(--border-custom) flex items-center gap-1.5">
-                  {canRevisePrescription && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      disabled={therapyStatus !== 'IN_PROGRESS'}
-                      onClick={onRevisePrescription}
-                    >
-                      Revisar prescrição
-                    </Button>
-                  )}
-                  {therapyStatus !== null && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      leftIcon={<FontAwesomeIcon icon={faClockRotateLeft} style={{ fontSize: 10 }} />}
-                      onClick={onShowLifecycleHistory}
-                    >
-                      Histórico
-                    </Button>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -315,20 +287,5 @@ function Row({
         {value}
       </span>
     </div>
-  )
-}
-
-function StatusBadge({ tone, dot, children }: { tone: 'emerald' | 'yellow' | 'gray'; dot?: boolean; children: React.ReactNode }) {
-  const map = {
-    emerald: { wrap: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    yellow: { wrap: 'bg-yellow-50 text-yellow-700 border-yellow-200', dot: 'bg-yellow-500' },
-    gray: { wrap: 'bg-gray-100 text-gray-600 border-gray-200', dot: 'bg-gray-400' },
-  }
-  const s = map[tone]
-  return (
-    <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.6rem] font-semibold border', s.wrap)}>
-      {dot && <span className={cn('w-1.5 h-1.5 rounded-full', s.dot)} />}
-      {children}
-    </span>
   )
 }
