@@ -8,6 +8,7 @@ import { revisePrescription } from '@/shared/api/clinical.api'
 import { listProtocols } from '@/shared/api/protocols.api'
 import type { ProtocolStep } from '@/shared/api/contracts/protocols'
 import { queryKeys } from '@/shared/api/query-keys'
+import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
 import { cn } from '@/shared/lib/cn'
 import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
@@ -146,8 +147,19 @@ function ReviseForm({
       pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
       dirty={!!reason}
       onClose={onClose}
-      title="Revisar prescrição para outra versão"
+      ariaLabel="Revisar prescrição para outra versão"
       size="lg"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[1.05rem] font-bold text-(--text)">Revisar prescrição para outra versão</div>
+          <div className="text-[0.82rem] text-(--text-muted)">Fixa novo snapshot do protocolo</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>

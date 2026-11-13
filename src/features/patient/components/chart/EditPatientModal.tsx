@@ -1,6 +1,7 @@
 import { editMinorPatientSchema, editPatientSchema, type EditPatientForm } from '@/features/patient/schemas/edit-patient'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
 import { Button, ConfirmDiscardModal, FieldLabel, Modal, ReadOnlyField, Select, TextInput } from '@/shared/components'
+import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
 import { formatCPF, formatPhone } from '@/shared/lib/formatters'
@@ -98,11 +99,22 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
       <Modal
         open={open}
         onClose={handleCancel}
-        title={step === 'form' ? 'Editar dados do paciente' : 'Confirmar alterações?'}
+        ariaLabel="Editar dados do paciente"
         size="lg"
-        {...(step === 'review'
-          ? { icon: <FontAwesomeIcon icon={faCheck} style={{ fontSize: 16 }} />, tone: 'brand' as const }
-          : {})}
+        headerSlot={
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 truncate text-[1.05rem] font-bold text-(--text)">
+              {step === 'review' && <FontAwesomeIcon icon={faCheck} className="text-brand" style={{ fontSize: 15 }} />}
+              {step === 'form' ? 'Editar dados do paciente' : 'Confirmar alterações?'}
+            </div>
+            <div className="text-[0.82rem] text-(--text-muted)">{patient.name}</div>
+          </div>
+        }
+        headerStyle={{
+          background: MODAL_HEADER_BACKGROUND,
+          borderBottom: 'none',
+          paddingTop: '1.4rem',
+        }}
         footer={
           step === 'form' ? (
             <>

@@ -1,4 +1,5 @@
 import type { Application } from '@/features/patient/stores/usePatientStore'
+import { useModalityStyle } from '@/features/scheduling/components/modality-colors'
 
 export const APPLICATION_STATUS_DISPLAY: Record<Application['status'], { label: string; className: string }> = {
   scheduled: { label: 'Agendada', className: 'bg-brand/10 text-brand' },
@@ -7,8 +8,17 @@ export const APPLICATION_STATUS_DISPLAY: Record<Application['status'], { label: 
   missed: { label: 'Ausente', className: 'bg-red-100 text-red-600' },
 }
 
-export function getApplicationEventColor(application: Application) {
-  const grad = 'linear-gradient(105deg, rgba(255,255,255,0.12) 0%, transparent 55%)'
-  if (application.modality === 'sublingual') return { bg: '#A6D9D1', text: '#1E5A52', border: '#74C3B9', grad }
-  return { bg: '#CFE99E', text: '#4E6E23', border: '#B7E06A', grad }
+const EVENT_COLOR_GRAD = 'linear-gradient(105deg, rgba(255,255,255,0.12) 0%, transparent 55%)'
+
+export function useApplicationEventColor(): (application: Application) => {
+  bg: string
+  text: string
+  border: string
+  grad: string
+} {
+  const modalityStyle = useModalityStyle()
+  return (application) => {
+    const tone = modalityStyle(application)
+    return { bg: tone.surface, text: tone.ink, border: tone.border, grad: EVENT_COLOR_GRAD }
+  }
 }

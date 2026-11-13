@@ -75,18 +75,16 @@ export function WeekView({
                     background: tone.surface,
                     borderColor: tone.border,
                     color: tone.ink,
-                    backgroundImage:
-                      application.status === 'missed'
-                        ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.14) 0 1.5px, transparent 1.5px 6px)'
-                        : undefined,
                   }}
                 >
-                  <div className="truncate text-[0.68rem] font-bold">
+                  <div className={cn('truncate text-[0.68rem] font-bold', application.status === 'completed' && 'font-black')}>
                     {application.startTime}
                     {application.endTime ? ` – ${application.endTime}` : ''}
                   </div>
-                  <div className="truncate font-semibold">{application.patientName ?? ''}</div>
-                  <div className="truncate font-medium opacity-75">
+                  <div className={cn('truncate font-semibold', application.status === 'completed' && 'font-extrabold')}>
+                    {application.patientName ?? ''}
+                  </div>
+                  <div className={cn('truncate font-medium opacity-75', application.status === 'completed' && 'font-bold opacity-90')}>
                     {application.dose} · {application.cycle.days} dias
                   </div>
                 </div>

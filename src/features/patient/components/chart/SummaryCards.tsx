@@ -1,8 +1,5 @@
 import allerviaMark from '@/assets/allervia-mark-light.png'
 import { cn } from '@/shared/lib/cn'
-import { useSidebarStore } from '@/shared/layout/useSidebarStore'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeftLong } from '@fortawesome/free-solid-svg-icons'
 
 const withSmallMl = (value: string) =>
   value.split(/(ml)/gi).map((part, index) =>
@@ -49,37 +46,10 @@ const CARDS: {
 ]
 
 export function SummaryCards(props: SummaryCardsProps) {
-
-
-  const sidebarCollapsed = useSidebarStore((s) => s.isCollapsed)
-
-  const previousTag = (floating: boolean) => (
-    <span
-      title={`Dose administrada anterior: ${props.previousDose}`}
-      className={cn(
-        'inline-flex items-center gap-1 whitespace-nowrap rounded-md border px-2 py-0.5 text-[0.6rem] font-medium leading-none',
-        floating && 'absolute -top-2 left-1/2 z-10 -translate-x-1/2',
-      )}
-      style={
-        floating
-          ? { borderColor: '#B7E06A', background: '#D3EE9A', color: '#44611E' }
-          : {
-              borderColor: '#B7E06A',
-              background: 'rgba(183,224,106,0.18)',
-              color: '#D3EE9A',
-            }
-      }
-    >
-      <FontAwesomeIcon icon={faArrowLeftLong} style={{ fontSize: 9 }} />
-      {props.previousDose}
-    </span>
-  )
-
   return (
     <div className="grid grid-cols-3 gap-3 pt-2">
       {CARDS.map((card) => (
         <div key={card.key} className="relative">
-          {card.key === 'dose' && props.previousDose && !sidebarCollapsed && previousTag(true)}
           <div
             className="relative rounded-xl p-4 border overflow-hidden backdrop-blur-xl"
             style={{
@@ -110,7 +80,6 @@ export function SummaryCards(props: SummaryCardsProps) {
                 <div className="truncate text-lg font-semibold" style={{ color: '#F2F6F7' }}>
                   {withSmallMl(card.render(props))}
                 </div>
-                {card.key === 'dose' && props.previousDose && sidebarCollapsed && previousTag(false)}
               </div>
             </div>
           </div>

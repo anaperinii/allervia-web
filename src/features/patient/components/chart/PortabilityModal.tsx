@@ -89,8 +89,19 @@ function PortabilityModalForm({ open, patient, therapyId, onClose }: Portability
     <Modal
       open={open}
       onClose={requestClose}
-      title="Exportar prontuário clínico"
+      ariaLabel="Exportar prontuário clínico"
       size="lg"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[1.05rem] font-bold text-(--text)">Exportar prontuário clínico</div>
+          <div className="text-[0.82rem] text-(--text-muted)">{patient.name}</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
       footer={
         <Button
           tone="brand"

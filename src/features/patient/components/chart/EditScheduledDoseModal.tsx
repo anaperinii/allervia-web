@@ -5,6 +5,7 @@ import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, TextInp
 import { updateScheduledDose } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
+import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import { toZonedOffsetIso, dayInZone, timeInZone } from '@/shared/lib/dates'
 import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
@@ -109,7 +110,18 @@ function EditScheduledDoseForm({
       pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
       dirty={!!reason}
       onClose={onClose}
-      title="Editar previsão pendente"
+      ariaLabel="Editar previsão pendente"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[1.05rem] font-bold text-(--text)">Editar previsão pendente</div>
+          <div className="text-[0.82rem] text-(--text-muted)">Ajusta apenas esta previsão</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>

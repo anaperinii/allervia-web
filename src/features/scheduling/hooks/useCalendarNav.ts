@@ -68,6 +68,11 @@ export function useCalendarNav(timeZone = 'America/Sao_Paulo') {
     setCurrentDate(next)
   }
 
+  const goToDate = (date: Date) => {
+    setCurrentDate(date)
+    setSelectedDate(date)
+  }
+
   const setYear = (year: number) => {
     const next = new Date(currentDate)
     const day = next.getDate()
@@ -93,5 +98,6 @@ export function useCalendarNav(timeZone = 'America/Sao_Paulo') {
     goToToday,
     setMonth,
     setYear,
+    goToDate,
   }
 }

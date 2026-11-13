@@ -1,11 +1,12 @@
+import { cn } from '@/shared/lib/cn'
 import { collectPages } from '@/shared/api/pagination'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { format } from 'date-fns'
+import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
-import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
+import { useApplicationEventColor } from '@/features/scheduling/constants/application-display'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 import { scheduleItemToApplication } from '@/features/patient/adapters/clinical-presentation'
@@ -27,9 +28,11 @@ import { WeekView } from '@/features/scheduling/components/WeekView'
 import { MonthView } from '@/features/scheduling/components/MonthView'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
 import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
+import { CalendarSidePanel } from '@/features/scheduling/components/CalendarSidePanel'
+import { useSchedulingUiStore } from '@/features/scheduling/stores/useSchedulingUiStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faCalendarDays, faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { PageHeader, Pill, SelectPill, SHOWCASE } from '@/shared/components/showcase'
 
 const MONTH_OPTIONS = [
@@ -70,6 +73,7 @@ export function AppointmentsPage() {
   const canNewAppointment = useHasPermission('new_appointment')
   const canReschedule = useHasPermission('edit_scheduled_dose')
   const navigate = useNavigate()
+  const eventColor = useApplicationEventColor()
   const calendar = useCalendarNav(account?.organization?.timeZone ?? 'America/Sao_Paulo')
 
   const [showNewModal, setShowNewModal] = useState(false)
@@ -79,15 +83,30 @@ export function AppointmentsPage() {
   const [dayModal, setDayModal] = useState<{ date: Date; apps: Application[] } | null>(null)
   const [rescheduleDoseId, setRescheduleDoseId] = useState<string | null>(null)
   const [showRescheduledToast, setShowRescheduledToast] = useState(false)
+  const showCalendarPanel = useSchedulingUiStore((s) => s.showCalendarPanel)
+  const setShowCalendarPanel = useSchedulingUiStore((s) => s.setShowCalendarPanel)
+  const [panelMonth, setPanelMonth] = useState(calendar.selectedDate)
+
+  useEffect(() => {
+    if (showCalendarPanel) setPanelMonth(calendar.selectedDate)
+  }, [calendar.selectedDate, showCalendarPanel])
 
   const visibleDays = calendar.viewMode === 'week' ? calendar.weekDays : calendar.monthDays
   const range = useMemo(() => {
     if (visibleDays.length === 0) return null
-    return {
-      from: toZonedOffsetIso(dayInput(visibleDays[0]), '00:00', account?.organization?.timeZone ?? 'America/Sao_Paulo'),
-      to: toZonedOffsetIso(dayInput(visibleDays[visibleDays.length - 1]), '23:59', account?.organization?.timeZone ?? 'America/Sao_Paulo'),
+    let from = visibleDays[0]
+    let to = visibleDays[visibleDays.length - 1]
+    if (showCalendarPanel) {
+      const panelStart = startOfMonth(panelMonth)
+      const panelEnd = endOfMonth(panelMonth)
+      if (panelStart < from) from = panelStart
+      if (panelEnd > to) to = panelEnd
     }
-  }, [visibleDays, account?.organization?.timeZone])
+    return {
+      from: toZonedOffsetIso(dayInput(from), '00:00', account?.organization?.timeZone ?? 'America/Sao_Paulo'),
+      to: toZonedOffsetIso(dayInput(to), '23:59', account?.organization?.timeZone ?? 'America/Sao_Paulo'),
+    }
+  }, [visibleDays, account?.organization?.timeZone, showCalendarPanel, panelMonth])
 
 
   const search = useDebouncedValue(patientSearch.trim())
@@ -228,6 +247,16 @@ export function AppointmentsPage() {
               ]}
               aria-label="Modo de visualização"
             />
+            <Pill
+              active={showCalendarPanel}
+              icon={faCalendarDays}
+              onClick={() => {
+                if (!showCalendarPanel) setPanelMonth(calendar.selectedDate)
+                setShowCalendarPanel(!showCalendarPanel)
+              }}
+            >
+              Calendário
+            </Pill>
             {canNewAppointment && (
               <Pill active icon={faPlus} onClick={() => setShowNewModal(true)}>
                 Novo agendamento
@@ -257,35 +286,48 @@ export function AppointmentsPage() {
         </p>
       )}
 
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-[#F6F8F8]">
-        <CalendarToolbar
-          monthLabel={calendar.monthLabel}
-          onPrev={calendar.goToPrev}
-          onNext={calendar.goToNext}
-          onToday={calendar.goToToday}
-          isToday={calendar.isToday}
-        />
-        <div className="flex-1 overflow-auto">
-          {calendar.viewMode === 'week' ? (
-            <WeekView
-              weekDays={calendar.weekDays}
-              selectedDate={calendar.selectedDate}
-              onSelectDate={calendar.setSelectedDate}
-              applicationsByDate={applicationsByDate}
-              onSelectApplication={handleSelect}
-            />
-          ) : (
-            <MonthView
-              monthDays={calendar.monthDays}
-              referenceDate={calendar.currentDate}
-              selectedDate={calendar.selectedDate}
-              onSelectDate={calendar.setSelectedDate}
-              applicationsByDate={applicationsByDate}
-              onSelectApplication={handleSelect}
-              onOpenDay={(date, apps) => setDayModal({ date, apps })}
-            />
-          )}
+      <div className="flex flex-1 min-h-0 gap-3 overflow-hidden">
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-[#F6F8F8]">
+          <CalendarToolbar
+            monthLabel={calendar.monthLabel}
+            onPrev={calendar.goToPrev}
+            onNext={calendar.goToNext}
+            onToday={calendar.goToToday}
+            isToday={calendar.isToday}
+          />
+          <div className="flex-1 overflow-auto">
+            {calendar.viewMode === 'week' ? (
+              <WeekView
+                weekDays={calendar.weekDays}
+                selectedDate={calendar.selectedDate}
+                onSelectDate={calendar.setSelectedDate}
+                applicationsByDate={applicationsByDate}
+                onSelectApplication={handleSelect}
+              />
+            ) : (
+              <MonthView
+                monthDays={calendar.monthDays}
+                referenceDate={calendar.currentDate}
+                selectedDate={calendar.selectedDate}
+                onSelectDate={calendar.setSelectedDate}
+                applicationsByDate={applicationsByDate}
+                onSelectApplication={handleSelect}
+                onOpenDay={(date, apps) => setDayModal({ date, apps })}
+              />
+            )}
+          </div>
         </div>
+
+        <CalendarSidePanel
+          open={showCalendarPanel}
+          onClose={() => setShowCalendarPanel(false)}
+          selectedDate={calendar.selectedDate}
+          onSelectDate={calendar.goToDate}
+          applicationsByDate={applicationsByDate}
+          onSelectApplication={handleSelect}
+          visibleMonth={panelMonth}
+          onVisibleMonthChange={setPanelMonth}
+        />
       </div>
 
       <Modal
@@ -303,21 +345,24 @@ export function AppointmentsPage() {
       >
         <div className="space-y-2">
           {dayModal?.apps.map((app) => {
-            const c = getApplicationEventColor(app)
+            const c = eventColor(app)
             return (
               <button
                 key={app.id}
                 type="button"
                 onClick={() => { handleSelect(app); setDayModal(null) }}
-                className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:brightness-95 cursor-pointer"
+                className={cn(
+                  'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:brightness-95 cursor-pointer',
+                  app.status === 'missed' && 'opacity-70',
+                )}
                 style={{ backgroundColor: c.bg, backgroundImage: c.grad, color: c.text }}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold">
+                  <div className={cn('text-xs font-bold', app.status === 'completed' && 'font-black')}>
                     {app.startTime}
                     {app.endTime ? ` – ${app.endTime}` : ''}
                   </div>
-                  <div className="text-[0.7rem] font-medium opacity-90 truncate">
+                  <div className={cn('text-[0.7rem] font-medium opacity-90 truncate', app.status === 'completed' && 'font-bold opacity-100')}>
                     {app.patientName} · {app.dose}
                   </div>
                 </div>

@@ -176,8 +176,19 @@ function NewAppointmentForm({
     <Modal
       open
       onClose={onClose}
-      title="Novo agendamento"
+      ariaLabel="Novo agendamento"
       size="lg"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[1.05rem] font-bold text-(--text)">Novo agendamento</div>
+          <div className="text-[0.82rem] text-(--text-muted)">Compromisso de agenda</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>
@@ -493,7 +504,6 @@ function AppointmentActionForm({
     >
       {reviewRequired && !currentRecord && <div role="alert"><p>Não foi possível carregar o registro atual. Seu rascunho está preservado.</p><button type="button" onClick={async () => { try { setCurrentRecord(await getAppointment(appointment.id)) } catch { toast.danger({ icon: null, title: 'Falha ao recarregar compromisso', description: 'Tente novamente antes de confirmar.' }) } }}>Recarregar registro atual</button></div>}
       <ClinicalReviewNotice required={reviewRequired && currentRecord !== null} onReview={() => { if (currentRecord) setReviewRequired(false) }} />
-      <p className="text-xs">Fuso do agendamento: {timeZone}</p>
       {reviewRequired && currentRecord && <p role="status">Registro atual: revisão {currentRecord.revision}, {STATUS_LABELS[currentRecord.status]}, início {formatInstantDate(currentRecord.startsAt, timeZone)} às {timeInputValue(currentRecord.startsAt, timeZone)}, término {formatInstantDate(currentRecord.endsAt, timeZone)} às {timeInputValue(currentRecord.endsAt, timeZone)}. Seu formulário continua com a intenção anterior.</p>}
       {tab === 'info' && (
         <>

@@ -81,15 +81,12 @@ export function MonthView({
                     className={cn(
                       'flex items-center gap-1 rounded border px-1 py-0.5 text-[0.55rem] font-medium cursor-pointer transition-all',
                       application.status === 'missed' && 'opacity-70',
+                      application.status === 'completed' && 'font-bold',
                     )}
                     style={{
                       background: tone.surface,
                       borderColor: tone.border,
                       color: tone.ink,
-                      backgroundImage:
-                        application.status === 'missed'
-                          ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.14) 0 1.5px, transparent 1.5px 6px)'
-                          : undefined,
                     }}
                   >
                     <span className="min-w-0 flex-1 truncate">

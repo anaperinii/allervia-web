@@ -14,6 +14,7 @@ import type {
   TherapyLifecycleEvent,
 } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
+import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import {
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
@@ -105,9 +106,21 @@ function SuspendForm({
       pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
       dirty={!!reason}
       onClose={onClose}
-      title="Suspender tratamento"
-      icon={<FontAwesomeIcon icon={faCirclePause} style={{ fontSize: 16 }} />}
-      tone="warning"
+      ariaLabel="Suspender tratamento"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 truncate text-[1.05rem] font-bold text-(--text)">
+            <FontAwesomeIcon icon={faCirclePause} className="text-amber-500" style={{ fontSize: 15 }} />
+            Suspender tratamento
+          </div>
+          <div className="text-[0.82rem] text-(--text-muted)">Bloqueia novos comandos clínicos</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>
@@ -201,9 +214,21 @@ function ResumeForm({
       pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
       dirty={!!reason}
       onClose={onClose}
-      title="Retomar tratamento"
-      icon={<FontAwesomeIcon icon={faRotateRight} style={{ fontSize: 16 }} />}
-      tone="success"
+      ariaLabel="Retomar tratamento"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 truncate text-[1.05rem] font-bold text-(--text)">
+            <FontAwesomeIcon icon={faRotateRight} className="text-emerald-500" style={{ fontSize: 15 }} />
+            Retomar tratamento
+          </div>
+          <div className="text-[0.82rem] text-(--text-muted)">Volta a aceitar comandos clínicos</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>
@@ -253,7 +278,23 @@ export function LifecycleHistoryModal({
     enabled: open && organizationId !== '',
   })
   return (
-    <Modal open={open} onClose={onClose} title="Histórico do tratamento" size="lg">
+    <Modal
+      open={open}
+      onClose={onClose}
+      ariaLabel="Histórico do tratamento"
+      size="lg"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[1.05rem] font-bold text-(--text)">Histórico do tratamento</div>
+          <div className="text-[0.82rem] text-(--text-muted)">Eventos de ciclo de vida</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
+    >
       {query.isPending && <p className="text-xs text-(--text-muted)">Carregando…</p>}
       {query.data && query.data.events.length === 0 && (
         <p className="text-xs text-(--text-muted)">Nenhum evento de ciclo de vida registrado.</p>

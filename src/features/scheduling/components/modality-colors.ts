@@ -11,6 +11,8 @@ export interface EventTone {
   surface: string
   border: string
   ink: string
+  dot: string
+  base: string
 }
 
 export function useModalityStyle(): (application: Application) => EventTone {
@@ -24,10 +26,21 @@ export function useModalityStyle(): (application: Application) => EventTone {
           : 'subcutaneous'
     const color =
       eventColors.find((entry) => entry.id === id)?.color ?? FALLBACK_EVENT_COLORS[id]
+    if (application.status === 'completed') {
+      return {
+        surface: `${color}66`,
+        border: `${color}E6`,
+        ink: `color-mix(in srgb, ${color} 55%, #1F2937)`,
+        dot: `color-mix(in srgb, ${color} 40%, #1F2937)`,
+        base: color,
+      }
+    }
     return {
       surface: `${color}33`,
       border: `${color}99`,
       ink: `color-mix(in srgb, ${color} 70%, #1F2937)`,
+      dot: color,
+      base: color,
     }
   }
 }

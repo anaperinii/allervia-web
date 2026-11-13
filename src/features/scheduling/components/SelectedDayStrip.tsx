@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
+import { useApplicationEventColor } from '@/features/scheduling/constants/application-display'
 import { useImmunotherapyLookup } from '@/features/immunotherapy/stores/useImmunotherapiesStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
@@ -20,6 +20,7 @@ export function SelectedDayStrip({
   onSelectApplication,
 }: SelectedDayStripProps) {
   const { getName } = useImmunotherapyLookup()
+  const eventColor = useApplicationEventColor()
   const [collapsed, setCollapsed] = useState(false)
 
   if (applications.length === 0) return null
@@ -49,7 +50,7 @@ export function SelectedDayStrip({
       >
         <div className="flex gap-2 overflow-x-auto pb-1">
         {applications.map((application) => {
-          const modalityColor = getApplicationEventColor(application)
+          const modalityColor = eventColor(application)
           const isScheduled = application.status === 'scheduled'
           return (
             <div
