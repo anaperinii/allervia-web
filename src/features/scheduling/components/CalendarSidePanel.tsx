@@ -78,10 +78,15 @@ export function CalendarSidePanel({
   }, [selectedDate])
 
   const [mounted, setMounted] = useState(open)
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(open)
   const rafRef = useRef<number | null>(null)
+  const didMount = useRef(false)
 
   useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true
+      return
+    }
     if (open) {
       setMounted(true)
       const raf1 = requestAnimationFrame(() => {

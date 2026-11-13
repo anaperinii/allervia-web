@@ -10,6 +10,7 @@ export interface EventColor {
 const DEFAULT_EVENT_COLORS: EventColor[] = [
   { id: 'subcutaneous', label: 'Subcutânea', color: '#B7E06A' },
   { id: 'sublingual', label: 'Sublingual', color: '#74C3B9' },
+  { id: 'appointment', label: 'Compromisso', color: '#B39DDB' },
   { id: 'missed', label: 'Ausente', color: '#EF4444' },
 ]
 

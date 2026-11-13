@@ -15,6 +15,7 @@ export { ToggleCard } from './forms/ToggleCard'
 export { VerificationCodeInput } from './forms/VerificationCodeInput'
 
 export { QrCodeImage } from './QrCodeImage'
+export { Spinner, CenteredSpinner } from './Spinner'
 
 export { AppErrorBoundary } from './errors/AppErrorBoundary'
 export { ErrorFallback } from './errors/ErrorFallback'

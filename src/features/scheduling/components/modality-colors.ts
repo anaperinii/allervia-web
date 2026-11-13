@@ -4,6 +4,7 @@ import type { Application } from '@/features/patient/stores/usePatientStore'
 export const FALLBACK_EVENT_COLORS: Record<string, string> = {
   subcutaneous: '#B7E06A',
   sublingual: '#74C3B9',
+  appointment: '#B39DDB',
   missed: '#EF4444',
 }
 
@@ -21,9 +22,11 @@ export function useModalityStyle(): (application: Application) => EventTone {
     const id =
       application.status === 'missed'
         ? 'missed'
-        : application.modality === 'sublingual'
-          ? 'sublingual'
-          : 'subcutaneous'
+        : application.isAppointment
+          ? 'appointment'
+          : application.modality === 'sublingual'
+            ? 'sublingual'
+            : 'subcutaneous'
     const color =
       eventColors.find((entry) => entry.id === id)?.color ?? FALLBACK_EVENT_COLORS[id]
     if (application.status === 'completed') {

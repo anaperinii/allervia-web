@@ -25,20 +25,20 @@ import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirector
 import { useKeyboardAutocomplete } from '@/shared/hooks/useKeyboardAutocomplete'
 import { appointmentWindow, dayInZone, timeInZone, addMinutesToTime } from '@/shared/lib/dates'
 import { formatInstantDate } from '@/features/patient/adapters/clinical-presentation'
+import { APPLICATION_STATUS_DISPLAY, appointmentStatusToApplicationStatus } from '@/features/scheduling/constants/application-display'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  faArrowRight,
+  faBookmark,
   faCircleCheck,
   faCircleInfo,
   faMagnifyingGlass,
 } from '@fortawesome/free-solid-svg-icons'
+import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
+import { FALLBACK_EVENT_COLORS } from '@/features/scheduling/components/modality-colors'
 
-const STATUS_LABELS: Record<Appointment['status'], string> = {
-  SCHEDULED: 'Agendado',
-  COMPLETED: 'Concluído',
-  CANCELLED: 'Cancelado',
-  MISSED: 'Faltou',
+function appointmentStatusLabel(status: Appointment['status']): string {
+  return APPLICATION_STATUS_DISPLAY[appointmentStatusToApplicationStatus(status)].label
 }
 
 type AppointmentTabId = 'info' | 'manage'
@@ -344,6 +344,9 @@ function AppointmentActionForm({
 }: AppointmentActionModalProps) {
   const { account } = useSession()
   const timeZone = account?.organization?.timeZone ?? 'America/Sao_Paulo'
+  const eventColors = useSettingsStore((s) => s.eventColors)
+  const categoryColor =
+    eventColors.find((entry) => entry.id === 'appointment')?.color ?? FALLBACK_EVENT_COLORS.appointment
   const [reviewRequired, setReviewRequired] = useState(false)
   const [currentRecord, setCurrentRecord] = useState(appointment)
   const queryClient = useQueryClient()
@@ -409,6 +412,12 @@ function AppointmentActionForm({
       size="md"
       headerSlot={
         <div className="min-w-0 flex-1">
+          <FontAwesomeIcon
+            icon={faBookmark}
+            style={{ fontSize: 15, color: categoryColor }}
+            className="absolute left-4 top-0"
+            title="Compromisso"
+          />
           <div className="flex min-w-0 items-center gap-3">
             <div
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
@@ -424,7 +433,7 @@ function AppointmentActionForm({
                 {appointment.patient.fullName}
               </div>
               <div className="text-[0.82rem] text-(--text-muted)">
-                {appointment.title ?? 'Compromisso'} · {STATUS_LABELS[appointment.status]}
+                {appointment.title ?? 'Compromisso'} · {appointmentStatusLabel(appointment.status)}
               </div>
             </div>
           </div>
@@ -504,21 +513,13 @@ function AppointmentActionForm({
     >
       {reviewRequired && !currentRecord && <div role="alert"><p>Não foi possível carregar o registro atual. Seu rascunho está preservado.</p><button type="button" onClick={async () => { try { setCurrentRecord(await getAppointment(appointment.id)) } catch { toast.danger({ icon: null, title: 'Falha ao recarregar compromisso', description: 'Tente novamente antes de confirmar.' }) } }}>Recarregar registro atual</button></div>}
       <ClinicalReviewNotice required={reviewRequired && currentRecord !== null} onReview={() => { if (currentRecord) setReviewRequired(false) }} />
-      {reviewRequired && currentRecord && <p role="status">Registro atual: revisão {currentRecord.revision}, {STATUS_LABELS[currentRecord.status]}, início {formatInstantDate(currentRecord.startsAt, timeZone)} às {timeInputValue(currentRecord.startsAt, timeZone)}, término {formatInstantDate(currentRecord.endsAt, timeZone)} às {timeInputValue(currentRecord.endsAt, timeZone)}. Seu formulário continua com a intenção anterior.</p>}
+      {reviewRequired && currentRecord && <p role="status">Registro atual: revisão {currentRecord.revision}, {appointmentStatusLabel(currentRecord.status)}, início {formatInstantDate(currentRecord.startsAt, timeZone)} às {timeInputValue(currentRecord.startsAt, timeZone)}, término {formatInstantDate(currentRecord.endsAt, timeZone)} às {timeInputValue(currentRecord.endsAt, timeZone)}. Seu formulário continua com a intenção anterior.</p>}
       {tab === 'info' && (
         <>
-          <Field label="Data">{formatInstantDate(appointment.startsAt, timeZone)}</Field>
-
-          <div className="flex items-end gap-2">
-            <div className="min-w-0 flex-1">
-              <Field label="Início">{timeInputValue(appointment.startsAt, timeZone)}</Field>
-            </div>
-            <div className="flex h-9 shrink-0 items-center text-(--text-muted)">
-              <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <Field label="Fim">{timeInputValue(appointment.endsAt, timeZone)}</Field>
-            </div>
+          <div className="grid grid-cols-3 gap-3">
+            <Field label="Data">{formatInstantDate(appointment.startsAt, timeZone)}</Field>
+            <Field label="Início">{timeInputValue(appointment.startsAt, timeZone)}</Field>
+            <Field label="Fim">{timeInputValue(appointment.endsAt, timeZone)}</Field>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

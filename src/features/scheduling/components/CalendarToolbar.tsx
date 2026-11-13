@@ -17,6 +17,7 @@ interface CalendarToolbarProps {
 const LEGEND_MODALITIES = [
   { id: 'subcutaneous', label: 'Subcutânea' },
   { id: 'sublingual', label: 'Sublingual' },
+  { id: 'appointment', label: 'Compromisso' },
   { id: 'missed', label: 'Ausente' },
 ]
 

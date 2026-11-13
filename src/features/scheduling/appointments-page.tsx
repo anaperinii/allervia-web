@@ -5,8 +5,8 @@ import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
-import { useApplicationEventColor } from '@/features/scheduling/constants/application-display'
+import { CenteredSpinner, Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
+import { appointmentStatusToApplicationStatus, useApplicationEventColor } from '@/features/scheduling/constants/application-display'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 import { scheduleItemToApplication } from '@/features/patient/adapters/clinical-presentation'
@@ -296,7 +296,9 @@ export function AppointmentsPage() {
             isToday={calendar.isToday}
           />
           <div className="flex-1 overflow-auto">
-            {calendar.viewMode === 'week' ? (
+            {scheduleQuery.isPending || appointmentsQuery.isPending ? (
+              <CenteredSpinner />
+            ) : calendar.viewMode === 'week' ? (
               <WeekView
                 weekDays={calendar.weekDays}
                 selectedDate={calendar.selectedDate}
@@ -433,12 +435,7 @@ function appointmentToApplication(item: Appointment, timeZone: string): Applicat
     date: `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`,
     startTime: localTime(item.startsAt, timeZone),
     endTime: localTime(item.endsAt, timeZone),
-    status:
-      item.status === 'MISSED'
-        ? 'missed'
-        : item.status === 'COMPLETED'
-          ? 'completed'
-          : 'scheduled',
+    status: appointmentStatusToApplicationStatus(item.status),
     dose: item.title ?? (item.dose ? 'Aplicação prevista' : 'Compromisso'),
     cycle: { number: 1, days: 0 },
     month: MONTHS_UPPER[Number(day.slice(5, 7)) - 1],
@@ -446,6 +443,7 @@ function appointmentToApplication(item: Appointment, timeZone: string): Applicat
     patientName: item.patient.fullName,
     patientPhone: formatPhone(item.patient.phoneNumber),
     modality: 'subcutaneous',
+    isAppointment: true,
   }
 }
 

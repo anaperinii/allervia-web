@@ -123,7 +123,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
         aria-modal="true"
         {...labelProps}
         className={cn(
-          'bg-white rounded-xl shadow-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200',
+          'relative bg-white rounded-xl shadow-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200',
           SIZE_CLASS[size]
         )}
         onClick={(e) => e.stopPropagation()}

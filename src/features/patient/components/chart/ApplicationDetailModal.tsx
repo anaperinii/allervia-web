@@ -15,6 +15,9 @@ import { queryKeys } from '@/shared/api/query-keys'
 import { formatInstantDate } from '@/features/patient/adapters/clinical-presentation'
 import type { DoseObservationAddendum } from '@/shared/api/contracts/clinical'
 import type { Application } from '@/features/patient/stores/usePatientStore'
+import { useModalityStyle } from '@/features/scheduling/components/modality-colors'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBookmark } from '@fortawesome/free-solid-svg-icons'
 
 function localTime(iso: string, timeZone = 'America/Sao_Paulo'): string {
   return new Intl.DateTimeFormat('en-GB', { timeZone, hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
@@ -56,6 +59,8 @@ function DetailModal({
 }: ApplicationDetailModalProps) {
   const [tab, setTab] = useState<TabId>('pre')
   const completed = application?.status === 'completed'
+  const modalityStyle = useModalityStyle()
+  const categoryColor = application ? modalityStyle(application).base : undefined
 
 
 
@@ -88,6 +93,12 @@ function DetailModal({
       headerSlot={
         application ? (
           <div className="min-w-0 flex-1">
+            <FontAwesomeIcon
+              icon={faBookmark}
+              style={{ fontSize: 15, color: categoryColor }}
+              className="absolute left-4 top-0"
+              title="Categoria"
+            />
             <div className="min-w-0">
               <div className="truncate text-[1.05rem] font-bold text-(--text)">
                 Aplicação de {application.date}
@@ -96,7 +107,7 @@ function DetailModal({
                 {application.startTime}
                 {endTime ? ` – ${endTime}` : ''}
                 {performer ? ` · ${performer}` : ''} ·{' '}
-                {completed ? 'Realizada' : 'Prevista'}
+                {completed ? 'Realizado' : 'Previsto'}
               </div>
             </div>
 

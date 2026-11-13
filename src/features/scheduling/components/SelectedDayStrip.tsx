@@ -74,7 +74,7 @@ export function SelectedDayStrip({
               <div className="flex items-center justify-between mt-1.5">
                 <div className="text-[0.6rem] font-medium opacity-90">{application.dose}</div>
                 {isScheduled && (
-                  <div className="text-[0.55rem] font-semibold uppercase tracking-wide opacity-80">Agendada</div>
+                  <div className="text-[0.55rem] font-semibold uppercase tracking-wide opacity-80">Agendado</div>
                 )}
               </div>
             </div>

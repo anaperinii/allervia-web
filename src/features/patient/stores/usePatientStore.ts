@@ -103,6 +103,7 @@ export interface Application {
   modality?: 'subcutaneous' | 'sublingual'
   patientName?: string
   patientPhone?: string
+  isAppointment?: boolean
 }
 
 interface PatientState {

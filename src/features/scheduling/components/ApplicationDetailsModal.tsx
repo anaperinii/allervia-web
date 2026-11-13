@@ -2,14 +2,14 @@ import { useState, type ReactNode } from 'react'
 import { Modal, Button } from '@/shared/components'
 import { cn } from '@/shared/lib/cn'
 import { formatPhone } from '@/shared/lib/formatters'
-import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 import { openWhatsApp, sendReminder } from '@/shared/lib/whatsapp'
 import { APPLICATION_STATUS_DISPLAY } from '@/features/scheduling/constants/application-display'
 import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
+import { useModalityStyle } from '@/features/scheduling/components/modality-colors'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowRight } from '@fortawesome/free-solid-svg-icons'
+import { faBookmark } from '@fortawesome/free-solid-svg-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
   InformationCircleIcon,
@@ -55,6 +55,8 @@ function DetailsModal({
   onReschedule,
 }: ApplicationDetailsModalProps) {
   const [tab, setTab] = useState<TabId>('info')
+  const modalityStyle = useModalityStyle()
+  const categoryColor = application ? modalityStyle(application).base : undefined
 
   const initials = (application?.patientName ?? '')
     .split(' ')
@@ -94,6 +96,12 @@ function DetailsModal({
       headerSlot={
         application ? (
           <div className="min-w-0 flex-1">
+            <FontAwesomeIcon
+              icon={faBookmark}
+              style={{ fontSize: 15, color: categoryColor }}
+              className="absolute left-4 top-0"
+              title="Categoria"
+            />
             <div className="flex min-w-0 items-center gap-3">
               <div
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
@@ -182,24 +190,16 @@ function DetailsModal({
     >
       {application && tab === 'info' && (
         <>
-          <Field label="Data">
-            {application.date}
-          </Field>
-
-          <div className="flex items-end gap-2">
-            <div className="min-w-0 flex-1">
-              <Field label="Início">
-                {application.startTime}
-              </Field>
-            </div>
-            <div className="flex h-9 shrink-0 items-center text-(--text-muted)">
-              <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <Field label="Fim">
-                {application.endTime || '—'}
-              </Field>
-            </div>
+          <div className="grid grid-cols-3 gap-3">
+            <Field label="Data">
+              {application.date}
+            </Field>
+            <Field label="Início">
+              {application.startTime}
+            </Field>
+            <Field label="Fim">
+              {application.endTime || '—'}
+            </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -207,21 +207,7 @@ function DetailsModal({
               {application.dose}
             </Field>
             <Field label="Intervalo">
-              {(() => {
-                const intervalColor = getIntervalColor(application.cycle.days)
-                return (
-                  <span
-                    className="inline-flex items-center rounded-md border px-2 py-0.5 text-[0.65rem] font-semibold"
-                    style={{
-                      backgroundColor: intervalColor.bg + '4D',
-                      color: intervalColor.text,
-                      borderColor: intervalColor.dot + '30',
-                    }}
-                  >
-                    {application.cycle.days} dias
-                  </span>
-                )
-              })()}
+              {application.cycle.days} dias
             </Field>
           </div>
 
