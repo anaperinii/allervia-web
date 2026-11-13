@@ -44,7 +44,7 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditSche
               const isRealized = application.status === 'completed'
               const isNext = application.status === 'scheduled'
               const hasReaction = application.sideEffect === 'yes'
-              const interactive = isRealized && !application.isAppointment
+              const interactive = application.isAppointment || isRealized
               const dateObj = parsePtDate(application.date)
               const day = format(dateObj, 'dd')
               const monthAbbr = capitalize(format(dateObj, 'MMM', { locale: ptBR }).replace('.', ''))

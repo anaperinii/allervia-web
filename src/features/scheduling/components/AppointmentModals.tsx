@@ -30,20 +30,19 @@ import { APPLICATION_STATUS_DISPLAY, appointmentStatusToApplicationStatus } from
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faBookmark,
-  faCheck,
   faCircleCheck,
   faCircleInfo,
+  faCircleXmark,
   faClock,
   faMagnifyingGlass,
-  faXmark,
 } from '@fortawesome/free-solid-svg-icons'
 import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
 
 const STATUS_ICON = {
   scheduled: faClock,
-  completed: faCheck,
-  missed: faXmark,
-  canceled: faXmark,
+  completed: faCircleCheck,
+  missed: faCircleXmark,
+  canceled: faCircleXmark,
 }
 
 const STATUS_ICON_COLOR = {
@@ -346,7 +345,7 @@ interface AppointmentActionModalProps {
   appointment: Appointment | null
   organizationId: string
   onClose: () => void
-  onOpenPatient?: (patientId: string) => void
+  onOpenPatient?: (patientId: string, appointmentId?: string) => void
 }
 
 export function AppointmentActionModal(props: AppointmentActionModalProps) {
@@ -451,7 +450,7 @@ function AppointmentActionForm({
               {onOpenPatient ? (
                 <button
                   type="button"
-                  onClick={() => onOpenPatient(appointment.patientId)}
+                  onClick={() => onOpenPatient(appointment.patientId, appointment.id)}
                   className="flex max-w-full items-center gap-1.5 text-left text-[1.05rem] font-bold text-(--text) transition-colors hover:text-brand"
                 >
                   <span className="truncate">{appointment.patient.fullName}</span>
@@ -548,7 +547,7 @@ function AppointmentActionForm({
               </Button>
             ) : (
               onOpenPatient && (
-                <Button tone="brand" variant="solid" onClick={() => onOpenPatient(appointment.patientId)}>
+                <Button tone="brand" variant="solid" onClick={() => onOpenPatient(appointment.patientId, appointment.id)}>
                   Ver no prontuário
                 </Button>
               )

@@ -183,9 +183,14 @@ export function AppointmentsPage() {
     return map
   }, [applications])
 
-  const openPatient = (patientId: string, doseId?: string) => {
+  const openPatient = (patientId: string, doseId?: string, appointmentId?: string) => {
     setSelectedApplication(null)
-    navigate({ to: '/patient/$patientId', params: { patientId }, search: doseId ? { doseId } : {} })
+    setSelectedAppointment(null)
+    navigate({
+      to: '/patient/$patientId',
+      params: { patientId },
+      search: doseId ? { doseId } : appointmentId ? { appointmentId } : {},
+    })
   }
 
   const handleSelect = (application: Application) => {
@@ -385,7 +390,7 @@ export function AppointmentsPage() {
         appointment={selectedAppointment}
         organizationId={organizationId}
         onClose={() => setSelectedAppointment(null)}
-        onOpenPatient={(patientId) => { setSelectedAppointment(null); openPatient(patientId) }}
+        onOpenPatient={(patientId, appointmentId) => openPatient(patientId, undefined, appointmentId)}
       />
 
       <Toast

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
-import { SegmentedControl, Toast } from '@/shared/components'
+import { SegmentedControl, Toast, showApiErrorToast } from '@/shared/components'
 import { sendReminder } from '@/shared/lib/whatsapp'
 import { usePatientStore, type Application } from '@/features/patient/stores/usePatientStore'
 import {
@@ -13,12 +13,15 @@ import {
   THERAPY_STATUS_LABELS,
 } from '@/features/patient/adapters/clinical-presentation'
 import {
+  getAppointment,
   getDose,
   getPatient,
   listAppointments,
   listDosesForTherapy,
   updatePatient,
 } from '@/shared/api/clinical.api'
+import type { Appointment } from '@/shared/api/contracts/clinical'
+import { AppointmentActionModal } from '@/features/scheduling/components/AppointmentModals'
 import { collectPages } from '@/shared/api/pagination'
 import { appointmentToApplication } from '@/features/scheduling/adapters/appointment-to-application'
 import { ApiError } from '@/shared/api/contracts/errors'
@@ -55,7 +58,7 @@ import { faCalendarDays, faFloppyDisk, faList, faPowerOff } from '@fortawesome/f
 export function PatientChartPage() {
   const navigate = useNavigate()
   const { patientId } = useParams({ from: '/patient/$patientId' })
-  const { therapy: therapyParam, doseId: doseIdParam } = useSearch({ from: '/patient/$patientId' })
+  const { therapy: therapyParam, doseId: doseIdParam, appointmentId: appointmentIdParam } = useSearch({ from: '/patient/$patientId' })
   const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
   const queryClient = useQueryClient()
@@ -172,6 +175,7 @@ export function PatientChartPage() {
   }, [patientDetail, selectedTherapy, setSelectedPatient, dosesQuery.data, account?.organization?.timeZone])
 
   const [selectedApplication, setSelectedApp] = useState<Application | null>(null)
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [monthFilter, setMonthFilter] = useState('all')
   const [activeTab, setActiveTab] = useState<'applications' | 'progress'>('applications')
   const [viewMode, setViewMode] = useState<'timeline' | 'calendar'>('timeline')
@@ -231,6 +235,27 @@ export function PatientChartPage() {
       navigate({ to: '/patient/$patientId', params: { patientId }, search: (prev) => ({ ...prev, doseId: undefined }), replace: true })
     }
   }, [doseIdParam, patientApplications, navigate, patientId])
+
+  useEffect(() => {
+    if (!appointmentIdParam) return
+    let cancelled = false
+    getAppointment(appointmentIdParam)
+      .then((appointment) => {
+        if (cancelled) return
+        setSelectedAppointment(appointment)
+        navigate({ to: '/patient/$patientId', params: { patientId }, search: (prev) => ({ ...prev, appointmentId: undefined }), replace: true })
+      })
+      .catch((error) => { if (!cancelled) showApiErrorToast(error) })
+    return () => { cancelled = true }
+  }, [appointmentIdParam, navigate, patientId])
+
+  const handleSelectApplication = (application: Application) => {
+    if (application.isAppointment) {
+      getAppointment(application.id).then(setSelectedAppointment).catch(showApiErrorToast)
+      return
+    }
+    setSelectedApp(application)
+  }
 
 
 
@@ -547,7 +572,7 @@ export function PatientChartPage() {
                   <div className="flex-1 overflow-y-auto px-5 py-4">
                     <ApplicationsTimeline
                       applicationsByMonth={groupedByMonth}
-                      onSelect={setSelectedApp}
+                      onSelect={handleSelectApplication}
                       onEditScheduled={() => setShowEditDoseModal(true)}
                       onSendReminder={(app) => sendReminder(selectedPatient.phone, selectedPatient.name.split(' ')[0], app.date, app.startTime)}
                     />
@@ -558,7 +583,7 @@ export function PatientChartPage() {
                     year={calYear}
                     applicationsByDate={applicationsByDate}
                     onMonthChange={(m, y) => { setCalMonth(m); setCalYear(y) }}
-                    onSelect={setSelectedApp}
+                    onSelect={handleSelectApplication}
                   />
                 )}
               </>
@@ -647,6 +672,12 @@ export function PatientChartPage() {
         patient={selectedPatient}
         therapyId={selectedTherapy?.id ?? null}
         onClose={() => setShowPortabilityModal(false)}
+      />
+
+      <AppointmentActionModal
+        appointment={selectedAppointment}
+        organizationId={organizationId}
+        onClose={() => setSelectedAppointment(null)}
       />
 
       <ApplicationDetailModal

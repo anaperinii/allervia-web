@@ -93,7 +93,7 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
                   {dayApplications.slice(0, 2).map((application) => {
                     const isRealized = application.status === 'completed'
                     const isNext = application.status === 'scheduled'
-                    const clickable = isRealized && !application.isAppointment
+                    const clickable = application.isAppointment || isRealized
                     const hasReaction = application.sideEffect === 'yes'
                     const intervalColor = getIntervalColor(application.cycle.days)
                     const accent = intervalColor.dot

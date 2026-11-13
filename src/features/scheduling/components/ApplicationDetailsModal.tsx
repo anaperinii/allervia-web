@@ -17,13 +17,13 @@ import { useModalityStyle } from '@/features/scheduling/components/modality-colo
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookmark, faCheck, faCircleInfo, faClock, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faBookmark, faCircleCheck, faCircleInfo, faCircleXmark, faClock } from '@fortawesome/free-solid-svg-icons'
 
 const STATUS_ICON = {
   scheduled: faClock,
-  completed: faCheck,
-  missed: faXmark,
-  canceled: faXmark,
+  completed: faCircleCheck,
+  missed: faCircleXmark,
+  canceled: faCircleXmark,
 }
 
 const STATUS_ICON_COLOR = {

@@ -18,13 +18,13 @@ import { APPLICATION_STATUS_DISPLAY } from '@/features/scheduling/constants/appl
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faChevronLeft, faChevronRight, faClock, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faCircleCheck, faCircleXmark, faChevronLeft, faChevronRight, faClock } from '@fortawesome/free-solid-svg-icons'
 
 const STATUS_ICON = {
   scheduled: faClock,
-  completed: faCheck,
-  missed: faXmark,
-  canceled: faXmark,
+  completed: faCircleCheck,
+  missed: faCircleXmark,
+  canceled: faCircleXmark,
 }
 
 const STATUS_ICON_COLOR = {

@@ -5,12 +5,14 @@ import { RequireCapability } from '@/shared/auth/RequireCapability'
 type SearchParams = {
   therapy?: string
   doseId?: string
+  appointmentId?: string
 }
 
 export const Route = createFileRoute('/patient/$patientId')({
   validateSearch: (search: Record<string, unknown>): SearchParams => ({
     therapy: typeof search.therapy === 'string' ? search.therapy : undefined,
     doseId: typeof search.doseId === 'string' ? search.doseId : undefined,
+    appointmentId: typeof search.appointmentId === 'string' ? search.appointmentId : undefined,
   }),
   component: () => (
     <RequireCapability capability="view_clinical">
