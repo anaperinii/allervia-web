@@ -14,11 +14,25 @@ import {
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/cn'
 import { useModalityStyle } from '@/features/scheduling/components/modality-colors'
-import { useApplicationEventColor } from '@/features/scheduling/constants/application-display'
+import { APPLICATION_STATUS_DISPLAY } from '@/features/scheduling/constants/application-display'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faChevronLeft, faChevronRight, faClock, faXmark } from '@fortawesome/free-solid-svg-icons'
+
+const STATUS_ICON = {
+  scheduled: faClock,
+  completed: faCheck,
+  missed: faXmark,
+  canceled: faXmark,
+}
+
+const STATUS_ICON_COLOR = {
+  scheduled: 'text-gray-400',
+  completed: 'text-emerald-600',
+  missed: 'text-red-500',
+  canceled: 'text-red-500',
+}
 
 const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 const MAX_DOTS = 4
@@ -45,7 +59,6 @@ export function CalendarSidePanel({
   onVisibleMonthChange,
 }: CalendarSidePanelProps) {
   const modalityStyle = useModalityStyle()
-  const eventColor = useApplicationEventColor()
 
   useEffect(() => {
     if (!open) return
@@ -206,17 +219,14 @@ export function CalendarSidePanel({
             ) : (
               <div className="space-y-1.5">
                 {selectedDayApplications.map((application) => {
-                  const color = eventColor(application)
+                  const tone = modalityStyle(application)
                   return (
                     <button
                       key={application.id}
                       type="button"
                       onClick={() => onSelectApplication(application)}
-                      className={cn(
-                        'flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:brightness-95',
-                        application.status === 'missed' && 'opacity-70',
-                      )}
-                      style={{ backgroundColor: color.bg, backgroundImage: color.grad, color: color.text }}
+                      className="flex w-full cursor-pointer items-start gap-3 rounded-lg border-l-4 bg-gray-100 px-3 py-2.5 text-left text-(--text) transition hover:bg-gray-200"
+                      style={{ borderLeftColor: tone.base }}
                     >
                       <div className="min-w-0 flex-1">
                         <div className={cn('text-xs font-bold', application.status === 'completed' && 'font-black')}>
@@ -227,6 +237,12 @@ export function CalendarSidePanel({
                           {application.patientName} · {application.dose}
                         </div>
                       </div>
+                      <FontAwesomeIcon
+                        icon={STATUS_ICON[application.status]}
+                        className={cn('mt-0.5 shrink-0', STATUS_ICON_COLOR[application.status])}
+                        style={{ fontSize: 12 }}
+                        title={APPLICATION_STATUS_DISPLAY[application.status].label}
+                      />
                     </button>
                   )
                 })}

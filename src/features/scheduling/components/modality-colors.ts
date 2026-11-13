@@ -19,14 +19,11 @@ export interface EventTone {
 export function useModalityStyle(): (application: Application) => EventTone {
   const eventColors = useSettingsStore((s) => s.eventColors)
   return (application) => {
-    const id =
-      application.status === 'missed'
-        ? 'missed'
-        : application.isAppointment
-          ? 'appointment'
-          : application.modality === 'sublingual'
-            ? 'sublingual'
-            : 'subcutaneous'
+    const id = application.isAppointment
+      ? 'appointment'
+      : application.modality === 'sublingual'
+        ? 'sublingual'
+        : 'subcutaneous'
     const color =
       eventColors.find((entry) => entry.id === id)?.color ?? FALLBACK_EVENT_COLORS[id]
     if (application.status === 'completed') {

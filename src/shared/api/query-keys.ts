@@ -64,6 +64,8 @@ export const queryKeys = {
 
   schedule: (organizationId: string, filters: Record<string, unknown>) =>
     ['clinical', organizationId, currentUserId(), 'doses', 'schedule', filters] as const,
+  patientAppointments: (organizationId: string, patientId: string) =>
+    ['clinical', organizationId, currentUserId(), 'appointments', 'patient', patientId] as const,
   clinicalMetrics: (organizationId: string, filters: Record<string, unknown>) =>
     ['clinical', organizationId, currentUserId(), 'doses', 'metrics', filters] as const,
 } as const

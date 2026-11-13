@@ -27,7 +27,7 @@ const TABS: { id: TabId; label: string; icon: typeof InformationCircleIcon }[] =
 interface ApplicationDetailsModalProps {
   application: Application | null
   onClose: () => void
-  onOpenPatient: (patientId: string) => void
+  onOpenPatient: (patientId: string, doseId?: string) => void
   onReschedule?: (doseId: string) => void
 }
 
@@ -69,7 +69,7 @@ function DetailsModal({
   const action = !application
     ? null
     : application.status === 'completed'
-      ? { label: 'Ver no prontuário', run: () => onOpenPatient(application.patientId) }
+      ? { label: 'Ver no prontuário', run: () => onOpenPatient(application.patientId, application.id) }
       : application.status === 'scheduled' && onReschedule
         ? { label: 'Editar', run: () => onReschedule(application.id) }
         : null
@@ -230,9 +230,14 @@ function DetailsModal({
 
       {application && tab === 'notes' && (
         <>
-          <Field label="Reação adversa">
-            {application.sideEffect === 'yes' ? 'Sim' : 'Não registrada'}
-          </Field>
+          {application.status === 'completed' && (
+            <Field label="Aplicado por">
+              {application.administrator || '—'}
+            </Field>
+          )}
+          {application.sideEffect === 'yes' && (
+            <Field label="Reação adversa">Sim</Field>
+          )}
           {application.reportedEffects && (
             <div>
               <div className="mb-1 text-[0.75rem] font-medium text-(--text-muted)">
@@ -263,7 +268,8 @@ function DetailsModal({
               </p>
             </div>
           )}
-          {!application.reportedEffects &&
+          {application.sideEffect !== 'yes' &&
+            !application.reportedEffects &&
             !application.medications &&
             !application.administratorNote && (
               <p className="py-6 text-center text-xs text-(--text-muted)">

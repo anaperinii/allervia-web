@@ -63,7 +63,7 @@ export function MonthView({
               <div
                 className={cn(
                   'text-[0.65rem] font-bold mb-1 w-5 h-5 flex items-center justify-center rounded-full',
-                  today ? 'bg-brand text-white' : 'text-(--text-muted) font-semibold',
+                  today && selected ? 'bg-brand text-white' : 'text-(--text-muted) font-semibold',
                 )}
               >
                 {format(day, 'dd')}
@@ -79,9 +79,9 @@ export function MonthView({
                       onSelectApplication(application)
                     }}
                     className={cn(
-                      'flex items-center gap-1 rounded border px-1 py-0.5 text-[0.55rem] font-medium cursor-pointer transition-all',
-                      application.status === 'missed' && 'opacity-70',
+                      'relative flex items-center gap-1 overflow-hidden rounded border px-1 py-0.5 text-[0.55rem] font-medium cursor-pointer transition-all',
                       application.status === 'completed' && 'font-bold',
+                      application.status === 'missed' && 'px-2',
                     )}
                     style={{
                       background: tone.surface,
@@ -89,6 +89,12 @@ export function MonthView({
                       color: tone.ink,
                     }}
                   >
+                    {application.status === 'missed' && (
+                      <>
+                        <span className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundImage: `repeating-linear-gradient(45deg, ${tone.border} 0 2px, transparent 2px 4px)` }} />
+                        <span className="absolute inset-y-0 right-0 w-1.5" style={{ backgroundImage: `repeating-linear-gradient(45deg, ${tone.border} 0 2px, transparent 2px 4px)` }} />
+                      </>
+                    )}
                     <span className="min-w-0 flex-1 truncate">
                       {application.startTime} · {application.patientName ?? ''} · {application.cycle.days} dias
                     </span>

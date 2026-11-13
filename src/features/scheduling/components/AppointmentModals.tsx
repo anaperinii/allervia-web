@@ -329,6 +329,7 @@ interface AppointmentActionModalProps {
   appointment: Appointment | null
   organizationId: string
   onClose: () => void
+  onOpenPatient?: (patientId: string) => void
 }
 
 export function AppointmentActionModal(props: AppointmentActionModalProps) {
@@ -341,6 +342,7 @@ function AppointmentActionForm({
   appointment,
   organizationId,
   onClose,
+  onOpenPatient,
 }: AppointmentActionModalProps) {
   const { account } = useSession()
   const timeZone = account?.organization?.timeZone ?? 'America/Sao_Paulo'
@@ -429,9 +431,19 @@ function AppointmentActionForm({
               {initials}
             </div>
             <div className="min-w-0">
-              <div className="truncate text-[1.05rem] font-bold text-(--text)">
-                {appointment.patient.fullName}
-              </div>
+              {onOpenPatient ? (
+                <button
+                  type="button"
+                  onClick={() => onOpenPatient(appointment.patientId)}
+                  className="block max-w-full truncate text-left text-[1.05rem] font-bold text-(--text) transition-colors hover:text-brand"
+                >
+                  {appointment.patient.fullName}
+                </button>
+              ) : (
+                <div className="truncate text-[1.05rem] font-bold text-(--text)">
+                  {appointment.patient.fullName}
+                </div>
+              )}
               <div className="text-[0.82rem] text-(--text-muted)">
                 {appointment.title ?? 'Compromisso'} · {appointmentStatusLabel(appointment.status)}
               </div>

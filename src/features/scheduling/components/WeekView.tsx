@@ -49,9 +49,9 @@ export function WeekView({
                 <span
                   className={cn(
                     'flex h-8 w-8 items-center justify-center rounded-full text-[1.05rem] font-bold',
-                    today || selected ? 'text-white' : 'text-(--text)',
+                    selected ? 'text-white' : 'text-(--text)',
                   )}
-                  style={today || selected ? { background: '#1d6772' } : undefined}
+                  style={selected ? { background: '#1d6772' } : undefined}
                 >
                   {format(day, 'dd')}
                 </span>
@@ -68,8 +68,8 @@ export function WeekView({
                     onSelectApplication(application)
                   }}
                   className={cn(
-                    'group cursor-pointer space-y-0.5 rounded-lg border px-2.5 py-1.5 text-[0.6rem] transition-all hover:-translate-y-px',
-                    application.status === 'missed' && 'opacity-70',
+                    'group relative cursor-pointer space-y-0.5 overflow-hidden rounded-lg border px-2.5 py-1.5 text-[0.6rem] transition-all hover:-translate-y-px',
+                    application.status === 'missed' && 'px-3.5',
                   )}
                   style={{
                     background: tone.surface,
@@ -77,6 +77,12 @@ export function WeekView({
                     color: tone.ink,
                   }}
                 >
+                  {application.status === 'missed' && (
+                    <>
+                      <span className="absolute inset-y-0 left-0 w-2" style={{ backgroundImage: `repeating-linear-gradient(45deg, ${tone.border} 0 3px, transparent 3px 6px)` }} />
+                      <span className="absolute inset-y-0 right-0 w-2" style={{ backgroundImage: `repeating-linear-gradient(45deg, ${tone.border} 0 3px, transparent 3px 6px)` }} />
+                    </>
+                  )}
                   <div className={cn('truncate text-[0.68rem] font-bold', application.status === 'completed' && 'font-black')}>
                     {application.startTime}
                     {application.endTime ? ` – ${application.endTime}` : ''}

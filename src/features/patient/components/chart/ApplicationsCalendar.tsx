@@ -93,6 +93,7 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
                   {dayApplications.slice(0, 2).map((application) => {
                     const isRealized = application.status === 'completed'
                     const isNext = application.status === 'scheduled'
+                    const clickable = isRealized && !application.isAppointment
                     const hasReaction = application.sideEffect === 'yes'
                     const intervalColor = getIntervalColor(application.cycle.days)
                     const accent = intervalColor.dot
@@ -106,8 +107,8 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
                       <button
                         type="button"
                         key={application.id}
-                        disabled={!isRealized}
-                        onClick={() => isRealized && onSelect(application)}
+                        disabled={!clickable}
+                        onClick={() => clickable && onSelect(application)}
                         className={cn(
                           'relative w-full rounded px-1 py-0.5 text-[0.45rem] font-semibold flex items-center gap-0.5 transition-all',
                           isNext ? 'cursor-default border-dashed border' :

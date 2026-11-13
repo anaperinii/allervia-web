@@ -15,9 +15,12 @@ import {
 import {
   getDose,
   getPatient,
+  listAppointments,
   listDosesForTherapy,
   updatePatient,
 } from '@/shared/api/clinical.api'
+import { collectPages } from '@/shared/api/pagination'
+import { appointmentToApplication } from '@/features/scheduling/adapters/appointment-to-application'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { humanErrorMessage } from '@/shared/api/error-copy'
 import { queryKeys } from '@/shared/api/query-keys'
@@ -52,7 +55,7 @@ import { faCalendarDays, faFloppyDisk, faList, faPowerOff } from '@fortawesome/f
 export function PatientChartPage() {
   const navigate = useNavigate()
   const { patientId } = useParams({ from: '/patient/$patientId' })
-  const { therapy: therapyParam } = useSearch({ from: '/patient/$patientId' })
+  const { therapy: therapyParam, doseId: doseIdParam } = useSearch({ from: '/patient/$patientId' })
   const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
   const queryClient = useQueryClient()
@@ -187,10 +190,47 @@ export function PatientChartPage() {
   const [showReactivateToast, setShowReactivateToast] = useState(false)
   const [showAdjustToast, setShowAdjustToast] = useState(false)
 
-  const patientApplications = useMemo(
-    () => doseRecords.map((record) => doseToLegacyApplication(record, patientId, { hasReaction: false, timeZone: account?.organization?.timeZone ?? 'America/Sao_Paulo' })),
-    [doseRecords, patientId, account?.organization?.timeZone],
+  const appointmentsRange = useMemo(() => {
+    const now = new Date()
+    const from = new Date(now.getFullYear() - 5, now.getMonth(), 1)
+    const to = new Date(now.getFullYear() + 2, now.getMonth(), 1)
+    return { from: from.toISOString(), to: to.toISOString() }
+  }, [])
+
+  const patientAppointmentsQuery = useQuery({
+    queryKey: queryKeys.patientAppointments(organizationId, patientId),
+    queryFn: ({ signal }) =>
+      collectPages(
+        (page) => listAppointments({ ...appointmentsRange, patientId, page, pageSize: 100 }, signal),
+        { signal, maxPages: 5 },
+      ),
+    enabled: organizationId !== '' && patientId !== '',
+  })
+  const timeZone = account?.organization?.timeZone ?? 'America/Sao_Paulo'
+  const patientAppointmentApplications = useMemo(
+    () =>
+      (patientAppointmentsQuery.data?.items ?? [])
+        .filter((item) => item.status !== 'CANCELLED')
+        .map((item) => appointmentToApplication(item, timeZone)),
+    [patientAppointmentsQuery.data, timeZone],
   )
+
+  const patientApplications = useMemo(
+    () => [
+      ...doseRecords.map((record) => doseToLegacyApplication(record, patientId, { hasReaction: false, timeZone })),
+      ...patientAppointmentApplications,
+    ],
+    [doseRecords, patientId, timeZone, patientAppointmentApplications],
+  )
+
+  useEffect(() => {
+    if (!doseIdParam) return
+    const found = patientApplications.find((item) => item.id === doseIdParam)
+    if (found) {
+      setSelectedApp(found)
+      navigate({ to: '/patient/$patientId', params: { patientId }, search: (prev) => ({ ...prev, doseId: undefined }), replace: true })
+    }
+  }, [doseIdParam, patientApplications, navigate, patientId])
 
 
 

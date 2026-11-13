@@ -6,7 +6,8 @@ import { useQuery } from '@tanstack/react-query'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { CenteredSpinner, Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
-import { appointmentStatusToApplicationStatus, useApplicationEventColor } from '@/features/scheduling/constants/application-display'
+import { useApplicationEventColor } from '@/features/scheduling/constants/application-display'
+import { appointmentToApplication } from '@/features/scheduling/adapters/appointment-to-application'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 import { scheduleItemToApplication } from '@/features/patient/adapters/clinical-presentation'
@@ -19,8 +20,7 @@ import {
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
-import { toZonedOffsetIso, dayInZone, timeInZone } from '@/shared/lib/dates'
-import { formatPhone } from '@/shared/lib/formatters'
+import { toZonedOffsetIso } from '@/shared/lib/dates'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import { useCalendarNav } from '@/features/scheduling/hooks/useCalendarNav'
 import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolbar'
@@ -191,9 +191,9 @@ export function AppointmentsPage() {
     enabled: organizationId !== '' && rescheduleDoseId !== null,
   })
 
-  const openPatient = (patientId: string) => {
+  const openPatient = (patientId: string, doseId?: string) => {
     setSelectedApplication(null)
-    navigate({ to: '/patient/$patientId', params: { patientId } })
+    navigate({ to: '/patient/$patientId', params: { patientId }, search: doseId ? { doseId } : {} })
   }
 
   const handleSelect = (application: Application) => {
@@ -406,6 +406,7 @@ export function AppointmentsPage() {
         appointment={selectedAppointment}
         organizationId={organizationId}
         onClose={() => setSelectedAppointment(null)}
+        onOpenPatient={(patientId) => { setSelectedAppointment(null); openPatient(patientId) }}
       />
 
       <Toast
@@ -420,30 +421,4 @@ export function AppointmentsPage() {
   )
 }
 
-function localTime(iso: string, timeZone = 'America/Sao_Paulo'): string {
-  return timeInZone(new Date(iso), timeZone)
-}
-
-const MONTHS_UPPER = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO']
-
-function appointmentToApplication(item: Appointment, timeZone: string): Application {
-  const starts = new Date(item.startsAt)
-  const day = dayInZone(starts, timeZone)
-  return {
-    id: item.id,
-    patientId: item.patientId,
-    date: `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`,
-    startTime: localTime(item.startsAt, timeZone),
-    endTime: localTime(item.endsAt, timeZone),
-    status: appointmentStatusToApplicationStatus(item.status),
-    dose: item.title ?? (item.dose ? 'Aplicação prevista' : 'Compromisso'),
-    cycle: { number: 1, days: 0 },
-    month: MONTHS_UPPER[Number(day.slice(5, 7)) - 1],
-    year: Number(day.slice(0, 4)),
-    patientName: item.patient.fullName,
-    patientPhone: formatPhone(item.patient.phoneNumber),
-    modality: 'subcutaneous',
-    isAppointment: true,
-  }
-}
 

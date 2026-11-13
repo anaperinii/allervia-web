@@ -44,7 +44,7 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditSche
               const isRealized = application.status === 'completed'
               const isNext = application.status === 'scheduled'
               const hasReaction = application.sideEffect === 'yes'
-              const interactive = isRealized
+              const interactive = isRealized && !application.isAppointment
               const dateObj = parsePtDate(application.date)
               const day = format(dateObj, 'dd')
               const monthAbbr = capitalize(format(dateObj, 'MMM', { locale: ptBR }).replace('.', ''))
@@ -79,12 +79,18 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditSche
                     </div>
                     <div className="mt-1 flex items-center gap-2 flex-wrap">
                       <span className={cn('text-sm text-(--text-muted)', isNext && 'font-semibold')}>{withSmallMl(application.dose)}</span>
-                      <span
-                        className="inline-flex items-center px-1.5 py-px rounded-md text-[0.55rem] font-semibold border"
-                        style={{ backgroundColor: color.bg + '4D', color: color.text, borderColor: color.dot + '30' }}
-                      >
-                        {application.cycle.days} dias
-                      </span>
+                      {application.isAppointment ? (
+                        <span className="rounded-md bg-[#B39DDB]/20 text-[#5E4A8C] text-[0.55rem] font-bold uppercase tracking-wide px-1.5 py-0.5">
+                          Compromisso
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex items-center px-1.5 py-px rounded-md text-[0.55rem] font-semibold border"
+                          style={{ backgroundColor: color.bg + '4D', color: color.text, borderColor: color.dot + '30' }}
+                        >
+                          {application.cycle.days} dias
+                        </span>
+                      )}
                       {isNext && (
                         <span className="rounded-md bg-teal-600 text-white text-[0.55rem] font-bold uppercase tracking-wide px-1.5 py-0.5">
                           Próxima agendada
