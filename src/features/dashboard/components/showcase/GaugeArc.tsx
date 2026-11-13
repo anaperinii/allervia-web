@@ -90,7 +90,7 @@ export function GaugeArc({ ratio, value, caption, footnote, ariaLabel, children 
 export function GaugeLegendItem({ color, label, value }: { color: string; label: string; value: string }) {
   return (
     <span
-      className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.66rem] font-medium leading-none"
+      className="inline-flex w-fit items-center gap-1.5 rounded-md px-2.5 py-1 text-[0.66rem] font-medium leading-none"
       style={{ background: `${color}26`, border: `1px solid ${color}`, color: SHOWCASE.ink }}
     >
       <span className="font-bold tabular-nums">{value}</span>

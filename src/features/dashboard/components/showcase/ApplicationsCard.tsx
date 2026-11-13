@@ -68,7 +68,7 @@ export function ApplicationsCard({ title, caption, series, doseMix }: Applicatio
               ].map((row) => (
                 <span
                   key={row.label}
-                  className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.66rem] font-medium leading-none first:ml-3"
+                  className="inline-flex w-fit items-center gap-1.5 rounded-md px-2.5 py-1 text-[0.66rem] font-medium leading-none first:ml-3"
                   style={{
                     background: `${row.color}26`,
                     border: `1px solid ${row.color}`,

@@ -1,4 +1,4 @@
-import { format, isSameDay, isToday } from 'date-fns'
+import { format, isBefore, isSameDay, isToday, startOfDay } from 'date-fns'
 import { cn } from '@/shared/lib/cn'
 import { useModalityStyle } from '@/features/scheduling/components/modality-colors'
 import type { Application } from '@/features/patient/stores/usePatientStore'
@@ -71,6 +71,8 @@ export function MonthView({
               <div className="space-y-0.5">
                 {applications.slice(0, 2).map((application) => {
                   const tone = modalityStyle(application)
+                  const isOverdue = application.status === 'scheduled' && isBefore(day, startOfDay(new Date()))
+                  const showHatch = application.status === 'missed' || isOverdue
                   return (
                   <div
                     key={application.id}
@@ -81,7 +83,7 @@ export function MonthView({
                     className={cn(
                       'relative flex items-center gap-1 overflow-hidden rounded border px-1 py-0.5 text-[0.55rem] font-medium cursor-pointer transition-all',
                       application.status === 'completed' && 'font-bold',
-                      application.status === 'missed' && 'px-2',
+                      showHatch && 'px-2',
                     )}
                     style={{
                       background: tone.surface,
@@ -89,7 +91,7 @@ export function MonthView({
                       color: tone.ink,
                     }}
                   >
-                    {application.status === 'missed' && (
+                    {showHatch && (
                       <>
                         <span className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundImage: `repeating-linear-gradient(45deg, ${tone.border} 0 2px, transparent 2px 4px)` }} />
                         <span className="absolute inset-y-0 right-0 w-1.5" style={{ backgroundImage: `repeating-linear-gradient(45deg, ${tone.border} 0 2px, transparent 2px 4px)` }} />

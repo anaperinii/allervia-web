@@ -30,11 +30,28 @@ import { APPLICATION_STATUS_DISPLAY, appointmentStatusToApplicationStatus } from
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faBookmark,
+  faCheck,
   faCircleCheck,
   faCircleInfo,
+  faClock,
   faMagnifyingGlass,
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons'
 import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
+
+const STATUS_ICON = {
+  scheduled: faClock,
+  completed: faCheck,
+  missed: faXmark,
+  canceled: faXmark,
+}
+
+const STATUS_ICON_COLOR = {
+  scheduled: 'text-gray-400',
+  completed: 'text-emerald-600',
+  missed: 'text-red-500',
+  canceled: 'text-red-500',
+}
 import { FALLBACK_EVENT_COLORS } from '@/features/scheduling/components/modality-colors'
 
 function appointmentStatusLabel(status: Appointment['status']): string {
@@ -435,13 +452,25 @@ function AppointmentActionForm({
                 <button
                   type="button"
                   onClick={() => onOpenPatient(appointment.patientId)}
-                  className="block max-w-full truncate text-left text-[1.05rem] font-bold text-(--text) transition-colors hover:text-brand"
+                  className="flex max-w-full items-center gap-1.5 text-left text-[1.05rem] font-bold text-(--text) transition-colors hover:text-brand"
                 >
-                  {appointment.patient.fullName}
+                  <span className="truncate">{appointment.patient.fullName}</span>
+                  <FontAwesomeIcon
+                    icon={STATUS_ICON[appointmentStatusToApplicationStatus(appointment.status)]}
+                    className={cn('shrink-0', STATUS_ICON_COLOR[appointmentStatusToApplicationStatus(appointment.status)])}
+                    style={{ fontSize: 13 }}
+                    title={appointmentStatusLabel(appointment.status)}
+                  />
                 </button>
               ) : (
-                <div className="truncate text-[1.05rem] font-bold text-(--text)">
-                  {appointment.patient.fullName}
+                <div className="flex max-w-full items-center gap-1.5 text-[1.05rem] font-bold text-(--text)">
+                  <span className="truncate">{appointment.patient.fullName}</span>
+                  <FontAwesomeIcon
+                    icon={STATUS_ICON[appointmentStatusToApplicationStatus(appointment.status)]}
+                    className={cn('shrink-0', STATUS_ICON_COLOR[appointmentStatusToApplicationStatus(appointment.status)])}
+                    style={{ fontSize: 13 }}
+                    title={appointmentStatusLabel(appointment.status)}
+                  />
                 </div>
               )}
               <div className="text-[0.82rem] text-(--text-muted)">
@@ -485,35 +514,46 @@ function AppointmentActionForm({
       }}
       headerAction={
         isOpen ? (
-          <button
-            type="button"
+          <Button
+            tone="brand"
+            variant="outline"
+            size="sm"
+            className="shrink-0 self-start"
             onClick={() => setTab(tab === 'manage' ? 'info' : 'manage')}
-            className="shrink-0 cursor-pointer self-start rounded-lg border border-transparent px-3 py-1.5 text-[0.7rem] font-semibold text-white transition-[filter] duration-200 hover:brightness-110"
-            style={{ background: '#12333a' }}
           >
             {tab === 'manage' ? 'Ver detalhes' : 'Editar'}
-          </button>
+          </Button>
         ) : (
           <span />
         )
       }
       footer={
         <>
-          <button
-            type="button"
-            onClick={() =>
-              sendReminder(
-                appointment.patient.phoneNumber,
-                appointment.patient.fullName.split(' ')[0],
-                formatInstantDate(appointment.startsAt, timeZone),
-                timeInputValue(appointment.startsAt, timeZone),
+          {tab !== 'manage' && (
+            isOpen ? (
+              <Button
+                tone="brand"
+                variant="solid"
+                leftIcon={<HugeiconsIcon icon={WhatsappIcon} size={14} strokeWidth={1.8} />}
+                onClick={() =>
+                  sendReminder(
+                    appointment.patient.phoneNumber,
+                    appointment.patient.fullName.split(' ')[0],
+                    formatInstantDate(appointment.startsAt, timeZone),
+                    timeInputValue(appointment.startsAt, timeZone),
+                  )
+                }
+              >
+                Enviar lembrete via WhatsApp
+              </Button>
+            ) : (
+              onOpenPatient && (
+                <Button tone="brand" variant="solid" onClick={() => onOpenPatient(appointment.patientId)}>
+                  Ver no prontuário
+                </Button>
               )
-            }
-            className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-transparent bg-emerald-500 px-3 py-1.5 text-[0.7rem] font-semibold text-white transition-colors hover:bg-emerald-600"
-          >
-            <HugeiconsIcon icon={WhatsappIcon} size={14} strokeWidth={1.8} />
-            Enviar lembrete via WhatsApp
-          </button>
+            )
+          )}
           <Button variant="outline" onClick={onClose}>Fechar</Button>
           {isOpen && tab === 'manage' && (
             <Button tone="brand" variant="solid" disabled={!canSubmit} onClick={() => mutation.mutate()}>

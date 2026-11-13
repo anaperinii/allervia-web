@@ -54,7 +54,14 @@ export function CalendarToolbar({ monthLabel, onPrev, onNext, onToday, isToday, 
         <div className="flex items-center gap-4 text-[0.7rem] text-(--text-muted)">
           {legendItems.map((item) => (
             <span key={item.label} className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+              {item.id === 'missed' ? (
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundImage: `repeating-linear-gradient(45deg, ${item.color} 0 1.5px, transparent 1.5px 3px)` }}
+                />
+              ) : (
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+              )}
               {item.label}
             </span>
           ))}

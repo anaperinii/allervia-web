@@ -1,4 +1,4 @@
-import { format, isSameDay, isToday } from 'date-fns'
+import { format, isBefore, isSameDay, isToday, startOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/cn'
 import { useModalityStyle } from '@/features/scheduling/components/modality-colors'
@@ -60,6 +60,8 @@ export function WeekView({
             <div className="flex-1 space-y-1 overflow-y-auto">
               {applications.map((application) => {
                 const tone = modalityStyle(application)
+                const isOverdue = application.status === 'scheduled' && isBefore(day, startOfDay(new Date()))
+                const showHatch = application.status === 'missed' || isOverdue
                 return (
                 <div
                   key={application.id}
@@ -69,7 +71,7 @@ export function WeekView({
                   }}
                   className={cn(
                     'group relative cursor-pointer space-y-0.5 overflow-hidden rounded-lg border px-2.5 py-1.5 text-[0.6rem] transition-all hover:-translate-y-px',
-                    application.status === 'missed' && 'px-3.5',
+                    showHatch && 'px-3.5',
                   )}
                   style={{
                     background: tone.surface,
@@ -77,7 +79,7 @@ export function WeekView({
                     color: tone.ink,
                   }}
                 >
-                  {application.status === 'missed' && (
+                  {showHatch && (
                     <>
                       <span className="absolute inset-y-0 left-0 w-2" style={{ backgroundImage: `repeating-linear-gradient(45deg, ${tone.border} 0 3px, transparent 3px 6px)` }} />
                       <span className="absolute inset-y-0 right-0 w-2" style={{ backgroundImage: `repeating-linear-gradient(45deg, ${tone.border} 0 3px, transparent 3px 6px)` }} />

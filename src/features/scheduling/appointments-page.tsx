@@ -11,7 +11,7 @@ import { appointmentToApplication } from '@/features/scheduling/adapters/appoint
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 import { scheduleItemToApplication } from '@/features/patient/adapters/clinical-presentation'
-import { getDose, listAppointments, listDoseSchedule } from '@/shared/api/clinical.api'
+import { listAppointments, listDoseSchedule } from '@/shared/api/clinical.api'
 import type { Appointment, ScheduleDoseItem } from '@/shared/api/contracts/clinical'
 import {
   AppointmentActionModal,
@@ -27,7 +27,6 @@ import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolba
 import { WeekView } from '@/features/scheduling/components/WeekView'
 import { MonthView } from '@/features/scheduling/components/MonthView'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
-import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
 import { CalendarSidePanel } from '@/features/scheduling/components/CalendarSidePanel'
 import { useSchedulingUiStore } from '@/features/scheduling/stores/useSchedulingUiStore'
 
@@ -81,7 +80,6 @@ export function AppointmentsPage() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [patientSearch, setPatientSearch] = useState('')
   const [dayModal, setDayModal] = useState<{ date: Date; apps: Application[] } | null>(null)
-  const [rescheduleDoseId, setRescheduleDoseId] = useState<string | null>(null)
   const [showRescheduledToast, setShowRescheduledToast] = useState(false)
   const showCalendarPanel = useSchedulingUiStore((s) => s.showCalendarPanel)
   const setShowCalendarPanel = useSchedulingUiStore((s) => s.setShowCalendarPanel)
@@ -184,12 +182,6 @@ export function AppointmentsPage() {
     }
     return map
   }, [applications])
-
-  const rescheduleDoseQuery = useQuery({
-    queryKey: queryKeys.dose(organizationId, rescheduleDoseId ?? ''),
-    queryFn: ({ signal }) => getDose(rescheduleDoseId!, signal),
-    enabled: organizationId !== '' && rescheduleDoseId !== null,
-  })
 
   const openPatient = (patientId: string, doseId?: string) => {
     setSelectedApplication(null)
@@ -376,24 +368,11 @@ export function AppointmentsPage() {
 
       <ApplicationDetailsModal
         application={selectedApplication}
+        organizationId={organizationId}
         onClose={() => setSelectedApplication(null)}
         onOpenPatient={openPatient}
-        onReschedule={
-          canReschedule
-            ? (doseId) => {
-                setSelectedApplication(null)
-                setRescheduleDoseId(doseId)
-              }
-            : undefined
-        }
-      />
-
-      <EditScheduledDoseModal
-        open={rescheduleDoseId !== null && rescheduleDoseQuery.data !== undefined}
-        dose={rescheduleDoseQuery.data ?? null}
-        organizationId={organizationId}
-        onClose={() => setRescheduleDoseId(null)}
         onSaved={() => setShowRescheduledToast(true)}
+        canReschedule={canReschedule}
       />
 
       <NewAppointmentModal
