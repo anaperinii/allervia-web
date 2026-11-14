@@ -524,7 +524,7 @@ export function PhaseStackChart({
                       className="w-full rounded-[3px]"
                       style={{
                         height: `${(row.buildUp / max) * 100}%`,
-                        background: `linear-gradient(180deg, ${PHASE_SERIES[0].color}ff 0%, ${PHASE_SERIES[0].color}33 100%)`,
+                        background: `linear-gradient(180deg, ${PHASE_SERIES[0].color}bb 0%, ${PHASE_SERIES[0].color}33 100%)`,
                         minHeight: 3,
                       }}
                     />
@@ -541,7 +541,7 @@ export function PhaseStackChart({
                       className="w-full rounded-[3px]"
                       style={{
                         height: `${(row.maintenance / max) * 100}%`,
-                        background: `linear-gradient(180deg, ${PHASE_SERIES[1].color}ff 0%, ${PHASE_SERIES[1].color}99 100%)`,
+                        background: `linear-gradient(180deg, ${PHASE_SERIES[1].color}bb 0%, ${PHASE_SERIES[1].color}99 100%)`,
                         minHeight: 3,
                       }}
                     />
