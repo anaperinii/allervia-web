@@ -1,6 +1,6 @@
 import { useId, useState, type ReactNode } from 'react'
 import { SHOWCASE } from '@/shared/components/showcase'
-import { axisLabels, weekKey } from '@/features/dashboard/hooks/useChartWindow'
+import { axisLabels, todayIndex, weekKey } from '@/features/dashboard/hooks/useChartWindow'
 import type {
   CountEntry,
   PhaseDayEntry,
@@ -450,12 +450,88 @@ function bucketByWeek(series: PhaseDayEntry[]): PhaseDayEntry[] {
   return [...buckets.values()]
 }
 
-const PHASE_VIEW_W = 640
-const PHASE_VIEW_H = 144
-
 export type PhaseGranularity = 'day' | 'week'
 export type PhaseFilterKey = 'all' | 'buildUp' | 'maintenance'
 
+
+function PhaseSparkline({
+  values,
+  labels,
+  color,
+  hover,
+  onHover,
+  highlightIndex,
+}: {
+  values: number[]
+  labels: string[]
+  color: string
+  hover: number | null
+  onHover: (index: number | null) => void
+  highlightIndex: number | null
+}) {
+  const viewW = 200
+  const viewH = 56
+  const gradientId = useId()
+  const min = Math.min(...values)
+  const max = Math.max(...values, min + 1)
+  const stepX = viewW / Math.max(values.length - 1, 1)
+  const points: Point[] = values.map((value, index) => ({
+    x: values.length <= 1 ? viewW / 2 : index * stepX,
+    y: viewH - 6 - ((value - min) / (max - min || 1)) * (viewH - 12),
+  }))
+  const line = smoothPath(points)
+  const area = `${line} L${points[points.length - 1].x},${viewH} L${points[0].x},${viewH} Z`
+  const displayIndex = hover ?? highlightIndex
+  const hoveredPoint = displayIndex !== null ? points[displayIndex] : undefined
+
+  return (
+    <div className="relative">
+      <svg viewBox={`0 0 ${viewW} ${viewH}`} className="h-9 w-full" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.28" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill={`url(#${gradientId})`} stroke="none" />
+        <path
+          d={line}
+          fill="none"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+        />
+        {hoveredPoint && (
+          <line
+            x1={hoveredPoint.x}
+            y1={0}
+            x2={hoveredPoint.x}
+            y2={viewH}
+            stroke={SHOWCASE.muted}
+            strokeWidth="1"
+            strokeDasharray="3 3"
+            vectorEffect="non-scaling-stroke"
+            opacity={0.5}
+          />
+        )}
+      </svg>
+
+      <HoverBands count={values.length} onHover={onHover} />
+
+      {hoveredPoint && displayIndex !== null && (
+        <ChartTooltip
+          leftPct={(hoveredPoint.x / viewW) * 100}
+          topPct={(hoveredPoint.y / viewH) * 100}
+          label={labels[displayIndex]}
+        >
+          {values[displayIndex].toLocaleString('pt-BR')}
+        </ChartTooltip>
+      )}
+    </div>
+  )
+}
 
 export function PhaseStackChart({
   series,
@@ -469,145 +545,89 @@ export function PhaseStackChart({
 }) {
   const byWeek = granularity === 'week' || (granularity === 'auto' && series.length > 60)
   const rows = byWeek ? bucketByWeek(series) : series
-  const phases = PHASE_SERIES.filter(
-    (phase) => visiblePhase === 'all' || phase.key === visiblePhase,
-  )
-  const max = Math.max(
-    ...rows.map((row) => Math.max(...phases.map((phase) => row[phase.key]))),
-    1,
-  )
+  const visibleKeys = (visiblePhase === 'all' ? ['buildUp', 'maintenance'] : [visiblePhase]) as (
+    'buildUp' | 'maintenance'
+  )[]
+
+  const latest = rows[rows.length - 1] ?? { buildUp: 0, maintenance: 0 }
+  const earliest = rows[0] ?? latest
+  const totalLatest = latest.buildUp + latest.maintenance
+  const buildUpPct = totalLatest > 0 ? Math.round((latest.buildUp / totalLatest) * 100) : 0
+  const maintenancePct = totalLatest > 0 ? 100 - buildUpPct : 0
   const [hover, setHover] = useState<number | null>(null)
-  const hovered = hover !== null ? rows[hover] : undefined
-
-
-  const stepX = PHASE_VIEW_W / Math.max(rows.length, 1)
-  const trends = phases.map((phase) => ({
-    phase,
-    line: smoothPath(
-      rows.map((row, index) => ({
-        x: stepX * (index + 0.5),
-        y: PHASE_VIEW_H - (row[phase.key] / max) * PHASE_VIEW_H + 8,
-      })),
-    ),
-  }))
+  const labels = rows.map((row) => row.label)
+  const todayIdx = todayIndex(rows)
+  const highlightIndex = todayIdx >= 0 ? todayIdx : null
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-4">
-        {phases.map((phase) => (
-          <span key={phase.key} className="flex items-center gap-1.5 text-[0.66rem] font-medium" style={{ color: SHOWCASE.inkSoft }}>
-            <span className="h-2 w-2 rounded-full" style={{ background: phase.color }} />
-            {phase.label}
+    <div className="flex flex-col gap-4">
+      {totalLatest > 0 && (
+        <div className="flex items-center" style={{ color: SHOWCASE.ink }}>
+          <span className="text-[1.1rem] font-semibold" style={{ width: `${buildUpPct}%` }}>
+            {buildUpPct}
+            <span className="text-[0.6em] font-normal">%</span>
           </span>
-        ))}
-        <span className="flex items-center gap-1.5 text-[0.66rem] font-medium" style={{ color: SHOWCASE.muted }}>
-          <span className="h-0.5 w-4 rounded-full" style={{ background: SHOWCASE.inkSoft }} />
-          Tendência por fase
-        </span>
-      </div>
-
-      <div className="relative flex h-36 items-end gap-[5px]">
-        {rows.map((row, index) => {
-          const total = phases.reduce((sum, phase) => sum + row[phase.key], 0)
-          const dimmed = hover !== null && hover !== index
-          const showMaintenance = visiblePhase === 'all' || visiblePhase === 'maintenance'
-          const showBuildUp = visiblePhase === 'all' || visiblePhase === 'buildUp'
-          return (
-            <div key={row.date} className="flex h-full flex-1 items-end justify-center gap-[2px] px-px" style={{ opacity: dimmed ? 0.45 : 1 }}>
-              {showBuildUp && (
-                <span
-                  className="h-full flex-1 rounded-[3px]"
-                  style={{ display: 'flex', alignItems: 'flex-end' }}
-                >
-                  {row.buildUp > 0 && (
-                    <span
-                      className="w-full rounded-[3px]"
-                      style={{
-                        height: `${(row.buildUp / max) * 100}%`,
-                        background: `linear-gradient(180deg, ${PHASE_SERIES[0].color}bb 0%, ${PHASE_SERIES[0].color}33 100%)`,
-                        minHeight: 3,
-                      }}
-                    />
-                  )}
-                </span>
-              )}
-              {showMaintenance && (
-                <span
-                  className="h-full flex-1 rounded-[3px]"
-                  style={{ display: 'flex', alignItems: 'flex-end' }}
-                >
-                  {row.maintenance > 0 && (
-                    <span
-                      className="w-full rounded-[3px]"
-                      style={{
-                        height: `${(row.maintenance / max) * 100}%`,
-                        background: `linear-gradient(180deg, ${PHASE_SERIES[1].color}bb 0%, ${PHASE_SERIES[1].color}99 100%)`,
-                        minHeight: 3,
-                      }}
-                    />
-                  )}
-                </span>
-              )}
-              {total === 0 && (
-                <span
-                  className="w-full rounded-[2px]"
-                  style={{ height: 3, background: SHOWCASE.muted, opacity: 0.45 }}
-                />
-              )}
-            </div>
-          )
-        })}
-
-        <svg
-          className="pointer-events-none absolute inset-0 h-full w-full"
-          viewBox={`0 0 ${PHASE_VIEW_W} ${PHASE_VIEW_H}`}
-          preserveAspectRatio="none"
-
-
-          style={{ overflow: 'visible' }}
-          aria-hidden="true"
-        >
-          {trends.map(({ phase, line }) => (
-            <path
-              key={phase.key}
-              d={line}
-              fill="none"
-              stroke={phase.trend}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
-        </svg>
-
-        <HoverBands count={rows.length} onHover={setHover} />
-
-        {hovered && hover !== null && (
-          <ChartTooltip
-            leftPct={((hover + 0.5) / rows.length) * 100}
-            topPct={
-              100 -
-              (Math.max(...phases.map((phase) => hovered[phase.key])) / max) * 100
-            }
-            label={hovered.label}
-          >
-            {phases.map((phase, index) => (
-              <span key={phase.key} className={index > 0 ? 'opacity-70' : undefined}>
-                {index > 0 && ' · '}
-                {phase.label}: {hovered[phase.key].toLocaleString('pt-BR')} pacientes
-              </span>
-            ))}
-          </ChartTooltip>
+          <span className="text-right text-[1.1rem] font-semibold" style={{ width: `${maintenancePct}%` }}>
+            {maintenancePct}
+            <span className="text-[0.6em] font-normal">%</span>
+          </span>
+        </div>
+      )}
+      <div className="-mt-2 flex h-2.5 w-full overflow-hidden rounded-full" style={{ background: SHOWCASE.cardInnerStrong }}>
+        {totalLatest > 0 ? (
+          <>
+            <span className="h-full" style={{ width: `${buildUpPct}%`, background: PHASE_SERIES[0].color }} />
+            <span className="h-full" style={{ width: `${maintenancePct}%`, background: PHASE_SERIES[1].color }} />
+          </>
+        ) : (
+          <span className="h-full w-full" style={{ background: SHOWCASE.muted, opacity: 0.3 }} />
         )}
       </div>
 
-      <div className="flex items-center justify-between text-[0.62rem] font-medium" style={{ color: SHOWCASE.muted }}>
-        {rows.map((row, index) => (
-          <span key={`${row.label}-${index}`} className="flex-1 text-center">
-            {row.label}
-          </span>
-        ))}
+      <div className={visibleKeys.length > 1 ? 'grid grid-cols-2 gap-4' : 'grid grid-cols-1 gap-4'}>
+        {visibleKeys.map((key) => {
+          const phase = PHASE_SERIES.find((entry) => entry.key === key)!
+          const delta = latest[key] - earliest[key]
+          const deltaColor = delta > 0 ? '#1A9E6B' : delta < 0 ? '#D14343' : SHOWCASE.muted
+          return (
+            <div key={key} className="rounded-xl border p-4" style={{ borderColor: SHOWCASE.line }}>
+              <span
+                className="flex items-center gap-1.5 text-[0.72rem] font-medium uppercase tracking-wide"
+                style={{ color: SHOWCASE.inkSoft }}
+              >
+                <span className="h-2 w-2 rounded-full" style={{ background: phase.color }} />
+                {phase.label}
+              </span>
+              <div
+                className="mt-1 text-[2.1rem] font-medium leading-none tracking-tight tabular-nums"
+                style={{ color: SHOWCASE.ink }}
+              >
+                {latest[key].toLocaleString('pt-BR')}
+              </div>
+              <p className="mt-1.5 text-[0.7rem]" style={{ color: SHOWCASE.muted }}>
+                {delta === 0 ? (
+                  'sem variação'
+                ) : (
+                  <span className="font-semibold" style={{ color: deltaColor }}>
+                    {delta > 0 ? '+' : ''}
+                    {delta}
+                  </span>
+                )}
+                {delta !== 0 && ` em ${rows.length} dias`}
+              </p>
+              <div className="mt-2">
+                <PhaseSparkline
+                  values={rows.map((row) => row[key])}
+                  labels={labels}
+                  color={phase.trend}
+                  hover={hover}
+                  onHover={setHover}
+                  highlightIndex={highlightIndex}
+                />
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
