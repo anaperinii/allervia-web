@@ -15,7 +15,7 @@ interface GaugeArcProps {
 
   ratio: number
 
-  value: string
+  value: ReactNode
 
   caption?: string
 

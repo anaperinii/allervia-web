@@ -163,10 +163,14 @@ export function StatValue({
   value,
   unit,
   className,
+  color = SHOWCASE.ink,
+  mutedColor = SHOWCASE.muted,
 }: {
   value: string
   unit?: string
   className?: string
+  color?: string
+  mutedColor?: string
 }) {
   const tailLength = value.length > 3 ? Math.min(3, value.length - 1) : 0
   const head = tailLength > 0 ? value.slice(0, value.length - tailLength) : value
@@ -175,12 +179,12 @@ export function StatValue({
   return (
     <span
       className={cn('flex items-baseline leading-none tracking-tight tabular-nums', className)}
-      style={{ color: SHOWCASE.ink }}
+      style={{ color }}
     >
       <span className="font-medium">{head}</span>
-      {tail && <span style={{ color: SHOWCASE.muted }}>{tail}</span>}
+      {tail && <span style={{ color: mutedColor }}>{tail}</span>}
       {unit && (
-        <span className="ml-0.5 text-[0.5em] font-medium" style={{ color: SHOWCASE.muted }}>
+        <span className="ml-0.5 text-[0.5em] font-medium" style={{ color: mutedColor }}>
           {unit}
         </span>
       )}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { faChevronLeft, faChevronRight, faRotateRight } from '@fortawesome/free-solid-svg-icons'
 import { Card, CardHeader, CircleButton, DayAxis, SHOWCASE, StatValue } from '@/shared/components/showcase'
-import { axisLabels, todayIndex, useSeriesFilters, windowCaption } from '@/features/dashboard/hooks/useChartWindow'
+import { axisLabels, todayIndex, useSeriesFilters, weekdayAbbrev, windowCaption } from '@/features/dashboard/hooks/useChartWindow'
 import { CardFilters } from './CardFilters'
 import { ChartTooltip, HoverBands } from './ChartHover'
 import { cn } from '@/shared/lib/cn'
@@ -23,11 +23,6 @@ export function ApplicationsCard({ title, caption, series, doseMix }: Applicatio
   const windowTotal = slice.reduce((sum, entry) => sum + entry.value, 0)
   const max = Math.max(...slice.map((entry) => entry.value), 1)
   const currentIndex = todayIndex(slice)
-  const peakIndex = slice.reduce(
-    (best, entry, i) => (entry.value > slice[best].value ? i : best),
-    0,
-  )
-  const peakValue = slice[peakIndex]?.value ?? 0
   const [hover, setHover] = useState<number | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const selectedIndex = selected ? slice.findIndex((entry) => entry.date === selected) : -1
@@ -65,6 +60,7 @@ export function ApplicationsCard({ title, caption, series, doseMix }: Applicatio
               <StatValue value={total.toLocaleString('pt-BR')} className="text-[2.4rem]" />
               {[
                 { label: 'SCIT', value: total, color: MODALITY_COLORS.subcutaneous },
+                { label: 'SLIT', value: 0, color: MODALITY_COLORS.sublingual },
               ].map((row) => (
                 <span
                   key={row.label}
@@ -87,7 +83,10 @@ export function ApplicationsCard({ title, caption, series, doseMix }: Applicatio
                 </span>
               ))}
             </div>
-            <span className="text-[0.82rem] font-medium" style={{ color: SHOWCASE.muted }}>
+            <span
+              className="text-[0.66rem] font-semibold uppercase tracking-wide"
+              style={{ color: SHOWCASE.muted }}
+            >
               {selectedEntry ? 'Aplicações no dia' : 'Aplicações totais no período'}
             </span>
           </div>
@@ -130,30 +129,40 @@ export function ApplicationsCard({ title, caption, series, doseMix }: Applicatio
               const isToday = i === currentIndex
               const isHovered = hover === i
               const isSelected = selectedIndex === i
-              const isPeak = i === peakIndex && peakValue > 0
-              const highlighted = isSelected || isHovered || (isPeak && selectedIndex < 0 && hover === null)
+              const defaultHighlight = selectedIndex < 0 && hover === null && isToday
+              const highlighted = isSelected || isHovered || defaultHighlight
               const height = Math.max(6, Math.round((entry.value / max) * 100))
               return (
                 <div key={`${entry.label}-${i}`} className="relative flex h-full flex-1 flex-col justify-end">
-                  {isPeak && hover === null && selectedIndex < 0 && (
-                    <div className="absolute inset-x-0 -top-1 flex justify-center">
-                      <span
-                        className="inline-flex items-center rounded-md px-2 py-1 text-[0.62rem] font-bold tabular-nums backdrop-blur-md"
-                        style={{
-                          background: 'rgba(255,255,255,0.45)',
-                          border: '1px solid rgba(255,255,255,0.65)',
-                          color: SHOWCASE.ink,
-                        }}
-                      >
-                        {peakValue.toLocaleString('pt-BR')}
-                      </span>
-                    </div>
-                  )}
+                  <div
+                    className="absolute inset-x-0 flex justify-center"
+                    style={{ bottom: `calc(${height}% + 0.3rem)` }}
+                  >
+                    <span
+                      className="inline-flex items-center rounded-md px-2 py-1 text-[0.62rem] font-bold tabular-nums"
+                      style={
+                        highlighted
+                          ? {
+                              background: `${SHOWCASE.accent}26`,
+                              border: `1px solid ${SHOWCASE.accent}`,
+                              color: SHOWCASE.ink,
+                              backdropFilter: 'blur(8px)',
+                            }
+                          : { color: SHOWCASE.muted }
+                      }
+                    >
+                      {entry.value.toLocaleString('pt-BR')}
+                    </span>
+                  </div>
                   <div
                     className={cn('w-full transition-colors duration-150', slice.length > 30 ? 'rounded-sm' : 'rounded-md')}
                     style={{
                       height: `${height}%`,
-                      backgroundColor: highlighted ? SHOWCASE.accent : SHOWCASE.cardInner,
+                      background: highlighted
+                        ? 'linear-gradient(180deg, #74C3B9ee 0%, #74C3B966 100%)'
+                        : isToday
+                          ? `${SHOWCASE.accent}40`
+                          : SHOWCASE.cardInner,
                       outline: isToday && !highlighted ? `1px dashed ${SHOWCASE.muted}` : undefined,
                       outlineOffset: isToday && !highlighted ? '-1px' : undefined,
                     }}
@@ -174,7 +183,7 @@ export function ApplicationsCard({ title, caption, series, doseMix }: Applicatio
                 topPct={100 - Math.max(6, Math.round((hovered.value / max) * 100))}
                 label={hovered.label}
               >
-                {hovered.value.toLocaleString('pt-BR')} aplicações
+                {hovered.value.toLocaleString('pt-BR')} {hovered.value === 1 ? 'aplicação' : 'aplicações'}
               </ChartTooltip>
             )}
           </div>
@@ -191,7 +200,9 @@ export function ApplicationsCard({ title, caption, series, doseMix }: Applicatio
         </div>
 
         <div className="px-9">
-          <DayAxis days={axisLabels(slice.map((entry) => entry.label))} />
+          <DayAxis
+            days={axisLabels(slice.map((entry) => `${entry.label} · ${weekdayAbbrev(entry.date)}`))}
+          />
         </div>
       </div>
     </Card>

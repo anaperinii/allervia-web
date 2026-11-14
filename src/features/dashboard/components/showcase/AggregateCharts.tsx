@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { SHOWCASE } from '@/shared/components/showcase'
 import { axisLabels, weekKey } from '@/features/dashboard/hooks/useChartWindow'
 import type {
@@ -68,9 +68,9 @@ export function ChartState({
   return <>{children}</>
 }
 
-export function ChartCaption({ children }: { children: ReactNode }) {
+export function ChartCaption({ children, size = '0.66rem' }: { children: ReactNode; size?: string }) {
   return (
-    <p className="mb-6 -mt-3 leading-snug text-[0.66rem]" style={{ color: SHOWCASE.muted }}>
+    <p className="mb-6 -mt-3 leading-snug" style={{ color: SHOWCASE.muted, fontSize: size }}>
       {children}
     </p>
   )
@@ -82,16 +82,90 @@ export function ChartCaption({ children }: { children: ReactNode }) {
 
 
 
+const RING_VIEW_W = 220
+const RING_VIEW_H = 104
+const RING_RADIUS = 92
+const RING_STROKE = 14
+const RING_CENTER_X = RING_VIEW_W / 2
+const RING_BASELINE = 104
+const RING_ARC = `M${RING_CENTER_X - RING_RADIUS},${RING_BASELINE} A${RING_RADIUS},${RING_RADIUS} 0 0 1 ${RING_CENTER_X + RING_RADIUS},${RING_BASELINE}`
+const RING_SEMICIRCLE = Math.PI * RING_RADIUS
+
+function ConcentrationRing({ rows, unit }: { rows: { entry: CountEntry; color: string }[]; unit: string }) {
+  const total = rows.reduce((sum, { entry }) => sum + entry.count, 0)
+  const clipId = useId()
+  let offset = 0
+
+  return (
+    <div className="mt-auto flex flex-col items-center pt-4 -mb-5">
+      <div className="relative w-full max-w-[18rem]">
+        <svg
+          viewBox={`0 0 ${RING_VIEW_W} ${RING_VIEW_H}`}
+          className="w-full"
+          style={{ overflow: 'visible' }}
+          role="img"
+          aria-label={`Total: ${total} ${unit}`}
+        >
+          <defs>
+            <clipPath id={clipId}>
+              <rect x={0} y={0} width={RING_VIEW_W} height={RING_BASELINE} />
+            </clipPath>
+          </defs>
+          <g clipPath={`url(#${clipId})`}>
+            <path
+              d={RING_ARC}
+              fill="none"
+              stroke={SHOWCASE.cardInnerStrong}
+              strokeWidth={RING_STROKE}
+              strokeLinecap="round"
+            />
+            {rows.map(({ entry, color }) => {
+              const length = total > 0 ? (entry.count / total) * RING_SEMICIRCLE : 0
+              const dashoffset = -offset
+              offset += length
+              return (
+                <path
+                  key={entry.label}
+                  d={RING_ARC}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={RING_STROKE}
+                  strokeLinecap="round"
+                  strokeDasharray={`${length} ${RING_SEMICIRCLE}`}
+                  strokeDashoffset={dashoffset}
+                />
+              )
+            })}
+          </g>
+        </svg>
+
+        <div className="absolute inset-x-0 bottom-5 flex flex-col items-center gap-0.5">
+          <span
+            className="text-[1.9rem] font-medium leading-none tracking-tight tabular-nums"
+            style={{ color: SHOWCASE.ink }}
+          >
+            {total}
+          </span>
+          <span className="text-[0.62rem] font-semibold uppercase tracking-wide" style={{ color: SHOWCASE.muted }}>
+            {unit}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function HBarList({
   data,
   unit,
   palette = 'ordinal',
+  showRing = true,
 }: {
   data: CountEntry[]
   unit: string
   palette?: 'ordinal' | 'lime'
+  showRing?: boolean
 }) {
-  const max = Math.max(...data.map((entry) => entry.count), 1)
   const ramp = palette === 'lime' ? LIME_RAMP : ORDINAL_RAMP
   const rows = data.map((entry, index) => {
     const step =
@@ -100,7 +174,7 @@ export function HBarList({
   })
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-1 flex-col gap-2.5">
       {rows.map(({ entry, color }) => (
         <div key={entry.label} className="flex items-center gap-2.5">
           <span
@@ -119,7 +193,7 @@ export function HBarList({
           >
             <span
               className="block h-full rounded-full"
-              style={{ width: `${Math.max((entry.count / max) * 100, 2)}%`, background: color }}
+              style={{ width: `${Math.max(entry.pct, 2)}%`, background: color }}
             />
           </div>
           <span className="w-16 shrink-0 text-right text-[0.7rem] tabular-nums" style={{ color: SHOWCASE.ink }}>
@@ -128,6 +202,8 @@ export function HBarList({
           </span>
         </div>
       ))}
+
+      {showRing && <ConcentrationRing rows={rows} unit={unit} />}
     </div>
   )
 }
@@ -208,8 +284,8 @@ export function VolumeConcentrationHeatmap({ matrix }: { matrix: VolumeMatrixDat
 
 const STATUS_SERIES = [
   { key: 'active', label: 'Ativas', color: '#0E9E8C' },
-  { key: 'suspended', label: 'Suspensas', color: '#0774B8' },
-  { key: 'completed', label: 'Concluídas', color: '#2E7D32' },
+  { key: 'suspended', label: 'Suspensas', color: '#FF8C69' },
+  { key: 'completed', label: 'Concluídas', color: '#00E0D1' },
 ] as const
 
 const STATUS_VIEW_W = 640
@@ -397,7 +473,7 @@ export function PhaseStackChart({
     (phase) => visiblePhase === 'all' || phase.key === visiblePhase,
   )
   const max = Math.max(
-    ...rows.map((row) => phases.reduce((sum, phase) => sum + row[phase.key], 0)),
+    ...rows.map((row) => Math.max(...phases.map((phase) => row[phase.key]))),
     1,
   )
   const [hover, setHover] = useState<number | null>(null)
@@ -410,7 +486,7 @@ export function PhaseStackChart({
     line: smoothPath(
       rows.map((row, index) => ({
         x: stepX * (index + 0.5),
-        y: PHASE_VIEW_H - (row[phase.key] / max) * PHASE_VIEW_H,
+        y: PHASE_VIEW_H - (row[phase.key] / max) * PHASE_VIEW_H + 8,
       })),
     ),
   }))
@@ -430,35 +506,48 @@ export function PhaseStackChart({
         </span>
       </div>
 
-      <div className="relative flex h-36 items-end gap-[3px]">
+      <div className="relative flex h-36 items-end gap-[5px]">
         {rows.map((row, index) => {
           const total = phases.reduce((sum, phase) => sum + row[phase.key], 0)
           const dimmed = hover !== null && hover !== index
           const showMaintenance = visiblePhase === 'all' || visiblePhase === 'maintenance'
           const showBuildUp = visiblePhase === 'all' || visiblePhase === 'buildUp'
           return (
-            <div key={row.date} className="flex h-full flex-1 flex-col justify-end gap-[2px]" style={{ opacity: dimmed ? 0.45 : 1 }}>
-              {showMaintenance && row.maintenance > 0 && (
+            <div key={row.date} className="flex h-full flex-1 items-end justify-center gap-[2px] px-px" style={{ opacity: dimmed ? 0.45 : 1 }}>
+              {showBuildUp && (
                 <span
-                  className="w-full rounded-[3px]"
-                  style={{
-                    height: `${(row.maintenance / max) * 100}%`,
-                    background: `${PHASE_SERIES[1].color}99`,
-                    minHeight: 3,
-                  }}
-                />
+                  className="h-full flex-1 rounded-[3px]"
+                  style={{ display: 'flex', alignItems: 'flex-end' }}
+                >
+                  {row.buildUp > 0 && (
+                    <span
+                      className="w-full rounded-[3px]"
+                      style={{
+                        height: `${(row.buildUp / max) * 100}%`,
+                        background: `linear-gradient(180deg, ${PHASE_SERIES[0].color}ff 0%, ${PHASE_SERIES[0].color}33 100%)`,
+                        minHeight: 3,
+                      }}
+                    />
+                  )}
+                </span>
               )}
-              {showBuildUp && row.buildUp > 0 && (
+              {showMaintenance && (
                 <span
-                  className="w-full rounded-[3px]"
-                  style={{
-                    height: `${(row.buildUp / max) * 100}%`,
-                    background: `linear-gradient(180deg, ${PHASE_SERIES[0].color}99 0%, ${PHASE_SERIES[0].color}33 100%)`,
-                    minHeight: 3,
-                  }}
-                />
+                  className="h-full flex-1 rounded-[3px]"
+                  style={{ display: 'flex', alignItems: 'flex-end' }}
+                >
+                  {row.maintenance > 0 && (
+                    <span
+                      className="w-full rounded-[3px]"
+                      style={{
+                        height: `${(row.maintenance / max) * 100}%`,
+                        background: `linear-gradient(180deg, ${PHASE_SERIES[1].color}ff 0%, ${PHASE_SERIES[1].color}99 100%)`,
+                        minHeight: 3,
+                      }}
+                    />
+                  )}
+                </span>
               )}
-              {                                                                               }
               {total === 0 && (
                 <span
                   className="w-full rounded-[2px]"
@@ -499,7 +588,7 @@ export function PhaseStackChart({
             leftPct={((hover + 0.5) / rows.length) * 100}
             topPct={
               100 -
-              (phases.reduce((sum, phase) => sum + hovered[phase.key], 0) / max) * 100
+              (Math.max(...phases.map((phase) => hovered[phase.key])) / max) * 100
             }
             label={hovered.label}
           >
@@ -514,9 +603,9 @@ export function PhaseStackChart({
       </div>
 
       <div className="flex items-center justify-between text-[0.62rem] font-medium" style={{ color: SHOWCASE.muted }}>
-        {axisLabels(rows.map((row) => row.label), 8).map((label, index) => (
-          <span key={`${label}-${index}`} className="flex-1 text-center">
-            {label}
+        {rows.map((row, index) => (
+          <span key={`${row.label}-${index}`} className="flex-1 text-center">
+            {row.label}
           </span>
         ))}
       </div>

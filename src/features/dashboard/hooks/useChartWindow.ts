@@ -43,8 +43,7 @@ function parse(date: string) {
 
 function weekStart(date: Date) {
   const start = new Date(date)
-  const weekday = (start.getDay() + 6) % 7
-  start.setDate(start.getDate() - weekday)
+  start.setDate(start.getDate() - start.getDay())
   return start
 }
 
@@ -232,6 +231,12 @@ export function todayIndex(slice: SeriesEntry[]) {
   return slice.findIndex((entry) => entry.date === key)
 }
 
+const WEEKDAY_ABBREV = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB']
+
+export function weekdayAbbrev(date: string) {
+  return WEEKDAY_ABBREV[parse(date).getDay()]
+}
+
 export function axisLabels(labels: string[], max = 7) {
   if (labels.length <= max) return labels
   const step = Math.ceil(labels.length / max)
@@ -240,5 +245,5 @@ export function axisLabels(labels: string[], max = 7) {
 
 export function windowCaption(caption: string, slice: { label: string }[]) {
   if (slice.length === 0) return caption
-  return `${caption} · ${slice[0].label} – ${slice[slice.length - 1].label}`
+  return `${slice[0].label} – ${slice[slice.length - 1].label}`
 }

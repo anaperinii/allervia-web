@@ -194,7 +194,7 @@ export function ExportReportPage() {
       })
       .replace(',', '')
     return {
-      generatedAt: `${generatedAtLabel} (${timeZone})`,
+      generatedAt: generatedAtLabel,
       periodLabel: `${dayLabel(periodDays.fromDay)} a ${dayLabel(periodDays.toDay)} (${periodDays.days.length} dias)`,
       sections,
       metrics,
@@ -309,17 +309,17 @@ export function ExportReportPage() {
       />
 
       <div className="flex min-h-0 flex-1 gap-5">
-      <div className="flex-1 overflow-y-auto max-w-2xl space-y-4 px-1 pb-8">
-        <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
-          <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
-          <p className="text-[0.68rem] text-brand-dark leading-relaxed">
+      <div className="flex flex-1 flex-col min-h-0 overflow-y-auto max-w-2xl gap-4 px-1">
+        <div className="flex items-start gap-2 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5">
+          <FontAwesomeIcon icon={faCircleInfo} className="text-gray-500 shrink-0 mt-0.5" style={{ fontSize: 14 }} />
+          <p className="text-[0.68rem] text-gray-600 leading-relaxed">
             {FORMAT_DESCRIPTIONS[format]}
             {!isDashboardFormat &&
               ' Cada geração fica registrada na auditoria do servidor com autor, justificativa, filtros e corte.'}
           </p>
         </div>
 
-        <div className="rounded-xl border border-(--border-custom) bg-white px-4 py-3 space-y-3">
+        <div className="flex-1 rounded-xl border border-(--border-custom) bg-white px-4 py-3 space-y-3">
           <FieldLabel label="Formato">
             <Select value={format} onChange={(e) => setFormat(e.target.value as ExportFormat)}>
               <optgroup label="Conjunto clínico (listagem completa)">
@@ -428,7 +428,7 @@ export function ExportReportPage() {
         {progress && <p className="text-xs text-(--text-muted)">{progress}</p>}
       </div>
 
-      <aside className="hidden min-h-0 flex-1 flex-col gap-2 pb-8 lg:flex">
+      <aside className="hidden min-h-0 flex-1 flex-col gap-2 lg:flex">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-[0.8rem] font-semibold text-(--text)">Pré-visualização</h2>
           <span className="text-[0.66rem] text-(--text-muted)">

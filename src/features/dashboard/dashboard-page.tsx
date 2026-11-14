@@ -38,10 +38,10 @@ import { Card, CardHeader, CircleButton, PageHeader, Pill, SHOWCASE } from '@/sh
 import { addDaysToDay, dayInZone, toZonedOffsetIso } from '@/shared/lib/dates'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import {
-  faArrowTrendUp,
   faCalendar,
-  faShieldHalved,
-  faUser,
+  faCube,
+  faCubes,
+  faUserCheck,
   faUserXmark,
 } from '@fortawesome/free-solid-svg-icons'
 import { useQuery } from '@tanstack/react-query'
@@ -292,7 +292,7 @@ export function DashboardPage() {
       {
         label: 'Tratamentos ativos',
         value: metrics ? String(metrics.therapies.inProgress) : '—',
-        icon: faUser,
+        icon: faUserCheck,
       },
       {
         label: 'Tratamentos suspensos',
@@ -302,12 +302,12 @@ export function DashboardPage() {
       {
         label: 'Em indução',
         value: metrics ? String(metrics.therapies.buildUp) : '—',
-        icon: faArrowTrendUp,
+        icon: faCube,
       },
       {
         label: 'Em manutenção',
         value: metrics ? String(metrics.therapies.maintenance) : '—',
-        icon: faShieldHalved,
+        icon: faCubes,
       },
     ],
     [metrics],
@@ -316,7 +316,7 @@ export function DashboardPage() {
   return (
     <>
       <PageHeader
-        breadcrumb={['Painel de Métricas']}
+        className="-mt-2"
         title="Painel de Métricas"
         actions={
           <>
@@ -376,7 +376,12 @@ export function DashboardPage() {
               <div className="flex flex-1 flex-col justify-center">
                 <GaugeArc
                   ratio={adherencePct / 100}
-                  value={`${adherencePct}%`}
+                  value={
+                    <>
+                      {adherencePct}
+                      <span className="text-[1.3rem] font-medium">%</span>
+                    </>
+                  }
                   caption={`${metrics.adherence.numerator} de ${metrics.adherence.denominator} aplicações`}
                   footnote="no dia previsto"
                   ariaLabel={`Adesão de ${adherencePct}% no período`}
@@ -406,7 +411,7 @@ export function DashboardPage() {
 
         <div className="col-span-8">
           <ApplicationsCard
-            title="Aplicações Registradas"
+            title="Aplicações Registradas na Semana"
             caption="No período"
             series={applicationSeries}
             doseMix={[]}
@@ -422,7 +427,7 @@ export function DashboardPage() {
           filters={statusFilters}
           filtersActive={statusGranularity !== 'month' || statusWindow !== '12'}
         >
-          <ChartCaption>
+          <ChartCaption size="0.72rem">
             Tratamentos por status ao fim de cada {statusGranularity === 'month' ? 'mês' : 'semana'}, reconstruídos do histórico de suspensões, retomadas e conclusões
           </ChartCaption>
           <ChartState
@@ -440,14 +445,14 @@ export function DashboardPage() {
           filters={concentrationFilters}
           filtersActive={concentrationOrder !== 'scale' || concentrationTop !== 'all'}
         >
-          <ChartCaption>Aplicações administradas no período, por concentração</ChartCaption>
+          <ChartCaption size="0.72rem">Aplicações administradas no período, por concentração</ChartCaption>
           <ChartState
             loading={metricsQuery.isPending}
             error={metricsQuery.isError}
             empty={concentrationView.length === 0}
             emptyText="Sem aplicações administradas no período."
           >
-            <HBarList data={concentrationView} unit="aplicações" />
+            <HBarList data={concentrationView} unit="aplicações" showRing={false} />
           </ChartState>
         </ChartCard>
         <ChartCard
@@ -455,7 +460,7 @@ export function DashboardPage() {
           filters={matrixFilters}
           filtersActive={matrixConcentration !== 'all'}
         >
-          <ChartCaption>Matriz de valores administrados no período</ChartCaption>
+          <ChartCaption size="0.72rem">Matriz de valores administrados no período</ChartCaption>
           <ChartState
             loading={metricsQuery.isPending}
             error={metricsQuery.isError}
@@ -470,14 +475,14 @@ export function DashboardPage() {
           filters={typeFilters}
           filtersActive={typeZeros !== 'show' || typeTop !== 'all'}
         >
-          <ChartCaption>Tratamentos em andamento, por tipo de alérgeno</ChartCaption>
+          <ChartCaption size="0.72rem">Tratamentos em andamento, por tipo de alérgeno</ChartCaption>
           <ChartState
             loading={metricsQuery.isPending || typesQuery.isPending}
             error={metricsQuery.isError || typesQuery.isError}
             empty={typeView.every((entry) => entry.count === 0)}
             emptyText="Sem tratamentos em andamento."
           >
-            <HBarList data={typeView} unit="tratamentos" palette="lime" />
+            <HBarList data={typeView} unit="tratamentos" palette="lime" showRing={false} />
           </ChartState>
         </ChartCard>
         <ChartCard
@@ -486,8 +491,8 @@ export function DashboardPage() {
           filters={phaseFilters}
           filtersActive={phaseGranularity !== 'day' || visiblePhase !== 'all'}
         >
-          <ChartCaption>
-            Pacientes com tratamento em andamento em cada dia, por fase — reconstruídos das datas de início de indução e manutenção
+          <ChartCaption size="0.72rem">
+            Pacientes com tratamento em andamento em cada dia, por fase, reconstruídos das datas de início de indução e manutenção
           </ChartCaption>
           <ChartState
             loading={phaseTimelineQuery.isPending}
