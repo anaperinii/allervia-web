@@ -33,7 +33,7 @@ const buildConfig = (state: TeamConfirmState): ConfirmConfig => {
     case 'deactivate':
       return {
         icon: <FontAwesomeIcon icon={faUserXmark} style={{ fontSize: 16 }} />,
-        tone: 'warning',
+        tone: 'danger',
         title: 'Encerrar acesso',
         body: (
           <>

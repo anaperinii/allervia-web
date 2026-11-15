@@ -3,7 +3,6 @@ import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
 import { SegmentedControl, Toast, showApiErrorToast } from '@/shared/components'
-import { sendReminder } from '@/shared/lib/whatsapp'
 import { usePatientStore, type Application } from '@/features/patient/stores/usePatientStore'
 import {
   buildLegacyPatient,
@@ -16,6 +15,7 @@ import {
   getAppointment,
   getDose,
   getPatient,
+  getTherapyLifecycle,
   listAppointments,
   listDosesForTherapy,
   updatePatient,
@@ -36,9 +36,8 @@ import { SummaryCards } from '@/features/patient/components/chart/SummaryCards'
 import { ApplicationsMonthFilter } from '@/features/patient/components/chart/ApplicationsMonthFilter'
 import { ApplicationsTimeline } from '@/features/patient/components/chart/ApplicationsTimeline'
 import { ApplicationsCalendar } from '@/features/patient/components/chart/ApplicationsCalendar'
-import { ProgressIndicator } from '@/features/patient/components/chart/ProgressIndicator'
-import { TreatmentTimeline } from '@/features/patient/components/treatment-completion/TreatmentTimeline'
 import { ApplicationDetailModal } from '@/features/patient/components/chart/ApplicationDetailModal'
+import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
 import { EditPatientModal } from '@/features/patient/components/chart/EditPatientModal'
 import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
 import {
@@ -81,6 +80,13 @@ export function PatientChartPage() {
     }
     return patientDetail.therapies[0] ?? null
   }, [patientDetail, therapyParam])
+
+  const lifecycleQuery = useQuery({
+    queryKey: [...queryKeys.immunotherapy(organizationId, selectedTherapy?.id ?? ''), 'lifecycle'],
+    queryFn: ({ signal }) => getTherapyLifecycle(selectedTherapy!.id, signal),
+    enabled: organizationId !== '' && selectedTherapy !== null,
+  })
+  const lifecycleEventCount = lifecycleQuery.data?.events.length ?? 0
 
   const dosesQuery = useQuery({
     queryKey: queryKeys.doses(organizationId, selectedTherapy?.id ?? ''),
@@ -221,10 +227,15 @@ export function PatientChartPage() {
 
   const patientApplications = useMemo(
     () => [
-      ...doseRecords.map((record) => doseToLegacyApplication(record, patientId, { hasReaction: false, timeZone })),
+      ...doseRecords.map((record) => ({
+        ...doseToLegacyApplication(record, patientId, { hasReaction: false, timeZone }),
+        patientName: selectedPatient?.name,
+        patientPhone: selectedPatient?.phone,
+        administrator: selectedPatient?.responsibleDoctor,
+      })),
       ...patientAppointmentApplications,
     ],
-    [doseRecords, patientId, timeZone, patientAppointmentApplications],
+    [doseRecords, patientId, timeZone, patientAppointmentApplications, selectedPatient],
   )
 
   useEffect(() => {
@@ -412,7 +423,7 @@ export function PatientChartPage() {
           inductionStart={inductionStart}
           maintenanceStart={maintenanceStart}
           activeInactivation={null}
-          inactivationCount={0}
+          inactivationCount={lifecycleEventCount}
           canReactivate={canReactivate}
           canEvolve={canEvolve}
           canEmitReport={canEmitReport}
@@ -501,7 +512,6 @@ export function PatientChartPage() {
             <div className="flex items-end gap-1">
             {([
               { key: 'applications', label: 'Aplicações', first: true },
-              { key: 'progress', label: 'Gráficos de Progressão', first: false },
             ] as const).map((t) => {
               const active = activeTab === t.key
               return (
@@ -547,59 +557,40 @@ export function PatientChartPage() {
           </div>
 
           <div className="flex-1 flex flex-col rounded-tr-xl rounded-b-xl border border-(--border-custom) bg-white overflow-hidden min-h-0 min-w-0">
-            {activeTab === 'applications' ? (
-              <>
-                <div className="px-5 py-3 border-b border-(--border-custom) min-w-0">
-                  <ApplicationsMonthFilter
-                    months={availableMonths}
-                    activeKey={monthFilter}
-                    onChange={(key) => {
-                      setMonthFilter(key)
-                      if (key === 'all') {
-                        const now = new Date()
-                        setCalMonth(now.getMonth())
-                        setCalYear(now.getFullYear())
-                      } else {
-                        const [yr, monthName] = key.split('-')
-                        const mi = monthIndexFromPtUpper(monthName)
-                        if (mi >= 0) { setCalMonth(mi); setCalYear(Number(yr)) }
-                      }
-                    }}
-                  />
-                </div>
+            <div className="px-5 py-3 border-b border-(--border-custom) min-w-0">
+              <ApplicationsMonthFilter
+                months={availableMonths}
+                activeKey={monthFilter}
+                onChange={(key) => {
+                  setMonthFilter(key)
+                  if (key === 'all') {
+                    const now = new Date()
+                    setCalMonth(now.getMonth())
+                    setCalYear(now.getFullYear())
+                  } else {
+                    const [yr, monthName] = key.split('-')
+                    const mi = monthIndexFromPtUpper(monthName)
+                    if (mi >= 0) { setCalMonth(mi); setCalYear(Number(yr)) }
+                  }
+                }}
+              />
+            </div>
 
-                {viewMode === 'timeline' ? (
-                  <div className="flex-1 overflow-y-auto px-5 py-4">
-                    <ApplicationsTimeline
-                      applicationsByMonth={groupedByMonth}
-                      onSelect={handleSelectApplication}
-                      onEditScheduled={() => setShowEditDoseModal(true)}
-                      onSendReminder={(app) => sendReminder(selectedPatient.phone, selectedPatient.name.split(' ')[0], app.date, app.startTime)}
-                    />
-                  </div>
-                ) : (
-                  <ApplicationsCalendar
-                    month={calMonth}
-                    year={calYear}
-                    applicationsByDate={applicationsByDate}
-                    onMonthChange={(m, y) => { setCalMonth(m); setCalYear(y) }}
-                    onSelect={handleSelectApplication}
-                  />
-                )}
-              </>
-            ) : (
-              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-                <ProgressIndicator
-                  steps={pendingDose?.allowedValues ?? []}
-                  currentStepId={lastAdministered?.administeredStepId ?? null}
-                />
-                <TreatmentTimeline
-                  applications={patientApplications}
-                  inductionStart={inductionStart ?? '—'}
-                  maintenanceStart={maintenanceStart}
-                  flat
+            {viewMode === 'timeline' ? (
+              <div className="flex-1 overflow-y-auto px-5 py-4">
+                <ApplicationsTimeline
+                  applicationsByMonth={groupedByMonth}
+                  onSelect={handleSelectApplication}
                 />
               </div>
+            ) : (
+              <ApplicationsCalendar
+                month={calMonth}
+                year={calYear}
+                applicationsByDate={applicationsByDate}
+                onMonthChange={(m, y) => { setCalMonth(m); setCalYear(y) }}
+                onSelect={handleSelectApplication}
+              />
             )}
           </div>
           </div>
@@ -617,6 +608,7 @@ export function PatientChartPage() {
         open={showEditDoseModal}
         dose={pendingDose}
         organizationId={organizationId}
+        patientName={selectedPatient.name}
         onClose={() => setShowEditDoseModal(false)}
         onSaved={() => setShowAdjustToast(true)}
       />
@@ -681,7 +673,7 @@ export function PatientChartPage() {
       />
 
       <ApplicationDetailModal
-        application={selectedApplication}
+        application={selectedApplication?.status === 'completed' ? selectedApplication : null}
         organizationId={organizationId}
         onClose={() => setSelectedApp(null)}
         onRetract={
@@ -694,6 +686,16 @@ export function PatientChartPage() {
             ? (doseId) => { setSelectedApp(null); setLateObsDoseId(doseId) }
             : undefined
         }
+      />
+
+      <ApplicationDetailsModal
+        application={selectedApplication?.status !== 'completed' ? selectedApplication : null}
+        organizationId={organizationId}
+        onClose={() => setSelectedApp(null)}
+        onOpenPatient={() => {}}
+        onSaved={() => setShowAdjustToast(true)}
+        canReschedule={canAdjustProtocol}
+        showPatientAvatar={false}
       />
 
       <Toast

@@ -119,6 +119,7 @@ export function PatientActionsMenu({
               hint="Eventos de ciclo de vida do tratamento"
               count={lifecycleEventCount}
               onClick={handle(onShowLifecycleHistory)}
+              disabled={lifecycleEventCount === 0}
             />
           )}
         </div>

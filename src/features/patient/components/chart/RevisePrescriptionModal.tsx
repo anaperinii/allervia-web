@@ -10,7 +10,7 @@ import type { ProtocolStep } from '@/shared/api/contracts/protocols'
 import { queryKeys } from '@/shared/api/query-keys'
 import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
-import { cn } from '@/shared/lib/cn'
+import { StepsMultiSelect } from '@/features/immunotherapy/components/add-steps/ImmunotherapyDataStep'
 import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -55,6 +55,14 @@ function ReviseForm({
     queryFn: ({ signal }) => listProtocols(signal),
     enabled: organizationId !== '',
   })
+
+  const currentVersion = useMemo(() => {
+    for (const protocol of protocolsQuery.data ?? []) {
+      const version = protocol.versions.find((entry) => entry.id === currentVersionId)
+      if (version) return { protocol, version }
+    }
+    return null
+  }, [protocolsQuery.data, currentVersionId])
 
   const publishedOptions = useMemo(
     () =>
@@ -130,15 +138,19 @@ function ReviseForm({
     onError: async (error) => { setRehearsed(null); if (error instanceof ApiError && error.code.startsWith('STALE_')) { setReviewRequired(true); setConfirmedRevision(null); try { const current = await getImmunotherapy(therapyId); setConfirmedRevision(current.revision) } catch { return }; await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) } },
   })
 
-  const toggleStep = (stepId: string) => {
+  const applyStepIds = (next: string[]) => {
     setRehearsed(null)
-    const next = stepIds.includes(stepId)
-      ? stepIds.filter((id) => id !== stepId)
-      : steps.map((step) => step.id).filter((id) => id === stepId || stepIds.includes(id))
     setStepIds(next)
     if (!next.includes(startingStepId)) setStartingStepId('')
     if (!next.includes(targetStepId)) setTargetStepId('')
     if (!next.includes(pendingStepId)) setPendingStepId('')
+  }
+
+  const toggleStep = (stepId: string) => {
+    const next = stepIds.includes(stepId)
+      ? stepIds.filter((id) => id !== stepId)
+      : steps.map((step) => step.id).filter((id) => id === stepId || stepIds.includes(id))
+    applyStepIds(next)
   }
 
   return (
@@ -151,8 +163,12 @@ function ReviseForm({
       size="lg"
       headerSlot={
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[1.05rem] font-bold text-(--text)">Revisar prescrição para outra versão</div>
-          <div className="text-[0.82rem] text-(--text-muted)">Fixa novo snapshot do protocolo</div>
+          <div className="truncate text-[0.95rem] font-bold text-(--text)">
+            Revisar prescrição para outra versão
+          </div>
+          <div className="text-[0.82rem] text-(--text-muted)">
+            Versão atual: {currentVersion ? `${currentVersion.protocol.name} v${currentVersion.version.number}` : '—'}
+          </div>
         </div>
       }
       headerStyle={{
@@ -210,31 +226,14 @@ function ReviseForm({
       {selected && (
         <>
           <FieldLabel label="Etapas permitidas">
-            <div className="flex flex-wrap gap-2">
-              {steps.map((step) => {
-                const active = stepIds.includes(step.id)
-                return (
-                  <button
-                    key={step.id}
-                    type="button"
-                    role="checkbox"
-                    aria-checked={active}
-                    onClick={() => toggleStep(step.id)}
-                    className={cn(
-                      'rounded-lg border px-3 py-1.5 text-[0.7rem] font-semibold transition-colors cursor-pointer',
-                      active
-                        ? 'border-brand bg-brand-50 text-brand-dark'
-                        : 'border-(--border-custom) bg-white text-(--text-muted) hover:border-brand/50',
-                    )}
-                  >
-                    {formatStepOption(step)}
-                    <span className="ml-1.5 font-normal opacity-75">
-                      {step.intervalDays}d
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+            <StepsMultiSelect
+              steps={steps}
+              selectedStepIds={stepIds}
+              onToggle={toggleStep}
+              onSelectAll={() => applyStepIds(steps.map((step) => step.id))}
+              onClear={() => applyStepIds([])}
+              disabledLabel="Selecione a versão primeiro"
+            />
           </FieldLabel>
           <div className="grid grid-cols-3 gap-3">
             <StepSelect label="Etapa inicial" value={startingStepId} onChange={(v) => { setStartingStepId(v); setRehearsed(null) }} steps={steps} stepIds={stepIds} />

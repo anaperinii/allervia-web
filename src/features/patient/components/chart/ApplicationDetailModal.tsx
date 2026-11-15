@@ -89,8 +89,8 @@ function DetailModal({
         application ? (
           <div className="min-w-0 flex-1">
             <div className="min-w-0">
-              <div className="truncate text-[1.05rem] font-bold text-(--text)">
-                Aplicação de {application.date}
+              <div className="truncate text-[0.95rem] text-(--text)">
+                Aplicação de <span className="font-bold">{application.date}</span>
               </div>
               <div className="text-[0.82rem] text-(--text-muted)">
                 {application.startTime}

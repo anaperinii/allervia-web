@@ -16,11 +16,7 @@ interface PasswordRequirementsProps {
 export function PasswordRequirements({ password, className }: PasswordRequirementsProps) {
   return (
     <div
-      className={cn('rounded-lg px-3 py-2.5', className)}
-      style={{
-        background: 'var(--field, rgba(255,255,255,0.04))',
-        border: '1px solid var(--field-bd, rgba(255,255,255,0.10))',
-      }}
+      className={cn('rounded-lg px-3 py-2.5 bg-gray-50 border border-gray-200', className)}
     >
       <div className="grid grid-flow-col grid-rows-3 gap-x-4 gap-y-1">
         {PASSWORD_RULES.map((rule) => {
@@ -32,26 +28,20 @@ export function PasswordRequirements({ password, className }: PasswordRequiremen
                 style={
                   met
                     ? {
-                        background: 'var(--ok-bg, rgba(16,185,129,0.22))',
-                        boxShadow: '0 0 10px rgba(16,185,129,0.55), 0 0 3px rgba(16,185,129,0.35)',
+                        background: 'rgba(16,185,129,0.18)',
+                        boxShadow: '0 0 10px rgba(16,185,129,0.4), 0 0 3px rgba(16,185,129,0.3)',
                       }
-                    : {
-                        background: 'var(--bd, rgba(255,255,255,0.08))',
-                      }
+                    : { background: 'rgba(0,0,0,0.06)' }
                 }
               >
                 <FontAwesomeIcon
                   icon={faCircleCheck}
-                  style={{ fontSize: 8, color: met ? 'var(--ok, #34d399)' : 'var(--ink-faint, rgba(255,255,255,0.30))' }}
+                  style={{ fontSize: 8, color: met ? '#059669' : 'rgba(0,0,0,0.22)' }}
                 />
               </div>
               <span
                 className="text-[0.6rem] transition-colors duration-300"
-                style={
-                  met
-                    ? { color: 'var(--ok-ink, #a7f3d0)', fontWeight: 500 }
-                    : { color: 'var(--ink-soft, rgba(255,255,255,0.55))' }
-                }
+                style={met ? { color: '#047857', fontWeight: 500 } : { color: 'var(--text-muted)' }}
               >
                 {rule.label}
               </span>

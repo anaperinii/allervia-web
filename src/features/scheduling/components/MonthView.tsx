@@ -12,7 +12,6 @@ interface MonthViewProps {
   onSelectDate: (date: Date) => void
   applicationsByDate: Map<string, Application[]>
   onSelectApplication: (application: Application) => void
-  onOpenDay: (date: Date, applications: Application[]) => void
 }
 
 export function MonthView({
@@ -22,7 +21,6 @@ export function MonthView({
   onSelectDate,
   applicationsByDate,
   onSelectApplication,
-  onOpenDay,
 }: MonthViewProps) {
   const modalityStyle = useModalityStyle()
   return (
@@ -46,10 +44,7 @@ export function MonthView({
           return (
             <div
               key={day.toISOString()}
-              onClick={() => {
-                onSelectDate(day)
-                if (applications.length) onOpenDay(day, applications)
-              }}
+              onClick={() => onSelectDate(day)}
               className={cn(
                 'border-r border-b border-(--border-custom) last:border-r-0 p-1.5 min-h-20 cursor-pointer transition-colors relative',
                 !isCurrentMonth && 'opacity-40 bg-gray-50',

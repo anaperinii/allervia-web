@@ -1,12 +1,9 @@
-import { cn } from '@/shared/lib/cn'
 import { collectPages } from '@/shared/api/pagination'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { endOfMonth, format, startOfMonth } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { CenteredSpinner, Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
-import { useApplicationEventColor } from '@/features/scheduling/constants/application-display'
+import { endOfMonth, startOfMonth } from 'date-fns'
+import { CenteredSpinner, SegmentedControl, TextInput, Toast } from '@/shared/components'
 import { appointmentToApplication } from '@/features/scheduling/adapters/appointment-to-application'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
@@ -72,14 +69,12 @@ export function AppointmentsPage() {
   const canNewAppointment = useHasPermission('new_appointment')
   const canReschedule = useHasPermission('edit_scheduled_dose')
   const navigate = useNavigate()
-  const eventColor = useApplicationEventColor()
   const calendar = useCalendarNav(account?.organization?.timeZone ?? 'America/Sao_Paulo')
 
   const [showNewModal, setShowNewModal] = useState(false)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [patientSearch, setPatientSearch] = useState('')
-  const [dayModal, setDayModal] = useState<{ date: Date; apps: Application[] } | null>(null)
   const [showRescheduledToast, setShowRescheduledToast] = useState(false)
   const showCalendarPanel = useSchedulingUiStore((s) => s.showCalendarPanel)
   const setShowCalendarPanel = useSchedulingUiStore((s) => s.setShowCalendarPanel)
@@ -311,7 +306,6 @@ export function AppointmentsPage() {
                 onSelectDate={calendar.setSelectedDate}
                 applicationsByDate={applicationsByDate}
                 onSelectApplication={handleSelect}
-                onOpenDay={(date, apps) => setDayModal({ date, apps })}
               />
             )}
           </div>
@@ -328,48 +322,6 @@ export function AppointmentsPage() {
           onVisibleMonthChange={setPanelMonth}
         />
       </div>
-
-      <Modal
-        open={!!dayModal}
-        onClose={() => setDayModal(null)}
-        size="sm"
-        title={
-          dayModal
-            ? (() => {
-                const s = format(dayModal.date,"EEEE, dd 'de' MMMM", { locale: ptBR })
-                return s.charAt(0).toUpperCase() + s.slice(1)
-              })()
-            : ''
-        }
-      >
-        <div className="space-y-2">
-          {dayModal?.apps.map((app) => {
-            const c = eventColor(app)
-            return (
-              <button
-                key={app.id}
-                type="button"
-                onClick={() => { handleSelect(app); setDayModal(null) }}
-                className={cn(
-                  'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:brightness-95 cursor-pointer',
-                  app.status === 'missed' && 'opacity-70',
-                )}
-                style={{ backgroundColor: c.bg, backgroundImage: c.grad, color: c.text }}
-              >
-                <div className="min-w-0 flex-1">
-                  <div className={cn('text-xs font-bold', app.status === 'completed' && 'font-black')}>
-                    {app.startTime}
-                    {app.endTime ? ` – ${app.endTime}` : ''}
-                  </div>
-                  <div className={cn('text-[0.7rem] font-medium opacity-90 truncate', app.status === 'completed' && 'font-bold opacity-100')}>
-                    {app.patientName} · {app.dose}
-                  </div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      </Modal>
 
       <ApplicationDetailsModal
         application={selectedApplication}

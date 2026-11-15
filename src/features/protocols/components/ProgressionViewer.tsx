@@ -6,6 +6,9 @@ import type {
   ProtocolVersion,
 } from '@/shared/api/contracts/protocols'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFlaskVial } from '@fortawesome/free-solid-svg-icons'
+
 const PHASE_VIEW = {
   BUILD_UP: {
     label: 'Indução',
@@ -126,6 +129,7 @@ export function ProgressionViewer({
       onClose={onClose}
       size="xl"
       title={`${protocolName} · v${version.number}`}
+      icon={<FontAwesomeIcon icon={faFlaskVial} style={{ fontSize: 16 }} />}
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[0.65rem] font-semibold text-(--text-muted)">

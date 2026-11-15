@@ -18,7 +18,7 @@ interface ImmunotherapyDataStepProps {
   form: UseFormReturn<AddImmunotherapyForm>
 }
 
-interface StepsMultiSelectProps {
+export interface StepsMultiSelectProps {
   steps: ProtocolStep[]
   selectedStepIds: string[]
   onToggle: (stepId: string) => void
@@ -29,7 +29,7 @@ interface StepsMultiSelectProps {
   disabledLabel: string
 }
 
-function StepsMultiSelect({
+export function StepsMultiSelect({
   steps,
   selectedStepIds,
   onToggle,

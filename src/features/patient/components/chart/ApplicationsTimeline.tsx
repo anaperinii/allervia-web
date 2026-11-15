@@ -1,19 +1,13 @@
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/shared/lib/cn'
-import { IconButton } from '@/shared/components'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
 import { parsePtDate } from '@/shared/lib/dates'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMessage, faPen } from '@fortawesome/free-solid-svg-icons'
-
 interface ApplicationsTimelineProps {
   applicationsByMonth: Record<string, Application[]>
   onSelect: (application: Application) => void
-  onEditScheduled?: (application: Application) => void
-  onSendReminder?: (application: Application) => void
 }
 
 const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slice(1)
@@ -23,7 +17,17 @@ const withSmallMl = (value: string) =>
     /^ml$/i.test(part) ? <span key={index} className="text-[0.8em] ml-0.5">{part}</span> : part,
   )
 
-export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditScheduled, onSendReminder }: ApplicationsTimelineProps) {
+function daysOverdue(brDate: string): number {
+  const [day, month, year] = brDate.split('/').map(Number)
+  if (!day || !month || !year) return 0
+  const target = new Date(year, month - 1, day)
+  target.setHours(0, 0, 0, 0)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.round((today.getTime() - target.getTime()) / 86400000)
+}
+
+export function ApplicationsTimeline({ applicationsByMonth, onSelect }: ApplicationsTimelineProps) {
   const entries = Object.entries(applicationsByMonth)
   if (entries.length === 0) {
     return <div className="text-center text-xs text-(--text-muted) py-10">Nenhuma aplicação encontrada neste período.</div>
@@ -44,7 +48,8 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditSche
               const isRealized = application.status === 'completed'
               const isNext = application.status === 'scheduled'
               const hasReaction = application.sideEffect === 'yes'
-              const interactive = application.isAppointment || isRealized
+              const overdueDays = isNext ? daysOverdue(application.date) : 0
+              const interactive = true
               const dateObj = parsePtDate(application.date)
               const day = format(dateObj, 'dd')
               const monthAbbr = capitalize(format(dateObj, 'MMM', { locale: ptBR }).replace('.', ''))
@@ -80,7 +85,10 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditSche
                     <div className="mt-1 flex items-center gap-2 flex-wrap">
                       <span className={cn('text-sm text-(--text-muted)', isNext && 'font-semibold')}>{withSmallMl(application.dose)}</span>
                       {application.isAppointment ? (
-                        <span className="rounded-md bg-[#B39DDB]/20 text-[#5E4A8C] text-[0.55rem] font-bold uppercase tracking-wide px-1.5 py-0.5">
+                        <span
+                          className="inline-flex items-center px-1.5 py-px rounded-md text-[0.55rem] font-semibold border"
+                          style={{ backgroundColor: '#9CA3AF4D', color: '#4B5563', borderColor: '#9CA3AF30' }}
+                        >
                           Compromisso
                         </span>
                       ) : (
@@ -96,6 +104,11 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditSche
                           Próxima agendada
                         </span>
                       )}
+                      {overdueDays > 0 && (
+                        <span className="rounded-md bg-red-400 text-white text-[0.55rem] font-bold uppercase tracking-wide px-1.5 py-0.5">
+                          Atrasada há {overdueDays} {overdueDays === 1 ? 'dia' : 'dias'}
+                        </span>
+                      )}
                       {hasReaction && (
                         <span className="rounded-md bg-[#C46A3C] text-white text-[0.55rem] font-bold uppercase tracking-wide px-1.5 py-0.5">
                           Reação registrada
@@ -103,27 +116,6 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect, onEditSche
                       )}
                     </div>
                   </div>
-
-                  {isNext && (
-                    <div className="flex items-center gap-1 pr-2.5 shrink-0">
-                      <IconButton
-                        size="sm"
-                        tone="brand"
-                        aria-label="Editar dados previstos"
-                        onClick={(e) => { e.stopPropagation(); onEditScheduled?.(application) }}
-                      >
-                        <FontAwesomeIcon icon={faPen} style={{ fontSize: 13 }} />
-                      </IconButton>
-                      <IconButton
-                        size="sm"
-                        tone="brand"
-                        aria-label="Enviar lembrete ao paciente"
-                        onClick={(e) => { e.stopPropagation(); onSendReminder?.(application) }}
-                      >
-                        <FontAwesomeIcon icon={faMessage} style={{ fontSize: 13 }} />
-                      </IconButton>
-                    </div>
-                  )}
                 </div>
               )
             })}

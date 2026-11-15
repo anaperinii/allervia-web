@@ -70,6 +70,7 @@ interface ApplicationDetailsModalProps {
   onOpenPatient: (patientId: string, doseId?: string) => void
   onSaved?: () => void
   canReschedule?: boolean
+  showPatientAvatar?: boolean
 }
 
 
@@ -96,6 +97,7 @@ function DetailsModal({
   onOpenPatient,
   onSaved,
   canReschedule,
+  showPatientAvatar = true,
 }: ApplicationDetailsModalProps) {
   const [tab, setTab] = useState<TabId>('info')
   const modalityStyle = useModalityStyle()
@@ -219,19 +221,21 @@ function DetailsModal({
               title="Categoria"
             />
             <div className="flex min-w-0 items-center gap-3">
-              <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                style={{
-                  background: 'linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
-                  boxShadow: '0 6px 14px -8px rgba(16,60,68,0.55)',
-                }}
-              >
-                {initials}
-              </div>
+              {showPatientAvatar && (
+                <div
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                  style={{
+                    background: 'linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
+                    boxShadow: '0 6px 14px -8px rgba(16,60,68,0.55)',
+                  }}
+                >
+                  {initials}
+                </div>
+              )}
               <div className="min-w-0">
                 <button
                   onClick={() => onOpenPatient(application.patientId)}
-                  className="flex max-w-full items-center gap-1.5 text-left text-[1.05rem] font-bold text-(--text) transition-colors hover:text-brand"
+                  className="flex max-w-full items-center gap-1.5 text-left text-[0.95rem] font-bold text-(--text) transition-colors hover:text-brand"
                 >
                   <span className="truncate">{application.patientName ?? ''}</span>
                   <FontAwesomeIcon
@@ -247,7 +251,7 @@ function DetailsModal({
                     {APPLICATION_STATUS_DISPLAY[application.status].label}
                   </span>
                   {application.status === 'scheduled' && daysOverdue(application.date) > 0 && (
-                    <span className="inline-flex items-center rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-[0.65rem] font-semibold text-red-600">
+                    <span className="rounded-md bg-red-400 text-white text-[0.55rem] font-bold uppercase tracking-wide px-1.5 py-0.5">
                       Atrasada há {daysOverdue(application.date)} {daysOverdue(application.date) === 1 ? 'dia' : 'dias'}
                     </span>
                   )}

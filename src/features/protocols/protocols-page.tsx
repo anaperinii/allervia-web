@@ -28,7 +28,14 @@ import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { Button, Modal, TextInput } from '@/shared/components'
-import { faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
+import {
+  faCircleCheck,
+  faMagnifyingGlass,
+  faPlus,
+  faRotateLeft,
+  faStar,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { cn } from '@/shared/lib/cn'
 
@@ -441,6 +448,20 @@ export function ProtocolsPage() {
               : confirm?.type === 'discard'
                 ? 'Excluir rascunho'
                 : 'Retirar versão'
+        }
+        icon={
+          <FontAwesomeIcon
+            icon={
+              confirm?.type === 'publish'
+                ? faCircleCheck
+                : confirm?.type === 'default'
+                  ? faStar
+                  : confirm?.type === 'discard'
+                    ? faTrash
+                    : faRotateLeft
+            }
+            style={{ fontSize: 16 }}
+          />
         }
         footer={
           <>

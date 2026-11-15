@@ -196,7 +196,7 @@ function NewAppointmentForm({
       size="lg"
       headerSlot={
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[1.05rem] font-bold text-(--text)">Novo agendamento</div>
+          <div className="truncate text-[0.95rem] font-bold text-(--text)">Novo agendamento</div>
           <div className="text-[0.82rem] text-(--text-muted)">Compromisso de agenda</div>
         </div>
       }
@@ -451,7 +451,7 @@ function AppointmentActionForm({
                 <button
                   type="button"
                   onClick={() => onOpenPatient(appointment.patientId, appointment.id)}
-                  className="flex max-w-full items-center gap-1.5 text-left text-[1.05rem] font-bold text-(--text) transition-colors hover:text-brand"
+                  className="flex max-w-full items-center gap-1.5 text-left text-[0.95rem] font-bold text-(--text) transition-colors hover:text-brand"
                 >
                   <span className="truncate">{appointment.patient.fullName}</span>
                   <FontAwesomeIcon
@@ -462,7 +462,7 @@ function AppointmentActionForm({
                   />
                 </button>
               ) : (
-                <div className="flex max-w-full items-center gap-1.5 text-[1.05rem] font-bold text-(--text)">
+                <div className="flex max-w-full items-center gap-1.5 text-[0.95rem] font-bold text-(--text)">
                   <span className="truncate">{appointment.patient.fullName}</span>
                   <FontAwesomeIcon
                     icon={STATUS_ICON[appointmentStatusToApplicationStatus(appointment.status)]}

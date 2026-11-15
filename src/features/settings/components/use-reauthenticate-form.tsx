@@ -4,7 +4,7 @@ import { humanErrorMessage } from '@/shared/api/error-copy'
 import { reauthenticate } from '@/shared/api/auth.api'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock } from '@fortawesome/free-solid-svg-icons'
+import { faUserLock } from '@fortawesome/free-solid-svg-icons'
 
 interface UseReauthenticateFormOptions {
   requireCode: boolean
@@ -61,4 +61,4 @@ export function useReauthenticateForm({ requireCode, onSuccess }: UseReauthentic
   return { password, setPassword, code, setCode, error, submitting, incomplete, submit, reset }
 }
 
-export const reauthenticateIcon = <FontAwesomeIcon icon={faLock} style={{ fontSize: 16 }} />
+export const reauthenticateIcon = <FontAwesomeIcon icon={faUserLock} style={{ fontSize: 16 }} />

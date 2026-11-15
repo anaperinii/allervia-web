@@ -463,6 +463,7 @@ export function ExportReportPage() {
         open={showConfirm}
         onClose={() => setShowConfirm(false)}
         title="Confirmar exportação"
+        icon={<FontAwesomeIcon icon={faDownload} style={{ fontSize: 16 }} />}
         size="sm"
         footer={
           <>

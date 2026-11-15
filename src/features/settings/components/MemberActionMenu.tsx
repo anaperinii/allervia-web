@@ -74,7 +74,7 @@ export function MemberActionMenu({
             <button
               role="menuitem"
               onClick={onDeactivate}
-              className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-amber-600 border-l-2 border-transparent hover:bg-teal-50/60 hover:border-l-brand transition-colors cursor-pointer"
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-red-600 border-l-2 border-transparent hover:bg-red-50/60 hover:border-l-red-600 transition-colors cursor-pointer"
             >
               <FontAwesomeIcon icon={faUserXmark} style={{ fontSize: 12 }} />
               Encerrar acesso

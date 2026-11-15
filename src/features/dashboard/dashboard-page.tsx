@@ -35,6 +35,7 @@ import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { Card, CardHeader, CircleButton, PageHeader, Pill, SHOWCASE } from '@/shared/components/showcase'
+import { Spinner } from '@/shared/components'
 import { addDaysToDay, dayInZone, toZonedOffsetIso } from '@/shared/lib/dates'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import {
@@ -315,6 +316,11 @@ export function DashboardPage() {
 
   return (
     <>
+      {metricsQuery.isPending && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.6)' }}>
+          <Spinner size={32} />
+        </div>
+      )}
       <PageHeader
         className="-mt-2"
         title="Painel de Métricas"

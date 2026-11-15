@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 
-import { faCheck, faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface EditPatientModalProps {
@@ -103,8 +103,7 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
         size="lg"
         headerSlot={
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 truncate text-[1.05rem] font-bold text-(--text)">
-              {step === 'review' && <FontAwesomeIcon icon={faCheck} className="text-brand" style={{ fontSize: 15 }} />}
+            <div className="truncate text-[0.95rem] font-bold text-(--text)">
               {step === 'form' ? 'Editar dados do paciente' : 'Confirmar alterações?'}
             </div>
             <div className="text-[0.82rem] text-(--text-muted)">{patient.name}</div>
