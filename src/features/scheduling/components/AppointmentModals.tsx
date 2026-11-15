@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
 import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { InformationCircleIcon, WhatsappIcon } from '@hugeicons/core-free-icons'
+import { InformationCircleIcon, StickyNote01Icon, WhatsappIcon } from '@hugeicons/core-free-icons'
 import { formatPhone } from '@/shared/lib/formatters'
 import { openWhatsApp, sendReminder } from '@/shared/lib/whatsapp'
 import { Button, FieldLabel, Modal, Select, TextArea, TextInput, toast } from '@/shared/components'
@@ -57,14 +57,16 @@ function appointmentStatusLabel(status: Appointment['status']): string {
   return APPLICATION_STATUS_DISPLAY[appointmentStatusToApplicationStatus(status)].label
 }
 
-type AppointmentTabId = 'info' | 'manage'
-
+type AppointmentTabId = 'info' | 'notes' | 'manage'
 
 const APPOINTMENT_TABS: {
   id: AppointmentTabId
   label: string
   icon: typeof InformationCircleIcon
-}[] = [{ id: 'info', label: 'Informações', icon: InformationCircleIcon }]
+}[] = [
+  { id: 'info', label: 'Informações', icon: InformationCircleIcon },
+  { id: 'notes', label: 'Observações', icon: StickyNote01Icon },
+]
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -430,22 +432,26 @@ function AppointmentActionForm({
       size="md"
       headerSlot={
         <div className="min-w-0 flex-1">
-          <FontAwesomeIcon
-            icon={faBookmark}
-            style={{ fontSize: 15, color: categoryColor }}
-            className="absolute left-4 top-0"
-            title="Compromisso"
-          />
+          {onOpenPatient && (
+            <FontAwesomeIcon
+              icon={faBookmark}
+              style={{ fontSize: 15, color: categoryColor }}
+              className="absolute left-4 top-0"
+              title="Compromisso"
+            />
+          )}
           <div className="flex min-w-0 items-center gap-3">
-            <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-              style={{
-                background: 'linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
-                boxShadow: '0 6px 14px -8px rgba(16,60,68,0.55)',
-              }}
-            >
-              {initials}
-            </div>
+            {onOpenPatient && (
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                style={{
+                  background: 'linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
+                  boxShadow: '0 6px 14px -8px rgba(16,60,68,0.55)',
+                }}
+              >
+                {initials}
+              </div>
+            )}
             <div className="min-w-0">
               {onOpenPatient ? (
                 <button
@@ -593,11 +599,14 @@ function AppointmentActionForm({
           <Field label="Previsão vinculada">
             {appointment.dose ? formatInstantDate(appointment.dose.scheduledAt, timeZone) : 'Nenhuma'}
           </Field>
-          <Field label="Observações">{appointment.notes ?? '—'}</Field>
           {appointment.statusReason && (
             <Field label="Motivo registrado">{appointment.statusReason}</Field>
           )}
         </>
+      )}
+
+      {tab === 'notes' && (
+        <Field label="Observações">{appointment.notes ?? '—'}</Field>
       )}
 
       {tab === 'manage' && (

@@ -4,7 +4,7 @@ import type { Application } from '@/features/patient/stores/usePatientStore'
 export const FALLBACK_EVENT_COLORS: Record<string, string> = {
   subcutaneous: '#B7E06A',
   sublingual: '#74C3B9',
-  appointment: '#B39DDB',
+  appointment: '#9CA3AF',
   missed: '#EF4444',
 }
 

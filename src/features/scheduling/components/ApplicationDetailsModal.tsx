@@ -214,12 +214,14 @@ function DetailsModal({
       headerSlot={
         application ? (
           <div className="min-w-0 flex-1">
-            <FontAwesomeIcon
-              icon={faBookmark}
-              style={{ fontSize: 15, color: categoryColor }}
-              className="absolute left-4 top-0"
-              title="Categoria"
-            />
+            {showPatientAvatar && (
+              <FontAwesomeIcon
+                icon={faBookmark}
+                style={{ fontSize: 15, color: categoryColor }}
+                className="absolute left-4 top-0"
+                title="Categoria"
+              />
+            )}
             <div className="flex min-w-0 items-center gap-3">
               {showPatientAvatar && (
                 <div
