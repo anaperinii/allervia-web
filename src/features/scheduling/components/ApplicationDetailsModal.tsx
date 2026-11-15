@@ -136,7 +136,7 @@ function DetailsModal({
     if (!dose || tab !== 'manage') return
     // seeds the manage form once the dose query resolves
     /* eslint-disable react-hooks/set-state-in-effect */
-    setStepId(dose.plannedStepId)
+    setStepId(dose.plannedStepId ?? '')
     setDate(localDateInput(dose.scheduledAt, doseTimeZone))
     setTime(localTimeInput(dose.scheduledAt, doseTimeZone))
     /* eslint-enable react-hooks/set-state-in-effect */

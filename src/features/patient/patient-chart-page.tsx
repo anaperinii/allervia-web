@@ -515,10 +515,10 @@ export function PatientChartPage() {
           <div className="relative z-10 flex items-end justify-between gap-2">
             <div className="flex items-end gap-1">
             {([
-              { key: 'doses', label: 'Aplicações', count: sortedApplications.filter((a) => !a.isAppointment).length, first: true },
+              { key: 'doses', label: 'Aplicações', count: sortedApplications.filter((a) => !a.isAppointment).length },
               { key: 'appointments', label: 'Compromissos', count: sortedApplications.filter((a) => a.isAppointment).length },
               { key: 'all', label: 'Todas', count: sortedApplications.length },
-            ] as const).map((t) => {
+            ] as const).map((t, index) => {
               const active = kindFilter === t.key
               return (
                 <button
@@ -536,7 +536,7 @@ export function PatientChartPage() {
                 >
                   {active && (
                     <>
-                      {!t.first && (
+                      {index !== 0 && (
                         <span aria-hidden="true" className="pointer-events-none absolute -left-3 bottom-0 h-3 w-3" style={{ background: 'radial-gradient(circle at 0% 0%, transparent 11.5px, #ffffff 12.5px)' }} />
                       )}
                       <span aria-hidden="true" className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3" style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, #ffffff 12.5px)' }} />
