@@ -100,7 +100,7 @@ export function PatientActionsMenu({
           )}
           {canInactivate && (
             <MenuItem
-              label="Inativar imunoterapia"
+              label="Suspender tratamento"
               hint="Pausa as aplicações"
               onClick={handle(onInactivate)}
               disabled={isInactivateDisabled}

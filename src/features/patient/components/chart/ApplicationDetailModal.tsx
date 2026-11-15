@@ -164,13 +164,16 @@ function DetailModal({
       open={!!application}
       onClose={onClose}
       ariaLabel="Dados da aplicação"
-      size="xl"
+      size="lg"
       headerSlot={
         application ? (
           <div className="min-w-0 flex-1">
             <div className="min-w-0">
-              <div className="truncate text-[0.95rem] font-bold text-(--text)">
-                Aplicação de {application.date}
+              <div className="flex items-center gap-1.5 truncate text-[0.95rem] font-bold text-(--text)">
+                <span className="truncate">Aplicação de {application.date}</span>
+                {completed && (
+                  <FontAwesomeIcon icon={faCircleCheck} className="shrink-0 text-emerald-600" style={{ fontSize: 13 }} title="Realizado" />
+                )}
               </div>
               <div className="text-[0.82rem] text-(--text-muted)">
                 {application.startTime}
@@ -243,7 +246,7 @@ function DetailModal({
       }
     >
       {application && tab === 'pre' && (
-        <div className="grid grid-cols-2 content-start gap-x-4 gap-y-3">
+        <div className="grid min-h-[18rem] grid-cols-2 content-start gap-x-4 gap-y-3">
           <Field colSpan label="Como o paciente passou durante o intervalo da última aplicação?">
             {dose?.betweenDosesReport ||
               application.administratorNote ||
@@ -269,7 +272,7 @@ function DetailModal({
       )}
 
       {application && tab === 'post' && (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+        <div className="grid min-h-[18rem] grid-cols-2 content-start gap-x-4 gap-y-3">
           <Field label="Data">{application.date}</Field>
           <Field label="Horário">
             {application.startTime}
@@ -294,7 +297,7 @@ function DetailModal({
       )}
 
       {application && tab === 'late' && (
-        <>
+        <div className="min-h-[18rem] space-y-3.5">
           <ClinicalReviewNotice required={lateReviewRequired} onReview={() => setLateReviewRequired(false)} />
           <div className="grid grid-cols-2 gap-3">
             <FieldLabel label="Efeitos relatados" hint="(separe por vírgula)">
@@ -331,11 +334,11 @@ function DetailModal({
               />
             </FieldLabel>
           )}
-        </>
+        </div>
       )}
 
       {application && tab === 'addenda' && (
-        <div className="space-y-3">
+        <div className="min-h-[18rem] space-y-3">
           {addenda.map((addendum) => (
             <Addendum key={addendum.id} addendum={addendum} />
           ))}

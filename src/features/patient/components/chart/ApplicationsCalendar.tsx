@@ -93,7 +93,7 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
                   {dayApplications.slice(0, 2).map((application) => {
                     const isRealized = application.status === 'completed'
                     const isNext = application.status === 'scheduled'
-                    const clickable = application.isAppointment || isRealized
+                    const clickable = true
                     const hasReaction = application.sideEffect === 'yes'
                     const intervalColor = getIntervalColor(application.cycle.days)
                     const accent = intervalColor.dot
@@ -110,9 +110,9 @@ export function ApplicationsCalendar({ month, year, applicationsByDate, onMonthC
                         disabled={!clickable}
                         onClick={() => clickable && onSelect(application)}
                         className={cn(
-                          'relative w-full rounded px-1 py-0.5 text-[0.45rem] font-semibold flex items-center gap-0.5 transition-all',
-                          isNext ? 'cursor-default border-dashed border' :
-                          isRealized ? 'cursor-pointer border hover:-translate-y-px hover:shadow-[0_2px_6px_-3px_var(--app-glow)]' :
+                          'relative w-full rounded px-1 py-0.5 text-[0.45rem] font-semibold flex items-center gap-0.5 transition-all cursor-pointer hover:-translate-y-px hover:shadow-[0_2px_6px_-3px_var(--app-glow)]',
+                          isNext ? 'border-dashed border' :
+                          isRealized ? 'border' :
                           'bg-gray-100 text-(--text-muted) border border-gray-200',
                         )}
                         style={style}

@@ -469,7 +469,7 @@ function AppointmentActionForm({
                 </button>
               ) : (
                 <div className="flex max-w-full items-center gap-1.5 text-[0.95rem] font-bold text-(--text)">
-                  <span className="truncate">{appointment.patient.fullName}</span>
+                  <span className="truncate">{appointment.title ?? 'Compromisso'}</span>
                   <FontAwesomeIcon
                     icon={STATUS_ICON[appointmentStatusToApplicationStatus(appointment.status)]}
                     className={cn('shrink-0', STATUS_ICON_COLOR[appointmentStatusToApplicationStatus(appointment.status)])}
@@ -479,7 +479,9 @@ function AppointmentActionForm({
                 </div>
               )}
               <div className="text-[0.82rem] text-(--text-muted)">
-                {appointment.title ?? 'Compromisso'} · {appointmentStatusLabel(appointment.status)}
+                {onOpenPatient
+                  ? `${appointment.title ?? 'Compromisso'} · ${appointmentStatusLabel(appointment.status)}`
+                  : `${appointment.patient.fullName} · ${appointmentStatusLabel(appointment.status)}`}
               </div>
             </div>
           </div>

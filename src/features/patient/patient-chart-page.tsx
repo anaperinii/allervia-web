@@ -180,6 +180,7 @@ export function PatientChartPage() {
   const [selectedApplication, setSelectedApp] = useState<Application | null>(null)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [monthFilter, setMonthFilter] = useState('all')
+  const [kindFilter, setKindFilter] = useState<'doses' | 'appointments' | 'all'>('doses')
   const [viewMode, setViewMode] = useState<'timeline' | 'calendar'>('timeline')
   const [calMonth, setCalMonth] = useState(new Date().getMonth())
   const [calYear, setCalYear] = useState(new Date().getFullYear())
@@ -316,19 +317,26 @@ export function PatientChartPage() {
     [patientApplications],
   )
 
+  const kindFilteredApplications = useMemo(() => {
+    if (kindFilter === 'all') return sortedApplications
+    return sortedApplications.filter((application) =>
+      kindFilter === 'appointments' ? application.isAppointment : !application.isAppointment,
+    )
+  }, [sortedApplications, kindFilter])
+
   const availableMonths = useMemo(() => {
     const months = new Map<string, string>()
-    sortedApplications.forEach((application) => {
+    kindFilteredApplications.forEach((application) => {
       const key = `${application.year}-${application.month}`
       if (!months.has(key)) months.set(key, `${application.month} ${application.year}`)
     })
     return Array.from(months.entries()).map(([key, label]) => ({ key, label }))
-  }, [sortedApplications])
+  }, [kindFilteredApplications])
 
   const filteredApplications = useMemo(() => {
-    if (monthFilter === 'all') return sortedApplications
-    return sortedApplications.filter((application) => `${application.year}-${application.month}` === monthFilter)
-  }, [sortedApplications, monthFilter])
+    if (monthFilter === 'all') return kindFilteredApplications
+    return kindFilteredApplications.filter((application) => `${application.year}-${application.month}` === monthFilter)
+  }, [kindFilteredApplications, monthFilter])
 
   const groupedByMonth = useMemo(() => {
     const byMonth: Record<string, Application[]> = {}
@@ -503,7 +511,41 @@ export function PatientChartPage() {
           />
 
           <div className="flex flex-1 flex-col min-h-0 min-w-0 pl-1.5">
-          <div className="relative z-10 flex items-end justify-end gap-2">
+          <div className="relative z-10 flex items-end justify-between gap-2">
+            <div className="flex items-end gap-1">
+            {([
+              { key: 'doses', label: 'Aplicações', count: sortedApplications.filter((a) => !a.isAppointment).length, first: true },
+              { key: 'appointments', label: 'Compromissos', count: sortedApplications.filter((a) => a.isAppointment).length },
+              { key: 'all', label: 'Todas', count: sortedApplications.length },
+            ] as const).map((t) => {
+              const active = kindFilter === t.key
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setKindFilter(t.key)}
+                  className={cn(
+                    'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors cursor-pointer',
+                    active
+                      ? 'bg-white text-slate-800 z-10 shadow-[0_-3px_10px_-3px_rgba(18,51,58,0.10),-5px_0_10px_-5px_rgba(18,51,58,0.10),5px_0_10px_-5px_rgba(18,51,58,0.10)]'
+                      : 'bg-gray-100/70 text-slate-400 hover:bg-gray-100 hover:text-slate-600',
+                  )}
+                >
+                  {active && (
+                    <>
+                      {!t.first && (
+                        <span aria-hidden="true" className="pointer-events-none absolute -left-3 bottom-0 h-3 w-3" style={{ background: 'radial-gradient(circle at 0% 0%, transparent 11.5px, #ffffff 12.5px)' }} />
+                      )}
+                      <span aria-hidden="true" className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3" style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, #ffffff 12.5px)' }} />
+                    </>
+                  )}
+                  {t.label} <span className="text-[0.85em] text-slate-400">({t.count})</span>
+                </button>
+              )
+            })}
+            </div>
             <SegmentedControl
               value={viewMode}
               onChange={setViewMode}
@@ -517,7 +559,7 @@ export function PatientChartPage() {
             />
           </div>
 
-          <div className="flex-1 flex flex-col rounded-xl border border-(--border-custom) bg-white overflow-hidden min-h-0 min-w-0">
+          <div className="flex-1 flex flex-col rounded-tr-xl rounded-b-xl border border-(--border-custom) bg-white overflow-hidden min-h-0 min-w-0">
             <div className="px-5 py-3 border-b border-(--border-custom) min-w-0">
               <ApplicationsMonthFilter
                 months={availableMonths}

@@ -16,6 +16,7 @@ interface SegmentedControlProps<T extends string> {
   size?: SegmentedControlSize
   fullWidth?: boolean
   className?: string
+  activeClassName?: string
   'aria-label'?: string
 }
 
@@ -38,6 +39,7 @@ export function SegmentedControl<T extends string>({
   size = 'md',
   fullWidth,
   className,
+  activeClassName,
   'aria-label': ariaLabel,
 }: SegmentedControlProps<T>) {
   return (
@@ -64,7 +66,7 @@ export function SegmentedControl<T extends string>({
               'rounded-md font-medium transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap',
               ITEM_PADDING[size],
               fullWidth && 'flex-1',
-              active ? 'bg-[#12333a] text-white' : 'text-[#4A6469] hover:text-[#12333a]'
+              active ? (activeClassName ?? 'bg-[#12333a] text-white') : 'text-[#4A6469] hover:text-[#12333a]'
             )}
           >
             {opt.icon}

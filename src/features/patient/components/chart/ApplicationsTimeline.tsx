@@ -5,6 +5,23 @@ import { getIntervalColor } from '@/features/immunotherapy/constants/interval-co
 import { parsePtDate } from '@/shared/lib/dates'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleCheck, faCircleXmark, faClock } from '@fortawesome/free-solid-svg-icons'
+
+const APPOINTMENT_STATUS_ICON = {
+  scheduled: faClock,
+  completed: faCircleCheck,
+  missed: faCircleXmark,
+  canceled: faCircleXmark,
+} as const
+
+const APPOINTMENT_STATUS_ICON_COLOR = {
+  scheduled: 'text-gray-400',
+  completed: 'text-green-500',
+  missed: 'text-red-500',
+  canceled: 'text-red-500',
+} as const
+
 interface ApplicationsTimelineProps {
   applicationsByMonth: Record<string, Application[]>
   onSelect: (application: Application) => void
@@ -45,7 +62,6 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect }: Applicat
           <div className="space-y-3.5">
             {monthApplications.map((application) => {
               const color = getIntervalColor(application.cycle.days)
-              const isRealized = application.status === 'completed'
               const isNext = application.status === 'scheduled'
               const hasReaction = application.sideEffect === 'yes'
               const overdueDays = isNext ? daysOverdue(application.date) : 0
@@ -71,24 +87,26 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect }: Applicat
                   )}
                 >
                   <div className="flex w-18 shrink-0 flex-col items-center justify-center py-2.5">
-                    <span className={cn('text-[0.7rem] font-normal leading-none', accentMuted)}>{monthAbbr}</span>
-                    <span className={cn('text-2xl font-semibold leading-tight', accentText)}>{day}</span>
+                    <span className={cn('text-[0.7rem] leading-none', isNext ? 'font-bold' : 'font-normal', accentMuted)}>{monthAbbr}</span>
+                    <span className={cn('leading-tight', isNext ? 'text-3xl font-black' : 'text-2xl font-semibold', accentText)}>{day}</span>
                   </div>
 
                   <div className="w-px self-stretch bg-gray-200 my-2" />
 
                   <div className="flex-1 min-w-0 px-5 py-2.5">
-                    <div className={cn('text-[0.8rem] text-(--text-muted)', isNext && 'font-semibold')}>
+                    <div className={cn('flex items-center gap-1.5 text-[0.8rem] text-(--text-muted)', isNext && 'font-semibold')}>
                       {weekday}, {application.startTime}
                       {application.endTime ? `–${application.endTime}` : ''}
+                      <FontAwesomeIcon
+                        icon={APPOINTMENT_STATUS_ICON[application.status]}
+                        className={APPOINTMENT_STATUS_ICON_COLOR[application.status]}
+                        style={{ fontSize: 10 }}
+                      />
                     </div>
                     <div className="mt-1 flex items-center gap-2 flex-wrap">
-                      <span className={cn('text-sm text-(--text-muted)', isNext && 'font-semibold')}>{withSmallMl(application.dose)}</span>
+                      <span className={cn('text-sm text-(--text-muted)', application.isAppointment && 'text-[0.85rem]', isNext && 'font-semibold')}>{withSmallMl(application.dose)}</span>
                       {application.isAppointment ? (
-                        <span
-                          className="inline-flex items-center px-1.5 py-px rounded-md text-[0.55rem] font-semibold border"
-                          style={{ backgroundColor: '#9CA3AF4D', color: '#4B5563', borderColor: '#9CA3AF30' }}
-                        >
+                        <span className="rounded-md bg-gray-200 text-gray-700 text-[0.55rem] font-bold uppercase tracking-wide px-1.5 py-0.5">
                           Compromisso
                         </span>
                       ) : (
@@ -97,11 +115,6 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect }: Applicat
                           style={{ backgroundColor: color.bg + '4D', color: color.text, borderColor: color.dot + '30' }}
                         >
                           {application.cycle.days} dias
-                        </span>
-                      )}
-                      {isNext && (
-                        <span className="rounded-md bg-teal-600 text-white text-[0.55rem] font-bold uppercase tracking-wide px-1.5 py-0.5">
-                          Próxima agendada
                         </span>
                       )}
                       {overdueDays > 0 && (

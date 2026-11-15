@@ -235,22 +235,35 @@ function DetailsModal({
                 </div>
               )}
               <div className="min-w-0">
-                <button
-                  onClick={() => onOpenPatient(application.patientId)}
-                  className="flex max-w-full items-center gap-1.5 text-left text-[0.95rem] font-bold text-(--text) transition-colors hover:text-brand"
-                >
-                  <span className="truncate">{application.patientName ?? ''}</span>
-                  <FontAwesomeIcon
-                    icon={STATUS_ICON[application.status]}
-                    className={cn('shrink-0', STATUS_ICON_COLOR[application.status])}
-                    style={{ fontSize: 13 }}
-                    title={APPLICATION_STATUS_DISPLAY[application.status].label}
-                  />
-                </button>
+                {showPatientAvatar ? (
+                  <button
+                    onClick={() => onOpenPatient(application.patientId)}
+                    className="flex max-w-full items-center gap-1.5 text-left text-[0.95rem] font-bold text-(--text) transition-colors hover:text-brand"
+                  >
+                    <span className="truncate">{application.patientName ?? ''}</span>
+                    <FontAwesomeIcon
+                      icon={STATUS_ICON[application.status]}
+                      className={cn('shrink-0', STATUS_ICON_COLOR[application.status])}
+                      style={{ fontSize: 13 }}
+                      title={APPLICATION_STATUS_DISPLAY[application.status].label}
+                    />
+                  </button>
+                ) : (
+                  <div className="flex max-w-full items-center gap-1.5 text-[0.95rem] font-bold text-(--text)">
+                    <span className="truncate">Aplicação de {application.date}</span>
+                    <FontAwesomeIcon
+                      icon={STATUS_ICON[application.status]}
+                      className={cn('shrink-0', STATUS_ICON_COLOR[application.status])}
+                      style={{ fontSize: 13 }}
+                      title={APPLICATION_STATUS_DISPLAY[application.status].label}
+                    />
+                  </div>
+                )}
                 <div className="flex items-center gap-1.5 text-[0.82rem] text-(--text-muted)">
                   <span>
-                    {application.modality === 'sublingual' ? 'Sublingual' : 'Subcutânea'} ·{' '}
-                    {APPLICATION_STATUS_DISPLAY[application.status].label}
+                    {showPatientAvatar
+                      ? `${application.modality === 'sublingual' ? 'Sublingual' : 'Subcutânea'} · ${APPLICATION_STATUS_DISPLAY[application.status].label}`
+                      : `${application.patientName ?? ''} · ${APPLICATION_STATUS_DISPLAY[application.status].label}`}
                   </span>
                   {application.status === 'scheduled' && daysOverdue(application.date) > 0 && (
                     <span className="rounded-md bg-red-400 text-white text-[0.55rem] font-bold uppercase tracking-wide px-1.5 py-0.5">
