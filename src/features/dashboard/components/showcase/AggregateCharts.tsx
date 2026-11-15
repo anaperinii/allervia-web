@@ -94,7 +94,16 @@ const RING_SEMICIRCLE = Math.PI * RING_RADIUS
 function ConcentrationRing({ rows, unit }: { rows: { entry: CountEntry; color: string }[]; unit: string }) {
   const total = rows.reduce((sum, { entry }) => sum + entry.count, 0)
   const clipId = useId()
-  let offset = 0
+
+  const segments = rows.reduce<{ entry: CountEntry; color: string; length: number; offset: number }[]>(
+    (acc, row) => {
+      const length = total > 0 ? (row.entry.count / total) * RING_SEMICIRCLE : 0
+      const previousOffset = acc.length > 0 ? acc[acc.length - 1].offset + acc[acc.length - 1].length : 0
+      acc.push({ ...row, length, offset: previousOffset })
+      return acc
+    },
+    [],
+  )
 
   return (
     <div className="mt-auto flex flex-col items-center pt-4 -mb-5">
@@ -119,23 +128,18 @@ function ConcentrationRing({ rows, unit }: { rows: { entry: CountEntry; color: s
               strokeWidth={RING_STROKE}
               strokeLinecap="round"
             />
-            {rows.map(({ entry, color }) => {
-              const length = total > 0 ? (entry.count / total) * RING_SEMICIRCLE : 0
-              const dashoffset = -offset
-              offset += length
-              return (
-                <path
-                  key={entry.label}
-                  d={RING_ARC}
-                  fill="none"
-                  stroke={color}
-                  strokeWidth={RING_STROKE}
-                  strokeLinecap="round"
-                  strokeDasharray={`${length} ${RING_SEMICIRCLE}`}
-                  strokeDashoffset={dashoffset}
-                />
-              )
-            })}
+            {segments.map(({ entry, color, length, offset }) => (
+              <path
+                key={entry.label}
+                d={RING_ARC}
+                fill="none"
+                stroke={color}
+                strokeWidth={RING_STROKE}
+                strokeLinecap="round"
+                strokeDasharray={`${length} ${RING_SEMICIRCLE}`}
+                strokeDashoffset={-offset}
+              />
+            ))}
           </g>
         </svg>
 
@@ -592,7 +596,7 @@ export function PhaseStackChart({
           return (
             <div key={key} className="rounded-xl border p-4" style={{ borderColor: SHOWCASE.line }}>
               <span
-                className="flex items-center gap-1.5 text-[0.72rem] font-medium uppercase tracking-wide"
+                className="flex items-center gap-1.5 text-[0.72rem] font-medium tracking-wide"
                 style={{ color: SHOWCASE.inkSoft }}
               >
                 <span className="h-2 w-2 rounded-full" style={{ background: phase.color }} />

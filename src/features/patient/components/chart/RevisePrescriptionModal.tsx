@@ -57,11 +57,12 @@ function ReviseForm({
   })
 
   const currentVersion = useMemo(() => {
-    for (const protocol of protocolsQuery.data ?? []) {
-      const version = protocol.versions.find((entry) => entry.id === currentVersionId)
-      if (version) return { protocol, version }
-    }
-    return null
+    const protocols = protocolsQuery.data ?? []
+    const protocol = protocols.find((candidate) =>
+      candidate.versions.some((entry) => entry.id === currentVersionId),
+    )
+    const version = protocol?.versions.find((entry) => entry.id === currentVersionId)
+    return protocol && version ? { protocol, version } : null
   }, [protocolsQuery.data, currentVersionId])
 
   const publishedOptions = useMemo(

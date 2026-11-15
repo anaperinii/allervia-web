@@ -134,9 +134,12 @@ function DetailsModal({
 
   useEffect(() => {
     if (!dose || tab !== 'manage') return
+    // seeds the manage form once the dose query resolves
+    /* eslint-disable react-hooks/set-state-in-effect */
     setStepId(dose.plannedStepId)
     setDate(localDateInput(dose.scheduledAt, doseTimeZone))
     setTime(localTimeInput(dose.scheduledAt, doseTimeZone))
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [dose, tab, doseTimeZone])
 
   const selectedStep = dose?.allowedValues.find((step) => step.id === stepId) ?? null

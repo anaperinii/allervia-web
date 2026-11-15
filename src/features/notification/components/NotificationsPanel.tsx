@@ -1,6 +1,6 @@
 import { useSession } from '@/shared/auth/useSession'
 import { queryKeys } from '@/shared/api/query-keys'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   listNotifications,
@@ -89,10 +89,6 @@ export function NotificationsPanel({
   const total = query.data?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
-  useEffect(() => {
-    setSelectedIds(new Set())
-  }, [page, unreadOnly])
-
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: queryKeys.notificationScope(organizationId, userId) })
 
@@ -164,7 +160,7 @@ export function NotificationsPanel({
                 <input
                   type="checkbox"
                   checked={unreadOnly}
-                  onChange={(e) => { setUnreadOnly(e.target.checked); setPage(1) }}
+                  onChange={(e) => { setUnreadOnly(e.target.checked); setPage(1); setSelectedIds(new Set()) }}
                   className="accent-[#257E8C]"
                 />
                 Somente não lidas
@@ -252,13 +248,23 @@ export function NotificationsPanel({
         )}
         {totalPages > 1 && (
           <div className="mt-auto flex items-center justify-center gap-3 py-3 border-t border-(--border-custom)">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => { setPage((p) => p - 1); setSelectedIds(new Set()) }}
+            >
               Anterior
             </Button>
             <span className="text-[0.7rem] text-(--text-muted)">
               Página {page} de {totalPages}
             </span>
-            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => { setPage((p) => p + 1); setSelectedIds(new Set()) }}
+            >
               Próxima
             </Button>
           </div>

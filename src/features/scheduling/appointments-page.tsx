@@ -81,6 +81,7 @@ export function AppointmentsPage() {
   const [panelMonth, setPanelMonth] = useState(calendar.selectedDate)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- keeps the side panel month synced while it is open
     if (showCalendarPanel) setPanelMonth(calendar.selectedDate)
   }, [calendar.selectedDate, showCalendarPanel])
 

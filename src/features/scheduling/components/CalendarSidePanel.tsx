@@ -101,6 +101,7 @@ export function CalendarSidePanel({
       return
     }
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- drives the mount/unmount enter animation
       setMounted(true)
       const raf1 = requestAnimationFrame(() => {
         const raf2 = requestAnimationFrame(() => setVisible(true))

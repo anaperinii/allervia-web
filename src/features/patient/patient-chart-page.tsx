@@ -238,6 +238,7 @@ export function PatientChartPage() {
     if (!doseIdParam) return
     const found = patientApplications.find((item) => item.id === doseIdParam)
     if (found) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- opens the dose modal requested via the doseId query param
       setSelectedApp(found)
       navigate({ to: '/patient/$patientId', params: { patientId }, search: (prev) => ({ ...prev, doseId: undefined }), replace: true })
     }
