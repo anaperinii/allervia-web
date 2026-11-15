@@ -152,7 +152,7 @@ export function ProfilePage() {
             {}
             <div className="flex flex-col gap-6">
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Pessoais</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
@@ -187,7 +187,7 @@ export function ProfilePage() {
             </section>
 
             <section className="flex flex-1 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-white">
-              <div className="flex items-center gap-2 border-b border-(--border-custom) bg-[#F7F9F9] px-4 py-2.5">
+              <div className="flex items-center gap-2 border-b border-(--border-custom) bg-gray-50/50 px-4 py-2.5">
                 <FontAwesomeIcon icon={faUserGear} className="text-(--text-muted)" style={{ fontSize: 13 }} />
                 <h2 className="text-xs font-bold text-(--text)">Acesso e papéis</h2>
               </div>
@@ -218,7 +218,7 @@ export function ProfilePage() {
             </div>
 
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Profissionais</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">

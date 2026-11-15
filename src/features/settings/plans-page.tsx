@@ -10,7 +10,7 @@ export function PlansPage() {
     <SettingsLayout subtitle="Planos e Serviços">
       <div className="max-w-4xl mx-auto space-y-6">
         <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-          <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
             <h2 className="text-xs font-bold text-(--text)">Faturamento</h2>
           </div>
           <div className="p-4 flex items-start gap-3">

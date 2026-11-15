@@ -106,7 +106,7 @@ export function FlowDiagram({
             </p>
           )}
 
-          <div className={cn('overflow-x-auto py-6 pl-16 pr-8', MAP_SURFACE)}>
+          <div className={cn('max-h-[420px] overflow-x-auto overflow-y-auto py-6 pl-16 pr-8', MAP_SURFACE)}>
             <TrailMap
               chain={chain}
               activeStepId={activeStepId}

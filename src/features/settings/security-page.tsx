@@ -45,6 +45,7 @@ import {
   faRightFromBracket,
   faShieldHalved,
   faTrashCan,
+  faTriangleExclamation,
   faUserXmark,
   faChevronRight,
 } from '@fortawesome/free-solid-svg-icons'
@@ -276,7 +277,7 @@ export function SecurityPage() {
     <SettingsLayout subtitle="Segurança e Privacidade">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-          <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
             <h2 className="text-xs font-bold text-(--text)">Autenticação</h2>
           </div>
           <div className="p-4 space-y-3">
@@ -371,7 +372,7 @@ export function SecurityPage() {
         </section>
 
         <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-          <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9] flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center justify-between">
             <div>
               <h2 className="text-xs font-bold text-(--text)">Sessões ativas</h2>
               <p className="text-[0.65rem] text-(--text-muted)">
@@ -428,7 +429,7 @@ export function SecurityPage() {
         </section>
 
         <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-          <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
             <h2 className="text-xs font-bold text-(--text)">Privacidade e LGPD</h2>
           </div>
           <div className="p-4 space-y-3">
@@ -460,7 +461,7 @@ export function SecurityPage() {
             <div className="truncate text-[0.95rem] font-bold text-(--text)">
               Alterar senha
             </div>
-            <div className="text-[0.82rem] text-(--text-muted)">Nova senha de acesso à conta</div>
+            <div className="text-[0.82rem] text-(--text-muted)">Defina uma nova senha para entrar na sua conta</div>
           </div>
         }
         headerStyle={{
@@ -535,7 +536,7 @@ export function SecurityPage() {
         onClose={() => setShowLogoutAllModal(false)}
         size="sm"
         title="Encerrar todas as sessões"
-        icon={<FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 16 }} />}
+        icon={<FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 16 }} />}
         tone="danger"
         footer={
           <>

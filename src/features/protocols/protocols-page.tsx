@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { ProgressionViewer } from '@/features/protocols/components/ProgressionViewer'
+import { FlowDiagramViewer } from '@/features/protocols/components/FlowDiagramViewer'
 import { AutomationCard } from '@/features/protocols/components/AutomationCard'
 import {
   discardDraftVersion,
@@ -27,13 +29,16 @@ import { showApiErrorToast } from '@/shared/components'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { useHasPermission } from '@/shared/stores/useUserStore'
-import { Button, Modal, TextInput } from '@/shared/components'
+import { Button, IconButton, Modal, TextInput } from '@/shared/components'
 import {
   faCircleCheck,
+  faEllipsis,
   faMagnifyingGlass,
+  faSitemap,
   faPlus,
   faRotateLeft,
   faStar,
+  faThumbtack,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -88,6 +93,7 @@ export function ProtocolsPage() {
 
   const [confirm, setConfirm] = useState<ConfirmAction | null>(null)
   const [progression, setProgression] = useState<ProgressionTarget | null>(null)
+  const [flowDiagram, setFlowDiagram] = useState<ProgressionTarget | null>(null)
   const [search, setSearch] = useState('')
   const [staleAutomation, setStaleAutomation] = useState(false)
 
@@ -308,7 +314,8 @@ export function ProtocolsPage() {
                           {status.label}
                         </span>
                         {isDefault && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border bg-brand-50 text-brand-dark border-brand/30">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.65rem] font-semibold bg-[#12333a] text-white">
+                            <FontAwesomeIcon icon={faThumbtack} style={{ fontSize: 10 }} />
                             Padrão para novas prescrições
                           </span>
                         )}
@@ -320,19 +327,6 @@ export function ProtocolsPage() {
                         </span>
                       </button>
                       <div className="ml-auto flex items-center gap-1.5">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            void navigate({
-                              to: '/protocol-lab',
-                              search: { versionId: version.id },
-                            })
-                          }
-                          disabled={version.definition.steps.length === 0}
-                        >
-                          Simular fluxo
-                        </Button>
                         {canManage && version.status === 'DRAFT' && (
                           <>
                             <Button
@@ -374,27 +368,16 @@ export function ProtocolsPage() {
                             </Button>
                           </>
                         )}
-                        {canManage && version.status === 'PUBLISHED' && (
-                          <>
-                            {!isDefault && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setConfirm({ type: 'default', version })}
-                              >
-                                Tornar padrão
-                              </Button>
-                            )}
-                            <Button
-                              variant="outline"
-                              tone="danger"
-                              size="sm"
-                              onClick={() => setConfirm({ type: 'retire', version })}
-                            >
-                              Retirar
-                            </Button>
-                          </>
-                        )}
+                        <VersionActionsMenu
+                          onViewDiagram={() =>
+                            setFlowDiagram({ protocolName: protocol.name, version })
+                          }
+                          viewDiagramDisabled={version.definition.steps.length === 0}
+                          showDefaultAndRetire={canManage && version.status === 'PUBLISHED'}
+                          isDefault={isDefault}
+                          onMakeDefault={() => setConfirm({ type: 'default', version })}
+                          onRetire={() => setConfirm({ type: 'retire', version })}
+                        />
                       </div>
                     </li>
                   )
@@ -434,6 +417,14 @@ export function ProtocolsPage() {
         isDefault={
           progression ? defaultVersionIds.has(progression.version.id) : false
         }
+      />
+
+      <FlowDiagramViewer
+        open={flowDiagram !== null}
+        onClose={() => setFlowDiagram(null)}
+        protocolName={flowDiagram?.protocolName ?? ''}
+        versionNumber={flowDiagram?.version.number ?? 0}
+        steps={flowDiagram?.version.definition.steps ?? []}
       />
 
       <Modal
@@ -533,5 +524,119 @@ export function ProtocolsPage() {
       </Modal>
 
     </SettingsLayout>
+  )
+}
+
+interface VersionActionsMenuProps {
+  onViewDiagram: () => void
+  viewDiagramDisabled: boolean
+  showDefaultAndRetire: boolean
+  isDefault: boolean
+  onMakeDefault: () => void
+  onRetire: () => void
+}
+
+const MENU_WIDTH = 224
+
+function VersionActionsMenu({
+  onViewDiagram,
+  viewDiagramDisabled,
+  showDefaultAndRetire,
+  isDefault,
+  onMakeDefault,
+  onRetire,
+}: VersionActionsMenuProps) {
+  const [open, setOpen] = useState(false)
+  const [coords, setCoords] = useState({ top: 0, left: 0 })
+  const anchorRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    if (!open) return
+    const place = () => {
+      const rect = anchorRef.current?.getBoundingClientRect()
+      if (!rect) return
+      setCoords({
+        top: rect.bottom + 4,
+        left: Math.max(12, Math.min(rect.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - 12)),
+      })
+    }
+    place()
+    window.addEventListener('scroll', place, true)
+    window.addEventListener('resize', place)
+    return () => {
+      window.removeEventListener('scroll', place, true)
+      window.removeEventListener('resize', place)
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (anchorRef.current?.contains(target)) return
+      if (menuRef.current?.contains(target)) return
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  return (
+    <div ref={anchorRef} className="relative inline-block">
+      <IconButton size="sm" aria-label="Ações da versão" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        <FontAwesomeIcon icon={faEllipsis} style={{ fontSize: 14 }} />
+      </IconButton>
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            className="fixed z-[60] overflow-hidden rounded-lg border border-(--border-custom) bg-white shadow-[0_8px_24px_rgba(0,0,0,0.1)] divide-y divide-(--border-custom)"
+            style={{ top: coords.top, left: coords.left, width: MENU_WIDTH }}
+          >
+          {showDefaultAndRetire && (
+            <button
+              role="menuitem"
+              disabled={isDefault}
+              onClick={() => {
+                setOpen(false)
+                onMakeDefault()
+              }}
+              className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-xs text-(--text) border-l-2 border-transparent hover:bg-teal-50/60 hover:border-l-brand transition-colors disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:border-l-transparent"
+            >
+              <FontAwesomeIcon icon={faThumbtack} style={{ fontSize: 12 }} />
+              Tornar padrão
+            </button>
+          )}
+          <button
+            role="menuitem"
+            disabled={viewDiagramDisabled}
+            onClick={() => {
+              setOpen(false)
+              onViewDiagram()
+            }}
+            className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-xs text-(--text) border-l-2 border-transparent hover:bg-teal-50/60 hover:border-l-brand transition-colors disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:border-l-transparent"
+          >
+            <FontAwesomeIcon icon={faSitemap} style={{ fontSize: 12 }} />
+            Visualizar diagrama de fluxo
+          </button>
+          {showDefaultAndRetire && (
+            <button
+              role="menuitem"
+              onClick={() => {
+                setOpen(false)
+                onRetire()
+              }}
+              className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-xs text-red-600 border-l-2 border-transparent hover:bg-red-50/60 hover:border-l-red-600 transition-colors"
+            >
+              <FontAwesomeIcon icon={faTrash} style={{ fontSize: 12 }} />
+              Retirar
+            </button>
+          )}
+          </div>,
+          document.body,
+        )}
+    </div>
   )
 }
