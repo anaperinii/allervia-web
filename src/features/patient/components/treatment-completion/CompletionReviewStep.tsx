@@ -3,6 +3,7 @@ import type { Patient } from '@/features/patient/stores/usePatientStore'
 import { FieldLabel, StepHeading, TextArea } from '@/shared/components'
 import { GLASS_CARD_SHADOW } from '@/shared/constants/glass-card'
 import { cn } from '@/shared/lib/cn'
+import { formatCPF } from '@/shared/lib/formatters'
 import type { UseFormReturn } from 'react-hook-form'
 
 import { faCheck, faLock, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
@@ -54,7 +55,7 @@ export function CompletionReviewStep({
           </span>
         </div>
         <dl className="divide-y divide-(--border-custom)">
-          <Row label="Paciente" value={`${patient.name} · ${patient.cpf}`} />
+          <Row label="Paciente" value={`${patient.name} · ${formatCPF(patient.cpf)}`} />
           <Row label="Imunoterapia" value={`${patient.immunotherapyType} · ${patient.administrationRoute}`} />
           <Row label="Período de tratamento" value={`${inductionStart ?? '-'} → hoje · ${totalDurationLabel}`} />
           <Row label="Aplicações realizadas" value={String(totalApplications)} />

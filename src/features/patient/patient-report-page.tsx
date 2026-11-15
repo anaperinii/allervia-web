@@ -25,6 +25,7 @@ import {
   type ReportSectionId,
 } from '@/features/patient/exporters'
 import { maskCpf, maskName, maskPhone } from '@/shared/lib/mask'
+import { formatCPF } from '@/shared/lib/formatters'
 import { ReportConfigPanel } from '@/features/patient/components/report/ReportConfigPanel'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -126,14 +127,12 @@ export function PatientReportPage() {
 
   const reportData = useMemo<ReportData | null>(() => {
     if (!patient || !selectedTherapy || !sourcesReady) return null
-    const masked = anonymized
-      ? {
-          ...patient,
-          name: maskName(patient.name, true),
-          cpf: maskCpf(patient.cpf, true),
-          phone: maskPhone(patient.phone, true),
-        }
-      : patient
+    const masked = {
+      ...patient,
+      name: anonymized ? maskName(patient.name, true) : patient.name,
+      cpf: maskCpf(formatCPF(patient.cpf), anonymized),
+      phone: anonymized ? maskPhone(patient.phone, true) : patient.phone,
+    }
     return {
       patient: masked,
       inductionStart: formatInstantDate(selectedTherapy.inductionStartDate),

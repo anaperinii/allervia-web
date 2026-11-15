@@ -405,7 +405,7 @@ describe('wizard de evolução sobre o contrato de doses', () => {
     await user.click(screen.getByRole('button', { name: 'Continuar' }))
     expect(await screen.findByText('Data da próxima aplicação')).toBeInTheDocument()
     expect(screen.getByText('Data prevista pelo protocolo')).toBeInTheDocument()
-    expect(screen.getByText('+3d')).toBeInTheDocument()
+    expect(screen.getByText('+3 dias')).toBeInTheDocument()
     expect(screen.queryByText('Justificativa da data')).toBeNull()
 
     await user.click(screen.getByRole('button', { name: /salvar evolução/i }))
@@ -436,7 +436,7 @@ describe('wizard de evolução sobre o contrato de doses', () => {
 
     await user.click(screen.getByRole('button', { name: 'Continuar' }))
     await screen.findByText('Data da próxima aplicação')
-    expect(screen.queryByText(/^[+−]\d+d$/)).toBeNull()
+    expect(screen.queryByText(/^[+−]\d+ dias?$/)).toBeNull()
     expect(screen.queryByText('Data prevista pelo protocolo')).toBeNull()
 
     await user.click(screen.getByRole('button', { name: 'Voltar' }))
@@ -446,7 +446,7 @@ describe('wizard de evolução sobre o contrato de doses', () => {
     await user.click(screen.getByRole('button', { name: 'Continuar' }))
 
     await screen.findByText('Data da próxima aplicação')
-    const badge = screen.getByText('−3d')
+    const badge = screen.getByText('−3 dias')
     expect(badge).toBeInTheDocument()
     expect(badge.className).toContain('amber')
     expect(screen.queryByText('Justificativa da data')).toBeNull()

@@ -84,7 +84,6 @@ export function activeByTypeFromMetrics(
     total += row.count
   }
   return [...counts.entries()]
-    .filter(([, count]) => count > 0)
     .sort(([labelA, a], [labelB, b]) => b - a || labelA.localeCompare(labelB, 'pt-BR'))
     .map(([label, count]) => ({
       label,

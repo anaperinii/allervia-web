@@ -163,7 +163,7 @@ export function ProtocolEditor({ draft, readOnly, onChange }: ProtocolEditorProp
             {!collapsed &&
               group.items.map(({ step, index }) => (
                 <StepRow
-                  key={step.id || index}
+                  key={index}
                   step={step}
                   stepIds={stepIds}
                   readOnly={readOnly}

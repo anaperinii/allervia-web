@@ -137,7 +137,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
       >
         {discardPrompt && (
           <div role="alertdialog" aria-modal="true" className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 p-4 animate-in fade-in-0 duration-150">
-            <div className="w-full max-w-xs rounded-xl bg-white p-5 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div role="alert" className="w-full max-w-xs rounded-xl bg-white p-5 shadow-2xl animate-in zoom-in-95 duration-150">
               <div className="mb-3 flex items-center gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50">
                   <FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-500" style={{ fontSize: 16 }} />

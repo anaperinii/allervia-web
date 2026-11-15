@@ -175,6 +175,11 @@ describe('vínculo paciente e tratamento na URL', () => {
       },
       { path: '/immunotherapies/therapy-1/doses', handler: [] },
       { path: '/professionals', handler: { items: [], page: 1, pageSize: 100, total: 0 } },
+      { path: '/appointments', handler: { items: [], page: 1, pageSize: 100, total: 0 } },
+      {
+        path: '/immunotherapies/therapy-1/lifecycle',
+        handler: { events: [], therapy: { id: 'therapy-1', revision: 0, status: 'IN_PROGRESS' } },
+      },
     ])
     const root = createRootRoute({ component: Outlet })
     const chart = createRoute({

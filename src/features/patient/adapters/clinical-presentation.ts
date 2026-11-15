@@ -122,7 +122,7 @@ export function buildLegacyPatient(
     age: ageFromBirthDate(detail.birthDate),
     phone: formatPhone(detail.phoneNumber),
     weight: `${detail.weightInKg.toLocaleString('pt-BR')} kg`,
-    cpf: detail.cpf ? formatCPF(detail.cpf) : detail.cpfMasked ?? '—',
+    cpf: detail.cpf ?? detail.cpfMasked ?? '—',
     guardian: detail.guardian
       ? {
           name: detail.guardian.fullName,

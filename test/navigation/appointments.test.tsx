@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
   createMemoryHistory,
@@ -279,7 +279,7 @@ describe('agenda alimentada por doses persistidas', () => {
     await user.click(await screen.findByText('Paula Andrade'))
     await user.click(await screen.findByRole('button', { name: /^editar$/i }))
 
-    expect(await screen.findByText('Editar previsão pendente')).toBeInTheDocument()
+    expect(await screen.findByText(/a edição ajusta apenas esta previsão/i)).toBeInTheDocument()
     const reasonLabel = screen.getByText(/motivo clínico/i, { selector: 'label' })
     const reason = reasonLabel.parentElement!.querySelector('textarea')!
     await user.type(reason, 'Paciente pediu para antecipar.')
@@ -308,9 +308,8 @@ describe('agenda alimentada por doses persistidas', () => {
 
     await screen.findByText('Paula Andrade')
     await user.click(screen.getByRole('button', { name: /novo agendamento/i }))
-    expect(
-      await screen.findByRole('heading', { name: 'Novo agendamento' }),
-    ).toBeInTheDocument()
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByText('Novo agendamento')).toBeInTheDocument()
 
     await user.type(screen.getByPlaceholderText(/buscar paciente/i), 'Paula')
     await user.click(await screen.findByRole('option', { name: /paula andrade/i }))
@@ -348,7 +347,9 @@ describe('dashboard com indicadores oficiais', () => {
     stubApi()
     await renderAt('/dashboard', DashboardPage)
 
-    expect(await screen.findByText('75%')).toBeInTheDocument()
+    expect(
+      await screen.findByText((_, element) => element?.textContent === '75%'),
+    ).toBeInTheDocument()
     expect(screen.getByText(/3 de 4 aplicações/)).toBeInTheDocument()
   })
   it('não apresenta percentual de adesão quando não há denominador', async () => {

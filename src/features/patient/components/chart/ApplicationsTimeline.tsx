@@ -117,6 +117,11 @@ export function ApplicationsTimeline({ applicationsByMonth, onSelect }: Applicat
                           {application.cycle.days} dias
                         </span>
                       )}
+                      {isNext && (
+                        <span className="rounded-md bg-teal-600 text-white text-[0.55rem] font-bold uppercase tracking-wide px-1.5 py-0.5">
+                          Próxima agendada
+                        </span>
+                      )}
                       {overdueDays > 0 && (
                         <span className="rounded-md bg-red-400 text-white text-[0.55rem] font-bold uppercase tracking-wide px-1.5 py-0.5">
                           Atrasada há {overdueDays} {overdueDays === 1 ? 'dia' : 'dias'}
