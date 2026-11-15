@@ -358,9 +358,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={() => setShowLogout(true)}
               aria-label="Sair"
               title="Sair"
-              idleBackground="transparent"
+              idleBackground="#E6EAEA"
               idleColor={SHOWCASE.inkSoft}
-              idleBorderColor={SIDEBAR_TREE_LINE}
+              idleBorderColor="transparent"
             />
           </span>
         </div>

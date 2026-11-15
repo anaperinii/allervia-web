@@ -36,7 +36,6 @@ import {
   faMagnifyingGlass,
   faSitemap,
   faPlus,
-  faRotateLeft,
   faStar,
   faThumbtack,
   faTrash,
@@ -431,6 +430,11 @@ export function ProtocolsPage() {
         open={confirm !== null}
         onClose={() => setConfirm(null)}
         size="sm"
+        tone={
+          confirm?.type === 'retire' || confirm?.type === 'discard'
+            ? 'danger'
+            : 'brand'
+        }
         title={
           confirm?.type === 'publish'
             ? 'Publicar versão'
@@ -447,9 +451,7 @@ export function ProtocolsPage() {
                 ? faCircleCheck
                 : confirm?.type === 'default'
                   ? faStar
-                  : confirm?.type === 'discard'
-                    ? faTrash
-                    : faRotateLeft
+                  : faTrash
             }
             style={{ fontSize: 16 }}
           />
@@ -592,7 +594,7 @@ function VersionActionsMenu({
           <div
             ref={menuRef}
             role="menu"
-            className="fixed z-[60] overflow-hidden rounded-lg border border-(--border-custom) bg-white shadow-[0_8px_24px_rgba(0,0,0,0.1)] divide-y divide-(--border-custom)"
+            className="fixed z-60 overflow-hidden rounded-lg border border-(--border-custom) bg-white shadow-[0_8px_24px_rgba(0,0,0,0.1)] divide-y divide-(--border-custom)"
             style={{ top: coords.top, left: coords.left, width: MENU_WIDTH }}
           >
           {showDefaultAndRetire && (
