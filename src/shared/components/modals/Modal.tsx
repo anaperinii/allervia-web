@@ -1,8 +1,10 @@
 import { cn } from '@/shared/lib/cn'
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { Button } from '../forms/Button'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faTriangleExclamation, faXmark } from '@fortawesome/free-solid-svg-icons'
 
 type Size = 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 const SIZE_CLASS: Record<Size, string> = {
@@ -111,7 +113,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
   const labelProps = title
     ? { 'aria-labelledby': titleId }
     : { 'aria-label': ariaLabel ?? 'Diálogo' }
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 animate-in fade-in-0 duration-200"
       onClick={requestClose}
@@ -122,7 +124,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
         aria-modal="true"
         {...labelProps}
         className={cn(
-          'bg-white rounded-xl shadow-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200',
+          'relative bg-white rounded-xl shadow-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200',
           SIZE_CLASS[size]
         )}
         onClick={(e) => e.stopPropagation()}
@@ -133,7 +135,25 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
           }
         }}
       >
-        {discardPrompt && <div role="alert" className="p-4"><p>Descartar os dados não salvos?</p><button onClick={() => setDiscardPrompt(false)}>Continuar editando</button><button onClick={() => { setDiscardPrompt(false); onClose() }}>Descartar e sair</button></div>}
+        {discardPrompt && (
+          <div role="alertdialog" aria-modal="true" className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 p-4 animate-in fade-in-0 duration-150">
+            <div role="alert" className="w-full max-w-xs rounded-xl bg-white p-5 shadow-2xl animate-in zoom-in-95 duration-150">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50">
+                  <FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-500" style={{ fontSize: 16 }} />
+                </div>
+                <h3 className="text-sm font-bold text-(--text)">Descartar alterações?</h3>
+              </div>
+              <p className="mb-4 text-xs leading-relaxed text-(--text-muted)">
+                Você tem alterações não salvas. Se sair agora, elas serão perdidas. Deseja continuar?
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" fullWidth onClick={() => setDiscardPrompt(false)}>Continuar editando</Button>
+                <Button tone="brand" variant="solid" fullWidth onClick={() => { setDiscardPrompt(false); onClose() }}>Descartar e sair</Button>
+              </div>
+            </div>
+          </div>
+        )}
         {hasHeader && (
           <div
             className="flex items-center justify-between px-5 py-3.5 border-b border-(--border-custom) shrink-0"
@@ -185,6 +205,7 @@ export function Modal({ open, onClose, title, size = 'md', children, footer, ico
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

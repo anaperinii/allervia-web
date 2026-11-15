@@ -216,6 +216,7 @@ async function fillPrescriptionStep(user: ReturnType<typeof userEvent.setup>) {
   )
 
   await user.selectOptions(controlByLabel(/versão do protocolo/i), 'version-1')
+  await user.click(screen.getByRole('button', { name: /todas as 2 etapas/i }))
   expect(screen.getByRole('checkbox', { name: /baixa/i })).toBeChecked()
   expect(screen.getByRole('checkbox', { name: /meta/i })).toBeChecked()
   await user.selectOptions(controlByLabel(/etapa inicial/i), 'low')
@@ -343,15 +344,16 @@ describe('prescription wizard', () => {
     const user = userEvent.setup()
     await renderWizard()
 
-    expect(screen.queryByText(/já em andamento neste paciente/i)).toBeNull()
+    expect(screen.queryByText(/imunoterapia.* vinculada/i)).toBeNull()
 
     await user.type(screen.getByPlaceholderText('Nome completo'), 'Paula')
     await user.click(await screen.findByRole('option', { name: /paula andrade/i }))
 
     expect(
-      await screen.findByText(/1 imunoterapia já em andamento neste paciente/i),
+      await screen.findByText(/1 imunoterapia vinculada para/i),
     ).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Ácaros' })).toBeInTheDocument()
+    expect(screen.getByText('Ácaros')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /acessar prontuário/i })).toBeInTheDocument()
     expect(screen.getByText('Em andamento')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Continuar' }))

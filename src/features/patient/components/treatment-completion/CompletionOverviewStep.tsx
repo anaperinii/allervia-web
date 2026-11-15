@@ -1,4 +1,5 @@
 import { cn } from '@/shared/lib/cn'
+import { formatCPF } from '@/shared/lib/formatters'
 import { StepHeading } from '@/shared/components'
 import { DottedSpot } from '@/features/patient/components/DottedSpot'
 import { CompletionMetrics } from '@/features/patient/components/treatment-completion/CompletionMetrics'
@@ -34,7 +35,7 @@ export function CompletionOverviewStep({
   const personalRows: [string, string][] = [
     ['Data de Nascimento', patient.birthDate],
     ['Idade', `${patient.age} anos`],
-    ['CPF', patient.cpf],
+    ['CPF', formatCPF(patient.cpf)],
     ['Telefone', patient.phone],
     ['Peso', patient.weight],
     ['Médico Responsável', patient.responsibleDoctor],

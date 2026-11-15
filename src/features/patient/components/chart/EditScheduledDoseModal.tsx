@@ -5,6 +5,7 @@ import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, TextInp
 import { updateScheduledDose } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
+import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import { toZonedOffsetIso, dayInZone, timeInZone } from '@/shared/lib/dates'
 import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 import { formatStepOption } from '@/features/patient/adapters/clinical-presentation'
@@ -17,6 +18,7 @@ interface EditScheduledDoseModalProps {
   open: boolean
   dose: DoseDetail | null
   organizationId: string
+  patientName: string
   onClose: () => void
   onSaved: () => void
 }
@@ -44,6 +46,7 @@ function EditScheduledDoseForm({
   open,
   dose,
   organizationId,
+  patientName,
   onClose,
   onSaved,
 }: EditScheduledDoseModalProps) {
@@ -103,13 +106,44 @@ function EditScheduledDoseForm({
   const canSubmit =
     !!dose && !!selectedStep && !!date && !!time && reason.trim().length > 0 && !mutation.isPending && !reviewRequired
 
+  const initials = patientName
+    .split(' ')
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+
   return (
     <Modal
       open={open && !!dose}
       pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
       dirty={!!reason}
       onClose={onClose}
-      title="Editar previsão pendente"
+      ariaLabel="Editar previsão pendente"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-3">
+            <div
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+              style={{
+                background: 'linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
+                boxShadow: '0 6px 14px -8px rgba(16,60,68,0.55)',
+              }}
+            >
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-[0.95rem] font-bold text-(--text)">{patientName}</div>
+              <div className="text-[0.82rem] text-(--text-muted)">Ajuste de previsão pendente</div>
+            </div>
+          </div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>

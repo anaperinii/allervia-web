@@ -1,9 +1,21 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faUser } from '@fortawesome/free-solid-svg-icons'
 import { cn } from '@/shared/lib/cn'
 import { MediaRow } from './MediaRow'
-import { PatientInitials } from '@/shared/components/glass-card'
 import { PROFESSION_LABELS, ROLE_BADGES } from '@/features/settings/constants/team-roles'
 import type { TeamMember } from '@/shared/api/contracts/team'
 import { MemberActionMenu } from './MemberActionMenu'
+
+function MemberAvatar({ size = 32 }: { size?: number }) {
+  return (
+    <div
+      className="flex shrink-0 items-center justify-center rounded-full bg-gray-100 text-(--text-muted)"
+      style={{ width: size, height: size }}
+    >
+      <FontAwesomeIcon icon={faUser} style={{ fontSize: Math.round(size * 0.44) }} />
+    </div>
+  )
+}
 
 interface MembersTableProps {
   members: TeamMember[]
@@ -44,7 +56,7 @@ export function MembersTable({
   return (
     <table className="w-full">
       <thead>
-        <tr className="border-b border-(--border-custom) bg-[#F7F9F9]">
+        <tr className="border-b border-(--border-custom) bg-gray-50/50">
           <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Membro</th>
           <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Papéis</th>
           <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-5 pt-2.5 pb-2.5">Profissão</th>
@@ -61,7 +73,7 @@ export function MembersTable({
           >
             <td className="px-5 py-3">
               <MediaRow
-                leading={<PatientInitials name={member.fullName} size={32} />}
+                leading={<MemberAvatar size={32} />}
                 title={
                   <>
                     {member.fullName}

@@ -10,7 +10,8 @@ import { useSession } from '@/shared/auth/useSession'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
+import { formatPhone } from '@/shared/lib/formatters'
 
 import { faFloppyDisk, faUser, faUserGear } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -41,7 +42,7 @@ export function ProfilePage() {
     resolver: zodResolver(profileSchema),
     values: {
       name: profile?.fullName ?? '',
-      phone: profile?.phoneNumber ?? '',
+      phone: profile?.phoneNumber ? formatPhone(profile.phoneNumber) : '',
       councilNumber: profile?.councilNumber ?? '',
       councilUf: profile?.councilUf ?? '',
     },
@@ -53,7 +54,7 @@ export function ProfilePage() {
     mutationFn: (values: ProfileForm) =>
       updateOwnProfile({
         fullName: values.name,
-        phoneNumber: values.phone,
+        phoneNumber: values.phone.replace(/\D/g, ''),
         councilNumber: values.councilNumber || undefined,
         councilUf: values.councilUf || undefined,
       }),
@@ -151,7 +152,7 @@ export function ProfilePage() {
             {}
             <div className="flex flex-col gap-6">
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Pessoais</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
@@ -162,8 +163,21 @@ export function ProfilePage() {
                 </FieldLabel>
                 <FieldLabel label="Telefone" error={errors.phone?.message}>
                   {editing
-                    ? <TextInput invalid={!!errors.phone} {...register('phone')} />
-                    : <ReadOnlyField>{watched.phone}</ReadOnlyField>}
+                    ? (
+                      <Controller
+                        control={control}
+                        name="phone"
+                        render={({ field }) => (
+                          <TextInput
+                            invalid={!!errors.phone}
+                            value={field.value}
+                            onBlur={field.onBlur}
+                            onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                          />
+                        )}
+                      />
+                    )
+                    : <ReadOnlyField>{watched.phone ? formatPhone(watched.phone) : ''}</ReadOnlyField>}
                 </FieldLabel>
               </div>
               <div className="px-4 pb-4 text-[0.65rem] leading-relaxed text-(--text-muted)">
@@ -173,7 +187,7 @@ export function ProfilePage() {
             </section>
 
             <section className="flex flex-1 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-white">
-              <div className="flex items-center gap-2 border-b border-(--border-custom) bg-[#F7F9F9] px-4 py-2.5">
+              <div className="flex items-center gap-2 border-b border-(--border-custom) bg-gray-50/50 px-4 py-2.5">
                 <FontAwesomeIcon icon={faUserGear} className="text-(--text-muted)" style={{ fontSize: 13 }} />
                 <h2 className="text-xs font-bold text-(--text)">Acesso e papéis</h2>
               </div>
@@ -204,7 +218,7 @@ export function ProfilePage() {
             </div>
 
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados Profissionais</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">

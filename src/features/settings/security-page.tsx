@@ -12,6 +12,7 @@ import {
   showApiErrorToast,
   toast,
 } from '@/shared/components'
+import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import { MediaRow } from '@/features/settings/components/MediaRow'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
 import { EnrollMfaFactorModal } from '@/features/settings/components/EnrollMfaFactorModal'
@@ -35,6 +36,8 @@ import { useSession } from '@/shared/auth/useSession'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faCheck,
+  faCircleInfo,
+  faDesktop,
   faFileArrowDown,
   faLock,
   faMobileScreen,
@@ -42,6 +45,7 @@ import {
   faRightFromBracket,
   faShieldHalved,
   faTrashCan,
+  faTriangleExclamation,
   faUserXmark,
   faChevronRight,
 } from '@fortawesome/free-solid-svg-icons'
@@ -85,6 +89,11 @@ function describeUserAgent(userAgent: string | null): string {
             ? 'Linux'
             : 'Sistema desconhecido'
   return `${browser} · ${system}`
+}
+
+function isMobileUserAgent(userAgent: string | null): boolean {
+  if (!userAgent) return false
+  return /Android|iPhone|iPad|iOS|Mobile/.test(userAgent)
 }
 
 function describeActivity(iso: string): string {
@@ -268,7 +277,7 @@ export function SecurityPage() {
     <SettingsLayout subtitle="Segurança e Privacidade">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-          <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
             <h2 className="text-xs font-bold text-(--text)">Autenticação</h2>
           </div>
           <div className="p-4 space-y-3">
@@ -363,12 +372,14 @@ export function SecurityPage() {
         </section>
 
         <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-          <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9] flex items-center justify-between">
-            <h2 className="text-xs font-bold text-(--text)">Sessões ativas</h2>
-            <div className="flex items-center gap-2">
-              <span className="text-[0.6rem] text-(--text-muted) bg-gray-100 px-2 py-0.5 rounded-full">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50 flex items-center justify-between">
+            <div>
+              <h2 className="text-xs font-bold text-(--text)">Sessões ativas</h2>
+              <p className="text-[0.65rem] text-(--text-muted)">
                 {devicesQuery.isSuccess ? `${devices.length} dispositivo${devices.length === 1 ? '' : 's'}` : 'Contagem indisponível'}
-              </span>
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
               <Button
                 tone="danger"
                 variant="outline"
@@ -389,7 +400,7 @@ export function SecurityPage() {
               <div key={device.id} className="px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg shrink-0', device.current ? 'bg-brand-50' : 'bg-gray-100')}>
-                    <FontAwesomeIcon icon={faMobileScreen} className={device.current ? 'text-brand' : 'text-(--text-muted)'} style={{ fontSize: 14 }} />
+                    <FontAwesomeIcon icon={isMobileUserAgent(device.userAgent) ? faMobileScreen : faDesktop} className={device.current ? 'text-brand' : 'text-(--text-muted)'} style={{ fontSize: 14 }} />
                   </div>
                   <div>
                     <div className="text-xs font-semibold text-(--text) flex items-center gap-1.5">
@@ -418,7 +429,7 @@ export function SecurityPage() {
         </section>
 
         <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-          <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+          <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
             <h2 className="text-xs font-bold text-(--text)">Privacidade e LGPD</h2>
           </div>
           <div className="p-4 space-y-3">
@@ -443,8 +454,21 @@ export function SecurityPage() {
         open={showPasswordModal}
         pending={changePasswordMutation.isPending || sensitive.busy || sensitive.pending}
         onClose={closePasswordModal}
-        title="Alterar senha"
+        ariaLabel="Alterar senha"
         size="sm"
+        headerSlot={
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[0.95rem] font-bold text-(--text)">
+              Alterar senha
+            </div>
+            <div className="text-[0.82rem] text-(--text-muted)">Defina uma nova senha para entrar na sua conta</div>
+          </div>
+        }
+        headerStyle={{
+          background: MODAL_HEADER_BACKGROUND,
+          borderBottom: 'none',
+          paddingTop: '1.4rem',
+        }}
         footer={
           <>
             <Button
@@ -498,10 +522,12 @@ export function SecurityPage() {
             {passwordErrors.general}
           </p>
         )}
-        <p className="text-[0.65rem] text-(--text-muted)">
-          Por segurança, todas as suas sessões são encerradas após a troca e
-          será preciso entrar novamente.
-        </p>
+        <div className="flex items-start gap-2 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5">
+          <FontAwesomeIcon icon={faCircleInfo} className="text-gray-500 shrink-0 mt-0.5" style={{ fontSize: 14 }} />
+          <p className="text-[0.65rem] text-gray-600 leading-relaxed">
+            Por segurança, todas as suas sessões são encerradas após a troca e será preciso entrar novamente.
+          </p>
+        </div>
       </Modal>
 
       <Modal
@@ -510,7 +536,7 @@ export function SecurityPage() {
         onClose={() => setShowLogoutAllModal(false)}
         size="sm"
         title="Encerrar todas as sessões"
-        icon={<FontAwesomeIcon icon={faRightFromBracket} style={{ fontSize: 16 }} />}
+        icon={<FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 16 }} />}
         tone="danger"
         footer={
           <>

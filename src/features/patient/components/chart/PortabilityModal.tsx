@@ -3,8 +3,9 @@ import { type LgpdFileFormat } from '@/features/patient/exporters'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
 import { getPatientClinicalRecord, listDosesForTherapy } from '@/shared/api/clinical.api'
 import { queryKeys } from '@/shared/api/query-keys'
+import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import { useSession } from '@/shared/auth/useSession'
-import { Button, ConfirmDiscardModal, Modal, SegmentedControl, TextArea } from '@/shared/components'
+import { Button, ConfirmDiscardModal, FieldLabel, Modal, SegmentedControl, Select, TextArea } from '@/shared/components'
 import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import { cn } from '@/shared/lib/cn'
 import { useQuery } from '@tanstack/react-query'
@@ -89,8 +90,21 @@ function PortabilityModalForm({ open, patient, therapyId, onClose }: Portability
     <Modal
       open={open}
       onClose={requestClose}
-      title="Exportar prontuário clínico"
+      ariaLabel="Exportar prontuário clínico"
       size="lg"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[0.95rem] font-bold text-(--text)">
+            Exportar prontuário clínico
+          </div>
+          <div className="text-[0.82rem] text-(--text-muted)">{patient.name}</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
       footer={
         <Button
           tone="brand"
@@ -103,10 +117,10 @@ function PortabilityModalForm({ open, patient, therapyId, onClose }: Portability
         </Button>
       }
     >
-      <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
-        <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
-        <p className="text-[0.65rem] text-brand-dark leading-relaxed">
-          Prontuário clínico no seu escopo autorizado: cadastro, tratamentos, prescrições, doses, observações, adendos, compromissos e trilha clínica. Não inclui dados de conta, notificações ou solicitações de suporte e não comprova auditoria do download.
+      <div className="flex items-start gap-2 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5">
+        <FontAwesomeIcon icon={faCircleInfo} className="text-gray-500 shrink-0 mt-0.5" style={{ fontSize: 14 }} />
+        <p className="text-[0.65rem] text-gray-600 leading-relaxed">
+          Prontuário clínico no seu escopo autorizado: cadastro, tratamentos, prescrições, doses, observações, adendos, compromissos e trilha clínica. Não inclui dados de conta, notificações ou solicitações de suporte.
         </p>
       </div>
 
@@ -114,7 +128,15 @@ function PortabilityModalForm({ open, patient, therapyId, onClose }: Portability
         Não foi possível carregar todas as fontes. Exportação bloqueada.
         <button type="button" onClick={() => { void dosesQuery.refetch(); void historyQuery.refetch() }}>Tentar novamente</button>
       </p>}
-      <div><label htmlFor="record-scope">Escopo</label><select id="record-scope" value={recordScope} onChange={event => setRecordScope(event.target.value as 'selected' | 'patient')}><option value="patient">Todos os tratamentos acessíveis do paciente</option><option value="selected">Tratamento selecionado</option></select></div>
+      <FieldLabel label="Escopo">
+        <Select
+          value={recordScope}
+          onChange={(event) => setRecordScope(event.target.value as 'selected' | 'patient')}
+        >
+          <option value="patient">Todos os tratamentos acessíveis do paciente</option>
+          <option value="selected">Tratamento selecionado</option>
+        </Select>
+      </FieldLabel>
       <div>
         <span className="text-xs font-semibold text-(--text-muted) mb-1.5 block">Formato</span>
         <SegmentedControl

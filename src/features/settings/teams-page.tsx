@@ -277,7 +277,7 @@ export function TeamsPage() {
               'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors cursor-pointer',
               tab === 'members'
                 ? 'bg-white text-[#12333a] z-10 shadow-[0_-3px_10px_-3px_rgba(18,51,58,0.10),-5px_0_10px_-5px_rgba(18,51,58,0.10),5px_0_10px_-5px_rgba(18,51,58,0.10)]'
-                : 'bg-[#F7F9F9] text-[#8CA1A6] hover:bg-white/70 hover:text-[#4A6469]',
+                : 'bg-gray-50/50 text-[#8CA1A6] hover:bg-white/70 hover:text-[#4A6469]',
             )}
           >
             {tab === 'members' && (
@@ -297,7 +297,7 @@ export function TeamsPage() {
               'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer',
               tab === 'invites'
                 ? 'bg-white text-[#12333a] z-10 shadow-[0_-3px_10px_-3px_rgba(18,51,58,0.10),-5px_0_10px_-5px_rgba(18,51,58,0.10),5px_0_10px_-5px_rgba(18,51,58,0.10)]'
-                : 'bg-[#F7F9F9] text-[#8CA1A6] hover:bg-white/70 hover:text-[#4A6469]',
+                : 'bg-gray-50/50 text-[#8CA1A6] hover:bg-white/70 hover:text-[#4A6469]',
             )}
           >
             {tab === 'invites' && (
@@ -324,7 +324,7 @@ export function TeamsPage() {
               'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer',
               tab === 'requests'
                 ? 'bg-white text-[#12333a] z-10 shadow-[0_-3px_10px_-3px_rgba(18,51,58,0.10),-5px_0_10px_-5px_rgba(18,51,58,0.10),5px_0_10px_-5px_rgba(18,51,58,0.10)]'
-                : 'bg-[#F7F9F9] text-[#8CA1A6] hover:bg-white/70 hover:text-[#4A6469]',
+                : 'bg-gray-50/50 text-[#8CA1A6] hover:bg-white/70 hover:text-[#4A6469]',
             )}
           >
             {tab === 'requests' && (

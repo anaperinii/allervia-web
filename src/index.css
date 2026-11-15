@@ -578,3 +578,30 @@ textarea:-webkit-autofill:focus {
   border: none;
 }
 
+@media print {
+  @page {
+    size: portrait;
+    margin: 10mm;
+  }
+
+  body.printing-flow-diagram * {
+    visibility: hidden;
+  }
+
+  body.printing-flow-diagram #flow-diagram-print-root,
+  body.printing-flow-diagram #flow-diagram-print-root * {
+    visibility: visible;
+  }
+
+  body.printing-flow-diagram #flow-diagram-print-root {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+
+  body.printing-flow-diagram #flow-diagram-print-root * {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+

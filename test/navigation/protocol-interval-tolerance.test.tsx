@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ProtocolEditor } from '@/features/protocols/protocol-editor'
@@ -125,16 +125,20 @@ describe('tolerância de intervalo no editor de protocolo', () => {
     )
 
     expect(
-      screen.getAllByText(/derivado desta etapa e da seguinte/i).length,
+      screen.getAllByText(/tolerância: curto/i).length,
     ).toBeGreaterThan(0)
     expect(screen.queryByText('Curto abaixo de')).toBeNull()
 
-    await user.click(screen.getAllByRole('button', { name: 'Definir limites' })[0])
+    await user.click(screen.getAllByRole('button', { name: 'Ações da etapa' })[0])
+    await user.click(screen.getByRole('menuitem', { name: 'Editar limites' }))
+
+    const shortField = screen.getByDisplayValue('4')
+    fireEvent.change(shortField, { target: { value: '5' } })
 
     expect(onChange).toHaveBeenCalledTimes(1)
     const next = onChange.mock.calls[0][0] as ProtocolDefinitionDraft
     expect(next.steps[0].intervalTolerance).toEqual({
-      shortBelowDays: 4,
+      shortBelowDays: 5,
       longFromDays: 14,
       stepReviewAboveDays: 21,
     })
@@ -162,9 +166,10 @@ describe('tolerância de intervalo no editor de protocolo', () => {
     )
 
     expect(screen.getByDisplayValue('5')).toBeInTheDocument()
-    expect(screen.getByText('Limites definidos neste protocolo.')).toBeInTheDocument()
+    expect(screen.getByText('personalizada')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Voltar ao derivado' }))
+    await user.click(screen.getAllByRole('button', { name: 'Ações da etapa' })[0])
+    await user.click(screen.getByRole('menuitem', { name: 'Voltar ao derivado' }))
     const next = onChange.mock.calls[0][0] as ProtocolDefinitionDraft
     expect(next.steps[0].intervalTolerance).toBeUndefined()
   })
@@ -177,6 +182,6 @@ describe('tolerância de intervalo no editor de protocolo', () => {
         onChange={vi.fn()}
       />,
     )
-    expect(screen.queryByRole('button', { name: 'Definir limites' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Ações da etapa' })).toBeNull()
   })
 })

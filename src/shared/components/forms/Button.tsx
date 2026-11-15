@@ -52,12 +52,12 @@ const OUTLINE_BASE = 'border border-[#DDE6E6] bg-white'
 const STYLES: Record<ButtonTone, Record<ButtonVariant, string>> = {
   brand: {
     solid: 'bg-[#12333a] text-white hover:bg-[#0c2429]',
-    outline: 'border border-[#257E8C]/40 bg-[#257E8C]/6 text-[#1d6772] hover:border-[#257E8C]/70 hover:bg-[#257E8C]/12',
+    outline: 'border border-[#12333a] bg-[#F7F9F9] text-[#12333a] hover:bg-[#12333a]/6',
     'outline-white': 'border border-[#257E8C]/40 bg-white text-[#1d6772] hover:border-[#257E8C]/70 hover:bg-[#257E8C]/6',
     ghost: 'text-[#12333a] hover:bg-[#12333a]/8',
   },
   danger: {
-    solid: 'bg-[#A41517] text-white hover:bg-[#8a1114]',
+    solid: 'bg-[#B5393B] text-white hover:bg-[#9c2f31]',
     outline: 'border border-red-300 bg-red-50 text-red-700 hover:border-red-400 hover:bg-red-100',
     'outline-white': 'border border-[#A41517]/40 bg-white text-[#A41517] hover:border-[#A41517]/70 hover:bg-[#A41517]/6',
     ghost: 'text-[#A41517] hover:bg-[#A41517]/10',
@@ -146,7 +146,7 @@ export function Button(props: ButtonProps) {
   const { tone: _t, variant: _v, size: _s, leftIcon: _l, rightIcon: _r, fullWidth: _fw, prominent: _p, className: _c, children: _ch, disabled: _d, ...rest } = asAction
   void _t; void _v; void _s; void _l; void _r; void _fw; void _p; void _c; void _ch; void _d
   return (
-    <button {...rest} disabled={disabled} className={cls}>
+    <button type="button" {...rest} disabled={disabled} className={cls}>
       {leftIcon && <span className="relative z-10 inline-flex">{leftIcon}</span>}
       <span className="relative z-10">{children}</span>
       {rightIcon && <span className="relative z-10 inline-flex">{rightIcon}</span>}

@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf'
 import { format } from 'date-fns'
+import { ALLERVIA_MARK_DARK_BASE64 } from './allervia-mark-base64'
 import type {
   ApplicationDayEntry,
   CountEntry,
@@ -51,7 +52,7 @@ const GRID: [number, number, number] = [226, 240, 239]
 const SURFACE: [number, number, number] = [245, 250, 250]
 
 const PHASE_COLORS = { buildUp: '#6E9A2B', maintenance: '#0C86C9' }
-const STATUS_COLORS = { active: '#14B8A6', suspended: '#0891B2', completed: '#0F766E' }
+const STATUS_COLORS = { active: '#14B8A6', suspended: '#FF8C69', completed: '#00E0D1' }
 const SEQUENTIAL_RAMP = ['#CCE9E4', '#A6D9D1', '#74C3B9', '#4FA99E', '#37877D']
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -175,7 +176,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     const plotW = contentW - axisW
     const plotY = y
     const plotH = chartH
-    const maxValue = Math.max(1, ...series.map((entry) => entry.buildUp + entry.maintenance))
+    const maxValue = Math.max(1, ...series.map((entry) => Math.max(entry.buildUp, entry.maintenance)))
 
     doc.setFontSize(6.5)
     doc.setFont('helvetica', 'normal')
@@ -189,18 +190,18 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
     }
 
     const slot = plotW / series.length
-    const barW = Math.min(4, slot * 0.6)
+    const barW = Math.min(1.8, slot * 0.3)
     series.forEach((entry, index) => {
-      const x = plotX + slot * index + (slot - barW) / 2
+      const groupX = plotX + slot * index + slot / 2
       const buildUpH = (plotH * entry.buildUp) / maxValue
       const maintenanceH = (plotH * entry.maintenance) / maxValue
-      if (maintenanceH > 0) {
-        doc.setFillColor(...hexToRgb(PHASE_COLORS.maintenance))
-        doc.rect(x, plotY + plotH - maintenanceH, barW, maintenanceH, 'F')
-      }
       if (buildUpH > 0) {
         doc.setFillColor(...hexToRgb(PHASE_COLORS.buildUp))
-        doc.rect(x, plotY + plotH - maintenanceH - buildUpH, barW, buildUpH, 'F')
+        doc.rect(groupX - barW - 0.3, plotY + plotH - buildUpH, barW, buildUpH, 'F')
+      }
+      if (maintenanceH > 0) {
+        doc.setFillColor(...hexToRgb(PHASE_COLORS.maintenance))
+        doc.rect(groupX + 0.3, plotY + plotH - maintenanceH, barW, maintenanceH, 'F')
       }
     })
 
@@ -215,7 +216,6 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
 
 
   const drawHBarList = (entries: CountEntry[], unit: string) => {
-    const max = Math.max(1, ...entries.map((entry) => entry.count))
     const labelW = 38
     const valueW = 30
     const barAreaW = contentW - labelW - valueW
@@ -227,7 +227,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
       doc.text(entry.label, margin, y + 3)
       doc.setFillColor(...SURFACE)
       doc.roundedRect(margin + labelW, y, barAreaW, 4, 1, 1, 'F')
-      const barW = Math.max(1.5, (barAreaW * entry.count) / max)
+      const barW = Math.max(1.5, (barAreaW * entry.pct) / 100)
       doc.setFillColor(...BRAND)
       doc.roundedRect(margin + labelW, y, barW, 4, 1, 1, 'F')
       doc.setTextColor(...MUTED)
@@ -292,6 +292,11 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
 
   doc.setFillColor(108, 158, 165)
   doc.rect(0, 0, pageW, 2, 'F')
+
+  const markSize = 7
+  const markX = pageW - margin - markSize
+  doc.addImage(ALLERVIA_MARK_DARK_BASE64, 'PNG', markX, margin, markSize, markSize)
+
   doc.setFontSize(16)
   doc.setTextColor(14, 153, 163)
   doc.setFont('helvetica', 'bold')
@@ -300,7 +305,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
   doc.setTextColor(...MUTED)
   doc.setFont('helvetica', 'normal')
   doc.text(`Período: ${data.periodLabel}`, margin, (y += 7))
-  doc.text(`Gerado em ${data.generatedAt} · allervia`, margin, (y += 5))
+  doc.text(`Gerado em ${data.generatedAt}`, margin, (y += 5))
   doc.setDrawColor(...GRID)
   doc.line(margin, (y += 3), pageW - margin, y)
   y += 6
@@ -348,7 +353,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
 
 
   if (includes('applications')) {
-    addSectionTitle('Aplicações Registradas', 'Aplicações por dia no período selecionado')
+    addSectionTitle('Aplicações Registradas na Semana', 'Aplicações por dia no período selecionado')
     if (data.applicationSeries.every((entry) => entry.value === 0)) {
       addEmptyState('Sem aplicações registradas no período.')
     } else {
@@ -390,7 +395,7 @@ export function buildDashboardReportPdf(data: DashboardReportData): jsPDF {
   if (includes('phases')) {
     addSectionTitle(
       'Distribuição de Fases',
-      'Aplicações administradas por dia, empilhadas por fase do tratamento',
+      'Aplicações administradas por dia, por fase do tratamento',
     )
     if (data.phaseSeries.every((entry) => entry.buildUp + entry.maintenance === 0)) {
       addEmptyState('Sem aplicações administradas no período.')

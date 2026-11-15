@@ -1,6 +1,9 @@
 import { Modal } from './Modal'
 import { Button } from '../forms/Button'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+
 interface ConfirmDiscardModalProps {
   open: boolean
   onCancel: () => void
@@ -22,10 +25,12 @@ export function ConfirmDiscardModal({
       onClose={onCancel}
       title={title}
       size="sm"
+      icon={<FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 16 }} />}
+      tone="warning"
       footer={
         <>
           <Button variant="outline" fullWidth onClick={onCancel}>Continuar editando</Button>
-          <Button tone="danger" variant="solid" fullWidth onClick={onConfirm}>Descartar e sair</Button>
+          <Button tone="brand" variant="solid" fullWidth onClick={onConfirm}>Descartar e sair</Button>
         </>
       }
     >

@@ -2,6 +2,9 @@ import type { ButtonTone } from '../forms/Button'
 import { Modal } from './Modal'
 import { Button } from '../forms/Button'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+
 interface CancelWizardModalProps {
   open: boolean
   title: string
@@ -24,10 +27,10 @@ export function CancelWizardModal({
   onConfirm,
   keepEditingLabel = 'Continuar editando',
   cancelLabel = 'Cancelar',
-  cancelTone = 'danger',
+  cancelTone = 'brand',
   secondaryLabel,
   onSecondary,
-  secondaryTone = 'danger',
+  secondaryTone = 'brand',
 }: CancelWizardModalProps) {
   return (
     <Modal
@@ -35,6 +38,8 @@ export function CancelWizardModal({
       onClose={onClose}
       title={title}
       size="sm"
+      icon={<FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 16 }} />}
+      tone="warning"
       footer={
         <>
           <Button variant="outline" onClick={onClose}>{keepEditingLabel}</Button>

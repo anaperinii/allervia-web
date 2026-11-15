@@ -14,6 +14,7 @@ import type {
   TherapyLifecycleEvent,
 } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
+import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import {
   INACTIVATION_CATEGORY_LABELS,
 } from '@/features/patient/constants/clinical-labels'
@@ -105,7 +106,20 @@ function SuspendForm({
       pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
       dirty={!!reason}
       onClose={onClose}
-      title="Suspender tratamento"
+      ariaLabel="Suspender tratamento"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[0.95rem] font-bold text-(--text)">
+            Suspender tratamento
+          </div>
+          <div className="text-[0.82rem] text-(--text-muted)">Bloqueio de novos comandos clínicos até a retomada</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>
@@ -117,9 +131,9 @@ function SuspendForm({
     >
       {reviewRequired && confirmedRevision === null && <div role="alert"><p>Não foi possível carregar a revisão atual. Seu rascunho está preservado.</p><button type="button" onClick={async () => { try { const current = await getImmunotherapy(therapyId); setConfirmedRevision(current.revision); await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) } catch (error) { showApiErrorToast(error) } }}>Recarregar registro atual</button></div>}
       <ClinicalReviewNotice required={reviewRequired && confirmedRevision !== null} onReview={() => { if (confirmedRevision !== null) setReviewRequired(false) }} />
-      <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
-        <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
-        <p className="text-[0.65rem] text-brand-dark leading-relaxed">
+      <div className="flex items-start gap-2 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5">
+        <FontAwesomeIcon icon={faCircleInfo} className="text-gray-500 shrink-0 mt-0.5" style={{ fontSize: 14 }} />
+        <p className="text-[0.65rem] text-gray-600 leading-relaxed">
           A suspensão bloqueia novos comandos clínicos e preserva a previsão pendente
           para a retomada. Motivo, categoria e autoria ficam no histórico do tratamento.
         </p>
@@ -199,7 +213,20 @@ function ResumeForm({
       pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
       dirty={!!reason}
       onClose={onClose}
-      title="Retomar tratamento"
+      ariaLabel="Retomar tratamento"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[0.95rem] font-bold text-(--text)">
+            Retomar tratamento
+          </div>
+          <div className="text-[0.82rem] text-(--text-muted)">Reativação de comandos clínicos</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>
@@ -249,7 +276,25 @@ export function LifecycleHistoryModal({
     enabled: open && organizationId !== '',
   })
   return (
-    <Modal open={open} onClose={onClose} title="Histórico do tratamento" size="lg">
+    <Modal
+      open={open}
+      onClose={onClose}
+      ariaLabel="Histórico do tratamento"
+      size="lg"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[0.95rem] font-bold text-(--text)">
+            Histórico do tratamento
+          </div>
+          <div className="text-[0.82rem] text-(--text-muted)">Eventos de ciclo de vida</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
+    >
       {query.isPending && <p className="text-xs text-(--text-muted)">Carregando…</p>}
       {query.data && query.data.events.length === 0 && (
         <p className="text-xs text-(--text-muted)">Nenhum evento de ciclo de vida registrado.</p>
@@ -265,9 +310,16 @@ export function LifecycleHistoryModal({
 
 function LifecycleEventCard({ event }: { event: TherapyLifecycleEvent }) {
   return (
-    <div className="rounded-lg border border-(--border-custom) bg-white px-3.5 py-2.5 space-y-1">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-(--text)">{EVENT_LABELS[event.type]}</span>
+    <div className="relative rounded-lg border border-(--border-custom) bg-white px-3.5 py-2.5 space-y-1">
+      <div className="relative flex items-center justify-between">
+        <span className="relative flex items-center">
+          <span
+            aria-hidden="true"
+            className="absolute -left-3.5 h-4 w-[3px] rounded-r-full"
+            style={{ background: '#257E8C' }}
+          />
+          <span className="text-xs font-bold text-(--text)">{EVENT_LABELS[event.type]}</span>
+        </span>
         <span className="text-[0.6rem] text-(--text-muted)">
           {formatInstantDate(event.createdAt)} · {event.createdBy.professional?.fullName ?? '—'}
         </span>

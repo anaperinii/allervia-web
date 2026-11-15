@@ -1,26 +1,14 @@
 import { ClinicalReviewNotice } from '@/shared/components/ClinicalReviewNotice'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, FieldLabel, Modal, Select, showApiErrorToast, TextArea, TextInput, toast } from '@/shared/components'
-import {
-  addLateObservation,
-  getDose,
-  retractDose,
-} from '@/shared/api/clinical.api'
+import { Button, FieldLabel, Modal, showApiErrorToast, TextArea, toast } from '@/shared/components'
+import { getDose, retractDose } from '@/shared/api/clinical.api'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
-import { toZonedOffsetIso, todayStr } from '@/shared/lib/dates'
 import { useIdempotencyKey } from '@/shared/lib/use-idempotency-key'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleCheck, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
-
-function toList(text: string): string[] {
-  return text
-    .split(/[;,\n]/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
+import { faCircleCheck, faCircleInfo, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 
 interface CorrectionModalProps {
   doseId: string | null
@@ -90,6 +78,8 @@ function RetractDoseForm({ doseId, organizationId, onClose }: CorrectionModalPro
       dirty={!!reason}
       onClose={onClose}
       title="Registrar aplicação em erro"
+      icon={<FontAwesomeIcon icon={faTriangleExclamation} style={{ fontSize: 16 }} />}
+      tone="danger"
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>
@@ -105,9 +95,9 @@ function RetractDoseForm({ doseId, organizationId, onClose }: CorrectionModalPro
       }
     >
       <ClinicalReviewNotice required={reviewRequired} onReview={() => setReviewRequired(false)} />
-      <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
-        <FontAwesomeIcon icon={faCircleInfo} className="text-amber-700 shrink-0 mt-0.5" style={{ fontSize: 14 }} />
-        <p className="text-[0.65rem] text-amber-800 leading-relaxed">
+      <div className="flex items-start gap-2 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5">
+        <FontAwesomeIcon icon={faCircleInfo} className="text-gray-500 shrink-0 mt-0.5" style={{ fontSize: 14 }} />
+        <p className="text-[0.65rem] text-gray-600 leading-relaxed">
           Nada é apagado: a aplicação vira &quot;registrada em erro&quot; com todos os valores
           preservados, a próxima previsão criada por ela é arquivada e a previsão original
           volta a ficar pendente.
@@ -129,134 +119,3 @@ function RetractDoseForm({ doseId, organizationId, onClose }: CorrectionModalPro
   )
 }
 
-export function LateObservationModal(props: CorrectionModalProps) { return props.doseId ? <LateObservationForm key={props.doseId} {...props} /> : null }
-
-function LateObservationForm({ doseId, organizationId, onClose }: CorrectionModalProps) {
-  const queryClient = useQueryClient()
-  const [effects, setEffects] = useState('')
-  const [medications, setMedications] = useState('')
-  const [notes, setNotes] = useState('')
-  const [date, setDate] = useState(todayStr())
-  const [time, setTime] = useState('12:00')
-  const [conduct, setConduct] = useState('')
-  const [conductJustification, setConductJustification] = useState('')
-  const idempotencyKeyFor = useIdempotencyKey()
-
-  const doseQuery = useQuery({
-    queryKey: queryKeys.dose(organizationId, doseId ?? ''),
-    queryFn: ({ signal }) => getDose(doseId!, signal),
-    enabled: doseId !== null && organizationId !== '',
-  })
-  const dose = doseQuery.data ?? null
-
-  const [reviewRequired, setReviewRequired] = useState(false)
-  const mutation = useMutation({
-    mutationFn: () => {
-      const command = {
-        reportedSideEffects: toList(effects),
-        administeredMedications: toList(medications),
-        ...(notes.trim() ? { notes: notes.trim() } : {}),
-        observedAt: toZonedOffsetIso(date, time, dose?.immunotherapy.currentPrescription?.resolved.timeZone ?? 'America/Sao_Paulo'),
-        ...(conduct
-          ? {
-              conduct: {
-                type: conduct as 'MAINTAIN' | 'REQUEST_PHYSICIAN_REVIEW' | 'SUSPEND_TREATMENT',
-                justification: conductJustification.trim() || undefined,
-              },
-            }
-          : {}),
-        expectedTherapyRevision: dose!.therapyRevision,
-      }
-      return addLateObservation(doseId!, {
-        ...command,
-        idempotencyKey: idempotencyKeyFor([doseId, command]),
-      })
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['clinical', organizationId] })
-      toast.success({
-        icon: <FontAwesomeIcon icon={faCircleCheck} style={{ fontSize: 16 }} />,
-        title: 'Observação tardia registrada',
-        description: 'Registro adicional imutável com sua autoria e o instante observado.',
-        autoDismissMs: 8000,
-      })
-      onClose()
-    },
-    meta: { suppressErrorToast: true },
-    onError: async (error) => {
-      if (error instanceof ApiError && error.code.startsWith('STALE_')) { setReviewRequired(true); await queryClient.invalidateQueries({ queryKey: queryKeys.clinical(organizationId) }) }
-      showApiErrorToast(
-        error,
-        error instanceof ApiError && error.code === 'CONDUCT_REQUIRES_PHYSICIAN'
-          ? {
-              title: 'Conduta exige revisão médica',
-              description:
-                'Suspender o tratamento exige poder de revisão clínica. Registre a observação e solicite avaliação médica.',
-            }
-          : {},
-      )
-    },
-  })
-
-  const canSubmit =
-    !!dose &&
-    (toList(effects).length > 0 || toList(medications).length > 0 || notes.trim().length > 0) &&
-    (!conduct || conduct === 'MAINTAIN' || conductJustification.trim().length > 0) &&
-    !mutation.isPending && !reviewRequired
-
-  return (
-    <Modal
-      open={doseId !== null}
-      pending={mutation.isPending || (mutation.error instanceof ApiError && mutation.error.isIndeterminate)}
-      dirty={!!effects || !!medications || !!notes || !!conduct}
-      onClose={onClose}
-      title="Observação pós-aplicação tardia"
-      size="lg"
-      footer={
-        <>
-          <Button variant="outline" onClick={onClose}>Voltar</Button>
-          <Button tone="brand" variant="solid" disabled={!canSubmit} onClick={() => mutation.mutate()}>
-            Registrar observação
-          </Button>
-        </>
-      }
-    >
-      <ClinicalReviewNotice required={reviewRequired} onReview={() => setReviewRequired(false)} />
-      <div className="grid grid-cols-2 gap-3">
-        <FieldLabel label="Efeitos relatados" hint="(separe por vírgula)">
-          <TextInput value={effects} onChange={(e) => setEffects(e.target.value)} placeholder="Ex: urticária, prurido" />
-        </FieldLabel>
-        <FieldLabel label="Medicações administradas" hint="(separe por vírgula)">
-          <TextInput value={medications} onChange={(e) => setMedications(e.target.value)} placeholder="Ex: anti-histamínico" />
-        </FieldLabel>
-        <FieldLabel label="Data observada">
-          <TextInput type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        </FieldLabel>
-        <FieldLabel label="Hora observada">
-          <TextInput type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-        </FieldLabel>
-      </div>
-      <FieldLabel label="Notas">
-        <TextArea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Contexto do relato (ex: paciente ligou à noite)" />
-      </FieldLabel>
-      <FieldLabel label="Conduta decorrente" hint="(opcional)">
-        <Select value={conduct} onChange={(e) => setConduct(e.target.value)}>
-          <option value="">Sem conduta registrada</option>
-          <option value="MAINTAIN">Manter protocolo</option>
-          <option value="REQUEST_PHYSICIAN_REVIEW">Solicitar avaliação médica</option>
-          <option value="SUSPEND_TREATMENT">Suspender tratamento (exige revisão clínica)</option>
-        </Select>
-      </FieldLabel>
-      {conduct && conduct !== 'MAINTAIN' && (
-        <FieldLabel label="Justificativa da conduta" required>
-          <TextArea
-            rows={2}
-            value={conductJustification}
-            onChange={(e) => setConductJustification(e.target.value)}
-            placeholder="Contexto clínico da conduta"
-          />
-        </FieldLabel>
-      )}
-    </Modal>
-  )
-}

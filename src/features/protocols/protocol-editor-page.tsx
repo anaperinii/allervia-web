@@ -181,10 +181,38 @@ export function ProtocolEditorPage({
   const subtitle =
     mode === 'create' || !editor?.name
       ? TITLES[mode]
-      : `${TITLES[mode]} — ${editor.name}`
+      : mode === 'new-version'
+        ? (
+          <>
+            {editor.name} <span className="text-xl font-normal text-(--text-muted)">(nova versão)</span>
+          </>
+        )
+        : `${TITLES[mode]} — ${editor.name}`
+
+  const headerActions = editor ? (
+    <>
+      <Button variant="outline" onClick={leave}>
+        Cancelar
+      </Button>
+      <Button
+        tone="brand"
+        variant="solid"
+        disabled={
+          !canManage ||
+          saveMutation.isPending ||
+          conflict || serverPublished || (mode === 'edit-draft' && versionQuery.data?.status !== 'DRAFT') ||
+          draftProblems.length > 0 ||
+          (mode === 'create' && editor.name.trim().length === 0)
+        }
+        onClick={() => saveMutation.mutate(editor)}
+      >
+        Salvar rascunho
+      </Button>
+    </>
+  ) : undefined
 
   return (
-    <SettingsLayout subtitle={subtitle}>
+    <SettingsLayout subtitle={subtitle} parents={['Protocolos de Imunoterapia']} headerActions={headerActions}>
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
         <div className="flex min-w-0 flex-1 flex-col gap-4 xl:max-w-3xl">
         {!canManage && (
@@ -292,25 +320,6 @@ export function ProtocolEditorPage({
               </ul>
             )}
 
-            <div className="flex items-center justify-end gap-2 border-t border-(--border-custom) pt-4">
-              <Button variant="outline" onClick={leave}>
-                Cancelar
-              </Button>
-              <Button
-                tone="brand"
-                variant="solid"
-                disabled={
-                  !canManage ||
-                  saveMutation.isPending ||
-                  conflict || serverPublished || (mode === 'edit-draft' && versionQuery.data?.status !== 'DRAFT') ||
-                  draftProblems.length > 0 ||
-                  (mode === 'create' && editor.name.trim().length === 0)
-                }
-                onClick={() => saveMutation.mutate(editor)}
-              >
-                Salvar rascunho
-              </Button>
-            </div>
           </>
         )}
         </div>

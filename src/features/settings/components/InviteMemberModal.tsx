@@ -2,11 +2,15 @@ import { emailSchema } from '@/shared/lib/field-schemas'
 import { useState } from 'react'
 import { cn } from '@/shared/lib/cn'
 import { Modal, Button, TextInput, FieldLabel } from '@/shared/components'
+import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import {
   ROLE_BADGES,
   ROLE_DESCRIPTIONS,
   type TeamRole,
 } from '@/features/settings/constants/team-roles'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
 interface InviteMemberModalProps {
   open: boolean
@@ -41,8 +45,21 @@ function InviteMemberForm({
     <Modal
       open={open}
       onClose={handleClose}
-      title="Convidar novo membro"
+      ariaLabel="Convidar novo membro"
       size="md"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[0.95rem] font-bold text-(--text)">
+            Convidar novo membro
+          </div>
+          <div className="text-[0.82rem] text-(--text-muted)">Acesso à organização</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
       footer={
         <>
           <Button variant="outline" onClick={handleClose}>
@@ -105,12 +122,15 @@ function InviteMemberForm({
           )}
         </div>
       </div>
-      <div className="bg-brand-50 border border-brand/20 rounded-lg p-3">
-        <div className="text-[0.65rem] font-semibold text-brand-dark mb-1">
-          Sobre este papel
-        </div>
-        <div className="text-[0.6rem] text-brand-dark/80 leading-relaxed">
-          {ROLE_DESCRIPTIONS[role]}
+      <div className="flex items-start gap-2 bg-gray-100 border border-gray-200 rounded-lg p-3">
+        <FontAwesomeIcon icon={faCircleInfo} className="text-gray-500 shrink-0 mt-0.5" style={{ fontSize: 13 }} />
+        <div>
+          <div className="text-[0.65rem] font-semibold text-(--text) mb-1">
+            Sobre este papel
+          </div>
+          <div className="text-[0.6rem] text-(--text-muted) leading-relaxed">
+            {ROLE_DESCRIPTIONS[role]}
+          </div>
         </div>
       </div>
     </Modal>

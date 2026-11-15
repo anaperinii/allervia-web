@@ -129,7 +129,7 @@ export function AdvancedSettingsPage() {
     <SettingsLayout subtitle="Configurações Avançadas">
       <div className="flex flex-col gap-5">
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Notificações</h2>
               </div>
               <div className="p-4 space-y-3">
@@ -153,7 +153,7 @@ export function AdvancedSettingsPage() {
             </section>
 
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Sistema</h2>
               </div>
               <div className="p-4 grid grid-cols-2 gap-4">
@@ -199,7 +199,7 @@ export function AdvancedSettingsPage() {
             </section>
 
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Agendamentos</h2>
               </div>
               <div className="p-4 space-y-4">
@@ -249,7 +249,7 @@ export function AdvancedSettingsPage() {
             </section>
 
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Tipos de Imunoterapia</h2>
               </div>
               <div className="p-4 space-y-3">
@@ -284,7 +284,7 @@ export function AdvancedSettingsPage() {
             </section>
 
             <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-              <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+              <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Dados e Backup</h2>
               </div>
               <div className="p-4 space-y-3">
@@ -299,7 +299,7 @@ export function AdvancedSettingsPage() {
 
             {canViewAudit && (
               <section className="border border-(--border-custom) rounded-xl overflow-hidden bg-white">
-                <div className="px-4 py-3 border-b border-(--border-custom) bg-[#F7F9F9]">
+                <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                   <h2 className="text-xs font-bold text-(--text)">Auditoria administrativa</h2>
                   <p className="text-[0.62rem] text-(--text-muted) mt-0.5">
                     Trilha oficial do servidor. O histórico clínico de cada tratamento

@@ -7,6 +7,7 @@ import {
 } from '@/features/patient/constants/clinical-labels'
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
 import type { ReportFileFormat, ReportSectionId } from '@/features/patient/exporters/types'
+import { formatCPF } from '@/shared/lib/formatters'
 import { maskCpf, maskName, maskPhone } from '@/shared/lib/mask'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -66,7 +67,7 @@ export function ReportClinicalPreview({
               <Section title="Dados Pessoais">
                 <KeyValueGrid items={[
                   ['Nome', anonymized ? maskName(patient.name, true) : patient.name],
-                  ['CPF', maskCpf(patient.cpf, anonymized)],
+                  ['CPF', maskCpf(formatCPF(patient.cpf), anonymized)],
                   ['Data de Nascimento', patient.birthDate],
                   ['Idade', `${patient.age} anos`],
                   ['Telefone', maskPhone(patient.phone, anonymized)],

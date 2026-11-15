@@ -1,15 +1,14 @@
 import { collectPages } from '@/shared/api/pagination'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { Modal, SegmentedControl, TextInput, Toast } from '@/shared/components'
-import { getApplicationEventColor } from '@/features/scheduling/constants/application-display'
+import { endOfMonth, startOfMonth } from 'date-fns'
+import { CenteredSpinner, SegmentedControl, TextInput, Toast } from '@/shared/components'
+import { appointmentToApplication } from '@/features/scheduling/adapters/appointment-to-application'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import type { Application } from '@/features/patient/stores/usePatientStore'
 import { scheduleItemToApplication } from '@/features/patient/adapters/clinical-presentation'
-import { getDose, listAppointments, listDoseSchedule } from '@/shared/api/clinical.api'
+import { listAppointments, listDoseSchedule } from '@/shared/api/clinical.api'
 import type { Appointment, ScheduleDoseItem } from '@/shared/api/contracts/clinical'
 import {
   AppointmentActionModal,
@@ -18,17 +17,18 @@ import {
 import { ApiError } from '@/shared/api/contracts/errors'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
-import { toZonedOffsetIso, dayInZone, timeInZone } from '@/shared/lib/dates'
+import { toZonedOffsetIso } from '@/shared/lib/dates'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import { useCalendarNav } from '@/features/scheduling/hooks/useCalendarNav'
 import { CalendarToolbar } from '@/features/scheduling/components/CalendarToolbar'
 import { WeekView } from '@/features/scheduling/components/WeekView'
 import { MonthView } from '@/features/scheduling/components/MonthView'
 import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
-import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
+import { CalendarSidePanel } from '@/features/scheduling/components/CalendarSidePanel'
+import { useSchedulingUiStore } from '@/features/scheduling/stores/useSchedulingUiStore'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faCalendarDays, faCircleCheck, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { PageHeader, Pill, SelectPill, SHOWCASE } from '@/shared/components/showcase'
 
 const MONTH_OPTIONS = [
@@ -75,18 +75,32 @@ export function AppointmentsPage() {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [patientSearch, setPatientSearch] = useState('')
-  const [dayModal, setDayModal] = useState<{ date: Date; apps: Application[] } | null>(null)
-  const [rescheduleDoseId, setRescheduleDoseId] = useState<string | null>(null)
   const [showRescheduledToast, setShowRescheduledToast] = useState(false)
+  const showCalendarPanel = useSchedulingUiStore((s) => s.showCalendarPanel)
+  const setShowCalendarPanel = useSchedulingUiStore((s) => s.setShowCalendarPanel)
+  const [panelMonth, setPanelMonth] = useState(calendar.selectedDate)
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- keeps the side panel month synced while it is open
+    if (showCalendarPanel) setPanelMonth(calendar.selectedDate)
+  }, [calendar.selectedDate, showCalendarPanel])
 
   const visibleDays = calendar.viewMode === 'week' ? calendar.weekDays : calendar.monthDays
   const range = useMemo(() => {
     if (visibleDays.length === 0) return null
-    return {
-      from: toZonedOffsetIso(dayInput(visibleDays[0]), '00:00', account?.organization?.timeZone ?? 'America/Sao_Paulo'),
-      to: toZonedOffsetIso(dayInput(visibleDays[visibleDays.length - 1]), '23:59', account?.organization?.timeZone ?? 'America/Sao_Paulo'),
+    let from = visibleDays[0]
+    let to = visibleDays[visibleDays.length - 1]
+    if (showCalendarPanel) {
+      const panelStart = startOfMonth(panelMonth)
+      const panelEnd = endOfMonth(panelMonth)
+      if (panelStart < from) from = panelStart
+      if (panelEnd > to) to = panelEnd
     }
-  }, [visibleDays, account?.organization?.timeZone])
+    return {
+      from: toZonedOffsetIso(dayInput(from), '00:00', account?.organization?.timeZone ?? 'America/Sao_Paulo'),
+      to: toZonedOffsetIso(dayInput(to), '23:59', account?.organization?.timeZone ?? 'America/Sao_Paulo'),
+    }
+  }, [visibleDays, account?.organization?.timeZone, showCalendarPanel, panelMonth])
 
 
   const search = useDebouncedValue(patientSearch.trim())
@@ -165,15 +179,14 @@ export function AppointmentsPage() {
     return map
   }, [applications])
 
-  const rescheduleDoseQuery = useQuery({
-    queryKey: queryKeys.dose(organizationId, rescheduleDoseId ?? ''),
-    queryFn: ({ signal }) => getDose(rescheduleDoseId!, signal),
-    enabled: organizationId !== '' && rescheduleDoseId !== null,
-  })
-
-  const openPatient = (patientId: string) => {
+  const openPatient = (patientId: string, doseId?: string, appointmentId?: string) => {
     setSelectedApplication(null)
-    navigate({ to: '/patient/$patientId', params: { patientId } })
+    setSelectedAppointment(null)
+    navigate({
+      to: '/patient/$patientId',
+      params: { patientId },
+      search: doseId ? { doseId } : appointmentId ? { appointmentId } : {},
+    })
   }
 
   const handleSelect = (application: Application) => {
@@ -227,6 +240,16 @@ export function AppointmentsPage() {
               ]}
               aria-label="Modo de visualização"
             />
+            <Pill
+              active={showCalendarPanel}
+              icon={faCalendarDays}
+              onClick={() => {
+                if (!showCalendarPanel) setPanelMonth(calendar.selectedDate)
+                setShowCalendarPanel(!showCalendarPanel)
+              }}
+            >
+              Calendário
+            </Pill>
             {canNewAppointment && (
               <Pill active icon={faPlus} onClick={() => setShowNewModal(true)}>
                 Novo agendamento
@@ -256,95 +279,58 @@ export function AppointmentsPage() {
         </p>
       )}
 
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-[#F6F8F8]">
-        <CalendarToolbar
-          monthLabel={calendar.monthLabel}
-          onPrev={calendar.goToPrev}
-          onNext={calendar.goToNext}
-          onToday={calendar.goToToday}
-        />
-        <div className="flex-1 overflow-auto">
-          {calendar.viewMode === 'week' ? (
-            <WeekView
-              weekDays={calendar.weekDays}
-              selectedDate={calendar.selectedDate}
-              onSelectDate={calendar.setSelectedDate}
-              applicationsByDate={applicationsByDate}
-              onSelectApplication={handleSelect}
-            />
-          ) : (
-            <MonthView
-              monthDays={calendar.monthDays}
-              referenceDate={calendar.currentDate}
-              selectedDate={calendar.selectedDate}
-              onSelectDate={calendar.setSelectedDate}
-              applicationsByDate={applicationsByDate}
-              onSelectApplication={handleSelect}
-              onOpenDay={(date, apps) => setDayModal({ date, apps })}
-            />
-          )}
+      <div className="flex flex-1 min-h-0 gap-3 overflow-hidden">
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-(--border-custom) bg-[#F6F8F8]">
+          <CalendarToolbar
+            monthLabel={calendar.monthLabel}
+            onPrev={calendar.goToPrev}
+            onNext={calendar.goToNext}
+            onToday={calendar.goToToday}
+            isToday={calendar.isToday}
+          />
+          <div className="flex-1 overflow-auto">
+            {scheduleQuery.isPending || appointmentsQuery.isPending ? (
+              <CenteredSpinner />
+            ) : calendar.viewMode === 'week' ? (
+              <WeekView
+                weekDays={calendar.weekDays}
+                selectedDate={calendar.selectedDate}
+                onSelectDate={calendar.setSelectedDate}
+                applicationsByDate={applicationsByDate}
+                onSelectApplication={handleSelect}
+              />
+            ) : (
+              <MonthView
+                monthDays={calendar.monthDays}
+                referenceDate={calendar.currentDate}
+                selectedDate={calendar.selectedDate}
+                onSelectDate={calendar.setSelectedDate}
+                applicationsByDate={applicationsByDate}
+                onSelectApplication={handleSelect}
+              />
+            )}
+          </div>
         </div>
-      </div>
 
-      <Modal
-        open={!!dayModal}
-        onClose={() => setDayModal(null)}
-        size="sm"
-        title={
-          dayModal
-            ? (() => {
-                const s = format(dayModal.date,"EEEE, dd 'de' MMMM", { locale: ptBR })
-                return s.charAt(0).toUpperCase() + s.slice(1)
-              })()
-            : ''
-        }
-      >
-        <div className="space-y-2">
-          {dayModal?.apps.map((app) => {
-            const c = getApplicationEventColor(app)
-            return (
-              <button
-                key={app.id}
-                type="button"
-                onClick={() => { handleSelect(app); setDayModal(null) }}
-                className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:brightness-95 cursor-pointer"
-                style={{ backgroundColor: c.bg, backgroundImage: c.grad, color: c.text }}
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold">
-                    {app.startTime}
-                    {app.endTime ? ` – ${app.endTime}` : ''}
-                  </div>
-                  <div className="text-[0.7rem] font-medium opacity-90 truncate">
-                    {app.patientName} · {app.dose}
-                  </div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      </Modal>
+        <CalendarSidePanel
+          open={showCalendarPanel}
+          onClose={() => setShowCalendarPanel(false)}
+          selectedDate={calendar.selectedDate}
+          onSelectDate={calendar.goToDate}
+          applicationsByDate={applicationsByDate}
+          onSelectApplication={handleSelect}
+          visibleMonth={panelMonth}
+          onVisibleMonthChange={setPanelMonth}
+        />
+      </div>
 
       <ApplicationDetailsModal
         application={selectedApplication}
+        organizationId={organizationId}
         onClose={() => setSelectedApplication(null)}
         onOpenPatient={openPatient}
-        onReschedule={
-          canReschedule
-            ? (doseId) => {
-                setSelectedApplication(null)
-                setRescheduleDoseId(doseId)
-              }
-            : undefined
-        }
-      />
-
-      <EditScheduledDoseModal
-        open={rescheduleDoseId !== null && rescheduleDoseQuery.data !== undefined}
-        dose={rescheduleDoseQuery.data ?? null}
-        organizationId={organizationId}
-        onClose={() => setRescheduleDoseId(null)}
         onSaved={() => setShowRescheduledToast(true)}
+        canReschedule={canReschedule}
       />
 
       <NewAppointmentModal
@@ -357,6 +343,7 @@ export function AppointmentsPage() {
         appointment={selectedAppointment}
         organizationId={organizationId}
         onClose={() => setSelectedAppointment(null)}
+        onOpenPatient={(patientId, appointmentId) => openPatient(patientId, undefined, appointmentId)}
       />
 
       <Toast
@@ -371,34 +358,4 @@ export function AppointmentsPage() {
   )
 }
 
-function localTime(iso: string, timeZone = 'America/Sao_Paulo'): string {
-  return timeInZone(new Date(iso), timeZone)
-}
-
-const MONTHS_UPPER = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO']
-
-function appointmentToApplication(item: Appointment, timeZone: string): Application {
-  const starts = new Date(item.startsAt)
-  const day = dayInZone(starts, timeZone)
-  return {
-    id: item.id,
-    patientId: item.patientId,
-    date: `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`,
-    startTime: localTime(item.startsAt, timeZone),
-    endTime: localTime(item.endsAt, timeZone),
-    status:
-      item.status === 'MISSED'
-        ? 'missed'
-        : item.status === 'COMPLETED'
-          ? 'completed'
-          : 'scheduled',
-    dose: item.title ?? (item.dose ? 'Aplicação prevista' : 'Compromisso'),
-    cycle: { number: 1, days: 0 },
-    month: MONTHS_UPPER[Number(day.slice(5, 7)) - 1],
-    year: Number(day.slice(0, 4)),
-    patientName: item.patient.fullName,
-    patientPhone: item.patient.phoneNumber,
-    modality: 'subcutaneous',
-  }
-}
 

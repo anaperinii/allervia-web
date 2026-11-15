@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { cn } from '@/shared/lib/cn'
 import type { ImmunotherapyListItem } from '@/shared/api/contracts/clinical'
 import { getIntervalColor } from '@/features/immunotherapy/constants/interval-colors'
@@ -7,17 +8,56 @@ import {
   ROUTE_LABELS,
 } from '@/features/patient/adapters/clinical-presentation'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons'
+
 interface ImmunotherapiesTableProps {
   items: ImmunotherapyListItem[]
   onSelect: (item: ImmunotherapyListItem) => void
 }
 
+type PatientSort = 'asc' | 'desc' | null
+
 export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTableProps) {
+  const [patientSort, setPatientSort] = useState<PatientSort>(null)
+
+  const cyclePatientSort = () => {
+    setPatientSort((prev) => (prev === null ? 'asc' : prev === 'asc' ? 'desc' : null))
+  }
+
+  const sortedItems = useMemo(() => {
+    if (!patientSort) return items
+    const sorted = [...items].sort((a, b) =>
+      a.patient.fullName.localeCompare(b.patient.fullName, 'pt-BR'),
+    )
+    return patientSort === 'desc' ? sorted.reverse() : sorted
+  }, [items, patientSort])
+
   return (
     <table className="w-full" aria-label="Lista de imunoterapias">
       <thead>
         <tr className="border-b border-(--border-custom) bg-[#F7F9F9]">
-          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] pl-5 pr-4 pt-2.5 pb-2.5">Paciente</th>
+          <th className="text-left text-[0.72rem] font-semibold text-[#12333a] pl-5 pr-4 pt-2.5 pb-2.5">
+            <button
+              type="button"
+              onClick={cyclePatientSort}
+              aria-label={
+                patientSort === 'asc'
+                  ? 'Ordenado por paciente, de A a Z. Clique para ordenar de Z a A'
+                  : patientSort === 'desc'
+                    ? 'Ordenado por paciente, de Z a A. Clique para remover ordenação'
+                    : 'Ordenar por paciente'
+              }
+              className="flex cursor-pointer items-center gap-1.5 text-[0.72rem] font-semibold text-[#12333a] transition-colors hover:text-brand-dark"
+            >
+              Paciente
+              <FontAwesomeIcon
+                icon={patientSort === 'asc' ? faSortUp : patientSort === 'desc' ? faSortDown : faSort}
+                style={{ fontSize: 11 }}
+                className={patientSort ? 'text-brand' : 'text-(--text-muted)'}
+              />
+            </button>
+          </th>
           <th className="text-left text-[0.72rem] font-semibold text-[#12333a] pl-6 pr-4 pt-2.5 pb-2.5">Tipo</th>
           <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-4 pt-2.5 pb-2.5">Intervalo e fase</th>
           <th className="text-left text-[0.72rem] font-semibold text-[#12333a] px-4 pt-2.5 pb-2.5">Via de administração</th>
@@ -26,14 +66,14 @@ export function ImmunotherapiesTable({ items, onSelect }: ImmunotherapiesTablePr
         </tr>
       </thead>
       <tbody>
-        {items.length === 0 ? (
+        {sortedItems.length === 0 ? (
           <tr>
             <td colSpan={6} className="text-center text-(--text-muted) py-10 text-xs">
               Nenhum tratamento encontrado com os filtros atuais
             </td>
           </tr>
         ) : (
-          items.map((item) => {
+          sortedItems.map((item) => {
 
 
             const phase =

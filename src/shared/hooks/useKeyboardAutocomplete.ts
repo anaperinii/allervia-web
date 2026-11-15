@@ -18,9 +18,11 @@ export function useKeyboardAutocomplete({
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const suggestionsRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  const [prevResetKey, setPrevResetKey] = useState(resetKey)
+  if (resetKey !== prevResetKey) {
+    setPrevResetKey(resetKey)
     setHighlightedIndex(-1)
-  }, [resetKey])
+  }
 
   useEffect(() => {
     if (highlightedIndex >= 0 && suggestionsRef.current) {
