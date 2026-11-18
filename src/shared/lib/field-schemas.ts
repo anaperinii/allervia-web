@@ -75,14 +75,21 @@ export const birthdateSchema = z
     return date <= today && date >= minDate
   }, 'Data de nascimento inválida')
 
-export const futureDateSchema = z
+/**
+ * Data civil obrigatória, sem limite de passado ou futuro. O início de uma
+ * imunoterapia pode ser anterior a hoje: tratamentos históricos trazidos de
+ * outro sistema precisam do dia real em que começaram, senão a aderência e a
+ * pontualidade de todas as doses passam a mentir — e nenhuma aplicação
+ * passada poderia ser registrada, porque o servidor recusa aplicação anterior
+ * ao início da indução.
+ */
+export const requiredDateSchema = z
   .string()
   .min(1, 'Data é obrigatória')
-  .refine((v) => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    return new Date(v + 'T12:00') >= today
-  }, 'Selecione uma data presente ou futura')
+  .refine(
+    (v) => Number.isFinite(new Date(v + 'T12:00').getTime()),
+    'Data inválida',
+  )
 
 const EXTRATO_COMPONENT_RE = /^[A-Za-zÀ-ÖØ-öø-ÿ]+(?:\s[A-Za-zÀ-ÖØ-öø-ÿ]+)*\s+\d+(?:\.\d+)?%$/
 

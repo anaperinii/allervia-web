@@ -76,6 +76,7 @@ describe('FE-12 administrative outcomes', () => {
     stubApi([
       { path: '/professionals', handler: { items: [member], total: 1, page: 1, pageSize: 10 } },
       { path: '/onboarding/invites/list', handler: { items: [], total: 0, page: 1, pageSize: 50 } },
+      { path: '/professionals/email-change-requests', handler: { items: [], total: 0, page: 1, pageSize: 10 } },
       { method: 'POST', path: '/onboarding/invites', handler: { id: 'invite-1', emailDelivered: false } },
     ])
     await renderPage('/teams', TeamsPage)

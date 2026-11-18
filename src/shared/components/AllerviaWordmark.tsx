@@ -14,7 +14,7 @@ export function AllerviaWordmark({ className, style }: AllerviaWordmarkProps) {
       className={cn('font-bold leading-none whitespace-nowrap tracking-[-0.005em]', className)}
       style={{ fontFamily: WORDMARK_FONT, ...style }}
     >
-      Allervia
+      allervia
     </span>
   )
 }

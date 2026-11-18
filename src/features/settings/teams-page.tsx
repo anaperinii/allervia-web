@@ -3,6 +3,9 @@ import { InvitesTable } from '@/features/settings/components/InvitesTable'
 import { ManageRolesModal } from '@/features/settings/components/ManageRolesModal'
 import { MembersTable } from '@/features/settings/components/MembersTable'
 import { SettingsLayout } from '@/features/settings/components/SettingsLayout'
+import { ChangeAccessEmailModal } from '@/features/settings/components/ChangeAccessEmailModal'
+import { ApproveEmailChangeModal } from '@/features/settings/components/ApproveEmailChangeModal'
+import { EmailChangeRequestsTable } from '@/features/settings/components/EmailChangeRequestsTable'
 import {
   TeamConfirmModal,
   type TeamConfirmState,
@@ -14,6 +17,7 @@ import { useHasPermission } from '@/shared/stores/useUserStore'
 import { useSession } from '@/shared/auth/useSession'
 import { queryKeys } from '@/shared/api/query-keys'
 import { ApiError } from '@/shared/api/contracts/errors'
+import type { EmailChangeRequestDto } from '@/shared/api/contracts/email-change'
 import type { Invite, TeamMember } from '@/shared/api/contracts/team'
 import {
   cancelInvite,
@@ -23,6 +27,7 @@ import {
   listTeamMembers,
   updateMemberAccess,
 } from '@/shared/api/team.api'
+import { listEmailChangeRequests, rejectEmailChange } from '@/shared/api/email-change.api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
@@ -44,7 +49,8 @@ export function TeamsPage() {
 
   const [deliveryNotice, setDeliveryNotice] = useState('')
   const [invitePage, setInvitePage] = useState(1)
-  const [tab, setTab] = useState<'members' | 'invites'>('members')
+  const [requestsPage, setRequestsPage] = useState(1)
+  const [tab, setTab] = useState<'members' | 'invites' | 'requests'>('members')
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
@@ -54,6 +60,8 @@ export function TeamsPage() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [confirmState, setConfirmState] = useState<TeamConfirmState | null>(null)
   const [rolesTarget, setRolesTarget] = useState<TeamMember | null>(null)
+  const [changeEmailTarget, setChangeEmailTarget] = useState<TeamMember | null>(null)
+  const [approveTarget, setApproveTarget] = useState<EmailChangeRequestDto | null>(null)
 
   const memberFilters = {
     page: currentPage,
@@ -63,7 +71,8 @@ export function TeamsPage() {
     isActive: statusFilter === 'all' ? undefined : statusFilter === 'active',
   }
 
-  const inviteFilters = { page: invitePage, pageSize: 50, includeExpired: true }
+  const inviteFilters = { page: invitePage, pageSize: itemsPerPage, includeExpired: true }
+  const requestFilters = { page: requestsPage, pageSize: itemsPerPage }
 
   const membersQuery = useQuery({
     queryKey: queryKeys.team(organizationId, memberFilters),
@@ -77,16 +86,28 @@ export function TeamsPage() {
     enabled: canManageTeam && organizationId !== '',
   })
 
+  const emailChangeRequestsQuery = useQuery({
+    queryKey: queryKeys.emailChangeRequests(organizationId, requestFilters),
+    queryFn: ({ signal }) => listEmailChangeRequests(requestFilters, signal),
+    enabled: canManageTeam && organizationId !== '',
+  })
+
   const refreshAll = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['team', organizationId] }),
       queryClient.invalidateQueries({ queryKey: ['invites', organizationId] }),
+      queryClient.invalidateQueries({ queryKey: ['email-change-requests', organizationId] }),
     ])
   }
 
   const accessMutation = useMutation({
     mutationFn: (input: { professionalId: string; isActive: boolean }) =>
       updateMemberAccess(input.professionalId, input.isActive),
+    onSuccess: refreshAll,
+  })
+
+  const rejectEmailChangeMutation = useMutation({
+    mutationFn: (requestId: string) => rejectEmailChange(requestId),
     onSuccess: refreshAll,
   })
 
@@ -119,8 +140,14 @@ export function TeamsPage() {
 
   const members = membersQuery.data?.items ?? []
   const invites = invitesQuery.data?.items ?? []
+  const emailChangeRequests = emailChangeRequestsQuery.data?.items ?? []
   const totalMembers = membersQuery.data?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(totalMembers / itemsPerPage))
+  const totalRequests = emailChangeRequestsQuery.data?.total ?? 0
+  const pendingRequests = emailChangeRequestsQuery.data?.pending ?? 0
+  const totalRequestPages = Math.max(1, Math.ceil(totalRequests / itemsPerPage))
+  const totalInvites = invitesQuery.data?.total ?? 0
+  const totalInvitePages = Math.max(1, Math.ceil(totalInvites / itemsPerPage))
 
   const applyFilter = (apply: () => void) => {
     apply()
@@ -128,7 +155,14 @@ export function TeamsPage() {
   }
 
   const handleConfirm = () => {
-    if (!confirmState || accessMutation.isPending || cancelMutation.isPending || resendMutation.isPending) return
+    if (
+      !confirmState ||
+      accessMutation.isPending ||
+      cancelMutation.isPending ||
+      resendMutation.isPending ||
+      rejectEmailChangeMutation.isPending
+    )
+      return
 
     switch (confirmState.type) {
       case 'deactivate':
@@ -146,6 +180,9 @@ export function TeamsPage() {
         if (invite) resendMutation.mutate(invite)
         break
       }
+      case 'reject-email-change':
+        rejectEmailChangeMutation.mutate(confirmState.id)
+        break
     }
 
     setConfirmState(null)
@@ -174,7 +211,7 @@ export function TeamsPage() {
 
   return (
     <SettingsLayout subtitle="Equipes e Convites">
-      <div className="flex h-full min-h-0 flex-col">
+      <div className="flex h-full min-h-0 flex-col pl-1.5">
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-45">
           <label htmlFor="team-search" className="sr-only">Pesquisar usuário</label>
@@ -221,7 +258,6 @@ export function TeamsPage() {
       </div>
 
       {deliveryNotice && <p role="status" className="mb-3">{deliveryNotice}</p>}
-      {tab === 'invites' && (invitesQuery.data?.total ?? 0) > 50 && <div><Button disabled={invitePage === 1} onClick={() => setInvitePage(page => page - 1)}>Anterior</Button><span>Página {invitePage}</span><Button disabled={invitePage * 50 >= (invitesQuery.data?.total ?? 0)} onClick={() => setInvitePage(page => page + 1)}>Próxima</Button></div>}
       {loadFailure && (
         <div
           role="alert"
@@ -239,14 +275,16 @@ export function TeamsPage() {
             onClick={() => setTab('members')}
             className={cn(
               'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors cursor-pointer',
-              tab === 'members' ? 'bg-gray-50/80 text-slate-800 z-10' : 'bg-white/55 text-slate-400 hover:bg-white/75 hover:text-slate-600',
+              tab === 'members'
+                ? 'bg-white text-[#12333a] z-10 shadow-[0_-3px_10px_-3px_rgba(18,51,58,0.10),-5px_0_10px_-5px_rgba(18,51,58,0.10),5px_0_10px_-5px_rgba(18,51,58,0.10)]'
+                : 'bg-gray-50/50 text-[#8CA1A6] hover:bg-white/70 hover:text-[#4A6469]',
             )}
           >
             {tab === 'members' && (
               <span
                 aria-hidden="true"
                 className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3"
-                style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)' }}
+                style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, #FFFFFF 12.5px)' }}
               />
             )}
             Membros <span className="text-[0.65rem] font-normal opacity-60">({totalMembers})</span>
@@ -257,7 +295,9 @@ export function TeamsPage() {
             onClick={() => setTab('invites')}
             className={cn(
               'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer',
-              tab === 'invites' ? 'bg-gray-50/80 text-slate-800 z-10' : 'bg-white/55 text-slate-400 hover:bg-white/75 hover:text-slate-600',
+              tab === 'invites'
+                ? 'bg-white text-[#12333a] z-10 shadow-[0_-3px_10px_-3px_rgba(18,51,58,0.10),-5px_0_10px_-5px_rgba(18,51,58,0.10),5px_0_10px_-5px_rgba(18,51,58,0.10)]'
+                : 'bg-gray-50/50 text-[#8CA1A6] hover:bg-white/70 hover:text-[#4A6469]',
             )}
           >
             {tab === 'invites' && (
@@ -265,23 +305,58 @@ export function TeamsPage() {
                 <span
                   aria-hidden="true"
                   className="pointer-events-none absolute -left-3 bottom-0 h-3 w-3"
-                  style={{ background: 'radial-gradient(circle at 0% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)' }}
+                  style={{ background: 'radial-gradient(circle at 0% 0%, transparent 11.5px, #FFFFFF 12.5px)' }}
                 />
                 <span
                   aria-hidden="true"
                   className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3"
-                  style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, rgba(249,250,251,0.8) 12.5px)' }}
+                  style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, #FFFFFF 12.5px)' }}
                 />
               </>
             )}
             Convites <span className="text-[0.65rem] font-normal opacity-60">({invitesQuery.data?.total ?? 0})</span>
           </button>
+          <button
+            role="tab"
+            aria-selected={tab === 'requests'}
+            onClick={() => setTab('requests')}
+            className={cn(
+              'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer',
+              tab === 'requests'
+                ? 'bg-white text-[#12333a] z-10 shadow-[0_-3px_10px_-3px_rgba(18,51,58,0.10),-5px_0_10px_-5px_rgba(18,51,58,0.10),5px_0_10px_-5px_rgba(18,51,58,0.10)]'
+                : 'bg-gray-50/50 text-[#8CA1A6] hover:bg-white/70 hover:text-[#4A6469]',
+            )}
+          >
+            {tab === 'requests' && (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -left-3 bottom-0 h-3 w-3"
+                  style={{ background: 'radial-gradient(circle at 0% 0%, transparent 11.5px, #FFFFFF 12.5px)' }}
+                />
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3"
+                  style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, #FFFFFF 12.5px)' }}
+                />
+              </>
+            )}
+            Pedidos de e-mail <span className="text-[0.65rem] font-normal opacity-60">({totalRequests})</span>
+            {pendingRequests > 0 && (
+              <span
+                className="inline-flex items-center rounded-md border border-amber-300/40 bg-amber-100/40 px-2 py-0.5 text-[0.6rem] font-medium text-amber-700/80"
+                title={`${pendingRequests} aguardando aprovação`}
+              >
+                {pendingRequests} pendente{pendingRequests === 1 ? '' : 's'}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
       {tab === 'members' ? (
-        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-[#F6F8F8]">
-          <div className="flex-1 overflow-auto">
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-white border border-[#DDE6E6]">
+          <div className="flex-1">
             {membersQuery.isPending ? (
               <div className="py-12 text-center text-xs text-(--text-muted)">
                 Carregando equipe…
@@ -313,18 +388,24 @@ export function TeamsPage() {
                   setOpenMenuId(null)
                   setRolesTarget(member)
                 }}
+                onChangeEmail={(member: TeamMember) => {
+                  setOpenMenuId(null)
+                  setChangeEmailTarget(member)
+                }}
               />
             )}
           </div>
           <TablePagination
             currentPage={currentPage}
             totalPages={totalPages}
+            totalItems={totalMembers}
+            visibleItems={members.length}
             onPageChange={setCurrentPage}
           />
         </div>
-      ) : (
-        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-[#F6F8F8]">
-          <div className="flex-1 overflow-auto">
+      ) : tab === 'invites' ? (
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-white border border-[#DDE6E6]">
+          <div className="flex-1">
             {invitesQuery.isPending ? (
               <div className="py-12 text-center text-xs text-(--text-muted)">
                 Carregando convites…
@@ -349,6 +430,42 @@ export function TeamsPage() {
               />
             )}
           </div>
+          <TablePagination
+            currentPage={invitePage}
+            totalPages={totalInvitePages}
+            totalItems={totalInvites}
+            visibleItems={invites.length}
+            onPageChange={setInvitePage}
+          />
+        </div>
+      ) : (
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-tr-xl rounded-b-xl bg-white border border-[#DDE6E6]">
+          <div className="flex-1">
+            {emailChangeRequestsQuery.isPending ? (
+              <div className="py-12 text-center text-xs text-(--text-muted)">
+                Carregando pedidos…
+              </div>
+            ) : (
+              <EmailChangeRequestsTable
+                requests={emailChangeRequests}
+                onApprove={(request) => setApproveTarget(request)}
+                onReject={(request) =>
+                  setConfirmState({
+                    type: 'reject-email-change',
+                    id: request.id,
+                    name: request.professionalName,
+                  })
+                }
+              />
+            )}
+          </div>
+          <TablePagination
+            currentPage={requestsPage}
+            totalPages={totalRequestPages}
+            totalItems={totalRequests}
+            visibleItems={emailChangeRequests.length}
+            onPageChange={setRequestsPage}
+          />
         </div>
       )}
       </div>
@@ -368,12 +485,25 @@ export function TeamsPage() {
         onSaved={refreshAll}
       />
 
+      <ChangeAccessEmailModal
+        member={changeEmailTarget}
+        onClose={() => setChangeEmailTarget(null)}
+        onDispatched={() => void refreshAll()}
+      />
+
+      <ApproveEmailChangeModal
+        request={approveTarget}
+        onClose={() => setApproveTarget(null)}
+        onApproved={() => void refreshAll()}
+      />
+
       <TeamConfirmModal
         state={confirmState}
         submitting={
           accessMutation.isPending ||
           cancelMutation.isPending ||
-          resendMutation.isPending
+          resendMutation.isPending ||
+          rejectEmailChangeMutation.isPending
         }
         onClose={() => setConfirmState(null)}
         onConfirm={handleConfirm}

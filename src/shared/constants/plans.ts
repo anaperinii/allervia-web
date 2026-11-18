@@ -30,7 +30,7 @@ export const PLANS: Plan[] = [
     period: '/mês',
     description: 'Para clínicas em crescimento',
     icon: faBuilding,
-    features: ['Até 500 pacientes', 'Protocolos SCIT e SLIT', 'Até 10 profissionais', 'Dashboard personalizável', 'Relatórios exportáveis', 'Integração com Google Agenda'],
+    features: ['Até 500 pacientes', 'Protocolos SCIT e SLIT', 'Até 10 profissionais', 'Dashboard personalizável', 'Relatórios exportáveis'],
   },
   {
     id: 'enterprise',

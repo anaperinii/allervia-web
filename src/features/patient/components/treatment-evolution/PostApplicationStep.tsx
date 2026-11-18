@@ -4,11 +4,12 @@ import { FieldLabel, Select, StepHeading, TextArea, TextInput, TimeSelect } from
 import { GLASS_CARD_SHADOW } from '@/shared/constants/glass-card'
 import { cn } from '@/shared/lib/cn'
 import { addMinutesToTime } from '@/shared/lib/dates'
+import { civilDaysBetween } from '@/shared/lib/dose-interval'
 import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
 import { formatStepPresentation } from '@/features/patient/adapters/clinical-presentation'
 import { Controller, type UseFormReturn } from 'react-hook-form'
 
-import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { faCircleInfo, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const CONDUCT_OPTIONS = [
@@ -17,31 +18,85 @@ const CONDUCT_OPTIONS = [
   { value: 'SUSPEND_TREATMENT', label: 'Suspender tratamento', desc: 'Exige poder de revisão clínica' },
 ] as const
 
+const INTERVAL_ALERTS = {
+  ON_PLAN: null,
+  TOO_SHORT: {
+    title: 'Intervalo mais curto que o previsto',
+    detail:
+      'Aplicar antes do intervalo do protocolo aumenta o risco de reação. Registre o motivo clínico para prosseguir.',
+  },
+  LONG: {
+    title: 'Intervalo mais longo que o previsto',
+    detail:
+      'A dose calculada é mantida. Confirme que o paciente segue apto a receber este passo na data escolhida.',
+  },
+  REQUIRES_STEP_REVIEW: {
+    title: 'Intervalo muito longo',
+    detail:
+      'O paciente perdeu mais de um ciclo. Avalie explicitamente se é preciso retroceder doses antes de prosseguir.',
+  },
+} as const
+
+const STEP_REVIEW_OPTIONS = [
+  {
+    value: 'KEEP_STEP',
+    label: 'Manter o passo calculado',
+    desc: 'O paciente segue apto ao passo recomendado',
+  },
+  {
+    value: 'STEP_BACK_REQUESTED',
+    label: 'Retroceder doses',
+    desc: 'Reavaliar o passo no prontuário antes de aplicar',
+  },
+] as const
+
+export type NextScheduleState =
+  /** Faltam dados para o servidor calcular a previsão (hora de início, valor). */
+  | 'waiting-input'
+  /** Consulta em voo. */
+  | 'loading'
+  /** O servidor respondeu com a data da sucessora. */
+  | 'planned'
+  /** O servidor respondeu que não há sucessora: fim da sequência. */
+  | 'end-of-sequence'
+  /** A consulta falhou; a previsão é desconhecida. */
+  | 'unavailable'
+
 interface PostApplicationStepProps {
   form: UseFormReturn<EvolutionForm>
   dose: DoseDetail | null
+  nextScheduleState?: NextScheduleState
 }
 
-export function PostApplicationStep({ form, dose }: PostApplicationStepProps) {
+export function PostApplicationStep({ form, dose, nextScheduleState = 'waiting-input' }: PostApplicationStepProps) {
   const { control, register, getValues, setValue, watch, formState: { errors } } = form
   const { members: executors } = useProfessionalDirectory()
   const stepId = watch('stepId')
   const sideEffectPost = watch('sideEffectPost')
   const medicationNeededPost = watch('medicationNeededPost')
   const conduct = watch('conduct')
+  const applicationDate = watch('applicationDate')
+  const nextApplicationDate = watch('nextApplicationDate')
+  const plannedNextDate = watch('nextApplicationDatePlanned')
 
   const allowedValues = dose?.allowedValues ?? []
   const plannedStepId = dose?.plannedStepId ?? null
   const selectedStep = allowedValues.find((step) => step.id === stepId) ?? null
   const isAdjusted = plannedStepId !== null && stepId !== '' && stepId !== plannedStepId
 
+  const isRescheduled =
+    plannedNextDate !== '' && nextApplicationDate !== '' && nextApplicationDate !== plannedNextDate
+  const nextDateDisabled = nextScheduleState !== 'planned' && !isRescheduled
+
+  const band = watch('nextIntervalBand')
+  const intervalDays = civilDaysBetween(applicationDate, nextApplicationDate)
+  const alert = band === '' ? null : INTERVAL_ALERTS[band]
+  const needsReason = band === 'TOO_SHORT' || band === 'REQUIRES_STEP_REVIEW'
+
   return (
     <div className="space-y-5">
-      <StepHeading description="Registre a aplicação realizada: valor permitido pela prescrição, janela de horário e executor. A sucessora é gravada pelo servidor na confirmação." />
+      <StepHeading description="Registre a aplicação realizada: valor permitido pela prescrição, janela de horário e executor. A sucessora é gravada pelo servidor na confirmação, na data indicada aqui." />
       <div className="grid grid-cols-2 gap-4">
-        <FieldLabel label="Data da aplicação" error={errors.applicationDate?.message}>
-          <TextInput type="date" invalid={!!errors.applicationDate} {...register('applicationDate')} />
-        </FieldLabel>
         <div className="grid grid-cols-2 gap-2">
           <FieldLabel label="Hora início" error={errors.startTime?.message}>
             <Controller
@@ -74,6 +129,23 @@ export function PostApplicationStep({ form, dose }: PostApplicationStepProps) {
                   invalid={!!errors.endTime}
                 />
               )}
+            />
+          </FieldLabel>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <FieldLabel label="Data da aplicação" error={errors.applicationDate?.message}>
+            <TextInput type="date" invalid={!!errors.applicationDate} {...register('applicationDate')} />
+          </FieldLabel>
+          <FieldLabel
+            label="Próxima aplicação"
+            error={errors.nextApplicationDate?.message}
+          >
+            <TextInput
+              type="date"
+              min={applicationDate || undefined}
+              disabled={nextDateDisabled}
+              invalid={!!errors.nextApplicationDate}
+              {...register('nextApplicationDate')}
             />
           </FieldLabel>
         </div>
@@ -112,6 +184,82 @@ export function PostApplicationStep({ form, dose }: PostApplicationStepProps) {
               ))}
           </Select>
         </FieldLabel>
+        {alert && (
+          <div className="col-span-2" style={{ animation: 'slide-up-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
+            <div
+              className="rounded-2xl bg-white/25 backdrop-blur-xl p-3.5 space-y-2.5"
+              style={{
+                boxShadow: GLASS_CARD_SHADOW,
+                backdropFilter: 'blur(20px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+                backgroundImage:
+                  'linear-gradient(105deg, rgba(245,158,11,0.18) 0%, rgba(252,211,77,0.10) 25%, rgba(254,243,199,0.04) 55%, transparent 80%)',
+              }}
+            >
+              <div className="flex items-start gap-2">
+                <FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-700 shrink-0 mt-0.5" style={{ fontSize: 16 }} />
+                <div className="leading-relaxed">
+                  <div className="text-[0.78rem] font-bold text-amber-800">
+                    {alert.title}
+                    {intervalDays !== null ? ` — ${intervalDays} dias` : ''}
+                  </div>
+                  <div className="text-[0.68rem] text-amber-800/80 mt-0.5">{alert.detail}</div>
+                </div>
+              </div>
+
+              {band === 'REQUIRES_STEP_REVIEW' && (
+                <Controller
+                  control={control}
+                  name="nextScheduleReview"
+                  render={({ field }) => (
+                    <div role="radiogroup" aria-label="Avaliação de retrocesso" className="grid grid-cols-2 gap-2">
+                      {STEP_REVIEW_OPTIONS.map((opt) => {
+                        const selected = field.value === opt.value
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            onClick={() => field.onChange(opt.value as EvolutionForm['nextScheduleReview'])}
+                            className={cn(
+                              'text-left px-2.5 py-2 rounded-lg border-[1.5px] transition-all cursor-pointer',
+                              selected
+                                ? 'border-amber-500 bg-gray-50/60'
+                                : 'border-amber-200 bg-gray-50/60 hover:border-amber-400',
+                            )}
+                          >
+                            <div className="text-[0.75rem] font-bold text-(--text)">{opt.label}</div>
+                            <div className="text-[0.65rem] text-(--text-muted) mt-0.5">{opt.desc}</div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                />
+              )}
+              {errors.nextScheduleReview?.message && (
+                <span className="text-[0.6rem] text-red-500 block">{errors.nextScheduleReview.message}</span>
+              )}
+
+              {needsReason && (
+                <FieldLabel
+                  label="Justificativa clínica do intervalo"
+                  required
+                  error={errors.nextScheduleReason?.message}
+                >
+                  <TextArea
+                    rows={2}
+                    placeholder="Contexto clínico do intervalo escolhido"
+                    invalid={!!errors.nextScheduleReason}
+                    className="focus:ring-amber-400"
+                    {...register('nextScheduleReason')}
+                  />
+                </FieldLabel>
+              )}
+            </div>
+          </div>
+        )}
         {isAdjusted && (
           <div className="col-span-2" style={{ animation: 'slide-up-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
             <FieldLabel

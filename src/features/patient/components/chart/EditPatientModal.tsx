@@ -1,6 +1,7 @@
 import { editMinorPatientSchema, editPatientSchema, type EditPatientForm } from '@/features/patient/schemas/edit-patient'
 import type { Patient } from '@/features/patient/stores/usePatientStore'
 import { Button, ConfirmDiscardModal, FieldLabel, Modal, ReadOnlyField, Select, TextInput } from '@/shared/components'
+import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard'
 import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
 import { formatCPF, formatPhone } from '@/shared/lib/formatters'
@@ -42,7 +43,7 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
     resolver: zodResolver(isMinor ? editMinorPatientSchema : editPatientSchema),
     defaultValues: {
       name: patient.name,
-      phone: patient.phone,
+      phone: patient.phone ? formatPhone(patient.phone) : '',
       weight: patient.weight,
       responsibleDoctor: patient.responsibleDoctorId ?? '',
       ...guardianDefaults,
@@ -65,7 +66,15 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
 
   const closeAndReset = () => {
     onClose()
-    reset()
+    // Sempre com valores explícitos: `reset()` sem argumentos faz o RHF chamar
+    // `form.reset()` nativo no <form> ancestral, limpando campos de fora do modal.
+    reset({
+      name: patient.name,
+      phone: patient.phone ? formatPhone(patient.phone) : '',
+      weight: patient.weight,
+      responsibleDoctor: patient.responsibleDoctorId ?? '',
+      ...guardianDefaults,
+    })
     setStep('form')
   }
 
@@ -90,8 +99,21 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
       <Modal
         open={open}
         onClose={handleCancel}
-        title={step === 'form' ? 'Editar dados do paciente' : 'Confirmar alterações?'}
+        ariaLabel="Editar dados do paciente"
         size="lg"
+        headerSlot={
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[0.95rem] font-bold text-(--text)">
+              {step === 'form' ? 'Editar dados do paciente' : 'Confirmar alterações?'}
+            </div>
+            <div className="text-[0.82rem] text-(--text-muted)">{patient.name}</div>
+          </div>
+        }
+        headerStyle={{
+          background: MODAL_HEADER_BACKGROUND,
+          borderBottom: 'none',
+          paddingTop: '1.4rem',
+        }}
         footer={
           step === 'form' ? (
             <>
@@ -117,7 +139,19 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
                 <TextInput invalid={!!errors.name} {...register('name')} />
               </FieldLabel>
               <FieldLabel label="Telefone" error={errors.phone?.message}>
-                <TextInput invalid={!!errors.phone} {...register('phone')} />
+                <Controller
+                  control={control}
+                  name="phone"
+                  render={({ field }) => (
+                    <TextInput
+                      placeholder="(00) 00000-0000"
+                      invalid={!!errors.phone}
+                      value={field.value ?? ''}
+                      onBlur={field.onBlur}
+                      onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                    />
+                  )}
+                />
               </FieldLabel>
               <FieldLabel label="Peso" error={errors.weight?.message}>
                 <TextInput invalid={!!errors.weight} {...register('weight')} />
@@ -136,7 +170,7 @@ function EditPatientModalForm({ open, patient, onClose, onSave }: EditPatientMod
                 </Select>
               </FieldLabel>
               <FieldLabel label="CPF">
-                <ReadOnlyField>{patient.cpf}</ReadOnlyField>
+                <ReadOnlyField>{formatCPF(patient.cpf)}</ReadOnlyField>
               </FieldLabel>
               <FieldLabel label="Data de nascimento">
                 <ReadOnlyField>{patient.birthDate}</ReadOnlyField>

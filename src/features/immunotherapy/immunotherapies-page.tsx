@@ -18,7 +18,7 @@ import { useSession } from '@/shared/auth/useSession'
 import { SegmentedControl, TablePagination } from '@/shared/components'
 import { PageHeader, Pill, SHOWCASE } from '@/shared/components/showcase'
 import { useHasPermission } from '@/shared/stores/useUserStore'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
@@ -50,6 +50,7 @@ export function ImmunotherapiesPage() {
     queryKey: queryKeys.immunotherapies(organizationId, filters),
     queryFn: ({ signal }) => listImmunotherapies(filters, signal),
     enabled: organizationId !== '',
+    placeholderData: keepPreviousData,
   })
 
   const typesQuery = useQuery({
@@ -155,7 +156,7 @@ export function ImmunotherapiesPage() {
         className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-xl"
         style={{ background: SHOWCASE.white, border: `1px solid ${SHOWCASE.line}` }}
       >
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1">
           {listQuery.isPending ? (
             <div className="py-12 text-center text-xs text-(--text-muted)">
               Carregando tratamentos…
@@ -169,6 +170,7 @@ export function ImmunotherapiesPage() {
           currentPage={currentPage}
           totalPages={totalPages}
           totalItems={total}
+          visibleItems={items.length}
           onPageChange={setCurrentPage}
         />
       </div>

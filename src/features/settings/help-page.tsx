@@ -50,7 +50,7 @@ function SupportRequestSection() {
   })
 
   return (
-    <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
+    <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white">
       <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
         <h2 className="text-xs font-bold text-(--text)">Solicitação de suporte</h2>
         <p className="text-[0.62rem] text-(--text-muted) mt-0.5">
@@ -138,7 +138,7 @@ export function HelpPage() {
               })}
             </div>
 
-            <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-[#F6F8F8]">
+            <section className="lg:col-span-2 border border-(--border-custom) rounded-xl overflow-hidden bg-white">
               <div className="px-4 py-3 border-b border-(--border-custom) bg-gray-50/50">
                 <h2 className="text-xs font-bold text-(--text)">Perguntas frequentes</h2>
               </div>
@@ -174,7 +174,7 @@ export function HelpPage() {
         <SupportRequestSection />
 
         <div className="lg:col-span-2 text-center text-[0.65rem] text-(--text-muted) py-2">
-          Allervia · Precisa de ajuda? Envie uma solicitação de suporte acima.
+          allervia · Precisa de ajuda? Envie uma solicitação de suporte acima.
         </div>
       </div>
     </SettingsLayout>

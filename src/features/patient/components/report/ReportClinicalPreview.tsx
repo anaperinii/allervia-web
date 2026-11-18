@@ -7,6 +7,7 @@ import {
 } from '@/features/patient/constants/clinical-labels'
 import type { Application, Patient } from '@/features/patient/stores/usePatientStore'
 import type { ReportFileFormat, ReportSectionId } from '@/features/patient/exporters/types'
+import { formatCPF } from '@/shared/lib/formatters'
 import { maskCpf, maskName, maskPhone } from '@/shared/lib/mask'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -45,7 +46,7 @@ export function ReportClinicalPreview({
             </p>
           </div>
           <div className="text-[0.6rem] text-(--text-muted) text-right">
-            <div>Allervia</div>
+            <div>allervia</div>
             <div>Formato: {fileFormat.toUpperCase()}</div>
             {anonymized && (
               <div className="flex items-center gap-1 text-brand font-semibold mt-0.5 justify-end">
@@ -66,7 +67,7 @@ export function ReportClinicalPreview({
               <Section title="Dados Pessoais">
                 <KeyValueGrid items={[
                   ['Nome', anonymized ? maskName(patient.name, true) : patient.name],
-                  ['CPF', maskCpf(patient.cpf, anonymized)],
+                  ['CPF', maskCpf(formatCPF(patient.cpf), anonymized)],
                   ['Data de Nascimento', patient.birthDate],
                   ['Idade', `${patient.age} anos`],
                   ['Telefone', maskPhone(patient.phone, anonymized)],
@@ -208,7 +209,7 @@ export function ReportClinicalPreview({
 
       <div className="px-6 py-3 border-t border-(--border-custom)">
         <div className="flex justify-between mb-2">
-          <span className="text-[0.6rem] text-(--text-muted)">Allervia © 2026</span>
+          <span className="text-[0.6rem] text-(--text-muted)">allervia © 2026</span>
           <span className="text-[0.6rem] text-(--text-muted)">Página 1 de 1</span>
         </div>
         <p className="text-[0.5rem] text-(--text-muted)/60 leading-relaxed mb-2">

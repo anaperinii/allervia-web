@@ -3,7 +3,7 @@ import { IconButton } from '@/shared/components'
 import type { TeamMember } from '@/shared/api/contracts/team'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEllipsis, faUserCheck, faUserGear, faUserXmark } from '@fortawesome/free-solid-svg-icons'
+import { faEllipsis, faEnvelopeCircleCheck, faUserCheck, faUserGear, faUserXmark } from '@fortawesome/free-solid-svg-icons'
 
 interface MemberActionMenuProps {
   member: TeamMember
@@ -13,6 +13,7 @@ interface MemberActionMenuProps {
   onDeactivate: () => void
   onActivate: () => void
   onManageRoles: () => void
+  onChangeEmail: () => void
 }
 
 export function MemberActionMenu({
@@ -23,6 +24,7 @@ export function MemberActionMenu({
   onDeactivate,
   onActivate,
   onManageRoles,
+  onChangeEmail,
 }: MemberActionMenuProps) {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -50,21 +52,29 @@ export function MemberActionMenu({
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full mt-1 w-48 bg-white border border-(--border-custom) rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.1)] overflow-hidden z-50 animate-in fade-in-0 slide-in-from-top-1 duration-150"
+          className="absolute right-0 top-full mt-1 w-48 bg-white border border-(--border-custom) rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.1)] overflow-hidden z-50 animate-in fade-in-0 slide-in-from-top-1 duration-150 divide-y divide-(--border-custom)"
         >
           <button
             role="menuitem"
             onClick={onManageRoles}
-            className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-(--text) hover:bg-gray-50 transition-colors cursor-pointer"
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-(--text) border-l-2 border-transparent hover:bg-teal-50/60 hover:border-l-brand transition-colors cursor-pointer"
           >
             <FontAwesomeIcon icon={faUserGear} style={{ fontSize: 12 }} />
             Gerenciar papéis
+          </button>
+          <button
+            role="menuitem"
+            onClick={onChangeEmail}
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-(--text) border-l-2 border-transparent hover:bg-teal-50/60 hover:border-l-brand transition-colors cursor-pointer"
+          >
+            <FontAwesomeIcon icon={faEnvelopeCircleCheck} style={{ fontSize: 12 }} />
+            Alterar e-mail de acesso
           </button>
           {member.isActive ? (
             <button
               role="menuitem"
               onClick={onDeactivate}
-              className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer"
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-red-600 border-l-2 border-transparent hover:bg-red-50/60 hover:border-l-red-600 transition-colors cursor-pointer"
             >
               <FontAwesomeIcon icon={faUserXmark} style={{ fontSize: 12 }} />
               Encerrar acesso
@@ -73,7 +83,7 @@ export function MemberActionMenu({
             <button
               role="menuitem"
               onClick={onActivate}
-              className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-green-600 hover:bg-green-50 transition-colors cursor-pointer"
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-green-600 border-l-2 border-transparent hover:bg-teal-50/60 hover:border-l-brand transition-colors cursor-pointer"
             >
               <FontAwesomeIcon icon={faUserCheck} style={{ fontSize: 12 }} />
               Restaurar acesso

@@ -9,6 +9,7 @@ export const queryKeys = {
   supportRequests: (organizationId: string, userId: string) => ['support-requests', organizationId, userId] as const,
   patientRecord: (organizationId: string, patientId: string) => ['clinical', organizationId, currentUserId(), 'patients', 'record', patientId] as const,
   statusHistory: (organizationId: string, filters: Record<string, unknown>) => ['clinical', organizationId, currentUserId(), 'status-history', filters] as const,
+  phaseTimeline: (organizationId: string, filters: Record<string, unknown>) => ['clinical', organizationId, currentUserId(), 'phase-timeline', filters] as const,
   session: () => ['session'] as const,
   account: () => ['account', 'me'] as const,
   devices: () => ['account', 'devices'] as const,
@@ -21,6 +22,8 @@ export const queryKeys = {
     ['team', organizationId, filters] as const,
   invites: (organizationId: string, filters: Record<string, unknown>) =>
     ['invites', organizationId, filters] as const,
+  emailChangeRequests: (organizationId: string, filters: Record<string, unknown>) =>
+    ['email-change-requests', organizationId, filters] as const,
   memberRoles: (organizationId: string, professionalId: string) =>
     ['team', organizationId, 'roles', professionalId] as const,
   inviteContext: (token: string) => ['invites', 'context', token] as const,
@@ -61,10 +64,8 @@ export const queryKeys = {
 
   schedule: (organizationId: string, filters: Record<string, unknown>) =>
     ['clinical', organizationId, currentUserId(), 'doses', 'schedule', filters] as const,
+  patientAppointments: (organizationId: string, patientId: string) =>
+    ['clinical', organizationId, currentUserId(), 'appointments', 'patient', patientId] as const,
   clinicalMetrics: (organizationId: string, filters: Record<string, unknown>) =>
     ['clinical', organizationId, currentUserId(), 'doses', 'metrics', filters] as const,
-
-  calendarConnection: () => ['integrations', 'google-calendar', 'me', currentUserId()] as const,
-  calendarConnections: (organizationId: string) =>
-    ['integrations', 'google-calendar', organizationId] as const,
 } as const

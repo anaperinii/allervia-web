@@ -15,6 +15,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/account/me/email-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AccountController_requestOwnEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/account/me/password": {
         parameters: {
             query?: never;
@@ -169,6 +185,38 @@ export interface paths {
         get: operations["SessionController_issueCsrfToken"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/email-change/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_emailChangeConfirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/email-change/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_emailChangeVerify"];
         delete?: never;
         options?: never;
         head?: never;
@@ -591,6 +639,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/doses/pdf-audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DosesController_auditDashboardReportPdf"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/doses/update/status/{id}": {
         parameters: {
             query?: never;
@@ -751,6 +815,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/immunotherapies/phase-timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ImmunotherapiesController_readPhaseTimeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/immunotherapies/record/{patientId}": {
         parameters: {
             query?: never;
@@ -761,6 +841,22 @@ export interface paths {
         get: operations["ImmunotherapiesController_readPatientRecord"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/immunotherapies/record/{patientId}/pdf-audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ImmunotherapiesController_auditPatientReportPdf"];
         delete?: never;
         options?: never;
         head?: never;
@@ -826,86 +922,6 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/integrations/google-calendar/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["GoogleCalendarController_callback"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/integrations/google-calendar/connect": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["GoogleCalendarController_connect"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/integrations/google-calendar/connection": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["GoogleCalendarController_status"];
-        put?: never;
-        post?: never;
-        delete: operations["GoogleCalendarController_disconnect"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/integrations/google-calendar/connections": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["GoogleCalendarController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/integrations/google-calendar/connections/{professionalId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["GoogleCalendarController_disconnectProfessional"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1231,6 +1247,70 @@ export interface paths {
         patch: operations["ProfessionalsController_changeAccess"];
         trace?: never;
     };
+    "/professionals/{id}/email-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProfessionalsController_startEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/professionals/email-change-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProfessionalsController_listPendingEmailChanges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/professionals/email-change-requests/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProfessionalsController_approvePendingEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/professionals/email-change-requests/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProfessionalsController_rejectPendingEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/professionals/me": {
         parameters: {
             query?: never;
@@ -1534,6 +1614,9 @@ export interface components {
             expectedTherapyRevision: number;
             idempotencyKey: string;
             immediateConduct?: components["schemas"]["DoseImmediateConductDto"];
+            nextScheduledAt?: string;
+            nextScheduleReason?: string;
+            nextScheduleReview?: "KEEP_STEP" | "STEP_BACK_REQUESTED";
             observations?: components["schemas"]["DoseObservationDto"][];
             reason?: string;
             values: components["schemas"]["ConfiguredDoseValuesDto"];
@@ -1552,6 +1635,10 @@ export interface components {
             route: "SUBCUTANEOUS";
             volume: string;
             volumeUnit: "mL";
+        };
+        AdminRequestEmailChangeDto: {
+            channel: "email" | "whatsapp";
+            newEmail: string;
         };
         AppointmentDoseDto: {
             id: string;
@@ -1592,6 +1679,9 @@ export interface components {
             statusReason: string | null;
             title: string | null;
             updatedAt: string;
+        };
+        ApproveEmailChangeDto: {
+            channel: "email" | "whatsapp";
         };
         AuditLogDto: {
             action: string;
@@ -1643,7 +1733,10 @@ export interface components {
             alreadyBound: boolean;
             prescriptionId: string;
         };
-        ChangePasswordDto: Record<string, never>;
+        ChangePasswordDto: {
+            currentPassword: string;
+            newPassword: string;
+        };
         ChangePasswordResponseDto: {
             message: string;
         };
@@ -1848,14 +1941,27 @@ export interface components {
             count: number;
             day: string;
         };
+        DoseMetricsConcentrationDto: {
+            concentration: number;
+            count: number;
+            totalVolume: number;
+        };
+        DoseMetricsPhasesDto: {
+            buildUp: number;
+            maintenance: number;
+        };
         DoseMetricsResponseDto: {
             adherence: components["schemas"]["DoseMetricsAdherenceDto"];
             applications: components["schemas"]["DoseMetricsApplicationsDto"];
+            concentration: components["schemas"]["DoseMetricsConcentrationDto"][];
             from: string;
+            phases: components["schemas"]["DoseMetricsPhasesDto"];
             scheduled: components["schemas"]["DoseMetricsScheduledDto"];
             therapies: components["schemas"]["DoseMetricsTherapiesDto"];
             timeZone: string;
             to: string;
+            typesActive: components["schemas"]["DoseMetricsTypeDto"][];
+            volumeMatrix: components["schemas"]["DoseMetricsVolumeMatrixDto"][];
         };
         DoseMetricsScheduledDto: {
             overdue: number;
@@ -1867,6 +1973,15 @@ export interface components {
             inProgress: number;
             maintenance: number;
             suspended: number;
+        };
+        DoseMetricsTypeDto: {
+            count: number;
+            immunoType: string;
+        };
+        DoseMetricsVolumeMatrixDto: {
+            concentration: number;
+            count: number;
+            volume: number;
         };
         DoseObservationAddendumResponseDto: {
             administeredMedications: string[];
@@ -1918,6 +2033,7 @@ export interface components {
             allowedValues: components["schemas"]["ProtocolStepResponseDto"][];
             expectedRevision: number;
             expectedTherapyRevision: number;
+            nextIntervalTolerance: components["schemas"]["StepIntervalToleranceDto"] | null;
             nextScheduledAt: string | null;
             prescriptionRevision: number;
             protocolVersionId: string;
@@ -2059,6 +2175,34 @@ export interface components {
             definition: components["schemas"]["ProtocolDefinitionDto"];
             expectedRevision: number;
         };
+        EmailChangeConfirmDTO: Record<string, never>;
+        EmailChangeMessageResponseDto: {
+            message: string;
+        };
+        EmailChangeRequestDto: {
+            currentEmail: string;
+            decidedAt?: string | null;
+            expiresAt: string;
+            id: string;
+            newEmail: string;
+            professionalId: string;
+            professionalName: string;
+            requestedAt: string;
+            status: "PENDING" | "DISPATCHED" | "CONFIRMED" | "REJECTED" | "SUPERSEDED" | "EXPIRED";
+            whatsappUrl?: string;
+        };
+        EmailChangeRequestPageDto: {
+            items: components["schemas"]["EmailChangeRequestDto"][];
+            page: number;
+            pageSize: number;
+            pending: number;
+            total: number;
+        };
+        EmailChangeVerifyDTO: Record<string, never>;
+        EmailChangeVerifyResponseDto: {
+            newEmail: string;
+            valid: boolean;
+        };
         EnrollMfaDto: {
             label?: string;
         };
@@ -2085,40 +2229,6 @@ export interface components {
             immunoType: string;
             inductionStartDate: string;
             status: "IN_PROGRESS" | "SUSPENDED" | "COMPLETED";
-        };
-        GoogleAuthorizationUrlDto: {
-            authorizationUrl: string;
-        };
-        GoogleCalendarConnectionListItemDto: {
-            brokenReason: string | null;
-            channelExpiresAt: string | null;
-            createdAt: string;
-            googleAccountEmail: string;
-            lastIncrementalSyncAt: string | null;
-            professional: components["schemas"]["GoogleCalendarConnectionProfessionalDto"];
-            professionalId: string;
-            status: "ACTIVE" | "BROKEN";
-        };
-        GoogleCalendarConnectionProfessionalDto: {
-            fullName: string;
-            id: string;
-            profession: "PHYSICIAN" | "NURSE" | "NURSING_TECHNICIAN" | "RECEPTIONIST";
-        };
-        GoogleCalendarDisconnectedResultDto: {
-            disconnected: boolean;
-        };
-        GoogleCalendarStatusConnectedDto: {
-            brokenReason: string | null;
-            channelExpiresAt: string | null;
-            connected: true;
-            deadLetteredJobs: number;
-            googleAccountEmail: string;
-            lastIncrementalSyncAt: string | null;
-            pendingJobs: number;
-            status: "ACTIVE" | "BROKEN";
-        };
-        GoogleCalendarStatusDisconnectedDto: {
-            connected: false;
         };
         GuardianDto: {
             cpf?: string;
@@ -2332,7 +2442,7 @@ export interface components {
             entityId: string | null;
             entityType: string | null;
             id: string;
-            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED";
+            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED" | "EMAIL_CHANGE_REQUEST_PENDING" | "EMAIL_CHANGE_REQUEST_DECIDED";
             organizationId: string;
             outboxEventId: string;
             readAt: string | null;
@@ -2348,7 +2458,7 @@ export interface components {
         };
         NotificationPreferenceDto: {
             enabled: boolean;
-            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED";
+            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED" | "EMAIL_CHANGE_REQUEST_PENDING" | "EMAIL_CHANGE_REQUEST_DECIDED";
         };
         OrganizationResponseDto: {
             automationEnabled: boolean;
@@ -2384,7 +2494,7 @@ export interface components {
             attempts: number;
             createdAt: string;
             id: string;
-            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED";
+            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED" | "EMAIL_CHANGE_REQUEST_PENDING" | "EMAIL_CHANGE_REQUEST_DECIDED";
             lastError: string | null;
             processedAt: string | null;
         };
@@ -2403,11 +2513,16 @@ export interface components {
             pageSize: number;
             total: number;
         };
-        PasswordResetConfirmDTO: Record<string, never>;
+        PasswordResetConfirmDTO: {
+            newPassword: string;
+            token: string;
+        };
         PasswordResetMessageResponseDto: {
             message: string;
         };
-        PasswordResetRequestDTO: Record<string, never>;
+        PasswordResetRequestDTO: {
+            email: string;
+        };
         PasswordResetVerifyDTO: Record<string, never>;
         PasswordResetVerifyResponseDto: {
             valid: boolean;
@@ -2492,6 +2607,24 @@ export interface components {
             userId: string | null;
             weightInKg: number;
         };
+        PdfAuditDto: {
+            anonymized?: boolean;
+            sections: string[];
+        };
+        PdfAuditResponseDto: {
+            recorded: boolean;
+        };
+        PhaseTimelineDayDto: {
+            buildUp: number;
+            date: string;
+            maintenance: number;
+        };
+        PhaseTimelineResponseDto: {
+            asOf: string;
+            days: components["schemas"]["PhaseTimelineDayDto"][];
+            timeZone: string;
+            totalTherapies: number;
+        };
         PrescriptionRevisionAppliedDto: {
             dryRun: false;
             pendingDose: components["schemas"]["DoseResponseDto"];
@@ -2571,6 +2704,7 @@ export interface components {
             concentration: string;
             id: string;
             intervalDays: number;
+            intervalTolerance?: components["schemas"]["StepIntervalToleranceInputDto"];
             label: string;
             nextStepId: string | null;
             phase: "BUILD_UP" | "MAINTENANCE";
@@ -2580,6 +2714,7 @@ export interface components {
             concentration: string;
             id: string;
             intervalDays: number;
+            intervalTolerance?: components["schemas"]["StepIntervalToleranceDto"];
             label: string;
             nextStepId: string | null;
             phase: "BUILD_UP" | "MAINTENANCE";
@@ -2772,6 +2907,9 @@ export interface components {
             revision: number;
             status: "IN_PROGRESS" | "SUSPENDED" | "COMPLETED";
         };
+        SelfRequestEmailChangeDto: {
+            newEmail: string;
+        };
         SessionEnvelopeDto: {
             authenticated: true;
             csrfToken: string;
@@ -2789,7 +2927,7 @@ export interface components {
         };
         SetPreferenceDto: {
             enabled: boolean;
-            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED";
+            kind: "PHYSICIAN_REVIEW_REQUESTED" | "TREATMENT_SUSPENDED" | "EMAIL_CHANGE_REQUEST_PENDING" | "EMAIL_CHANGE_REQUEST_DECIDED";
         };
         SimulateProtocolDto: {
             administered: components["schemas"]["AdministeredValuesInputDto"];
@@ -2841,6 +2979,16 @@ export interface components {
             complete: boolean;
             timeZone: string;
             totalTherapies: number;
+        };
+        StepIntervalToleranceDto: {
+            longFromDays: number;
+            shortBelowDays: number;
+            stepReviewAboveDays: number;
+        };
+        StepIntervalToleranceInputDto: {
+            longFromDays: number;
+            shortBelowDays: number;
+            stepReviewAboveDays: number;
         };
         SupportRequestDto: {
             message: string;
@@ -3033,8 +3181,9 @@ export interface components {
             expectedRevision: number;
             expectedTherapyRevision: number;
             idempotencyKey?: string;
-            reason: string;
+            reason?: string;
             scheduledAt: string;
+            scheduleReview?: "KEEP_STEP" | "STEP_BACK_REQUESTED";
             values: components["schemas"]["ConfiguredDoseValuesDto"];
         };
         UpdateScheduledDoseResponseDto: {
@@ -3114,6 +3263,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountContextDto"];
+                };
+            };
+        };
+    };
+    AccountController_requestOwnEmailChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelfRequestEmailChangeDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeRequestDto"];
                 };
             };
         };
@@ -3420,6 +3592,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CsrfTokenResponseDto"];
+                };
+            };
+        };
+    };
+    AuthController_emailChangeConfirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailChangeConfirmDTO"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeMessageResponseDto"];
+                };
+            };
+        };
+    };
+    AuthController_emailChangeVerify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailChangeVerifyDTO"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeVerifyResponseDto"];
                 };
             };
         };
@@ -4203,6 +4421,47 @@ export interface operations {
             };
         };
     };
+    DosesController_auditDashboardReportPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PdfAuditDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdfAuditResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     DosesController_legacyStatus: {
         parameters: {
             query?: never;
@@ -4493,6 +4752,29 @@ export interface operations {
             };
         };
     };
+    ImmunotherapiesController_readPhaseTimeline: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                timeZone: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhaseTimelineResponseDto"];
+                };
+            };
+        };
+    };
     ImmunotherapiesController_readPatientRecord: {
         parameters: {
             query?: never;
@@ -4510,6 +4792,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PatientClinicalRecordDto"];
+                };
+            };
+        };
+    };
+    ImmunotherapiesController_auditPatientReportPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patientId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PdfAuditDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdfAuditResponseDto"];
                 };
             };
         };
@@ -4597,125 +4904,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": string[];
-                };
-            };
-        };
-    };
-    GoogleCalendarController_callback: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            302: {
-                headers: {
-                    Location?: string;
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GoogleCalendarController_connect: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GoogleAuthorizationUrlDto"];
-                };
-            };
-        };
-    };
-    GoogleCalendarController_status: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GoogleCalendarStatusConnectedDto"] | components["schemas"]["GoogleCalendarStatusDisconnectedDto"];
-                };
-            };
-        };
-    };
-    GoogleCalendarController_disconnect: {
-        parameters: {
-            query?: {
-                removeEvents?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GoogleCalendarDisconnectedResultDto"];
-                };
-            };
-        };
-    };
-    GoogleCalendarController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GoogleCalendarConnectionListItemDto"][];
-                };
-            };
-        };
-    };
-    GoogleCalendarController_disconnectProfessional: {
-        parameters: {
-            query?: {
-                removeEvents?: boolean;
-            };
-            header?: never;
-            path: {
-                professionalId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GoogleCalendarDisconnectedResultDto"];
                 };
             };
         };
@@ -5216,6 +5404,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MemberAccessStatusDto"];
+                };
+            };
+        };
+    };
+    ProfessionalsController_startEmailChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminRequestEmailChangeDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeRequestDto"];
+                };
+            };
+        };
+    };
+    ProfessionalsController_listPendingEmailChanges: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeRequestPageDto"];
+                };
+            };
+        };
+    };
+    ProfessionalsController_approvePendingEmailChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveEmailChangeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeRequestDto"];
+                };
+            };
+        };
+    };
+    ProfessionalsController_rejectPendingEmailChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChangeRequestDto"];
                 };
             };
         };

@@ -6,6 +6,28 @@ export interface CollectedPage<T> {
 }
 
 
+export function mergeCollectedPages<T>(
+  pages: CollectedPage<T>[],
+  getId: (item: T) => string,
+): CollectedPage<T> {
+  const items: T[] = []
+  const ids = new Set<string>()
+  for (const page of pages) {
+    for (const item of page.items) {
+      const id = getId(item)
+      if (ids.has(id)) continue
+      ids.add(id)
+      items.push(item)
+    }
+  }
+  return {
+    items,
+    total: Math.max(items.length, ...pages.map((page) => page.total)),
+    complete: pages.every((page) => page.complete),
+    truncated: pages.some((page) => page.truncated),
+  }
+}
+
 export async function collectPages<T>(
   load: (page: number) => Promise<{ items: T[]; total: number; page?: number }>,
   options: { signal?: AbortSignal; maxPages: number; getId?: (item: T) => string },

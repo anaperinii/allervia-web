@@ -1,12 +1,13 @@
 import { ClinicalReviewNotice } from '@/shared/components/ClinicalReviewNotice'
 import { ApiError } from '@/shared/api/contracts/errors'
-import { collectPages } from '@/shared/api/pagination'
+import { collectAccentTolerantPages } from '@/shared/api/search'
+import { searchVariants } from '@/shared/lib/search-terms'
 import { useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
 import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { InformationCircleIcon, WhatsappIcon } from '@hugeicons/core-free-icons'
+import { InformationCircleIcon, StickyNote01Icon, WhatsappIcon } from '@hugeicons/core-free-icons'
 import { formatPhone } from '@/shared/lib/formatters'
 import { openWhatsApp, sendReminder } from '@/shared/lib/whatsapp'
 import { Button, FieldLabel, Modal, Select, TextArea, TextInput, toast } from '@/shared/components'
@@ -21,32 +22,51 @@ import type { Appointment } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { useProfessionalDirectory } from '@/shared/hooks/useProfessionalDirectory'
+import { useKeyboardAutocomplete } from '@/shared/hooks/useKeyboardAutocomplete'
 import { appointmentWindow, dayInZone, timeInZone, addMinutesToTime } from '@/shared/lib/dates'
 import { formatInstantDate } from '@/features/patient/adapters/clinical-presentation'
+import { APPLICATION_STATUS_DISPLAY, appointmentStatusToApplicationStatus } from '@/features/scheduling/constants/application-display'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  faArrowRight,
+  faBookmark,
   faCircleCheck,
   faCircleInfo,
+  faCircleXmark,
+  faClock,
   faMagnifyingGlass,
 } from '@fortawesome/free-solid-svg-icons'
+import { useSettingsStore } from '@/features/settings/stores/useSettingsStore'
 
-const STATUS_LABELS: Record<Appointment['status'], string> = {
-  SCHEDULED: 'Agendado',
-  COMPLETED: 'Concluído',
-  CANCELLED: 'Cancelado',
-  MISSED: 'Faltou',
+const STATUS_ICON = {
+  scheduled: faClock,
+  completed: faCircleCheck,
+  missed: faCircleXmark,
+  canceled: faCircleXmark,
 }
 
-type AppointmentTabId = 'info' | 'manage'
+const STATUS_ICON_COLOR = {
+  scheduled: 'text-gray-400',
+  completed: 'text-emerald-600',
+  missed: 'text-red-500',
+  canceled: 'text-red-500',
+}
+import { FALLBACK_EVENT_COLORS } from '@/features/scheduling/components/modality-colors'
 
+function appointmentStatusLabel(status: Appointment['status']): string {
+  return APPLICATION_STATUS_DISPLAY[appointmentStatusToApplicationStatus(status)].label
+}
+
+type AppointmentTabId = 'info' | 'notes' | 'manage'
 
 const APPOINTMENT_TABS: {
   id: AppointmentTabId
   label: string
   icon: typeof InformationCircleIcon
-}[] = [{ id: 'info', label: 'Informações', icon: InformationCircleIcon }]
+}[] = [
+  { id: 'info', label: 'Informações', icon: InformationCircleIcon },
+  { id: 'notes', label: 'Observações', icon: StickyNote01Icon },
+]
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -94,15 +114,38 @@ function NewAppointmentForm({
   const [endTime, setEndTime] = useState('')
   const [notes, setNotes] = useState('')
 
+  const searchTerms = searchVariants(search)
   const patientsQuery = useQuery({
     queryKey: queryKeys.patients(organizationId, {
       picker: 'appointment',
-      search: search.trim() || undefined,
+      search: searchTerms.join('|') || undefined,
     }),
-    queryFn: ({ signal }) => collectPages(page => listPatients({ page, pageSize: 100, isActive: true, search: search.trim() || undefined }, signal), { signal, maxPages: 5 }),
+    queryFn: ({ signal }) =>
+      collectAccentTolerantPages({
+        term: search,
+        signal,
+        load: (page, term) => listPatients({ page, pageSize: 100, isActive: true, search: term }, signal),
+        getId: (patient) => patient.id,
+        getSearchableText: (patient) => patient.fullName,
+      }),
     enabled: organizationId !== '',
   })
   const patientOptions = patientsQuery.data?.items ?? []
+  const { highlightedIndex, suggestionsRef, handleKeyDown } = useKeyboardAutocomplete({
+    isOpen: showSuggestions,
+    itemCount: patientOptions.length,
+    resetKey: JSON.stringify([search, patientOptions.map((p) => p.id)]),
+    onClose: () => setShowSuggestions(false),
+    onSelect: (idx) => {
+      const patient = patientOptions[idx]
+      if (patient) {
+        setPatientId(patient.id)
+        setDoseId('')
+        setSearch(patient.fullName)
+        setShowSuggestions(false)
+      }
+    },
+  })
   const professionals = useProfessionalDirectory()
   const therapiesQuery = useQuery({
     queryKey: [...queryKeys.patient(organizationId, patientId), 'therapies'],
@@ -151,8 +194,19 @@ function NewAppointmentForm({
     <Modal
       open
       onClose={onClose}
-      title="Novo agendamento"
+      ariaLabel="Novo agendamento"
       size="lg"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[0.95rem] font-bold text-(--text)">Novo agendamento</div>
+          <div className="text-[0.82rem] text-(--text-muted)">Compromisso de agenda</div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>Voltar</Button>
@@ -185,34 +239,42 @@ function NewAppointmentForm({
             }}
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            onKeyDown={handleKeyDown}
             role="combobox"
             aria-expanded={showSuggestions && patientOptions.length > 0}
             aria-controls="appointment-patient-suggestions"
             aria-autocomplete="list"
+            aria-activedescendant={highlightedIndex >= 0 ? `appointment-patient-suggestions-${highlightedIndex}` : undefined}
             className="pl-8"
           />
           {showSuggestions && patientOptions.length > 0 && (
             <div
+              ref={suggestionsRef}
               id="appointment-patient-suggestions"
               role="listbox"
               className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-(--border-custom) bg-white shadow-lg"
             >
-              {patientOptions.map((patient) => (
+              {patientOptions.map((patient, idx) => (
                 <button
                   key={patient.id}
+                  id={`appointment-patient-suggestions-${idx}`}
                   type="button"
                   role="option"
-                  aria-selected={patient.id === patientId}
+                  aria-selected={highlightedIndex === idx}
+                  data-suggestion-item
                   onClick={() => {
                     setPatientId(patient.id)
                     setDoseId('')
                     setSearch(patient.fullName)
                     setShowSuggestions(false)
                   }}
-                  className="flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors hover:bg-teal-50"
+                  className={cn(
+                    'flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors',
+                    highlightedIndex === idx ? 'bg-teal-50' : 'hover:bg-teal-50',
+                  )}
                 >
                   <span className="text-xs font-medium text-(--text)">{patient.fullName}</span>
-                  <span className="text-[0.65rem] text-(--text-muted)">{patient.phoneNumber}</span>
+                  <span className="text-[0.65rem] text-(--text-muted)">{formatPhone(patient.phoneNumber)}</span>
                 </button>
               ))}
             </div>
@@ -285,6 +347,7 @@ interface AppointmentActionModalProps {
   appointment: Appointment | null
   organizationId: string
   onClose: () => void
+  onOpenPatient?: (patientId: string, appointmentId?: string) => void
 }
 
 export function AppointmentActionModal(props: AppointmentActionModalProps) {
@@ -297,9 +360,13 @@ function AppointmentActionForm({
   appointment,
   organizationId,
   onClose,
+  onOpenPatient,
 }: AppointmentActionModalProps) {
   const { account } = useSession()
   const timeZone = account?.organization?.timeZone ?? 'America/Sao_Paulo'
+  const eventColors = useSettingsStore((s) => s.eventColors)
+  const categoryColor =
+    eventColors.find((entry) => entry.id === 'appointment')?.color ?? FALLBACK_EVENT_COLORS.appointment
   const [reviewRequired, setReviewRequired] = useState(false)
   const [currentRecord, setCurrentRecord] = useState(appointment)
   const queryClient = useQueryClient()
@@ -365,22 +432,56 @@ function AppointmentActionForm({
       size="md"
       headerSlot={
         <div className="min-w-0 flex-1">
+          {onOpenPatient && (
+            <FontAwesomeIcon
+              icon={faBookmark}
+              style={{ fontSize: 15, color: categoryColor }}
+              className="absolute left-4 top-0"
+              title="Compromisso"
+            />
+          )}
           <div className="flex min-w-0 items-center gap-3">
-            <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-              style={{
-                background: 'linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
-                boxShadow: '0 6px 14px -8px rgba(16,60,68,0.55)',
-              }}
-            >
-              {initials}
-            </div>
-            <div className="min-w-0">
-              <div className="truncate text-[1.05rem] font-bold text-(--text)">
-                {appointment.patient.fullName}
+            {onOpenPatient && (
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                style={{
+                  background: 'linear-gradient(160deg, #6C9EA5 0%, #4d7e85 100%)',
+                  boxShadow: '0 6px 14px -8px rgba(16,60,68,0.55)',
+                }}
+              >
+                {initials}
               </div>
+            )}
+            <div className="min-w-0">
+              {onOpenPatient ? (
+                <button
+                  type="button"
+                  onClick={() => onOpenPatient(appointment.patientId, appointment.id)}
+                  className="flex max-w-full items-center gap-1.5 text-left text-[0.95rem] font-bold text-(--text) transition-colors hover:text-brand"
+                >
+                  <span className="truncate">{appointment.patient.fullName}</span>
+                  <FontAwesomeIcon
+                    icon={STATUS_ICON[appointmentStatusToApplicationStatus(appointment.status)]}
+                    className={cn('shrink-0', STATUS_ICON_COLOR[appointmentStatusToApplicationStatus(appointment.status)])}
+                    style={{ fontSize: 13 }}
+                    title={appointmentStatusLabel(appointment.status)}
+                  />
+                </button>
+              ) : (
+                <div className="flex max-w-full items-center gap-1.5 text-[0.95rem] font-bold text-(--text)">
+                  <span className="truncate">{appointment.title ?? 'Compromisso'}</span>
+                  <FontAwesomeIcon
+                    icon={STATUS_ICON[appointmentStatusToApplicationStatus(appointment.status)]}
+                    className={cn('shrink-0', STATUS_ICON_COLOR[appointmentStatusToApplicationStatus(appointment.status)])}
+                    style={{ fontSize: 13 }}
+                    title={appointmentStatusLabel(appointment.status)}
+                  />
+                </div>
+              )}
               <div className="text-[0.82rem] text-(--text-muted)">
-                {appointment.title ?? 'Compromisso'} · {STATUS_LABELS[appointment.status]}
+                {onOpenPatient
+                  ? `${appointment.title ?? 'Compromisso'} · ${appointmentStatusLabel(appointment.status)}`
+                  : `${appointment.patient.fullName} · ${appointmentStatusLabel(appointment.status)}`}
               </div>
             </div>
           </div>
@@ -420,35 +521,46 @@ function AppointmentActionForm({
       }}
       headerAction={
         isOpen ? (
-          <button
-            type="button"
+          <Button
+            tone="brand"
+            variant="outline"
+            size="sm"
+            className="shrink-0 self-start"
             onClick={() => setTab(tab === 'manage' ? 'info' : 'manage')}
-            className="shrink-0 cursor-pointer self-start rounded-lg border border-transparent px-3 py-1.5 text-[0.7rem] font-semibold text-white transition-[filter] duration-200 hover:brightness-110"
-            style={{ background: '#12333a' }}
           >
             {tab === 'manage' ? 'Ver detalhes' : 'Editar'}
-          </button>
+          </Button>
         ) : (
           <span />
         )
       }
       footer={
         <>
-          <button
-            type="button"
-            onClick={() =>
-              sendReminder(
-                appointment.patient.phoneNumber,
-                appointment.patient.fullName.split(' ')[0],
-                formatInstantDate(appointment.startsAt, timeZone),
-                timeInputValue(appointment.startsAt, timeZone),
+          {tab !== 'manage' && (
+            isOpen ? (
+              <Button
+                tone="brand"
+                variant="solid"
+                leftIcon={<HugeiconsIcon icon={WhatsappIcon} size={14} strokeWidth={1.8} />}
+                onClick={() =>
+                  sendReminder(
+                    appointment.patient.phoneNumber,
+                    appointment.patient.fullName.split(' ')[0],
+                    formatInstantDate(appointment.startsAt, timeZone),
+                    timeInputValue(appointment.startsAt, timeZone),
+                  )
+                }
+              >
+                Enviar lembrete via WhatsApp
+              </Button>
+            ) : (
+              onOpenPatient && (
+                <Button tone="brand" variant="solid" onClick={() => onOpenPatient(appointment.patientId, appointment.id)}>
+                  Ver no prontuário
+                </Button>
               )
-            }
-            className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-transparent bg-emerald-500 px-3 py-1.5 text-[0.7rem] font-semibold text-white transition-colors hover:bg-emerald-600"
-          >
-            <HugeiconsIcon icon={WhatsappIcon} size={14} strokeWidth={1.8} />
-            Enviar lembrete via WhatsApp
-          </button>
+            )
+          )}
           <Button variant="outline" onClick={onClose}>Fechar</Button>
           {isOpen && tab === 'manage' && (
             <Button tone="brand" variant="solid" disabled={!canSubmit} onClick={() => mutation.mutate()}>
@@ -460,22 +572,13 @@ function AppointmentActionForm({
     >
       {reviewRequired && !currentRecord && <div role="alert"><p>Não foi possível carregar o registro atual. Seu rascunho está preservado.</p><button type="button" onClick={async () => { try { setCurrentRecord(await getAppointment(appointment.id)) } catch { toast.danger({ icon: null, title: 'Falha ao recarregar compromisso', description: 'Tente novamente antes de confirmar.' }) } }}>Recarregar registro atual</button></div>}
       <ClinicalReviewNotice required={reviewRequired && currentRecord !== null} onReview={() => { if (currentRecord) setReviewRequired(false) }} />
-      <p className="text-xs">Fuso do agendamento: {timeZone}</p>
-      {reviewRequired && currentRecord && <p role="status">Registro atual: revisão {currentRecord.revision}, {STATUS_LABELS[currentRecord.status]}, início {formatInstantDate(currentRecord.startsAt, timeZone)} às {timeInputValue(currentRecord.startsAt, timeZone)}, término {formatInstantDate(currentRecord.endsAt, timeZone)} às {timeInputValue(currentRecord.endsAt, timeZone)}. Seu formulário continua com a intenção anterior.</p>}
+      {reviewRequired && currentRecord && <p role="status">Registro atual: revisão {currentRecord.revision}, {appointmentStatusLabel(currentRecord.status)}, início {formatInstantDate(currentRecord.startsAt, timeZone)} às {timeInputValue(currentRecord.startsAt, timeZone)}, término {formatInstantDate(currentRecord.endsAt, timeZone)} às {timeInputValue(currentRecord.endsAt, timeZone)}. Seu formulário continua com a intenção anterior.</p>}
       {tab === 'info' && (
         <>
-          <Field label="Data">{formatInstantDate(appointment.startsAt, timeZone)}</Field>
-
-          <div className="flex items-end gap-2">
-            <div className="min-w-0 flex-1">
-              <Field label="Início">{timeInputValue(appointment.startsAt, timeZone)}</Field>
-            </div>
-            <div className="flex h-9 shrink-0 items-center text-(--text-muted)">
-              <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <Field label="Fim">{timeInputValue(appointment.endsAt, timeZone)}</Field>
-            </div>
+          <div className="grid grid-cols-3 gap-3">
+            <Field label="Data">{formatInstantDate(appointment.startsAt, timeZone)}</Field>
+            <Field label="Início">{timeInputValue(appointment.startsAt, timeZone)}</Field>
+            <Field label="Fim">{timeInputValue(appointment.endsAt, timeZone)}</Field>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -498,11 +601,14 @@ function AppointmentActionForm({
           <Field label="Previsão vinculada">
             {appointment.dose ? formatInstantDate(appointment.dose.scheduledAt, timeZone) : 'Nenhuma'}
           </Field>
-          <Field label="Observações">{appointment.notes ?? '—'}</Field>
           {appointment.statusReason && (
             <Field label="Motivo registrado">{appointment.statusReason}</Field>
           )}
         </>
+      )}
+
+      {tab === 'notes' && (
+        <Field label="Observações">{appointment.notes ?? '—'}</Field>
       )}
 
       {tab === 'manage' && (

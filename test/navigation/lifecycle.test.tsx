@@ -345,6 +345,7 @@ describe('ciclo de vida clínico no web', () => {
     const versionLabel = await screen.findByText(/nova versão publicada/i, { selector: 'label' })
     await screen.findByRole('option', { name: /SCIT ácaros — v2/ })
     await user.selectOptions(versionLabel.parentElement!.querySelector('select')!, 'version-2')
+    await user.click(screen.getByRole('button', { name: /nenhuma etapa selecionada/i }))
     await user.click(screen.getByRole('checkbox', { name: /baixa/i }))
     await user.click(screen.getByRole('checkbox', { name: /média/i }))
     await user.click(screen.getByRole('checkbox', { name: /meta/i }))

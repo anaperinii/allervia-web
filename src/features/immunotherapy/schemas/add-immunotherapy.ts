@@ -5,7 +5,7 @@ import {
   phoneSchema,
   weightSchema,
   birthdateSchema,
-  futureDateSchema,
+  requiredDateSchema,
   extratoSchema,
 } from '@/shared/lib/field-schemas'
 import { calculateAge } from '@/shared/lib/dates'
@@ -35,7 +35,11 @@ export const addImmunotherapySchema = z
     patientId: z.string(),
 
     type: z.string().min(1, 'Tipo é obrigatório'),
-    startDate: futureDateSchema,
+    startDate: requiredDateSchema,
+    startTime: z
+      .string()
+      .min(1, 'Hora é obrigatória')
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora inválida'),
     extract: extratoSchema,
 
     protocolVersionId: z.string().min(1, 'Selecione a versão do protocolo'),
@@ -152,6 +156,7 @@ export const STEP_1_FIELDS = [
 export const STEP_2_FIELDS = [
   'type',
   'startDate',
+  'startTime',
   'extract',
   'protocolVersionId',
   'stepIds',

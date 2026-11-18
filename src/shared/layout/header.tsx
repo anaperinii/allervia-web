@@ -70,7 +70,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
         className={cn(
           'fixed z-100 flex items-center justify-between transition-all duration-900 ease-[cubic-bezier(0.22,1,0.36,1)]',
           heroPill
-            ? 'left-0 right-0 mx-auto w-[min(1120px,92%)] h-14 px-6 rounded-full border backdrop-blur-md'
+            ? 'left-0 right-0 mx-auto w-[min(1120px,92%)] h-14 px-6 rounded-lg border backdrop-blur-md'
             : bareBar
               ? 'left-0 right-0 px-[5%] h-17'
               : 'left-0 right-0 px-[5%] h-17 border-b backdrop-blur-xl',
@@ -101,7 +101,7 @@ export function Header({ isAuthPage = false, hasHero = false }: HeaderProps) {
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
           <img src={allerviaMark} alt="" className="h-7 w-7 object-contain" />
-          <AllerviaWordmark className="text-xl" style={{ color: brandColor }} />
+          <AllerviaWordmark className="text-xl font-medium" style={{ color: brandColor }} />
         </Link>
 
         {showNavLinks && (

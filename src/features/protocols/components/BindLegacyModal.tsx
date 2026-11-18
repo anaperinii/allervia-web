@@ -161,6 +161,7 @@ function BindLegacyForm({
       dirty={!!versionId}
       onClose={onClose}
       title={`Vincular tratamento de ${therapy.patient.fullName}`}
+      icon={<FontAwesomeIcon icon={faFlaskVial} style={{ fontSize: 16 }} />}
       size="lg"
       footer={
         <>

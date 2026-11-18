@@ -84,6 +84,10 @@ function stubApi(totalRows = 2) {
           scheduled: { pending: 2, overdue: 1 },
           adherence: { numerator: 3, denominator: 4, ratio: 0.75 },
           therapies: { inProgress: 5, suspended: 1, completed: 2, buildUp: 3, maintenance: 2 },
+          concentration: [{ concentration: 1000, count: 2, totalVolume: 0.2 }],
+          volumeMatrix: [{ concentration: 1000, volume: 0.1, count: 2 }],
+          phases: { buildUp: 3, maintenance: 1 },
+          typesActive: [{ immunoType: 'Ácaros', count: 5 }],
         }),
       )
     }

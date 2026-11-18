@@ -54,7 +54,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       usePatientStore.setState({ selectedPatient: null, applications: [] })
       useUserStore.getState().syncFromAccount(null)
       void queryClient.cancelQueries()
-      setCsrfToken(null)
       queryClient.removeQueries({
         predicate: (query) => query.meta?.public !== true,
       })

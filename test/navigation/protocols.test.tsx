@@ -168,23 +168,23 @@ describe('catálogo de protocolos', () => {
     await screen.findByText('SCIT ácaros')
     await user.click(screen.getByRole('button', { name: /editar rascunho/i }))
 
-    const labelInput = await screen.findByDisplayValue('Início')
-    await user.clear(labelInput)
-    await user.type(labelInput, 'Início editado')
+    const idInput = await screen.findByDisplayValue('inicio')
+    await user.clear(idInput)
+    await user.type(idInput, 'inicio-editado')
 
     await user.click(screen.getByRole('button', { name: /salvar rascunho/i }))
 
     expect(
       await screen.findByText(/outra pessoa salvou este rascunho/i),
     ).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Início editado')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('inicio-editado')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /salvar rascunho/i })).toBeDisabled()
 
     await user.click(
       screen.getByRole('button', { name: /manter o meu e sobrescrever/i }),
     )
     expect(screen.getByRole('button', { name: /salvar rascunho/i })).toBeEnabled()
-    expect(screen.getByDisplayValue('Início editado')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('inicio-editado')).toBeInTheDocument()
   })
 })
 

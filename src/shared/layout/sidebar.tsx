@@ -125,7 +125,7 @@ export function Sidebar() {
           isCollapsed ? 'justify-center h-14 px-0' : 'h-14 pl-5 pr-5',
         )}
       >
-        <img src={allerviaMark} alt="Allervia" className="h-8 w-8 shrink-0 object-contain" />
+        <img src={allerviaMark} alt="allervia" className="h-8 w-8 shrink-0 object-contain" />
       </Link>
 
       <div

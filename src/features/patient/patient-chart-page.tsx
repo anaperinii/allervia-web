@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/cn'
-import { SegmentedControl, Toast } from '@/shared/components'
-import { sendReminder } from '@/shared/lib/whatsapp'
+import { SegmentedControl, Toast, showApiErrorToast } from '@/shared/components'
 import { usePatientStore, type Application } from '@/features/patient/stores/usePatientStore'
 import {
   buildLegacyPatient,
@@ -13,17 +12,23 @@ import {
   THERAPY_STATUS_LABELS,
 } from '@/features/patient/adapters/clinical-presentation'
 import {
+  getAppointment,
   getDose,
   getPatient,
+  getTherapyLifecycle,
+  listAppointments,
   listDosesForTherapy,
   updatePatient,
 } from '@/shared/api/clinical.api'
+import type { Appointment } from '@/shared/api/contracts/clinical'
+import { AppointmentActionModal } from '@/features/scheduling/components/AppointmentModals'
+import { collectPages } from '@/shared/api/pagination'
+import { appointmentToApplication } from '@/features/scheduling/adapters/appointment-to-application'
 import { ApiError } from '@/shared/api/contracts/errors'
 import { humanErrorMessage } from '@/shared/api/error-copy'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
-import { useAuditStore } from '@/shared/stores/useAuditStore'
-import { useCurrentUser, useHasPermission } from '@/shared/stores/useUserStore'
+import { useHasPermission } from '@/shared/stores/useUserStore'
 import { formatDurationFromDays } from '@/shared/lib/dates'
 import { monthIndexFromPtUpper } from '@/shared/constants/months-pt'
 import { PatientInfoSidebar } from '@/features/patient/components/chart/PatientInfoSidebar'
@@ -31,9 +36,8 @@ import { SummaryCards } from '@/features/patient/components/chart/SummaryCards'
 import { ApplicationsMonthFilter } from '@/features/patient/components/chart/ApplicationsMonthFilter'
 import { ApplicationsTimeline } from '@/features/patient/components/chart/ApplicationsTimeline'
 import { ApplicationsCalendar } from '@/features/patient/components/chart/ApplicationsCalendar'
-import { ProgressIndicator } from '@/features/patient/components/chart/ProgressIndicator'
-import { TreatmentTimeline } from '@/features/patient/components/treatment-completion/TreatmentTimeline'
 import { ApplicationDetailModal } from '@/features/patient/components/chart/ApplicationDetailModal'
+import { ApplicationDetailsModal } from '@/features/scheduling/components/ApplicationDetailsModal'
 import { EditPatientModal } from '@/features/patient/components/chart/EditPatientModal'
 import { EditScheduledDoseModal } from '@/features/patient/components/chart/EditScheduledDoseModal'
 import {
@@ -42,10 +46,7 @@ import {
   SuspendTherapyModal,
 } from '@/features/patient/components/chart/TherapyLifecycleModals'
 import { RevisePrescriptionModal } from '@/features/patient/components/chart/RevisePrescriptionModal'
-import {
-  LateObservationModal,
-  RetractDoseModal,
-} from '@/features/patient/components/chart/DoseCorrectionModals'
+import { RetractDoseModal } from '@/features/patient/components/chart/DoseCorrectionModals'
 import { PortabilityModal } from '@/features/patient/components/chart/PortabilityModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendarDays, faFloppyDisk, faList, faPowerOff } from '@fortawesome/free-solid-svg-icons'
@@ -53,7 +54,7 @@ import { faCalendarDays, faFloppyDisk, faList, faPowerOff } from '@fortawesome/f
 export function PatientChartPage() {
   const navigate = useNavigate()
   const { patientId } = useParams({ from: '/patient/$patientId' })
-  const { therapy: therapyParam } = useSearch({ from: '/patient/$patientId' })
+  const { therapy: therapyParam, doseId: doseIdParam, appointmentId: appointmentIdParam } = useSearch({ from: '/patient/$patientId' })
   const { account } = useSession()
   const organizationId = account?.organization?.id ?? ''
   const queryClient = useQueryClient()
@@ -76,6 +77,13 @@ export function PatientChartPage() {
     }
     return patientDetail.therapies[0] ?? null
   }, [patientDetail, therapyParam])
+
+  const lifecycleQuery = useQuery({
+    queryKey: [...queryKeys.immunotherapy(organizationId, selectedTherapy?.id ?? ''), 'lifecycle'],
+    queryFn: ({ signal }) => getTherapyLifecycle(selectedTherapy!.id, signal),
+    enabled: organizationId !== '' && selectedTherapy !== null,
+  })
+  const lifecycleEventCount = lifecycleQuery.data?.events.length ?? 0
 
   const dosesQuery = useQuery({
     queryKey: queryKeys.doses(organizationId, selectedTherapy?.id ?? ''),
@@ -169,29 +177,10 @@ export function PatientChartPage() {
     setSelectedPatient(buildLegacyPatient(patientDetail, selectedTherapy, dosesQuery.data?.find(record => record.id === selectedTherapy?.nextDose?.id)?.timeZone ?? account?.organization?.timeZone ?? 'America/Sao_Paulo'))
   }, [patientDetail, selectedTherapy, setSelectedPatient, dosesQuery.data, account?.organization?.timeZone])
 
-  const currentUser = useCurrentUser()
-  const logAccess = useAuditStore((s) => s.logAccess)
-  const loggedAccessRef = useRef<string | null>(null)
-  useEffect(() => {
-    if (!selectedPatient) return
-    const key = `${currentUser.id}::${selectedPatient.id}`
-    if (loggedAccessRef.current === key) return
-    loggedAccessRef.current = key
-    logAccess({
-      userId: currentUser.id,
-      userName: currentUser.name,
-      userRole: currentUser.role,
-      userRegistration: currentUser.registration,
-      patientId: selectedPatient.id,
-      patientName: selectedPatient.name,
-      action: 'view_chart',
-      description: 'Consultou o prontuário',
-    })
-  }, [selectedPatient, currentUser, logAccess])
-
   const [selectedApplication, setSelectedApp] = useState<Application | null>(null)
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [monthFilter, setMonthFilter] = useState('all')
-  const [activeTab, setActiveTab] = useState<'applications' | 'progress'>('applications')
+  const [kindFilter, setKindFilter] = useState<'doses' | 'appointments' | 'all'>('doses')
   const [viewMode, setViewMode] = useState<'timeline' | 'calendar'>('timeline')
   const [calMonth, setCalMonth] = useState(new Date().getMonth())
   const [calYear, setCalYear] = useState(new Date().getFullYear())
@@ -202,16 +191,79 @@ export function PatientChartPage() {
   const [showLifecycleHistory, setShowLifecycleHistory] = useState(false)
   const [showReviseModal, setShowReviseModal] = useState(false)
   const [retractDoseId, setRetractDoseId] = useState<string | null>(null)
-  const [lateObsDoseId, setLateObsDoseId] = useState<string | null>(null)
   const [showPortabilityModal, setShowPortabilityModal] = useState(false)
   const [showInactivateToast, setShowInactivateToast] = useState(false)
   const [showReactivateToast, setShowReactivateToast] = useState(false)
   const [showAdjustToast, setShowAdjustToast] = useState(false)
 
-  const patientApplications = useMemo(
-    () => doseRecords.map((record) => doseToLegacyApplication(record, patientId, { hasReaction: false, timeZone: account?.organization?.timeZone ?? 'America/Sao_Paulo' })),
-    [doseRecords, patientId, account?.organization?.timeZone],
+  const appointmentsRange = useMemo(() => {
+    const now = new Date()
+    const from = new Date(now.getFullYear() - 5, now.getMonth(), 1)
+    const to = new Date(now.getFullYear() + 2, now.getMonth(), 1)
+    return { from: from.toISOString(), to: to.toISOString() }
+  }, [])
+
+  const patientAppointmentsQuery = useQuery({
+    queryKey: queryKeys.patientAppointments(organizationId, patientId),
+    queryFn: ({ signal }) =>
+      collectPages(
+        (page) => listAppointments({ ...appointmentsRange, patientId, page, pageSize: 100 }, signal),
+        { signal, maxPages: 5 },
+      ),
+    enabled: organizationId !== '' && patientId !== '',
+  })
+  const timeZone = account?.organization?.timeZone ?? 'America/Sao_Paulo'
+  const patientAppointmentApplications = useMemo(
+    () =>
+      (patientAppointmentsQuery.data?.items ?? [])
+        .filter((item) => item.status !== 'CANCELLED')
+        .map((item) => appointmentToApplication(item, timeZone)),
+    [patientAppointmentsQuery.data, timeZone],
   )
+
+  const patientApplications = useMemo(
+    () => [
+      ...doseRecords.map((record) => ({
+        ...doseToLegacyApplication(record, patientId, { hasReaction: false, timeZone }),
+        patientName: selectedPatient?.name,
+        patientPhone: selectedPatient?.phone,
+        administrator: selectedPatient?.responsibleDoctor,
+      })),
+      ...patientAppointmentApplications,
+    ],
+    [doseRecords, patientId, timeZone, patientAppointmentApplications, selectedPatient],
+  )
+
+  useEffect(() => {
+    if (!doseIdParam) return
+    const found = patientApplications.find((item) => item.id === doseIdParam)
+    if (found) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- opens the dose modal requested via the doseId query param
+      setSelectedApp(found)
+      navigate({ to: '/patient/$patientId', params: { patientId }, search: (prev) => ({ ...prev, doseId: undefined }), replace: true })
+    }
+  }, [doseIdParam, patientApplications, navigate, patientId])
+
+  useEffect(() => {
+    if (!appointmentIdParam) return
+    let cancelled = false
+    getAppointment(appointmentIdParam)
+      .then((appointment) => {
+        if (cancelled) return
+        setSelectedAppointment(appointment)
+        navigate({ to: '/patient/$patientId', params: { patientId }, search: (prev) => ({ ...prev, appointmentId: undefined }), replace: true })
+      })
+      .catch((error) => { if (!cancelled) showApiErrorToast(error) })
+    return () => { cancelled = true }
+  }, [appointmentIdParam, navigate, patientId])
+
+  const handleSelectApplication = (application: Application) => {
+    if (application.isAppointment) {
+      getAppointment(application.id).then(setSelectedAppointment).catch(showApiErrorToast)
+      return
+    }
+    setSelectedApp(application)
+  }
 
 
 
@@ -266,19 +318,26 @@ export function PatientChartPage() {
     [patientApplications],
   )
 
+  const kindFilteredApplications = useMemo(() => {
+    if (kindFilter === 'all') return sortedApplications
+    return sortedApplications.filter((application) =>
+      kindFilter === 'appointments' ? application.isAppointment : !application.isAppointment,
+    )
+  }, [sortedApplications, kindFilter])
+
   const availableMonths = useMemo(() => {
     const months = new Map<string, string>()
-    sortedApplications.forEach((application) => {
+    kindFilteredApplications.forEach((application) => {
       const key = `${application.year}-${application.month}`
       if (!months.has(key)) months.set(key, `${application.month} ${application.year}`)
     })
     return Array.from(months.entries()).map(([key, label]) => ({ key, label }))
-  }, [sortedApplications])
+  }, [kindFilteredApplications])
 
   const filteredApplications = useMemo(() => {
-    if (monthFilter === 'all') return sortedApplications
-    return sortedApplications.filter((application) => `${application.year}-${application.month}` === monthFilter)
-  }, [sortedApplications, monthFilter])
+    if (monthFilter === 'all') return kindFilteredApplications
+    return kindFilteredApplications.filter((application) => `${application.year}-${application.month}` === monthFilter)
+  }, [kindFilteredApplications, monthFilter])
 
   const groupedByMonth = useMemo(() => {
     const byMonth: Record<string, Application[]> = {}
@@ -368,7 +427,7 @@ export function PatientChartPage() {
           inductionStart={inductionStart}
           maintenanceStart={maintenanceStart}
           activeInactivation={null}
-          inactivationCount={0}
+          inactivationCount={lifecycleEventCount}
           canReactivate={canReactivate}
           canEvolve={canEvolve}
           canEmitReport={canEmitReport}
@@ -452,108 +511,90 @@ export function PatientChartPage() {
             previousDose={previousDose}
           />
 
-          <div className="flex flex-1 flex-col min-h-0 min-w-0">
+          <div className="flex flex-1 flex-col min-h-0 min-w-0 pl-1.5">
           <div className="relative z-10 flex items-end justify-between gap-2">
             <div className="flex items-end gap-1">
             {([
-              { key: 'applications', label: 'Aplicações', first: true },
-              { key: 'progress', label: 'Gráficos de Progressão', first: false },
-            ] as const).map((t) => {
-              const active = activeTab === t.key
+              { key: 'doses', label: 'Aplicações', count: sortedApplications.filter((a) => !a.isAppointment).length },
+              { key: 'appointments', label: 'Compromissos', count: sortedApplications.filter((a) => a.isAppointment).length },
+              { key: 'all', label: 'Todas', count: sortedApplications.length },
+            ] as const).map((t, index) => {
+              const active = kindFilter === t.key
               return (
                 <button
                   key={t.key}
                   type="button"
                   role="tab"
                   aria-selected={active}
-                  onClick={() => setActiveTab(t.key)}
+                  onClick={() => setKindFilter(t.key)}
                   className={cn(
                     'relative rounded-t-xl px-5 py-2 text-xs font-semibold transition-colors cursor-pointer',
-                    active ? 'bg-white text-slate-800 z-10' : 'bg-gray-100/70 text-slate-400 hover:bg-gray-100 hover:text-slate-600',
+                    active
+                      ? 'bg-white text-slate-800 z-10 shadow-[0_-3px_10px_-3px_rgba(18,51,58,0.10),-5px_0_10px_-5px_rgba(18,51,58,0.10),5px_0_10px_-5px_rgba(18,51,58,0.10)]'
+                      : 'bg-gray-100/70 text-slate-400 hover:bg-gray-100 hover:text-slate-600',
                   )}
                 >
                   {active && (
                     <>
-                      {!t.first && (
+                      {index !== 0 && (
                         <span aria-hidden="true" className="pointer-events-none absolute -left-3 bottom-0 h-3 w-3" style={{ background: 'radial-gradient(circle at 0% 0%, transparent 11.5px, #ffffff 12.5px)' }} />
                       )}
                       <span aria-hidden="true" className="pointer-events-none absolute -right-3 bottom-0 h-3 w-3" style={{ background: 'radial-gradient(circle at 100% 0%, transparent 11.5px, #ffffff 12.5px)' }} />
                     </>
                   )}
-                  {t.label}
+                  {t.label} <span className="text-[0.85em] text-slate-400">({t.count})</span>
                 </button>
               )
             })}
             </div>
-            {activeTab === 'applications' && (
-              <SegmentedControl
-                value={viewMode}
-                onChange={setViewMode}
-                size="sm"
-                options={[
-                  { value: 'timeline', label: 'Lista', icon: <FontAwesomeIcon icon={faList} style={{ fontSize: 11 }} /> },
-                  { value: 'calendar', label: 'Calendário', icon: <FontAwesomeIcon icon={faCalendarDays} style={{ fontSize: 11 }} /> },
-                ]}
-                aria-label="Modo de visualização das aplicações"
-                className="mb-1 bg-white"
-              />
-            )}
+            <SegmentedControl
+              value={viewMode}
+              onChange={setViewMode}
+              size="sm"
+              options={[
+                { value: 'timeline', label: 'Lista', icon: <FontAwesomeIcon icon={faList} style={{ fontSize: 11 }} /> },
+                { value: 'calendar', label: 'Calendário', icon: <FontAwesomeIcon icon={faCalendarDays} style={{ fontSize: 11 }} /> },
+              ]}
+              aria-label="Modo de visualização das aplicações"
+              className="mb-1 bg-white"
+            />
           </div>
 
           <div className="flex-1 flex flex-col rounded-tr-xl rounded-b-xl border border-(--border-custom) bg-white overflow-hidden min-h-0 min-w-0">
-            {activeTab === 'applications' ? (
-              <>
-                <div className="px-5 py-3 border-b border-(--border-custom) min-w-0">
-                  <ApplicationsMonthFilter
-                    months={availableMonths}
-                    activeKey={monthFilter}
-                    onChange={(key) => {
-                      setMonthFilter(key)
-                      if (key === 'all') {
-                        const now = new Date()
-                        setCalMonth(now.getMonth())
-                        setCalYear(now.getFullYear())
-                      } else {
-                        const [yr, monthName] = key.split('-')
-                        const mi = monthIndexFromPtUpper(monthName)
-                        if (mi >= 0) { setCalMonth(mi); setCalYear(Number(yr)) }
-                      }
-                    }}
-                  />
-                </div>
+            <div className="px-5 py-3 border-b border-(--border-custom) min-w-0">
+              <ApplicationsMonthFilter
+                months={availableMonths}
+                activeKey={monthFilter}
+                onChange={(key) => {
+                  setMonthFilter(key)
+                  if (key === 'all') {
+                    const now = new Date()
+                    setCalMonth(now.getMonth())
+                    setCalYear(now.getFullYear())
+                  } else {
+                    const [yr, monthName] = key.split('-')
+                    const mi = monthIndexFromPtUpper(monthName)
+                    if (mi >= 0) { setCalMonth(mi); setCalYear(Number(yr)) }
+                  }
+                }}
+              />
+            </div>
 
-                {viewMode === 'timeline' ? (
-                  <div className="flex-1 overflow-y-auto px-5 py-4">
-                    <ApplicationsTimeline
-                      applicationsByMonth={groupedByMonth}
-                      onSelect={setSelectedApp}
-                      onEditScheduled={() => setShowEditDoseModal(true)}
-                      onSendReminder={(app) => sendReminder(selectedPatient.phone, selectedPatient.name.split(' ')[0], app.date, app.startTime)}
-                    />
-                  </div>
-                ) : (
-                  <ApplicationsCalendar
-                    month={calMonth}
-                    year={calYear}
-                    applicationsByDate={applicationsByDate}
-                    onMonthChange={(m, y) => { setCalMonth(m); setCalYear(y) }}
-                    onSelect={setSelectedApp}
-                  />
-                )}
-              </>
-            ) : (
-              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-                <ProgressIndicator
-                  steps={pendingDose?.allowedValues ?? []}
-                  currentStepId={lastAdministered?.administeredStepId ?? null}
-                />
-                <TreatmentTimeline
-                  applications={patientApplications}
-                  inductionStart={inductionStart ?? '—'}
-                  maintenanceStart={maintenanceStart}
-                  flat
+            {viewMode === 'timeline' ? (
+              <div className="flex-1 overflow-y-auto px-5 py-4">
+                <ApplicationsTimeline
+                  applicationsByMonth={groupedByMonth}
+                  onSelect={handleSelectApplication}
                 />
               </div>
+            ) : (
+              <ApplicationsCalendar
+                month={calMonth}
+                year={calYear}
+                applicationsByDate={applicationsByDate}
+                onMonthChange={(m, y) => { setCalMonth(m); setCalYear(y) }}
+                onSelect={handleSelectApplication}
+              />
             )}
           </div>
           </div>
@@ -571,6 +612,7 @@ export function PatientChartPage() {
         open={showEditDoseModal}
         dose={pendingDose}
         organizationId={organizationId}
+        patientName={selectedPatient.name}
         onClose={() => setShowEditDoseModal(false)}
         onSaved={() => setShowAdjustToast(true)}
       />
@@ -615,11 +657,6 @@ export function PatientChartPage() {
         organizationId={organizationId}
         onClose={() => setRetractDoseId(null)}
       />
-      <LateObservationModal
-        doseId={lateObsDoseId}
-        organizationId={organizationId}
-        onClose={() => setLateObsDoseId(null)}
-      />
 
       <PortabilityModal
         open={showPortabilityModal}
@@ -628,20 +665,32 @@ export function PatientChartPage() {
         onClose={() => setShowPortabilityModal(false)}
       />
 
+      <AppointmentActionModal
+        appointment={selectedAppointment}
+        organizationId={organizationId}
+        onClose={() => setSelectedAppointment(null)}
+      />
+
       <ApplicationDetailModal
-        application={selectedApplication}
+        application={
+          selectedApplication?.status === 'completed' && !retractDoseId
+            ? selectedApplication
+            : null
+        }
         organizationId={organizationId}
         onClose={() => setSelectedApp(null)}
-        onRetract={
-          canAdjustProtocol
-            ? (doseId) => { setSelectedApp(null); setRetractDoseId(doseId) }
-            : undefined
-        }
-        onLateObservation={
-          canAdjustProtocol
-            ? (doseId) => { setSelectedApp(null); setLateObsDoseId(doseId) }
-            : undefined
-        }
+        onRetract={canAdjustProtocol ? (doseId) => setRetractDoseId(doseId) : undefined}
+        canLateObservation={canAdjustProtocol}
+      />
+
+      <ApplicationDetailsModal
+        application={selectedApplication?.status !== 'completed' ? selectedApplication : null}
+        organizationId={organizationId}
+        onClose={() => setSelectedApp(null)}
+        onOpenPatient={() => {}}
+        onSaved={() => setShowAdjustToast(true)}
+        canReschedule={canAdjustProtocol}
+        showPatientAvatar={false}
       />
 
       <Toast

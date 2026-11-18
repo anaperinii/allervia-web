@@ -31,6 +31,7 @@ import { Route as HelpRouteImport } from './routes/help'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ExportReportRouteImport } from './routes/export-report'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ConfirmEmailChangeRouteImport } from './routes/confirm-email-change'
 import { Route as AppointmentsRouteImport } from './routes/appointments'
 import { Route as AdvancedSettingsRouteImport } from './routes/advanced-settings'
 import { Route as AddImmunotherapyRouteImport } from './routes/add-immunotherapy'
@@ -148,6 +149,11 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfirmEmailChangeRoute = ConfirmEmailChangeRouteImport.update({
+  id: '/confirm-email-change',
+  path: '/confirm-email-change',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppointmentsRoute = AppointmentsRouteImport.update({
   id: '/appointments',
   path: '/appointments',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/add-immunotherapy': typeof AddImmunotherapyRoute
   '/advanced-settings': typeof AdvancedSettingsRoute
   '/appointments': typeof AppointmentsRoute
+  '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/dashboard': typeof DashboardRoute
   '/export-report': typeof ExportReportRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByTo {
   '/add-immunotherapy': typeof AddImmunotherapyRoute
   '/advanced-settings': typeof AdvancedSettingsRoute
   '/appointments': typeof AppointmentsRoute
+  '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/dashboard': typeof DashboardRoute
   '/export-report': typeof ExportReportRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -246,6 +254,7 @@ export interface FileRoutesById {
   '/add-immunotherapy': typeof AddImmunotherapyRoute
   '/advanced-settings': typeof AdvancedSettingsRoute
   '/appointments': typeof AppointmentsRoute
+  '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/dashboard': typeof DashboardRoute
   '/export-report': typeof ExportReportRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/add-immunotherapy'
     | '/advanced-settings'
     | '/appointments'
+    | '/confirm-email-change'
     | '/dashboard'
     | '/export-report'
     | '/forgot-password'
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/add-immunotherapy'
     | '/advanced-settings'
     | '/appointments'
+    | '/confirm-email-change'
     | '/dashboard'
     | '/export-report'
     | '/forgot-password'
@@ -338,6 +349,7 @@ export interface FileRouteTypes {
     | '/add-immunotherapy'
     | '/advanced-settings'
     | '/appointments'
+    | '/confirm-email-change'
     | '/dashboard'
     | '/export-report'
     | '/forgot-password'
@@ -369,6 +381,7 @@ export interface RootRouteChildren {
   AddImmunotherapyRoute: typeof AddImmunotherapyRoute
   AdvancedSettingsRoute: typeof AdvancedSettingsRoute
   AppointmentsRoute: typeof AppointmentsRoute
+  ConfirmEmailChangeRoute: typeof ConfirmEmailChangeRoute
   DashboardRoute: typeof DashboardRoute
   ExportReportRoute: typeof ExportReportRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -550,6 +563,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/confirm-email-change': {
+      id: '/confirm-email-change'
+      path: '/confirm-email-change'
+      fullPath: '/confirm-email-change'
+      preLoaderRoute: typeof ConfirmEmailChangeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/appointments': {
       id: '/appointments'
       path: '/appointments'
@@ -601,6 +621,7 @@ const rootRouteChildren: RootRouteChildren = {
   AddImmunotherapyRoute: AddImmunotherapyRoute,
   AdvancedSettingsRoute: AdvancedSettingsRoute,
   AppointmentsRoute: AppointmentsRoute,
+  ConfirmEmailChangeRoute: ConfirmEmailChangeRoute,
   DashboardRoute: DashboardRoute,
   ExportReportRoute: ExportReportRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,

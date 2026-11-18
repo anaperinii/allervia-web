@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useHasPermission } from '@/shared/stores/useUserStore'
-import { exportClinicalDoses, getClinicalMetrics, listImmunotherapyTypes } from '@/shared/api/clinical.api'
+import { auditDashboardReportPdf, exportClinicalDoses, getClinicalMetrics, listImmunotherapyTypes } from '@/shared/api/clinical.api'
 import type { TherapyStatus } from '@/shared/api/contracts/clinical'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
@@ -26,15 +26,14 @@ import {
   exportDashboardReportJson,
 } from '@/features/dashboard/exporters/data-report-exporters'
 import {
-  aggregateActiveByType,
-  aggregateByConcentration,
-  aggregatePhasePatientsByDay,
-  aggregateVolumeMatrix,
+  activeByTypeFromMetrics,
   buildApplicationSeries,
+  concentrationFromMetrics,
   eachDay,
-  useActiveTherapies,
-  useDoseWindow,
+  phaseSeriesFromTimeline,
+  usePhaseTimeline,
   useStatusHistory,
+  volumeMatrixFromMetrics,
 } from '@/features/dashboard/hooks/useDashboardAggregates'
 import { downloadFile } from '@/shared/lib/file-download'
 import { addDaysToDay, dayInZone, toZonedOffsetIso } from '@/shared/lib/dates'
@@ -153,8 +152,7 @@ export function ExportReportPage() {
     queryFn: ({ signal }) => getClinicalMetrics(period, signal),
     enabled: dashboardOrganizationId !== '',
   })
-  const doseWindowQuery = useDoseWindow(dashboardOrganizationId, period)
-  const activeTherapiesQuery = useActiveTherapies(dashboardOrganizationId)
+  const phaseTimelineQuery = usePhaseTimeline(dashboardOrganizationId, periodDays, timeZone)
   const statusHistoryQuery = useStatusHistory(dashboardOrganizationId)
   const typesQuery = useQuery({
     queryKey: queryKeys.immunotherapyTypes(dashboardOrganizationId),
@@ -165,15 +163,13 @@ export function ExportReportPage() {
   const dashboardLoading =
     isDashboardFormat &&
     (metricsQuery.isPending ||
-      doseWindowQuery.isPending ||
-      activeTherapiesQuery.isPending ||
+      phaseTimelineQuery.isPending ||
       statusHistoryQuery.isPending ||
       typesQuery.isPending)
   const dashboardError =
     isDashboardFormat &&
     (metricsQuery.isError ||
-      doseWindowQuery.isError ||
-      activeTherapiesQuery.isError ||
+      phaseTimelineQuery.isError ||
       statusHistoryQuery.isError ||
       typesQuery.isError)
 
@@ -187,7 +183,6 @@ export function ExportReportPage() {
   const reportData = useMemo<DashboardReportData | null>(() => {
     const metrics = metricsQuery.data
     if (!metrics) return null
-    const doses = doseWindowQuery.data ?? []
     const generatedAtLabel = new Date()
       .toLocaleString('pt-BR', {
         timeZone,
@@ -199,21 +194,20 @@ export function ExportReportPage() {
       })
       .replace(',', '')
     return {
-      generatedAt: `${generatedAtLabel} (${timeZone})`,
+      generatedAt: generatedAtLabel,
       periodLabel: `${dayLabel(periodDays.fromDay)} a ${dayLabel(periodDays.toDay)} (${periodDays.days.length} dias)`,
       sections,
       metrics,
       applicationSeries: buildApplicationSeries(metrics, periodDays.fromDay, periodDays.toDay),
       statusSeries: statusHistoryQuery.data?.buckets ?? [],
-      phaseSeries: aggregatePhasePatientsByDay(activeTherapiesQuery.data ?? [], periodDays.fromDay, periodDays.toDay, timeZone),
-      concentrationData: aggregateByConcentration(doses),
-      typeData: aggregateActiveByType(activeTherapiesQuery.data ?? [], typesQuery.data ?? []),
-      volumeMatrix: aggregateVolumeMatrix(doses),
+      phaseSeries: phaseTimelineQuery.data ? phaseSeriesFromTimeline(phaseTimelineQuery.data) : [],
+      concentrationData: concentrationFromMetrics(metrics),
+      typeData: activeByTypeFromMetrics(metrics, typesQuery.data ?? []),
+      volumeMatrix: volumeMatrixFromMetrics(metrics),
     }
   }, [
     metricsQuery.data,
-    doseWindowQuery.data,
-    activeTherapiesQuery.data,
+    phaseTimelineQuery.data,
     statusHistoryQuery.data,
     typesQuery.data,
     periodDays,
@@ -226,7 +220,10 @@ export function ExportReportPage() {
   function runDashboardExport() {
     const data = reportData
     if (!data) return
-    if (format === 'dashboard-pdf') exportDashboardReportPdf(data)
+    if (format === 'dashboard-pdf') {
+      void auditDashboardReportPdf({ sections: data.sections ?? [] }).catch(() => {})
+      exportDashboardReportPdf(data)
+    }
     else if (format === 'dashboard-csv') exportDashboardReportCsv(data)
     else exportDashboardReportJson(data)
     toast.success({
@@ -312,17 +309,17 @@ export function ExportReportPage() {
       />
 
       <div className="flex min-h-0 flex-1 gap-5">
-      <div className="flex-1 overflow-y-auto max-w-2xl space-y-4 px-1 pb-8">
-        <div className="flex items-start gap-2 bg-brand/10 border border-brand/25 rounded-lg px-3 py-2.5">
-          <FontAwesomeIcon icon={faCircleInfo} className="text-brand shrink-0 mt-0.5" style={{ fontSize: 14 }} />
-          <p className="text-[0.68rem] text-brand-dark leading-relaxed">
+      <div className="flex flex-1 flex-col min-h-0 overflow-y-auto max-w-2xl gap-4 px-1">
+        <div className="flex items-start gap-2 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5">
+          <FontAwesomeIcon icon={faCircleInfo} className="text-gray-500 shrink-0 mt-0.5" style={{ fontSize: 14 }} />
+          <p className="text-[0.68rem] text-gray-600 leading-relaxed">
             {FORMAT_DESCRIPTIONS[format]}
             {!isDashboardFormat &&
               ' Cada geração fica registrada na auditoria do servidor com autor, justificativa, filtros e corte.'}
           </p>
         </div>
 
-        <div className="rounded-xl border border-(--border-custom) bg-white px-4 py-3 space-y-3">
+        <div className="flex-1 rounded-xl border border-(--border-custom) bg-white px-4 py-3 space-y-3">
           <FieldLabel label="Formato">
             <Select value={format} onChange={(e) => setFormat(e.target.value as ExportFormat)}>
               <optgroup label="Conjunto clínico (listagem completa)">
@@ -431,7 +428,7 @@ export function ExportReportPage() {
         {progress && <p className="text-xs text-(--text-muted)">{progress}</p>}
       </div>
 
-      <aside className="hidden min-h-0 flex-1 flex-col gap-2 pb-8 lg:flex">
+      <aside className="hidden min-h-0 flex-1 flex-col gap-2 lg:flex">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-[0.8rem] font-semibold text-(--text)">Pré-visualização</h2>
           <span className="text-[0.66rem] text-(--text-muted)">
@@ -466,6 +463,7 @@ export function ExportReportPage() {
         open={showConfirm}
         onClose={() => setShowConfirm(false)}
         title="Confirmar exportação"
+        icon={<FontAwesomeIcon icon={faDownload} style={{ fontSize: 16 }} />}
         size="sm"
         footer={
           <>

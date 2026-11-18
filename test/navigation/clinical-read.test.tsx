@@ -102,6 +102,15 @@ function clinicalRoutes(overrides: RouteDefinition[] = []): RouteDefinition[] {
     { path: '/immunotherapies/types', handler: ['Ácaros'] },
     { path: '/immunotherapies/therapy-1/doses', handler: THERAPY_DOSES },
     { path: '/doses/dose-scheduled', handler: PENDING_DETAIL },
+    { path: '/appointments', handler: { items: [], page: 1, pageSize: 100, total: 0 } },
+    {
+      path: '/immunotherapies/therapy-1/lifecycle',
+      handler: { events: [], therapy: { id: 'therapy-1', revision: 0, status: 'IN_PROGRESS' } },
+    },
+    {
+      path: '/immunotherapies/therapy-2/lifecycle',
+      handler: { events: [], therapy: { id: 'therapy-2', revision: 1, status: 'SUSPENDED' } },
+    },
     { path: '/patients/patient-1', handler: PATIENT },
     {
       path: '/patients/desconhecido',

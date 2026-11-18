@@ -1,21 +1,16 @@
 import { useMemo } from 'react'
 import { Modal } from '@/shared/components'
-import { cn } from '@/shared/lib/cn'
+import { ProtocolEditor } from '@/features/protocols/protocol-editor'
+import { MODAL_HEADER_BACKGROUND } from '@/features/scheduling/constants/modal-header'
 import type {
   ProtocolStep,
   ProtocolVersion,
 } from '@/shared/api/contracts/protocols'
 
-const PHASE_VIEW = {
-  BUILD_UP: {
-    label: 'Indução',
-    className: 'bg-sky-50 text-sky-700 border-sky-200',
-  },
-  MAINTENANCE: {
-    label: 'Manutenção',
-    className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  },
-} as const
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faThumbtack } from '@fortawesome/free-solid-svg-icons'
+
+function noop() {}
 
 interface ProgressionRow {
   step: ProtocolStep
@@ -24,25 +19,6 @@ interface ProgressionRow {
   repeats: boolean
   endsSequence: boolean
 }
-
-function dilution(value: string): string {
-  const parsed = Number(value)
-  return Number.isFinite(parsed)
-    ? `1:${parsed.toLocaleString('pt-BR')}`
-    : `1:${value}`
-}
-
-function volume(value: string): string {
-  return `${value.replace('.', ',')} mL`
-}
-
-function cadence(days: number): string {
-  if (days === 7) return '7 dias · semanal'
-  if (days === 14) return '14 dias · quinzenal'
-  if (days > 0 && days % 7 === 0) return `${days} dias · ${days / 7} semanas`
-  return `${days} dias`
-}
-
 
 function buildProgression(steps: ProtocolStep[]): {
   rows: ProgressionRow[]
@@ -125,26 +101,37 @@ export function ProgressionViewer({
       open={open}
       onClose={onClose}
       size="xl"
-      title={`${protocolName} · v${version.number}`}
+      ariaLabel="Visualizar progressão do protocolo"
+      headerSlot={
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-2">
+            <span className="truncate text-[0.95rem] font-bold text-(--text)">
+              {protocolName}
+            </span>
+            <span className="shrink-0 text-[0.82rem] font-medium text-(--text-muted)">
+              v{version.number}
+            </span>
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            {isDefault && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-[#12333a] px-2 py-0.5 text-[0.65rem] font-semibold text-white">
+                <FontAwesomeIcon icon={faThumbtack} style={{ fontSize: 10 }} />
+                Padrão para novas prescrições
+              </span>
+            )}
+            <span className="inline-flex items-center rounded-md bg-gray-300 px-2 py-0.5 text-[0.65rem] font-semibold text-gray-800">
+              {progression.rows.length}{' '}
+              {progression.rows.length === 1 ? 'etapa' : 'etapas'} na sequência
+            </span>
+          </div>
+        </div>
+      }
+      headerStyle={{
+        background: MODAL_HEADER_BACKGROUND,
+        borderBottom: 'none',
+        paddingTop: '1.4rem',
+      }}
     >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[0.65rem] font-semibold text-(--text-muted)">
-          {progression.rows.length}{' '}
-          {progression.rows.length === 1 ? 'etapa' : 'etapas'} na sequência
-        </span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border bg-sky-50 text-sky-700 border-sky-200">
-          {summary.buildUp} de indução
-        </span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">
-          {summary.maintenance} de manutenção
-        </span>
-        {isDefault && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border bg-brand-50 text-brand-dark border-brand/30">
-            Padrão para novas prescrições
-          </span>
-        )}
-      </div>
-
       <p className="text-xs leading-relaxed text-(--text-muted)">
         O dia é contado a partir da primeira aplicação, somando o intervalo de
         cada etapa.
@@ -160,55 +147,7 @@ export function ProgressionViewer({
         )}
       </p>
 
-      <ol className="flex flex-col gap-1.5">
-        {progression.rows.map((row, index) => {
-          const phase = PHASE_VIEW[row.step.phase]
-          return (
-            <li
-              key={row.step.id}
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-(--border-custom) bg-white px-3 py-2 animate-in fade-in-0 slide-in-from-bottom-1 fill-mode-backwards"
-              style={{ animationDelay: `${Math.min(index * 25, 400)}ms` }}
-            >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gray-100 text-[0.65rem] font-bold text-(--text-muted)">
-                {row.position}
-              </span>
-              <span className="min-w-36 text-xs font-semibold text-(--text)">
-                {row.step.label}
-              </span>
-              <span className="text-xs text-(--text)">
-                {dilution(row.step.concentration)}
-              </span>
-              <span className="text-xs text-(--text)">
-                {volume(row.step.volume)}
-              </span>
-              <span className="text-[0.65rem] text-(--text-muted)">
-                {cadence(row.step.intervalDays)}
-              </span>
-              <span className="text-[0.65rem] text-(--text-muted)">
-                dia {row.day}
-              </span>
-              <span
-                className={cn(
-                  'ml-auto inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border',
-                  phase.className,
-                )}
-              >
-                {phase.label}
-              </span>
-              {row.repeats && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border bg-amber-50 text-amber-700 border-amber-200">
-                  Repete
-                </span>
-              )}
-              {row.endsSequence && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[0.65rem] font-semibold border bg-slate-100 text-slate-600 border-slate-200">
-                  Fim da sequência
-                </span>
-              )}
-            </li>
-          )
-        })}
-      </ol>
+      <ProtocolEditor draft={version.definition} readOnly onChange={noop} />
 
       {progression.orphans.length > 0 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">

@@ -4,7 +4,7 @@
 
 <img src="assets/readme-header.png" alt="Allervia · Interface Clínica: Camada de visualização e interação do Sistema de Gestão de Tratamentos Imunoterápicos Alérgicos" width="100%" />
 
-> **Escopo deste repositório:** aqui vive exclusivamente a interface clínica do Allervia, a aplicação web em React operada pelos profissionais da clínica. O **back-end** (API, persistência, autenticação e regras de servidor) não faz parte deste repositório e será mantido em base própria; enquanto não existe integração, a interface opera sobre dados semeados em memória.
+> **Escopo deste repositório:** aqui vive exclusivamente a interface clínica do Allervia, a aplicação web em React operada pelos profissionais da clínica. O **back-end** (API, persistência, autenticação e regras de servidor) vive no repositório `allervia-backend`; esta interface o consome por HTTP, com os tipos do contrato gerados a partir do OpenAPI publicado lá (`npm run contract:types`).
 
 Plataforma de gestão clínica dedicada a consultórios de alergologia que conduzem protocolos de imunoterapia específica, nas modalidades **subcutânea (SCIT)** e **sublingual (SLIT)**. Oferece prontuário eletrônico estruturado, agenda terapêutica, cálculo automático de progressão de doses, encerramento assistido de tratamento, emissão de relatórios clínicos e trilha de auditoria em conformidade com a LGPD.
 
@@ -12,7 +12,7 @@ Plataforma de gestão clínica dedicada a consultórios de alergologia que condu
 
 > **Evolução contínua:** as funcionalidades, regras de negócio, protocolos clínicos e políticas de acesso descritas neste documento encontram-se em processo permanente de revisão, refinamento e amadurecimento, acompanhando o avanço do futuro produto, o retorno de profissionais de saúde envolvidos na validação clínica e eventuais atualizações normativas. Portanto, comportamentos atualmente implementados serão ajustados, expandidos ou reescritos em ciclos futuros; esta documentação reflete o estado vigente do sistema, não um contrato estático.
 
-> **Estado atual dos dados:** todo o estado é mantido em stores Zustand com dados semeados em memória (perfis, imunoterapias, aplicações, notificações e trilha de acessos). Nenhuma chamada de rede é feita nesta fase; a substituição por chamadas à API do back-end e a persistência real serão introduzidas em ciclo posterior.
+> **Estado atual dos dados:** perfis, imunoterapias, aplicações, agendamentos e notificações vêm da API do back-end, consumida por TanStack Query sobre os tipos gerados do contrato OpenAPI. As stores Zustand restantes guardam estado de sessão e preferências (`useUserStore`); a trilha de acessos (`useAuditStore`) ainda opera sobre dados semeados em memória e será ligada à API em ciclo posterior.
 
 ---
 

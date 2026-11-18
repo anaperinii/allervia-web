@@ -18,7 +18,7 @@ import { listProtocols } from '@/shared/api/protocols.api'
 import { queryKeys } from '@/shared/api/query-keys'
 import { useSession } from '@/shared/auth/useSession'
 import { Button, CancelWizardModal, toast, WizardStepsBreadcrumb, type WizardStep } from '@/shared/components'
-import { toZonedOffsetIso, tomorrowStr } from '@/shared/lib/dates'
+import { toZonedOffsetIso, tryZonedOffsetIso, tomorrowStr } from '@/shared/lib/dates'
 import { useUnsavedChangesBlocker } from '@/shared/hooks/useUnsavedChangesBlocker'
 import { useHasPermission } from '@/shared/stores/useUserStore'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -28,12 +28,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
 import { PageHeader } from '@/shared/components/showcase'
-import { faCircleCheck, faClipboardCheck, faSyringe, faUser } from '@fortawesome/free-solid-svg-icons'
+import { faBong, faCircleCheck, faClipboardCheck, faUser } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const STEPS: WizardStep[] = [
   { label: 'Paciente', icon: faUser, description: 'Busque pelo nome para reaproveitar um cadastro existente ou preencha os dados de um paciente novo, vinculado ao prescritor autenticado.' },
-  { label: 'Prescrição', icon: faSyringe, description: 'Tipo, extrato, data de início e a versão publicada do protocolo com etapas, início e meta.' },
+  { label: 'Prescrição', icon: faBong, description: 'Tipo, extrato, data de início e a versão publicada do protocolo com etapas, início e meta.' },
   { label: 'Revisão', icon: faClipboardCheck, description: 'Confira os valores exatos e o fuso. Salvar grava paciente, tratamento e primeira previsão em uma única transação.' },
 ]
 
@@ -49,6 +49,7 @@ export function AddImmunotherapyPage() {
   }, [canAdd, navigate])
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
+  const clinicalTimeZone = account?.organization?.timeZone ?? 'America/Sao_Paulo'
   const [showCancelModal, setShowCancelModal] = useState(false)
 
   const idempotencyKeyRef = useRef(new RegistrationIntent())
@@ -59,7 +60,7 @@ export function AddImmunotherapyPage() {
     defaultValues: {
       name: '', cpf: '', phone: '', birthDate: '', weight: '', patientId: '',
       guardianName: '', guardianCpf: '', guardianPhone: '',
-      type: '', startDate: tomorrowStr(), extract: '',
+      type: '', startDate: tomorrowStr(), startTime: '08:00', extract: '',
       protocolVersionId: '', stepIds: [], startingStepId: '', targetStepId: '',
     },
   })
@@ -116,7 +117,7 @@ export function AddImmunotherapyPage() {
         immunoType: data.type.trim(),
         administrationRoute: 'SUBCUTANEOUS' as const,
         extract: data.extract.trim(),
-        inductionStartDate: toZonedOffsetIso(data.startDate, '08:00', account?.organization?.timeZone ?? 'America/Sao_Paulo'),
+        inductionStartDate: toZonedOffsetIso(data.startDate, data.startTime, clinicalTimeZone),
         protocolVersionId: data.protocolVersionId,
         stepIds: data.stepIds,
         startingStepId: data.startingStepId,
@@ -178,7 +179,17 @@ export function AddImmunotherapyPage() {
     if (step < 3) {
       void advanceStep()
     } else {
-      void handleSubmit((data) => registerMutation.mutate(data))()
+      void handleSubmit((data) => {
+        if (!tryZonedOffsetIso(data.startDate, data.startTime, clinicalTimeZone)) {
+          form.setError('startTime', {
+            type: 'custom',
+            message: 'Horário inválido, ambíguo ou inexistente no fuso clínico.',
+          })
+          setStep(2)
+          return
+        }
+        registerMutation.mutate(data)
+      })()
     }
   }
 
@@ -195,7 +206,7 @@ export function AddImmunotherapyPage() {
         title="Adicionar Imunoterapia Alérgica"
       />
 
-      <div className="mb-2">
+      <div className="-mt-2 mb-2">
         <WizardStepsBreadcrumb
           steps={STEPS}
           current={step - 1}
@@ -204,10 +215,10 @@ export function AddImmunotherapyPage() {
         />
       </div>
 
-      <div className="wizard-fields flex flex-1 min-h-0 flex-col overflow-hidden">
+      <div className="wizard-fields relative flex flex-1 min-h-0 flex-col overflow-hidden">
         <form onSubmit={handleFormSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
           <div
-            className="flex flex-1 min-h-0 flex-col justify-start px-2 pt-1 pb-10 overflow-y-auto"
+            className="flex flex-1 min-h-0 flex-col justify-start px-2 pt-1 pb-24 overflow-y-auto"
           >
             <div className="w-full">
               {step === 1 && <PatientDataStep form={form} />}
@@ -222,23 +233,33 @@ export function AddImmunotherapyPage() {
             </div>
           </div>
 
-          <div className="border-t border-(--border-custom) px-5 py-3 flex justify-end gap-2">
-            <Button type="button" tone="danger" variant="outline" onClick={() => setShowCancelModal(true)}>
-              Cancelar
-            </Button>
-            {step > 1 && (
-              <Button type="button" tone="brand" variant="outline" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
+          <div
+            className="absolute inset-x-2 -bottom-3 flex items-center justify-between gap-2 rounded-xl border px-5 py-3 backdrop-blur-md"
+            style={{ background: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.5)' }}
+          >
+            <div />
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="solid" className="bg-gray-200 text-gray-700 hover:bg-gray-300" onClick={() => setShowCancelModal(true)}>
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                tone="brand"
+                variant="outline"
+                disabled={step === 1}
+                onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}
+              >
                 Voltar
               </Button>
-            )}
-            <Button
-              type="submit"
-              tone="brand"
-              variant="solid"
-              disabled={registerMutation.isPending}
-            >
-              {step < 3 ? 'Continuar' : 'Salvar Prescrição'}
-            </Button>
+              <Button
+                type="submit"
+                tone="brand"
+                variant="solid"
+                disabled={registerMutation.isPending}
+              >
+                {step < 3 ? 'Continuar' : 'Salvar Prescrição'}
+              </Button>
+            </div>
           </div>
         </form>
       </div>
