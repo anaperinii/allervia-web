@@ -10,8 +10,6 @@ interface SummaryCardsProps {
   currentInterval: string
   nextDate: string
   currentDose: string
-
-  previousDose?: string | null
 }
 
 const CARDS: {
@@ -81,15 +79,6 @@ export function SummaryCards(props: SummaryCardsProps) {
                   {withSmallMl(card.render(props))}
                 </div>
               </div>
-              {card.key === 'dose' && props.previousDose && (
-                <div
-                  title={`Dose administrada anterior: ${props.previousDose}`}
-                  className="truncate text-[0.68rem] font-medium"
-                  style={{ color: '#8FB4BA' }}
-                >
-                  {props.previousDose}
-                </div>
-              )}
             </div>
           </div>
         </div>

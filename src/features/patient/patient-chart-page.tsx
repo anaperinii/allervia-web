@@ -280,10 +280,6 @@ export function PatientChartPage() {
   const currentDose = currentDoseValues
     ? formatStepPresentation(currentDoseValues)
     : '-'
-  const previousDose =
-    pendingRecord?.plannedValues && lastAdministered?.administeredValues
-      ? formatStepPresentation(lastAdministered.administeredValues)
-      : null
 
   const allowedSteps =
     pendingDose?.allowedValues ?? fallbackDoseQuery.data?.allowedValues ?? []
@@ -508,7 +504,6 @@ export function PatientChartPage() {
             currentInterval={currentInterval}
             nextDate={nextDate}
             currentDose={currentDose}
-            previousDose={previousDose}
           />
 
           <div className="flex flex-1 flex-col min-h-0 min-w-0 pl-1.5">
